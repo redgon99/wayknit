@@ -1,14 +1,14 @@
-# HANDOFF — WayMeld(여로담) 작업 인계 문서
+# HANDOFF — Wayknit(여로담) 작업 인계 문서
 
 최신 갱신: 2026-09-06 / 브랜치 `main`
 
-이 문서는 같은 사용자가 다른 장소·다른 세션에서 작업을 이어받기 위한 인계 문서다. 아래 순서대로 읽으면 된다: **0(지금 상태) → 1(주의사항) → 필요한 상세는 2~5에서 찾아보기**.
+이 문서는 같은 사용자가 다른 장소·다른 세션에서 작업을 이어받기 위한 인계 문서다. 아래 순서대로 읽으면 된다: **0(지금 상태) → 1(주의사항) → 필요한 상세는 2~7에서 찾아보기**.
 
 ---
 
 ## 0. 지금 상태 한눈에 보기
 
-네 작업 트랙이 있다.
+여섯 작업 트랙이 있다.
 
 1. **관리자 페이지 개선** (§2) — 사용자가 요청한 감사에서 나온 우선순위 4건 전부 완료, 확장 백로그도 대부분 완료. 남은 건 페이지별 세부 미비점(§2-7, 아직 착수 안 함).
 2. **동선짜기 UX 검토** (§3) — 발견 5건 **전부 완료.**
@@ -16,7 +16,9 @@
 4. **실시간 공동편집** (§5) — 계획만 세운 상태, **미착수.** 사용자가 A안/B안 중 어느 쪽으로 갈지 정해야 착수 가능.
 5. **모바일 UX 감사·개선** (§6) — 2026-09-06 세션. 실제 모바일 화면을 전수 점검해 버그·불편 목록을 뽑고, 합의된 5단계를 **전부 완료.** 남은 결정 사항 있음(§6-7).
 
-**검증은 사용자가 직접 한다 (2026-09-06 사용자 지시로 변경됨):** 이전 방침("크로미움 설치해서 직접 접속해 확인해줘", 2026-09-05)은 **폐기됐다.** 세션이 Playwright로 자체 검증하지 말고, 각 단계 끝에 **"어디서 무엇을 눌러 어떤 결과가 나와야 정상인지" 확인 절차를 설명**하고 사용자의 확인을 기다린다. 이유: 스크린샷·DOM 스냅샷·스크립트 결과가 실제 코드 수정보다 토큰을 더 많이 먹는다는 걸 사용자가 확인했다. 브라우저 자동화가 정말 필요할 때의 설치법은 §7에 남겨둔다.
+6. **브랜드 개명** (§7) — 2026-09-06. `WayMeld` → `Wayknit`으로 폴더·저장소·코드·DB·스토리지 키 전부 전환 **완료.** 사용자 조치가 남아 있음(Netlify 사이트명·도메인 확보, §7-4).
+
+**검증은 사용자가 직접 한다 (2026-09-06 사용자 지시로 변경됨):** 이전 방침("크로미움 설치해서 직접 접속해 확인해줘", 2026-09-05)은 **폐기됐다.** 세션이 Playwright로 자체 검증하지 말고, 각 단계 끝에 **"어디서 무엇을 눌러 어떤 결과가 나와야 정상인지" 확인 절차를 설명**하고 사용자의 확인을 기다린다. 이유: 스크린샷·DOM 스냅샷·스크립트 결과가 실제 코드 수정보다 토큰을 더 많이 먹는다는 걸 사용자가 확인했다. 브라우저 자동화가 정말 필요할 때의 설치법은 §8에 남겨둔다.
 
 **작업 방식 (반드시 지킬 것):** 사용자와 "하나씩 완료 → 브리핑 → 컨펌 → 다음"으로 진행하기로 합의했다. 사용자 확답 없이 다음 항목으로 앞서가지 말 것.
 
@@ -103,7 +105,7 @@
 
 **후속 확인·수정 (같은 날):**
 - 마이그레이션 적용 확인됨, 실사용(두 번째 관리자 추가)까지 확인됨.
-- **버그 발견·수정: `is_admin()` 무한재귀.** `admin_users` SELECT 정책이 `is_admin()`을 호출하는데, `is_admin()`이 SECURITY DEFINER가 아니라 호출자 권한으로 `admin_users`를 다시 읽어 **정책 → is_admin() → admin_users 조회 → 정책 → …** 로 순환했다. 관리자가 1명일 때는 `OR` 첫 조건에서 단락돼 우연히 동작했지만, **두 번째 관리자를 추가하는 순간** 전체 스캔 중 `stack depth limit exceeded`(54001)로 목록 화면이 깨졌다. 수정: `supabase/migrations/20260904010000_fix_admin_is_admin_recursion.sql` — 저장소 기존 해법(`is_trip_collaborator`)과 동일하게 `security definer` + `set search_path = public`. `is_admin()`을 참조하는 정책 24개 전부 WayMeld 테이블 전용임을 확인(공유 DB지만 영향 범위는 WayMeld 한정).
+- **버그 발견·수정: `is_admin()` 무한재귀.** `admin_users` SELECT 정책이 `is_admin()`을 호출하는데, `is_admin()`이 SECURITY DEFINER가 아니라 호출자 권한으로 `admin_users`를 다시 읽어 **정책 → is_admin() → admin_users 조회 → 정책 → …** 로 순환했다. 관리자가 1명일 때는 `OR` 첫 조건에서 단락돼 우연히 동작했지만, **두 번째 관리자를 추가하는 순간** 전체 스캔 중 `stack depth limit exceeded`(54001)로 목록 화면이 깨졌다. 수정: `supabase/migrations/20260904010000_fix_admin_is_admin_recursion.sql` — 저장소 기존 해법(`is_trip_collaborator`)과 동일하게 `security definer` + `set search_path = public`. `is_admin()`을 참조하는 정책 24개 전부 Wayknit 테이블 전용임을 확인(공유 DB지만 영향 범위는 Wayknit 한정).
 
 ### 2-3. ② 감사 로그 (Audit log)
 
@@ -123,7 +125,7 @@
 
 ### 2-4. ③ 목록 페이지네이션·검색
 
-**무엇이 문제였나:** `lib/admin.ts`가 `waymeld_trips` 전량을 브라우저로 가져와 JS에서 집계했다. 특히 자료 개수를 세려고 `payload` 컬럼(여행 1건 최대 151KB)까지 통째로 받아왔다 — 데이터가 늘면 매 조회마다 수십~수백 MB. 검색창도 없었고 사용자 목록은 UUID만 보여줘 검색해도 쓸모없었다.
+**무엇이 문제였나:** `lib/admin.ts`가 `wayknit_trips` 전량을 브라우저로 가져와 JS에서 집계했다. 특히 자료 개수를 세려고 `payload` 컬럼(여행 1건 최대 151KB)까지 통째로 받아왔다 — 데이터가 늘면 매 조회마다 수십~수백 MB. 검색창도 없었고 사용자 목록은 UUID만 보여줘 검색해도 쓸모없었다.
 
 **변경한 파일:**
 - `supabase/migrations/20260904030000_admin_pagination_search.sql` — RPC 3개: `admin_user_rows`(집계+이메일조인+검색+페이지네이션), `admin_share_stats`(카운트 전부 SQL에서, `jsonb_array_length`로 자료 수 세서 payload 자체는 브라우저로 안 나감), `admin_plaza_listings`(최근 12건 고정 → 검색+페이지네이션). 셋 다 `security definer`라 **함수 첫 줄에서 `is_admin()` 직접 확인**(RLS 우회하므로 필수).
@@ -140,8 +142,8 @@
 
 | 대상 | 식별자 | 제재 |
 |---|---|---|
-| `trip` | `waymeld_trips.id` | `is_public=false` + `listed_in_plaza=false` |
-| `plaza_listing` | `waymeld_trips.id` | `listed_in_plaza=false`만 |
+| `trip` | `wayknit_trips.id` | `is_public=false` + `listed_in_plaza=false` |
+| `plaza_listing` | `wayknit_trips.id` | `listed_in_plaza=false`만 |
 | `guide` | `guide_articles.id` | `status='draft'` |
 | `place` | — | 신고 생성 UI 자체가 없어 제재 액션 없음으로 표시 |
 
@@ -149,7 +151,7 @@
 - `supabase/migrations/20260904050000_admin_report_moderation.sql` — `admin_report_target_states()`(대상 현재 상태), `admin_moderate_report(p_report_id)`(제재+신고 resolved 전환을 한 트랜잭션으로, 대상 유형을 신고 행에서 직접 읽어 호출자가 어긋나게 지정 불가)
 - `src/lib/contentReports.ts`, `src/pages/AdminReportsPage.tsx`, `src/styles/app.css`(`.admin-moderate-btn`)
 
-**설계 판단:** 관리자에게 `waymeld_trips` UPDATE 권한을 주지 않고(컬럼 단위 제한이 안 되므로) SECURITY DEFINER RPC로 필요한 플래그만 뒤집음. `waymeld_trips`엔 감사 트리거 안 닮(자동저장이 로그를 뒤덮으므로) — 제재 RPC 안에서만 직접 `admin_audit_log`에 기록.
+**설계 판단:** 관리자에게 `wayknit_trips` UPDATE 권한을 주지 않고(컬럼 단위 제한이 안 되므로) SECURITY DEFINER RPC로 필요한 플래그만 뒤집음. `wayknit_trips`엔 감사 트리거 안 닮(자동저장이 로그를 뒤덮으므로) — 제재 RPC 안에서만 직접 `admin_audit_log`에 기록.
 
 **⚠️ 남은 확인:** 세션 시점 실제 신고가 0건이라 브라우저에서는 빈 화면. `/plaza`나 공유 여행 페이지에서 신고를 접수한 뒤 확인할 것.
 
@@ -157,7 +159,7 @@
 
 사용자가 "순차적으로 진행"을 지시해 아래도 이어서 처리했다.
 
-**보안 어드바이저 점검 및 강화** — ②~④에서 SECURITY DEFINER 함수 6개를 추가해 Supabase security advisor로 검증. 전체 214건 중 WayMeld 테이블 ERROR는 0건(나머지는 같은 프로젝트의 다른 앱 것). 고친 것 둘(`20260904060000_admin_function_hardening.sql`): `audit_redact()`에 빠져 있던 `set search_path = public` 추가, 관리자 전용 RPC 5개가 로그아웃(anon) 상태에서도 호출 가능하던 것을 PUBLIC/anon 회수 후 `authenticated`에만 부여.
+**보안 어드바이저 점검 및 강화** — ②~④에서 SECURITY DEFINER 함수 6개를 추가해 Supabase security advisor로 검증. 전체 214건 중 Wayknit 테이블 ERROR는 0건(나머지는 같은 프로젝트의 다른 앱 것). 고친 것 둘(`20260904060000_admin_function_hardening.sql`): `audit_redact()`에 빠져 있던 `set search_path = public` 추가, 관리자 전용 RPC 5개가 로그아웃(anon) 상태에서도 호출 가능하던 것을 PUBLIC/anon 회수 후 `authenticated`에만 부여.
 **⚠️ 건드리면 안 되는 것:** `is_admin()`과 트리거 함수 `log_admin_action()`의 EXECUTE 권한은 회수하면 안 된다 — RLS 정책 본문에서 호출되므로 회수하면 관련 테이블이 전부 접근 불가가 된다. 어드바이저가 WARN으로 계속 표시하지만 의도된 것.
 
 **통합 대시보드** — 지표가 8개 페이지에 흩어져 있던 문제. `supabase/migrations/20260904070000_admin_dashboard.sql`의 `admin_dashboard_summary()` RPC(왕복 1회) + `src/lib/adminDashboard.ts`의 `deriveAlerts()`(숫자 나열이 아니라 "지금 손대야 할 것"을 규칙으로 추출) + `/admin/dashboard`. 경보 규칙: 미처리 신고 / 배포 실패 / 배포 초안은 있는데 계정 0개 / 트렌드 수집 정체 / 수집 원문-장소 미연결 / 시나리오 테마 미커버 / 초안 대기 / 관리자 1명뿐. 첫 실행에서 실제로 여러 건 잡혀 기능이 의도대로 동작함을 확인(배포 초안 9건인데 계정 0개, 트렌드 수집 정체, 수집 원문 597건 미연결, 시나리오 테마 6/10 커버 등).
@@ -168,7 +170,7 @@
 
 **버전 이력 되돌리기** — 별도 버전 테이블 없이 감사 로그(②)의 전/후 값을 재사용. `supabase/migrations/20260904090000_admin_audit_restore.sql`의 `admin_restore_audit_entry(p_audit_id)`. **핵심 위험 대응:** `audit_redact()`가 1000바이트 넘는 값을 자리표시자로 자르는데, 그대로 복원하면 원본이 파괴된다 — 잘림 마커를 구조화된 jsonb(`{"__audit_omitted_bytes__": N}`)로 만들고, 잘린 필드가 있으면 필드명을 알려주며 복원을 **서버에서 거부**한다(UI도 버튼을 막음). 허용 테이블: `guide_articles`/`landing_promo`/`admin_notices`/`scenario_catalog`. `admin_users`(권한 부여)·`content_reports`(신고 처리)는 되돌리면 안 되므로 서버에서 거부. INSERT 되돌리기(=행 자체를 지우는 것)도 거부 — 해당 화면에서 삭제하면 됨.
 
-**🔴 회귀 버그 수정 — 남의 여행이 "내 여행" 목록에 섞이던 문제 (관리자 페이지 밖 이슈지만 이 작업 중 발견):** 2026-09-01 공동편집 작업에서 `listRemote`/`readRemoteById`/`readRemoteLatest`가 `owner_id` 필터를 제거하면서, `waymeld_trips`의 SELECT 정책 4개(소유·협업 / **공개** / 마당등록 / **관리자**)가 전부 OR로 합쳐져 **일반 사용자에게도 공개 여행 전부가 "내 여행"으로 보이는** 문제였다(관리자 55건→19건, 여행 없는 사용자 34건→0건 등 실측). 데이터 손상·소유권 탈취는 없었음(UPDATE 정책은 그대로 소유자/편집자 한정). 수정: 쿼리에서 명시적으로 `or(owner_id.eq.나, id.in.(협업 여행들))`로 좁힘. **교훈: RLS에 "내 것 판별"을 맡기지 말 것** — RLS는 "접근 가능한가"만 정하고, 화면 목록은 그보다 좁은 질의여야 한다. 정책이 하나 추가될 때마다 조용히 넓어진다.
+**🔴 회귀 버그 수정 — 남의 여행이 "내 여행" 목록에 섞이던 문제 (관리자 페이지 밖 이슈지만 이 작업 중 발견):** 2026-09-01 공동편집 작업에서 `listRemote`/`readRemoteById`/`readRemoteLatest`가 `owner_id` 필터를 제거하면서, `wayknit_trips`의 SELECT 정책 4개(소유·협업 / **공개** / 마당등록 / **관리자**)가 전부 OR로 합쳐져 **일반 사용자에게도 공개 여행 전부가 "내 여행"으로 보이는** 문제였다(관리자 55건→19건, 여행 없는 사용자 34건→0건 등 실측). 데이터 손상·소유권 탈취는 없었음(UPDATE 정책은 그대로 소유자/편집자 한정). 수정: 쿼리에서 명시적으로 `or(owner_id.eq.나, id.in.(협업 여행들))`로 좁힘. **교훈: RLS에 "내 것 판별"을 맡기지 말 것** — RLS는 "접근 가능한가"만 정하고, 화면 목록은 그보다 좁은 질의여야 한다. 정책이 하나 추가될 때마다 조용히 넓어진다.
 
 **협업 초대 알림 (A안 — 초대 링크 복사, 관리자 페이지 밖):** 초대해도 상대에게 알림이 안 가던 문제(이메일 발송 수단이 저장소에 없음). A안으로 링크 복사 방식 채택. `supabase/migrations/20260904100000_trip_invite_preview.sql`의 `get_trip_invite_preview()`(SECURITY DEFINER, 이메일 마스킹해서 anon도 미리보기 가능) + `InviteBanner.tsx`(`/plan?invite=<id>` 진입 시 4가지 상태: 미로그인/다른계정로그인/연결중/이미참여). **B안(실제 이메일 발송)은 미착수** — 외부 서비스 가입 + 발신 도메인 인증(SPF/DKIM) 필요.
 
@@ -307,7 +309,7 @@
 
 **요구:** 검색 칩을 누르면 상세 모달을 좌측 패널 **바로 오른쪽에 붙이고**, 배경 암전 없이, 그 장소를 지도에 표시하고 적당히 자동 확대.
 
-- `app.css` — `.waymeld-root:not(.mobile-layout) .photos-overlay`에서 암전 제거 + `pointer-events: none`(지도를 계속 조작할 수 있게). 모바일은 기존 전체화면 모달 그대로.
+- `app.css` — `.wayknit-root:not(.mobile-layout) .photos-overlay`에서 암전 제거 + `pointer-events: none`(지도를 계속 조작할 수 있게). 모바일은 기존 전체화면 모달 그대로.
 - `mapZoom.ts` — `KAKAO_LEVEL_PLACE_FOCUS = 4`(≈100m). **이미 그보다 확대돼 있으면 축척을 건드리지 않는다** — 사용자가 맞춰둔 화면을 상세 열 때마다 되돌리면 성가시다.
 - `PlannerPage.tsx` — `mapLevelTick`(같은 레벨을 다시 지정해도 지도에 반영되게 하는 신호), `handleOpenPlacePhotos`에서 선택·중심·확대를 함께 처리.
 
@@ -383,7 +385,7 @@
 | 협업자 쓰기 권한 | ✅ `20260901000000` — `owner_update` 정책이 `is_trip_editor(id)` 허용 |
 | 협업자 자동저장 | ✅ `PlannerPage.tsx`의 700ms 디바운스 저장, `viewer`만 차단 |
 | Realtime 채널 | ✅ `tripPresence.ts` presence 채널 가동 중 |
-| `waymeld_trips` 실시간 구독 | ✅ 이미 `supabase_realtime` publication에 포함 (DB에서 직접 확인) |
+| `wayknit_trips` 실시간 구독 | ✅ 이미 `supabase_realtime` publication에 포함 (DB에서 직접 확인) |
 
 즉 **초대받은 사람이 핀업하면 이미 소유자 여행에 저장은 된다.** 새로고침하면 보인다.
 
@@ -436,7 +438,7 @@ B가 핀 추가 → payload 통째 저장 (A의 핀이 없는 자기 사본으�
 
 가장 심각했던 건. 모바일에서 `공유·시나리오·설정·도움말` 4개 기능이 **전부 접근 불가**였다.
 
-- 원인: `.waymeld-root.mobile-layout .map-type-toggle`의 `top:16px; right:16px`이 상단 바 오른쪽 끝의 더보기 버튼과 겹쳤다(측정: 더보기 `317,15,44×44` / 위성 `319,16,40×40`). 위성 토글의 `z-index:40`이 상단 바(`z-index:25`)보다 높아 탭을 전부 가로챘다.
+- 원인: `.wayknit-root.mobile-layout .map-type-toggle`의 `top:16px; right:16px`이 상단 바 오른쪽 끝의 더보기 버튼과 겹쳤다(측정: 더보기 `317,15,44×44` / 위성 `319,16,40×40`). 위성 토글의 `z-index:40`이 상단 바(`z-index:25`)보다 높아 탭을 전부 가로챘다.
 - 그 CSS의 원래 주석은 "모바일은 앱바가 따로 없이 지도가 화면 최상단부터 시작"이었다 — **그 전제가 깨진 뒤에도 좌표가 그대로 남아 있었던 것.** 나중에 상단 바 좌표를 바꿀 때 이 버튼도 같이 봐야 한다.
 - 수정: `app.css` — 위성 토글을 상단 바(검색 줄 + 날짜 탭) 아래인 `top:108px`으로 내림.
 
@@ -509,7 +511,54 @@ B가 핀 추가 → payload 통째 저장 (A의 핀이 없는 자기 사본으�
 
 ---
 
-## 7. 실행 명령 · 프로젝트 정보
+## 7. 브랜드 개명 — WayMeld → Wayknit (2026-09-06)
+
+`waymeld.com`·`.app`이 이미 선점돼 있어 영문 서비스명을 **Wayknit**으로 바꿨다. 한글명 **여로담**은 그대로다.
+
+**슬로건:** `Collect places. Meld your route.` → `Collect places. Knit your route.` (한글 "가고 싶은 곳을 담으면, 여행길이 됩니다"는 유지)
+
+### 7-1. 완료된 것
+
+| 대상 | 내용 |
+|---|---|
+| 로컬 폴더 | `~/Desktop/dev/waymeld2` → `~/Desktop/dev/wayknit` |
+| GitHub 저장소 | `redgon99/waymeld2` → [`redgon99/wayknit`](https://github.com/redgon99/wayknit), `git remote` 갱신 |
+| 코드·문서 본문 | 174개 파일 일괄 치환 (`WayMeld`→`Wayknit`, `waymeld`→`wayknit`, `WAYMELD`→`WAYKNIT`) |
+| 파일명 | 30개 (`docs/` 보고서·기획서, 디자인 PNG, `src/icons/waymeld-icons.ts`→`wayknit-icons.ts`) |
+| DB | `waymeld_trips` → `wayknit_trips` (+ 제약 3·인덱스 4·트리거 1·정책 1·함수 10개), `delete_waymeld_mock_mail_users` → `delete_wayknit_mock_mail_users` |
+| localStorage 키 | `waymeld:*` → `wayknit:*`, `waymeld-auth` → `wayknit-auth` |
+
+### 7-2. 일부러 바꾸지 않은 것
+
+- **`supabase/migrations/`의 과거 마이그레이션 파일** — 당시 이력이므로 원문 유지. 개명은 새 파일 `20260906120000_rename_waymeld_to_wayknit.sql` 하나로 표현했다. 과거 파일을 고치면 이력이 거짓이 된다.
+- **`src/lib/migrateStorageKeys.ts`의 구 브랜드 목록** — `waymeld`·`tripasist`가 남아 있어야 기존 사용자의 로컬 데이터를 새 키로 옮길 수 있다.
+- **독일어 로케일의 `Anmeldung`/`Anmelden`/`Melden`** — "로그인·등록"이라는 정상 단어다. 슬로건의 `Meld`만 `Knit`으로 바꿀 때 반드시 **단어경계**(`\bMeld\b`)를 쓸 것. macOS `sed`는 `\b`를 지원하지 않으므로 `perl -pi -e`를 쓴다 — 실제로 sed로 시도했다가 조용히 아무것도 안 바뀐 적이 있다.
+
+### 7-3. DB 개명에서 알아둘 것
+
+**함수 본문은 테이블 rename을 따라가지 않는다.** PostgreSQL은 함수 본문을 파스트리가 아니라 **텍스트**로 저장하므로, `alter table ... rename to`를 해도 함수 안의 `waymeld_trips`는 그대로 남아 전부 `relation does not exist`로 깨진다. 위 마이그레이션은 `pg_get_functiondef()`로 정의를 다시 읽어 참조만 치환해 재생성하는 `do` 블록으로 이를 처리했다(권한·소유자 유지됨).
+
+반대로 **자동으로 따라오는 것**: FK 4개(`share_plaza_imports` 2·`trip_invites`·`trip_collaborators`), `supabase_realtime` publication 멤버십, RLS 정책의 부착 대상. 적용 후 실제로 확인했다 — 47행 보존, publication 유지, REST 조회 200.
+
+### 7-4. 배포 상태 · 남은 것 (2026-09-06 갱신)
+
+**🔴 최우선 — 라이브가 개명 전 빌드다.** `wayknit.netlify.app`은 응답 200이지만 올라가 있는 번들이 `waymeld_trips`를 참조한다(라이브 `assets/index-CPELGVbz.js`에서 7회 확인). DB는 이미 `wayknit_trips`로 바뀌었으므로 **여행 조회·저장이 전부 실패하는 상태**다. 스토리지 키도 아직 `waymeld:*`. → **개명 커밋을 배포하면 즉시 해소된다.** DB를 코드 배포보다 먼저 바꾼 순서 때문에 생긴 공백이다.
+
+| 항목 | 상태 |
+|---|---|
+| Netlify 사이트 `wayknit.netlify.app` | ✅ 사용자가 확보 (2026-09-06) |
+| `wayknit.com` | ⏳ 2026-09-07 중 등록 예정 |
+| 개명 코드 배포 | 🔴 **미배포** — 워킹트리에 미커밋 |
+| 구 사이트 `waymeld.netlify.app` | 아직 살아 있음(별개 사이트). 정리 여부 미정 |
+
+**남은 사용자 조치:**
+1. **카카오 개발자 콘솔** — 사이트 도메인에 `https://wayknit.netlify.app` 등록해야 지도가 뜬다(§6-8). `.com` 확보 후 그것도 추가.
+2. **`.com` 확보 후** `public/robots.txt`·`scripts/generate-sitemap.mjs`·`.env.example`의 기준 URL을 새 도메인으로 한 번 더 갱신(현재는 `wayknit.netlify.app` 기준).
+3. **Edge Function 재배포(선택)** — 18개 함수의 브랜드 문구(AI 프롬프트, `WayknitBot` User-Agent)가 바뀌었다. **DB 테이블을 참조하는 함수는 없어서 재배포 안 해도 깨지지 않는다.**
+
+---
+
+## 8. 실행 명령 · 프로젝트 정보
 
 ```bash
 npx tsc --noEmit   # 타입체크 (배포 전 항상)

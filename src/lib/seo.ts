@@ -1,9 +1,9 @@
 import { DEFAULT_LOCALE, pathWithLocale, stripLocalePrefix, type AppLocale } from './locale';
 
-const RAW_SITE_URL = (import.meta.env.VITE_SITE_URL as string | undefined) ?? 'https://waymeld.netlify.app';
+const RAW_SITE_URL = (import.meta.env.VITE_SITE_URL as string | undefined) ?? 'https://wayknit.netlify.app';
 
 export const SITE_URL = RAW_SITE_URL.replace(/\/+$/, '');
-export const SITE_NAME = '여로담 · WayMeld';
+export const SITE_NAME = '여로담 · Wayknit';
 export const DEFAULT_OG_IMAGE_PATH = '/landing/hero.png';
 
 /** og:locale 용 BCP47 → OpenGraph underscore 표기 */

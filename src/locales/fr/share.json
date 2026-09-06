@@ -1,13 +1,13 @@
 {
   "meta": {
-    "tripTitle": "{{title}} · WayMeld",
+    "tripTitle": "{{title}} · Wayknit",
     "tripFallback": "Voyage partagé",
     "tripDescription": "Consultez un itinéraire jour par jour avec les temps de trajet et de visite réels, puis importez-le dans votre propre voyage.",
-    "plazaTitle": "Place des voyages · WayMeld",
+    "plazaTitle": "Place des voyages · Wayknit",
     "plazaDescription": "Parcourez les itinéraires de plusieurs jours partagés par d'autres voyageurs et importez-les dans votre voyage."
   },
   "target": {
-    "metaTitle": "Récupérer des lieux depuis un lien partagé · WayMeld",
+    "metaTitle": "Récupérer des lieux depuis un lien partagé · Wayknit",
     "title": "Lieux issus du lien partagé",
     "backToPlan": "Vers le planificateur",
     "extracting": "Recherche de lieux dans ce lien…",

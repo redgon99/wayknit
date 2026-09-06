@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "WayMeld — 收藏地点，编织路线",
+    "title": "Wayknit — 收藏地点，编织路线",
     "description": "搜索、标记地点，生成带时间的行程。Kakao与Google地图、多日行程、分享链接。"
   },
   "brand": {
-    "primary": "WayMeld",
+    "primary": "Wayknit",
     "secondary": "여로담"
   },
   "notice": {
@@ -21,7 +21,7 @@
     "menu": "菜单"
   },
   "hero": {
-    "eyebrow": "WayMeld",
+    "eyebrow": "Wayknit",
     "title": "收藏想去的地方，\n编织旅行路线",
     "subtitle": "搜索并标记地点，按分类整理。拖动调整顺序，生成几点到几点的行程。不是去过哪里，而是规划下一步怎么走。",
     "ctaPrimary": "免费开始",
@@ -48,8 +48,8 @@
     }
   },
   "features": {
-    "title": "WayMeld 的方式",
-    "subtitle": "不同于记录「去过哪里」的应用，WayMeld 规划「接下来怎么走」。",
+    "title": "Wayknit 的方式",
+    "subtitle": "不同于记录「去过哪里」的应用，Wayknit 规划「接下来怎么走」。",
     "multiDay": {
       "title": "多日标签",
       "body": "第1天、第2天分别管理标记与路线。"
@@ -73,7 +73,7 @@
   },
   "compare": {
     "title": "定位",
-    "us": "WayMeld",
+    "us": "Wayknit",
     "them": "到访记录应用",
     "row1": [
       "今日明日路线",
@@ -125,6 +125,6 @@
     "info": "韩国旅行信息",
     "login": "登录",
     "plan": "规划器",
-    "rights": "© {{year}} WayMeld"
+    "rights": "© {{year}} Wayknit"
   }
 }

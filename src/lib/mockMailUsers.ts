@@ -44,12 +44,12 @@ export async function signInMockMailUser(email: string): Promise<void> {
   if (verifyError) throw verifyError;
 }
 
-export async function deleteWaymeldMockMailUsers(): Promise<{
+export async function deleteWayknitMockMailUsers(): Promise<{
   deletedUsers: number;
   deletedTrips: number;
 }> {
   const sb = requireSupabase();
-  const { data, error } = await sb.rpc('delete_waymeld_mock_mail_users');
+  const { data, error } = await sb.rpc('delete_wayknit_mock_mail_users');
   if (error) throw error;
   const row = Array.isArray(data) ? data[0] : data;
   const rec = (row ?? {}) as Record<string, unknown>;

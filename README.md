@@ -1,9 +1,9 @@
-# WayMeld (여로담)
+# Wayknit (여로담)
 
 **가고 싶은 곳을 담으면, 여행길이 됩니다.**  
-*Collect places. Meld your route.*
+*Collect places. Knit your route.*
 
-카카오·Google 지도 기반 여행 동선 플래너. npm 패키지명: `waymeld`.
+카카오·Google 지도 기반 여행 동선 플래너. npm 패키지명: `wayknit`.
 
 심플하고 직관적인 단방향 사용 흐름으로 설계된 여행 계획 도구입니다.
 

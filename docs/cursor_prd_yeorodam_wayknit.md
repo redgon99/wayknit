@@ -1,9 +1,9 @@
-# PRD: 여로담 / WayMeld
+# PRD: 여로담 / Wayknit
 
 > Cursor 개발용 제품 요구사항 문서  
 > 프로젝트 성격: 카카오맵 기반 SPA 여행계획 MVP  
 > 타깃: 대한민국을 방문하는 해외 관광객  
-> 현재 배포 초안: `https://waymeld.netlify.app/` / `https://waymeld.netlify.app/plan`  
+> 현재 배포 초안: `https://wayknit.netlify.app/` / `https://wayknit.netlify.app/plan`  
 > 작성 기준: 오늘 대화에서 정의한 MVP, 앱명 검토, 해외 관광객 대상 확장 전략, 기능 아이디어를 통합 정리
 
 ---
@@ -13,8 +13,8 @@
 ### 1.1 제품명
 
 - 한글 서비스명: **여로담**
-- 영문 서비스명: **WayMeld**
-- npm / 저장소명: **`waymeld`**
+- 영문 서비스명: **Wayknit**
+- npm / 저장소명: **`wayknit`**
 
 ### 1.2 한 줄 정의
 
@@ -112,7 +112,7 @@
 
 ## 6. 현재 MVP 가정 상태
 
-**코드 기준 (WayMeld / waymeld v0.2.0, 2026-06)** — PRD 초안보다 앞선 하이브리드 MVP.
+**코드 기준 (Wayknit / wayknit v0.2.0, 2026-06)** — PRD 초안보다 앞선 하이브리드 MVP.
 
 - Vite + React + TypeScript SPA (`/`, `/plan`, `/trip/:slug`, `/plaza`, `/setup`, `/help`, `/themes`)
 - **듀얼 지도**: Kakao Map + Google Maps (위치·사용자 선택)
@@ -886,7 +886,7 @@ export interface GeneratedRoute {
 }
 ```
 
-### 10.4 SetupChecklistItem (localStorage `waymeld:korea-setup:v1`)
+### 10.4 SetupChecklistItem (localStorage `wayknit:korea-setup:v1`)
 
 ```ts
 export type SetupChecklistItem = {
@@ -1118,7 +1118,7 @@ VITE_KAKAO_JS_KEY=YOUR_KAKAO_JAVASCRIPT_KEY
 
 ```env
 VITE_TOUR_API_KEY=YOUR_KTO_TOUR_API_KEY
-VITE_APP_BASE_URL=https://waymeld.netlify.app
+VITE_APP_BASE_URL=https://wayknit.netlify.app
 ```
 
 ### 15.3 API 정책
@@ -1371,7 +1371,7 @@ Preference: Easiest
 
 제품 최종 문장:
 
-> **WayMeld helps foreign travelers turn saved places into clear Korea travel routes, with Korean addresses, map links, taxi cards, and day-by-day plans.**
+> **Wayknit helps foreign travelers turn saved places into clear Korea travel routes, with Korean addresses, map links, taxi cards, and day-by-day plans.**
 
 한글 문장:
 

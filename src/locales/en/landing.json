@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "WayMeld — Collect places. Meld your route.",
+    "title": "Wayknit — Collect places. Knit your route.",
     "description": "Search, pin places, and build a timed itinerary. Kakao & Google Maps, multi-day trips, shareable links."
   },
   "brand": {
-    "primary": "WayMeld",
+    "primary": "Wayknit",
     "secondary": ""
   },
   "notice": {
@@ -39,7 +39,7 @@
       "body": "Find places by keyword or category and pin from search or the map. Food, cafés, and sights appear as chips."
     },
     "route": {
-      "title": "Meld your route",
+      "title": "Knit your route",
       "body": "Timed schedule with stay durations and lunch-aware slots. Real road distances via Kakao mobility when available."
     },
     "share": {
@@ -49,7 +49,7 @@
   },
   "features": {
     "title": "Built for routing",
-    "subtitle": "Unlike apps that track where you’ve been, WayMeld is for where you’re going next—and when.",
+    "subtitle": "Unlike apps that track where you’ve been, Wayknit is for where you’re going next—and when.",
     "multiDay": {
       "title": "Multi-day tabs",
       "body": "Split pins and routes across Day 1, Day 2, Day 3. Long trips stay organized."
@@ -73,7 +73,7 @@
   },
   "compare": {
     "title": "Positioning",
-    "us": "WayMeld",
+    "us": "Wayknit",
     "them": "Visit tracker / bucket list",
     "row1": ["Routes for today & tomorrow", "Places you’ve been"],
     "row2": ["Timed itinerary", "Pins on a map"],
@@ -100,12 +100,12 @@
     "button": "Open route planner"
   },
   "footer": {
-    "tagline": "Collect → Meld → Route → Share",
+    "tagline": "Collect → Knit → Route → Share",
     "plaza": "Share plaza",
     "tips": "Travel tips",
     "info": "Korea travel info",
     "login": "Sign in",
     "plan": "Planner",
-    "rights": "© {{year}} WayMeld"
+    "rights": "© {{year}} Wayknit"
   }
 }

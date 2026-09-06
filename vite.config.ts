@@ -18,7 +18,7 @@ function kakaoProxyHeaders(proxyReq: ClientRequest, _req: IncomingMessage) {
 function buildTourSearchUrl(keyword: string, serviceKey: string): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     keyword: keyword.trim(),
     numOfRows: '10',
@@ -39,7 +39,7 @@ function buildTourFestivalUrl(
 ): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     eventStartDate,
     numOfRows: '100',
@@ -62,7 +62,7 @@ function buildTourNearbyUrl(
 ): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     mapX: String(mapX),
     mapY: String(mapY),
@@ -85,7 +85,7 @@ function tourDetailKeyParam(serviceKey: string): string {
 }
 
 function tourDetailCommonParams(): URLSearchParams {
-  return new URLSearchParams({ MobileOS: 'ETC', MobileApp: 'WayMeld', _type: 'json' });
+  return new URLSearchParams({ MobileOS: 'ETC', MobileApp: 'Wayknit', _type: 'json' });
 }
 
 const TOUR_DETAIL_BASE = 'https://apis.data.go.kr/B551011/KorService2';
@@ -413,7 +413,7 @@ export default defineConfig(({ mode }) => {
       manifest: {
         name: '여로담 — 가고 싶은 곳을 담으면, 여행길이 됩니다',
         short_name: '여로담',
-        description: '장소를 담고 여행길을 엮는 WayMeld',
+        description: '장소를 담고 여행길을 엮는 Wayknit',
         theme_color: '#1f2937',
         background_color: '#f8fafc',
         display: 'standalone',

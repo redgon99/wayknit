@@ -87,8 +87,8 @@ export interface TripSummary {
   collaboratorRole?: CollaboratorRole;
 }
 
-const LS_STORE = 'waymeld:trips-store:v2';
-const LS_PLAZA_IMPORTED = 'waymeld:plaza-imported-ids';
+const LS_STORE = 'wayknit:trips-store:v2';
+const LS_PLAZA_IMPORTED = 'wayknit:plaza-imported-ids';
 
 interface LocalStore {
   activeId: string | null;
@@ -278,7 +278,7 @@ export function applyPlazaPublish(
 
 /**
  * 내가 협업자로 접근 가능한 trip_id → role 맵.
- * waymeld_trips 조회에서 owner_id 필터를 뺀 만큼(RLS가 owner OR collaborator를
+ * wayknit_trips 조회에서 owner_id 필터를 뺀 만큼(RLS가 owner OR collaborator를
  * 이미 허용) 여기서 role만 UI 표시용으로 별도 조회한다.
  */
 async function fetchCollaboratorRoles(userId: string): Promise<Map<string, CollaboratorRole>> {
@@ -295,9 +295,9 @@ async function fetchCollaboratorRoles(userId: string): Promise<Map<string, Colla
 /**
  * "내 여행" 범위를 쿼리에서 명시적으로 좁힌다.
  *
- * RLS에 맡기면 안 된다. waymeld_trips에는 SELECT 정책이 4개 있고 PostgreSQL은
+ * RLS에 맡기면 안 된다. wayknit_trips에는 SELECT 정책이 4개 있고 PostgreSQL은
  * permissive 정책을 OR로 합치므로, 필터를 빼면 `public_slug_select`(is_public)와
- * `waymeld_trips_admin_select`(is_admin)까지 열려 남의 여행이 내 목록에 섞인다.
+ * `wayknit_trips_admin_select`(is_admin)까지 열려 남의 여행이 내 목록에 섞인다.
  * RLS는 "접근해도 되는가"를 정하고, 내 목록은 그보다 의도적으로 좁은 질의다.
  */
 function collaboratorIdsOf(roles: Map<string, CollaboratorRole>): string[] {
@@ -310,7 +310,7 @@ async function listRemote(userId: string): Promise<TripSummary[]> {
   const roles = await fetchCollaboratorRoles(userId);
   const collabIds = collaboratorIdsOf(roles);
 
-  const base = sb.from('waymeld_trips').select('id, slug, title, total_days, updated_at');
+  const base = sb.from('wayknit_trips').select('id, slug, title, total_days, updated_at');
   const scoped =
     collabIds.length > 0
       ? base.or(`owner_id.eq.${userId},id.in.(${collabIds.join(',')})`)
@@ -335,7 +335,7 @@ async function readRemoteById(userId: string, tripId: string): Promise<Trip | nu
 
   // 협업자로 등록된 여행이면 소유자 조건 없이, 아니면 내 것만.
   // 공개 여행 열람은 /trip/:slug 공유 페이지와 "끌어오기"가 담당한다.
-  const base = sb.from('waymeld_trips').select(TRIP_SELECT).eq('id', tripId);
+  const base = sb.from('wayknit_trips').select(TRIP_SELECT).eq('id', tripId);
   const scoped = roles.has(tripId) ? base : base.eq('owner_id', userId);
 
   const { data, error } = await scoped.maybeSingle();
@@ -351,7 +351,7 @@ async function readRemoteLatest(userId: string): Promise<Trip | null> {
 
   // 범위를 좁히지 않으면 "전체에서 가장 최근 수정된 여행"이 잡혀,
   // 남의 여행이 앱을 열자마자 내 플래너로 열린다.
-  const base = sb.from('waymeld_trips').select(TRIP_SELECT);
+  const base = sb.from('wayknit_trips').select(TRIP_SELECT);
   const scoped =
     collabIds.length > 0
       ? base.or(`owner_id.eq.${userId},id.in.(${collabIds.join(',')})`)
@@ -369,7 +369,7 @@ async function readBySlugRemote(slug: string): Promise<Trip | null> {
   const sb = getSupabase();
   if (!sb) return null;
   const { data, error } = await sb
-    .from('waymeld_trips')
+    .from('wayknit_trips')
     .select(TRIP_SELECT)
     .eq('slug', slug)
     .eq('is_public', true)
@@ -389,7 +389,7 @@ async function writeRemote(trip: Trip): Promise<void> {
     generatedRouteByDay: normalized.generatedRouteByDay,
     materials: normalized.materials ?? [],
   };
-  const { error } = await sb.from('waymeld_trips').upsert(
+  const { error } = await sb.from('wayknit_trips').upsert(
     {
       id: trip.id,
       slug: trip.slug,
@@ -565,7 +565,7 @@ async function listPlazaRemote(localeFilter?: string | null): Promise<PlazaListi
   const sb = getSupabase();
   if (!sb) return [];
   let query = sb
-    .from('waymeld_trips')
+    .from('wayknit_trips')
     .select(PLAZA_LIST_SELECT)
     .eq('listed_in_plaza', true)
     .eq('is_public', true);
@@ -757,7 +757,7 @@ async function deleteRemote(userId: string, tripId: string): Promise<void> {
   const sb = getSupabase();
   if (!sb) return;
   const { error } = await sb
-    .from('waymeld_trips')
+    .from('wayknit_trips')
     .delete()
     .eq('id', tripId)
     .eq('owner_id', userId);

@@ -1,4 +1,4 @@
-import { iconSvgMarkup } from '../icons/waymeld-icons';
+import { iconSvgMarkup } from '../icons/wayknit-icons';
 import { getCategoryMeta } from './categories';
 import type { Place, PinnedPlace } from '../types';
 

@@ -15,7 +15,7 @@ export function getSupabase(): SupabaseClient | null {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      storageKey: 'waymeld-auth',
+      storageKey: 'wayknit-auth',
     },
   });
   return _client;

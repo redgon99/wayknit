@@ -1,13 +1,13 @@
 {
   "meta": {
-    "tripTitle": "{{title}} · WayMeld",
+    "tripTitle": "{{title}} · Wayknit",
     "tripFallback": "Shared trip",
     "tripDescription": "See a day-by-day itinerary with real travel times and stay durations, then import it into your own trip.",
-    "plazaTitle": "Share plaza · WayMeld",
+    "plazaTitle": "Share plaza · Wayknit",
     "plazaDescription": "Browse multi-day itineraries shared by other travelers and import them into your own trip."
   },
   "target": {
-    "metaTitle": "Collect places from a shared link · WayMeld",
+    "metaTitle": "Collect places from a shared link · Wayknit",
     "title": "Places from your shared link",
     "backToPlan": "To planner",
     "extracting": "Looking for places in this link…",

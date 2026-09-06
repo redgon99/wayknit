@@ -1,7 +1,7 @@
 import type { MapProvider } from './mapProvider';
 import { inferMapProviderFromLocation, resolveMapProvider } from './mapProvider';
 
-const LS_KEY = 'waymeld:map-provider-choice-v1';
+const LS_KEY = 'wayknit:map-provider-choice-v1';
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 

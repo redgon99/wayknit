@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "WayMeld — Orte sammeln. Route zusammenfügen.",
+    "title": "Wayknit — Orte sammeln. Route zusammenfügen.",
     "description": "Suchen, Orte anpinnen und einen zeitlich geplanten Reiseplan bauen. Kakao und Google Maps, mehrtägige Reisen, teilbare Links."
   },
   "brand": {
-    "primary": "WayMeld",
+    "primary": "Wayknit",
     "secondary": ""
   },
   "notice": {
@@ -49,7 +49,7 @@
   },
   "features": {
     "title": "Fürs Routing gebaut",
-    "subtitle": "Anders als Apps, die merken, wo Sie waren, geht es bei WayMeld darum, wohin Sie als Nächstes wollen — und wann.",
+    "subtitle": "Anders als Apps, die merken, wo Sie waren, geht es bei Wayknit darum, wohin Sie als Nächstes wollen — und wann.",
     "multiDay": {
       "title": "Mehrtägige Tabs",
       "body": "Pins und Routen auf Tag 1, Tag 2, Tag 3 aufteilen. Lange Reisen bleiben übersichtlich."
@@ -73,7 +73,7 @@
   },
   "compare": {
     "title": "Positionierung",
-    "us": "WayMeld",
+    "us": "Wayknit",
     "them": "Besuchs-Tracker / Wunschliste",
     "row1": ["Routen für heute und morgen", "Orte, an denen Sie schon waren"],
     "row2": ["Zeitlicher Reiseplan", "Pins auf einer Karte"],
@@ -106,6 +106,6 @@
     "info": "Korea-Reiseinfos",
     "login": "Anmelden",
     "plan": "Planer",
-    "rights": "© {{year}} WayMeld"
+    "rights": "© {{year}} Wayknit"
   }
 }

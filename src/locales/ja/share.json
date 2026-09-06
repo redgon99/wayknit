@@ -1,13 +1,13 @@
 {
   "meta": {
-    "tripTitle": "{{title}} · WayMeld",
+    "tripTitle": "{{title}} · Wayknit",
     "tripFallback": "共有された旅程",
     "tripDescription": "移動時間や滞在時間まで反映した日程を確認して、自分の旅程に取り込めます。",
-    "plazaTitle": "共有ひろば · WayMeld",
+    "plazaTitle": "共有ひろば · Wayknit",
     "plazaDescription": "ほかの旅行者が共有した複数日の旅程を見て、そのまま自分の旅程に取り込めます。"
   },
   "target": {
-    "metaTitle": "共有リンクから場所を集める · WayMeld",
+    "metaTitle": "共有リンクから場所を集める · Wayknit",
     "title": "共有リンクの場所",
     "backToPlan": "プランナーへ",
     "extracting": "リンクから場所を探しています…",

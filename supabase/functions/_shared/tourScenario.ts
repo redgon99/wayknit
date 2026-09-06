@@ -80,7 +80,7 @@ export function buildScenarioKeywordUrl(
 ): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     keyword,
     numOfRows: String(numOfRows),
@@ -98,7 +98,7 @@ export function buildWellnessAreaUrl(
 ): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     langDivCd: 'KOR',
     wellnessThemaCd,
@@ -113,7 +113,7 @@ export function buildWellnessAreaUrl(
 export function buildGoCampingSearchUrl(keyword: string, serviceKey: string, numOfRows = 100): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     keyword,
     numOfRows: String(numOfRows),

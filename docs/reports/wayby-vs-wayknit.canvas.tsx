@@ -18,7 +18,7 @@ import {
   UsageBar,
 } from 'cursor/canvas';
 
-export default function WaybyVsWaymeld() {
+export default function WaybyVsWayknit() {
   return (
     <Stack gap={22}>
       <Stack gap={6}>

@@ -1,13 +1,13 @@
 {
   "meta": {
-    "tripTitle": "{{title}} · WayMeld",
+    "tripTitle": "{{title}} · Wayknit",
     "tripFallback": "共享行程",
     "tripDescription": "查看包含通行时间与停留时间的逐日行程，并可直接导入到自己的行程。",
-    "plazaTitle": "共享广场 · WayMeld",
+    "plazaTitle": "共享广场 · Wayknit",
     "plazaDescription": "浏览其他旅行者共享的多日行程，一键导入到自己的行程。"
   },
   "target": {
-    "metaTitle": "从共享链接收集地点 · WayMeld",
+    "metaTitle": "从共享链接收集地点 · Wayknit",
     "title": "共享链接中的地点",
     "backToPlan": "前往规划器",
     "extracting": "正在从链接中查找地点…",

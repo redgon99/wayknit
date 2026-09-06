@@ -24,7 +24,7 @@ import {
   type AdminUserRow,
 } from '../lib/admin';
 import { csvFilename, downloadCsv, toCsv } from '../lib/csv';
-import { deleteWaymeldMockMailUsers } from '../lib/mockMailUsers';
+import { deleteWayknitMockMailUsers } from '../lib/mockMailUsers';
 import { evaluateTier3Gates, type GateStatus } from '../lib/tierGates';
 import '../styles/app.css';
 
@@ -187,7 +187,7 @@ export default function AdminPage() {
         { header: '확인 시각', value: (r) => r.verifiedAt ?? '' },
         { header: '메모', value: (r) => r.memo ?? '' },
       ]);
-      downloadCsv(csvFilename('waymeld_사용자'), csv);
+      downloadCsv(csvFilename('wayknit_사용자'), csv);
     } catch (e) {
       setError(e instanceof Error ? e.message : '내보내기 실패');
     } finally {
@@ -206,7 +206,7 @@ export default function AdminPage() {
         { header: '마당 등록시각', value: (r) => r.listedAt ?? '' },
         { header: '자료 수', value: (r) => r.materialsCount },
       ]);
-      downloadCsv(csvFilename('waymeld_공유마당'), csv);
+      downloadCsv(csvFilename('wayknit_공유마당'), csv);
     } catch (e) {
       setError(e instanceof Error ? e.message : '내보내기 실패');
     } finally {
@@ -352,7 +352,7 @@ export default function AdminPage() {
     setDeletingMocks(true);
     setError(null);
     try {
-      const result = await deleteWaymeldMockMailUsers();
+      const result = await deleteWayknitMockMailUsers();
       setUserPage(0);
       await Promise.all([loadUsers(userSearch, 0), loadAll()]);
       window.alert(`목업 계정 ${result.deletedUsers}명, 여행 ${result.deletedTrips}건을 삭제했습니다.`);

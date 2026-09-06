@@ -2,7 +2,7 @@ import { landingAnchor, walkEnabled, type LandingMenuNode } from '../lib/landing
 import { youtubeEmbedUrl } from '../lib/landingPromo';
 
 const FALLBACK_IMAGES = [
-  { url: '/landing/hero.png', alt: 'WayMeld map' },
+  { url: '/landing/hero.png', alt: 'Wayknit map' },
   { url: '/landing/screen-search.png', alt: 'Search' },
   { url: '/landing/screen-route.png', alt: 'Route' },
 ];

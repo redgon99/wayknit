@@ -7,7 +7,7 @@ import type { LinkPlacesExtractResult } from './linkPlaces';
  * /share 가 장소를 추출하고, 그 결과를 플래너 검색 패널이 그대로 이어받는다.
  */
 
-const HANDOFF_KEY = 'waymeld:share-handoff-v1';
+const HANDOFF_KEY = 'wayknit:share-handoff-v1';
 
 export interface SharedPayload {
   title: string | null;

@@ -1,13 +1,13 @@
 {
   "meta": {
-    "tripTitle": "{{title}} · WayMeld",
+    "tripTitle": "{{title}} · Wayknit",
     "tripFallback": "Viaje compartido",
     "tripDescription": "Consulta un itinerario día a día con tiempos de viaje y de estancia reales, e impórtalo a tu propio viaje.",
-    "plazaTitle": "Plaza de viajes · WayMeld",
+    "plazaTitle": "Plaza de viajes · Wayknit",
     "plazaDescription": "Explora itinerarios de varios días compartidos por otros viajeros e impórtalos a tu propio viaje."
   },
   "target": {
-    "metaTitle": "Reúne lugares desde un enlace compartido · WayMeld",
+    "metaTitle": "Reúne lugares desde un enlace compartido · Wayknit",
     "title": "Lugares del enlace compartido",
     "backToPlan": "Al planificador",
     "extracting": "Buscando lugares en este enlace…",

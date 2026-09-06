@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "WayMeld — 場所を集めて、ルートを紡ぐ",
+    "title": "Wayknit — 場所を集めて、ルートを紡ぐ",
     "description": "検索してピンを立てれば、何時にどこへ行くかまで。カカオ・Googleマップ、複数日、共有リンク。"
   },
   "brand": {
-    "primary": "WayMeld",
+    "primary": "Wayknit",
     "secondary": "여로담"
   },
   "notice": {
@@ -21,7 +21,7 @@
     "menu": "メニュー"
   },
   "hero": {
-    "eyebrow": "WayMeld",
+    "eyebrow": "Wayknit",
     "title": "行きたい場所を集め、\n旅のルートを紡ぐ",
     "subtitle": "場所を検索してピンするとカテゴリ別に整理。ドラッグで順序を変え、何時にどこへ行くかまで作成。訪問マップではなく、次のルート作りに特化。",
     "ctaPrimary": "無料で始める",
@@ -39,7 +39,7 @@
     "share": { "title": "共有", "body": "読み取り専用リンクで共有、または共有広場からコースを取り込み。" }
   },
   "features": {
-    "title": "WayMeldの特徴",
+    "title": "Wayknitの特徴",
     "subtitle": "「行った場所」を集めるアプリではなく、「次にどう回るか」を作るツールです。",
     "multiDay": { "title": "複数日タブ", "body": "1日目・2日目でピンとルートを管理。" },
     "category": { "title": "カテゴリピンバー", "body": "ドラッグで順序・グループ変更。地図フィルター連動。" },
@@ -52,7 +52,7 @@
   },
   "compare": {
     "title": "ポジション",
-    "us": "WayMeld",
+    "us": "Wayknit",
     "them": "訪問記録アプリ",
     "row1": ["今日・明日のコース", "今まで行った場所"],
     "row2": ["時間付き日程", "地図のピンのみ"],
@@ -83,6 +83,6 @@
     "info": "韓国旅行情報",
     "login": "ログイン",
     "plan": "プランナー",
-    "rights": "© {{year}} WayMeld"
+    "rights": "© {{year}} Wayknit"
   }
 }

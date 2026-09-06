@@ -32,7 +32,7 @@ function LandingBrand({ className = '' }: { className?: string }) {
 }
 
 const GALLERY = [
-  { src: '/landing/hero.png', alt: 'WayMeld map' },
+  { src: '/landing/hero.png', alt: 'Wayknit map' },
   { src: '/landing/screen-search.png', alt: 'Search' },
   { src: '/landing/screen-route.png', alt: 'Route' },
 ];

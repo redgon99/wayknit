@@ -1,4 +1,4 @@
-import type { IconName } from '../icons/waymeld-icons';
+import type { IconName } from '../icons/wayknit-icons';
 
 export interface StoreFacilityChip {
   key: string;

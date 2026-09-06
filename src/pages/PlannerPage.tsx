@@ -1158,7 +1158,7 @@ export default function PlannerPage() {
   const occludedCenterShiftPx = useCallback(() => {
     if (typeof window === 'undefined') return 0;
     // 도킹 여부는 CSS와 같은 기준(.mobile-layout)으로 판단한다
-    if (document.querySelector('.waymeld-root.mobile-layout')) return 0;
+    if (document.querySelector('.wayknit-root.mobile-layout')) return 0;
     const styles = getComputedStyle(document.documentElement);
     const px = (name: string, fallback: number) =>
       parseFloat(styles.getPropertyValue(name)) || fallback;
@@ -2030,7 +2030,7 @@ export default function PlannerPage() {
   }, [presentationMode, tableViewMode]);
 
   const rootClass = [
-    'waymeld-root',
+    'wayknit-root',
     panelOpen && !useMobileChrome ? 'panel-open' : '',
     !panelOpen && !useMobileChrome ? 'panel-collapsed' : '',
     materialsPanelOpen ? 'materials-open' : '',

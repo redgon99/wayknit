@@ -1,4 +1,4 @@
-# WayMeld 수익화 분석 — Claude 대화 요약
+# Wayknit 수익화 분석 — Claude 대화 요약
 
 > 작성 기준: 2026-06-06  
 > 출처: Claude Code 대화 (수익화 관점 분석 + 멀티플랫폼 전략)
@@ -38,7 +38,7 @@
    - **지금 당장 유료 사용자 받을 수 없는 상태**
 
 2. **Google 검색 캡이 클라이언트 사이드(localStorage)**
-   - 브라우저 개발자 도구로 `waymeld:google-search-count` 삭제하면 무력화
+   - 브라우저 개발자 도구로 `wayknit:google-search-count` 삭제하면 무력화
    - 서버 사이드 카운터(Supabase RLS 기반)로 이전 필요
 
 3. **export 기능 자체가 미완성**
@@ -71,7 +71,7 @@
 
 ### 핵심 전제: 코드 한 벌, 플랫폼 여러 개
 
-현재 WayMeld는 PWA가 이미 세팅되어 있어 이를 최대한 활용하는 것이 가장 빠른 길이다.
+현재 Wayknit는 PWA가 이미 세팅되어 있어 이를 최대한 활용하는 것이 가장 빠른 길이다.
 
 ### 플랫폼별 배포 전략
 

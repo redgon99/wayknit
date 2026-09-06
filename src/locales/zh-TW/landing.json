@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "WayMeld — 收藏地點，編織路線",
+    "title": "Wayknit — 收藏地點，編織路線",
     "description": "搜索、標記地點，生成帶時間的行程。Kakao與Google地圖、多日行程、分享鏈接。"
   },
   "brand": {
-    "primary": "WayMeld",
+    "primary": "Wayknit",
     "secondary": "여로담"
   },
   "notice": {
@@ -21,7 +21,7 @@
     "menu": "選單"
   },
   "hero": {
-    "eyebrow": "WayMeld",
+    "eyebrow": "Wayknit",
     "title": "收藏想去的地方，\n編織旅行路線",
     "subtitle": "搜索並標記地點，按分類整理。拖動調整順序，生成幾點到幾點的行程。不是去過哪裡，而是規劃下一步怎麼走。",
     "ctaPrimary": "免費開始",
@@ -48,8 +48,8 @@
     }
   },
   "features": {
-    "title": "WayMeld 的方式",
-    "subtitle": "不同於記錄「去過哪裡」的應用，WayMeld 規劃「接下來怎麼走」。",
+    "title": "Wayknit 的方式",
+    "subtitle": "不同於記錄「去過哪裡」的應用，Wayknit 規劃「接下來怎麼走」。",
     "multiDay": {
       "title": "多日標籤",
       "body": "第1天、第2天分別管理標記與路線。"
@@ -73,7 +73,7 @@
   },
   "compare": {
     "title": "定位",
-    "us": "WayMeld",
+    "us": "Wayknit",
     "them": "到訪記錄應用",
     "row1": [
       "今日明日路線",
@@ -125,6 +125,6 @@
     "info": "韓國旅行信息",
     "login": "登錄",
     "plan": "規劃器",
-    "rights": "© {{year}} WayMeld"
+    "rights": "© {{year}} Wayknit"
   }
 }

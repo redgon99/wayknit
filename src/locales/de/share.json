@@ -1,13 +1,13 @@
 {
   "meta": {
-    "tripTitle": "{{title}} · WayMeld",
+    "tripTitle": "{{title}} · Wayknit",
     "tripFallback": "Geteilte Reise",
     "tripDescription": "Sieh dir den Tagesplan mit echten Fahrzeiten und Aufenthaltsdauern an und übernimm ihn in deine eigene Reise.",
-    "plazaTitle": "Reise-Plaza · WayMeld",
+    "plazaTitle": "Reise-Plaza · Wayknit",
     "plazaDescription": "Entdecke mehrtägige Reisepläne anderer Reisender und übernimm sie direkt in deine eigene Reise."
   },
   "target": {
-    "metaTitle": "Orte aus einem geteilten Link sammeln · WayMeld",
+    "metaTitle": "Orte aus einem geteilten Link sammeln · Wayknit",
     "title": "Orte aus dem geteilten Link",
     "backToPlan": "Zum Planer",
     "extracting": "Suche nach Orten in diesem Link…",

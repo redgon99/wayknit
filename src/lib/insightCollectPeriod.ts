@@ -8,7 +8,7 @@ export interface InsightCollectPeriod {
 
 export type InsightPeriodPreset = 7 | 30 | 90 | 0 | 'custom';
 
-const STORAGE_KEY = 'waymeld:insight-collect-period';
+const STORAGE_KEY = 'wayknit:insight-collect-period';
 
 export function defaultInsightCollectPeriod(): InsightCollectPeriod {
   return { periodDays: 30 };

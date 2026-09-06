@@ -338,7 +338,7 @@ export async function fetchGooglePlaceDetail(place: Place): Promise<GooglePlaceD
   try {
     detail = await fetchGooglePlaceDetailNew(place, googlePlaceId);
   } catch (err) {
-    console.warn('[WayMeld] Places API (New) unavailable, using legacy PlacesService', err);
+    console.warn('[Wayknit] Places API (New) unavailable, using legacy PlacesService', err);
     detail = await fetchGooglePlaceDetailLegacy(place, googlePlaceId);
   }
 

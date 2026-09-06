@@ -10,7 +10,7 @@ import i18n from './i18n';
  * 화면을 막지 않도록 모아서 보내고, 실패하면 조용히 버린다.
  */
 
-const SESSION_KEY = 'waymeld:analytics-session';
+const SESSION_KEY = 'wayknit:analytics-session';
 const FLUSH_DELAY_MS = 5000;
 const MAX_BATCH = 25;
 

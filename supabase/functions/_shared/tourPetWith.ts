@@ -26,7 +26,7 @@ export function buildPlaceListUrl(
   const base = `https://apis.data.go.kr/B551011/${BASE_BY_KIND[kind]}`;
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     arrange: 'C',
     numOfRows: String(options.numOfRows ?? 30),

@@ -115,7 +115,7 @@ async function buildDrafts(tips: TipRow[], apiKey: string): Promise<DraftGuide[]
 같은 주제끼리 묶어 **1~5개의 가이드 초안**을 만드세요.
 
 규칙:
-- 원문을 복사하지 말고 여로담(WayMeld) 톤으로 **재작성**
+- 원문을 복사하지 말고 여로담(Wayknit) 톤으로 **재작성**
 - 제목은 SEO형 한국어 (예: "한국여행시 교통카드 발급방법")
 - summary: 2~3문장
 - bodyMd: 마크다운, 단계(1. 2. 3.) 위주, 변동 가능 요금/정책 고지 한 줄 포함

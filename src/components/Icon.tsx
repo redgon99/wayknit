@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { WAYMELD_ICONS, type IconName } from '../icons/waymeld-icons';
+import { WAYKNIT_ICONS, type IconName } from '../icons/wayknit-icons';
 
 export type { IconName };
 
@@ -13,7 +13,7 @@ interface IconProps {
 }
 
 export function Icon({ name, size = 20, className, style, spin, title }: IconProps) {
-  const paths = WAYMELD_ICONS[name];
+  const paths = WAYKNIT_ICONS[name];
   const classes = ['wm-icon', spin ? 'wm-spin' : '', className].filter(Boolean).join(' ');
 
   return (

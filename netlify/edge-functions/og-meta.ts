@@ -27,7 +27,7 @@ const OG_LOCALE: Record<Locale, string> = {
   ru: 'ru_RU',
 };
 
-const SITE_NAME = '여로담 · WayMeld';
+const SITE_NAME = '여로담 · Wayknit';
 const DEFAULT_OG_IMAGE = '/og-default.png';
 
 type PageMeta = {
@@ -95,7 +95,7 @@ type TripRow = {
 
 async function tripMeta(slug: string, locale: Locale): Promise<PageMeta | null> {
   const rows = await supabaseSelect<TripRow>(
-    `waymeld_trips?select=title,total_days,payload&slug=eq.${encodeURIComponent(slug)}&is_public=eq.true&limit=1`,
+    `wayknit_trips?select=title,total_days,payload&slug=eq.${encodeURIComponent(slug)}&is_public=eq.true&limit=1`,
   );
   const row = rows?.[0];
   if (!row) return null;

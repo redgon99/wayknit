@@ -86,7 +86,7 @@ export function formatPinsAsKml(ctx: MapExportContext): string {
   <Document>
     <name>${xmlEscape(ctx.tripTitle)}</name>
     <description>${xmlEscape(
-      `${ctx.tripTitle} · WayMeld export · ${new Date().toISOString()}`
+      `${ctx.tripTitle} · Wayknit export · ${new Date().toISOString()}`
     )}</description>
 ${folders}
   </Document>
@@ -153,8 +153,8 @@ export function formatPinsAsGpx(ctx: MapExportContext): string {
     <desc>${desc}</desc>
     <type>${xmlEscape(pin.categoryLabel)}</type>
     <extensions>
-      <waymeld:day>${day}</waymeld:day>
-      <waymeld:order>${pin.order}</waymeld:order>
+      <wayknit:day>${day}</wayknit:day>
+      <wayknit:order>${pin.order}</wayknit:order>
     </extensions>
   </wpt>`;
       })
@@ -179,9 +179,9 @@ ${pts}
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="WayMeld"
+<gpx version="1.1" creator="Wayknit"
   xmlns="http://www.topografix.com/GPX/1/1"
-  xmlns:waymeld="https://waymeld.app/ns/gpx">
+  xmlns:wayknit="https://wayknit.app/ns/gpx">
   <metadata>
     <name>${xmlEscape(ctx.tripTitle)}</name>
     <time>${new Date().toISOString()}</time>

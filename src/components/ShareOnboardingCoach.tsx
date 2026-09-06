@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Icon } from './Icon';
-import type { IconName } from '../icons/waymeld-icons';
+import type { IconName } from '../icons/wayknit-icons';
 import { dismissShareOnboarding } from '../lib/onboarding';
 
 const STEPS: Array<{ title: string; body: string; icon: IconName }> = [

@@ -14,7 +14,7 @@ export const SUPPORTED_LOCALES: AppLocale[] = [
 
 export const DEFAULT_LOCALE: AppLocale = 'ko';
 
-export const LOCALE_STORAGE_KEY = 'waymeld:locale-v1';
+export const LOCALE_STORAGE_KEY = 'wayknit:locale-v1';
 
 export const LOCALE_LABELS: Record<AppLocale, string> = {
   ko: '한국어',

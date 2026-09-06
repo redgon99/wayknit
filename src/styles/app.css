@@ -1,5 +1,5 @@
 /* =============================================
-   WayMeld 통합 스타일
+   Wayknit 통합 스타일
    ============================================= */
 
 :root {
@@ -103,7 +103,7 @@ button {
   cursor: pointer;
 }
 
-/* WayMeld 아이콘 세트 (src/icons/waymeld-icons.ts) */
+/* Wayknit 아이콘 세트 (src/icons/wayknit-icons.ts) */
 .wm-icon {
   display: inline-block;
   vertical-align: -0.15em;
@@ -125,7 +125,7 @@ button {
    레이아웃 루트
    ============================================= */
 
-.waymeld-root {
+.wayknit-root {
   position: relative;
   width: 100vw;
   height: 100vh;
@@ -1757,7 +1757,7 @@ button {
  * 배경을 비우고 pointer-events도 넘겨 지도를 계속 조작할 수 있게 한다.
  * (모바일은 좌측 패널이 없으므로 기존 전체화면 모달을 그대로 쓴다)
  */
-.waymeld-root:not(.mobile-layout) .photos-overlay {
+.wayknit-root:not(.mobile-layout) .photos-overlay {
   position: absolute;
   background: none;
   padding: 0;
@@ -1768,11 +1768,11 @@ button {
 /* 오버레이를 통과시킨 클릭이 뒤쪽 앱바(로그아웃 등)를 누르지 않도록,
  * 오버레이의 자식은 모두 클릭을 되받는다. 사진 라이트박스도 여기 자식이라
  * .photos-panel만 되돌리면 라이트박스 닫기가 로그아웃을 눌러버린다. */
-.waymeld-root:not(.mobile-layout) .photos-overlay > * {
+.wayknit-root:not(.mobile-layout) .photos-overlay > * {
   pointer-events: auto;
 }
 
-.waymeld-root:not(.mobile-layout) .photos-overlay > .photos-panel {
+.wayknit-root:not(.mobile-layout) .photos-overlay > .photos-panel {
   /* 앱바 아래 남은 세로 공간의 한가운데에 놓는다(위아래 auto 여백).
    * 지도 옆에 붙는 패널이 위쪽에만 붙어 있으면 지도와 눈높이가 어긋난다. */
   position: fixed;
@@ -5163,7 +5163,7 @@ button {
   cursor: pointer;
 }
 
-.waymeld-root.mobile-layout .map-type-toggle {
+.wayknit-root.mobile-layout .map-type-toggle {
   /* 모바일 상단 바(검색·자료·더보기 + 날짜 탭) 아래로 — 더보기 버튼을 가려 탭을 가로채던 문제 수정 */
   top: 108px;
   right: 16px;
@@ -5381,11 +5381,11 @@ button {
     right: var(--mobile-gutter);
   }
 
-  .waymeld-root.panel-open .overlay-top-right {
+  .wayknit-root.panel-open .overlay-top-right {
     right: var(--mobile-gutter);
   }
 
-  .waymeld-root.presentation-mode.panel-open .overlay-map-header {
+  .wayknit-root.presentation-mode.panel-open .overlay-map-header {
     right: var(--mobile-gutter);
   }
 }
@@ -5481,48 +5481,48 @@ button {
   }
 
   /* --- 검색 확장 (목업 2) --- */
-  .waymeld-root.search-expanded .overlay-left {
+  .wayknit-root.search-expanded .overlay-left {
     max-height: var(--mobile-search-height-expanded);
   }
 
-  .waymeld-root.search-expanded .overlay-map-header {
+  .wayknit-root.search-expanded .overlay-map-header {
     max-height: var(--mobile-pinup-dock-compact);
   }
 
-  .waymeld-root.search-expanded .pinup-groups {
+  .wayknit-root.search-expanded .pinup-groups {
     max-height: min(100px, 14vh);
   }
 
-  .waymeld-root.search-expanded .overlay-map-tools {
+  .wayknit-root.search-expanded .overlay-map-tools {
     bottom: calc(var(--mobile-pinup-dock-compact) + var(--mobile-gutter) + 12px);
   }
 
-  .waymeld-root.search-expanded .overlay-bottom-left {
+  .wayknit-root.search-expanded .overlay-bottom-left {
     bottom: calc(var(--mobile-pinup-dock-compact) + var(--mobile-gutter) + 8px);
   }
 
   /* --- 프레젠테이션 모바일 (목업 3) --- */
-  .waymeld-root.presentation-mode .overlay-map-header {
+  .wayknit-root.presentation-mode .overlay-map-header {
     top: calc(var(--mobile-gutter) + env(safe-area-inset-top, 0px));
     bottom: auto;
     max-height: var(--mobile-pr-pinup-max);
     overflow-y: auto;
   }
 
-  .waymeld-root.presentation-mode .overlay-map-tools {
+  .wayknit-root.presentation-mode .overlay-map-tools {
     bottom: var(--mobile-gutter);
     left: var(--mobile-gutter);
   }
 
-  .waymeld-root.presentation-mode .pinup-groups {
+  .wayknit-root.presentation-mode .pinup-groups {
     max-height: min(200px, 28vh);
   }
 
-  .waymeld-root.presentation-mode .pinup-bar.presentation-active {
+  .wayknit-root.presentation-mode .pinup-bar.presentation-active {
     padding: 14px 16px;
   }
 
-  .waymeld-root.presentation-mode .pinup-bar.presentation-active .pinup-title {
+  .wayknit-root.presentation-mode .pinup-bar.presentation-active .pinup-title {
     font-size: 15px;
   }
 
@@ -5772,36 +5772,36 @@ button {
   opacity: 0.55;
 }
 
-.waymeld-root.panel-open .overlay-top-right {
+.wayknit-root.panel-open .overlay-top-right {
   right: 372px;
   transition: right 0.25s ease-out;
 }
 
 /* 프레젠테이션 모드 — 핀업 카드 상단 전폭 + 지도 유지, 검색·TripBar 등 다른 UI 카드만 숨김 */
-.waymeld-root.presentation-mode {
+.wayknit-root.presentation-mode {
   background: var(--color-map);
 }
 
-.waymeld-root.presentation-mode .overlay-left,
-.waymeld-root.presentation-mode .trip-day-card,
-.waymeld-root.presentation-mode .overlay-map-header-trip,
-.waymeld-root.presentation-mode .overlay-top-right {
+.wayknit-root.presentation-mode .overlay-left,
+.wayknit-root.presentation-mode .trip-day-card,
+.wayknit-root.presentation-mode .overlay-map-header-trip,
+.wayknit-root.presentation-mode .overlay-top-right {
   display: none !important;
 }
 
-.waymeld-root.presentation-mode .overlay-map-header {
+.wayknit-root.presentation-mode .overlay-map-header {
   left: 16px;
   right: 16px;
   top: 16px;
   bottom: auto;
 }
 
-.waymeld-root.presentation-mode.panel-open .overlay-map-header {
+.wayknit-root.presentation-mode.panel-open .overlay-map-header {
   right: 372px;
 }
 
-.waymeld-root.presentation-mode .overlay-map-pinup,
-.waymeld-root.presentation-mode .pinup-bar {
+.wayknit-root.presentation-mode .overlay-map-pinup,
+.wayknit-root.presentation-mode .pinup-bar {
   width: 100%;
   max-width: none;
 }
@@ -6305,15 +6305,15 @@ button {
    ============================================= */
 
 @media (max-width: 768px) {
-  .waymeld-root.mobile-layout .desktop-only-overlay {
+  .wayknit-root.mobile-layout .desktop-only-overlay {
     display: none !important;
   }
 
-  .waymeld-root.mobile-layout .map-canvas {
+  .wayknit-root.mobile-layout .map-canvas {
     inset: 0;
   }
 
-  .waymeld-root.mobile-layout.mobile-sheet-open .map-canvas::after {
+  .wayknit-root.mobile-layout.mobile-sheet-open .map-canvas::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -6322,24 +6322,24 @@ button {
     z-index: 14;
   }
 
-  .waymeld-root.mobile-layout .overlay-top-right {
+  .wayknit-root.mobile-layout .overlay-top-right {
     display: none;
   }
 
-  .waymeld-root.mobile-layout .auth-bar {
+  .wayknit-root.mobile-layout .auth-bar {
     padding: 6px 10px;
     font-size: 11px;
     max-width: 140px;
   }
 
-  .waymeld-root.mobile-layout .auth-bar .auth-email {
+  .wayknit-root.mobile-layout .auth-bar .auth-email {
     max-width: 72px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .waymeld-root.mobile-layout .overlay-bottom-left {
+  .wayknit-root.mobile-layout .overlay-bottom-left {
     bottom: calc(88px + env(safe-area-inset-bottom, 0px));
     left: var(--mobile-gutter);
     right: var(--mobile-gutter);
@@ -6348,18 +6348,18 @@ button {
     z-index: 15;
   }
 
-  .waymeld-root.mobile-layout.mobile-sheet-open .overlay-bottom-left {
+  .wayknit-root.mobile-layout.mobile-sheet-open .overlay-bottom-left {
     display: none;
   }
 
-  .waymeld-root.mobile-layout.mobile-sheet-open .mobile-top-bar {
+  .wayknit-root.mobile-layout.mobile-sheet-open .mobile-top-bar {
     opacity: 0;
     pointer-events: none;
     transform: translateY(-8px);
     transition: opacity 0.15s ease, transform 0.15s ease;
   }
 
-  .waymeld-root.mobile-layout.panel-open .mobile-dock {
+  .wayknit-root.mobile-layout.panel-open .mobile-dock {
     opacity: 0;
     pointer-events: none;
     transform: translateY(16px);
@@ -7484,7 +7484,7 @@ button {
   box-shadow: var(--shadow-float);
 }
 
-.waymeld-root.mobile-layout .trip-readonly-banner {
+.wayknit-root.mobile-layout .trip-readonly-banner {
   top: 16px;
 }
 
@@ -9054,7 +9054,7 @@ button {
     max-height: 40dvh;
     overflow: hidden;
   }
-  .waymeld-root.mobile-layout.mobile-sheet-open .overlay-bottom-left {
+  .wayknit-root.mobile-layout.mobile-sheet-open .overlay-bottom-left {
     display: none;
   }
 }
@@ -11480,15 +11480,15 @@ button {
   }
 }
 
-.waymeld-root.panel-collapsed .planner-side-panel {
+.wayknit-root.panel-collapsed .planner-side-panel {
   display: none;
 }
 
-.waymeld-root.presentation-mode .planner-app-bar,
-.waymeld-root.presentation-mode .planner-side-panel,
-.waymeld-root.presentation-mode .planner-icon-rail,
-.waymeld-root.presentation-mode .route-timeline-dock,
-.waymeld-root.presentation-mode .overlay-map-tools {
+.wayknit-root.presentation-mode .planner-app-bar,
+.wayknit-root.presentation-mode .planner-side-panel,
+.wayknit-root.presentation-mode .planner-icon-rail,
+.wayknit-root.presentation-mode .route-timeline-dock,
+.wayknit-root.presentation-mode .overlay-map-tools {
   display: none !important;
 }
 
@@ -12179,7 +12179,7 @@ button {
   box-shadow: 0 8px 28px rgba(15, 23, 42, 0.3);
 }
 
-.waymeld-root.presentation-mode .overview-chrome {
+.wayknit-root.presentation-mode .overview-chrome {
   display: flex;
 }
 
@@ -12223,7 +12223,7 @@ button {
   box-shadow: var(--shadow-panel);
 }
 
-.waymeld-root.presentation-mode .overview-legend {
+.wayknit-root.presentation-mode .overview-legend {
   display: flex;
 }
 
@@ -12253,12 +12253,12 @@ button {
   gap: 8px;
 }
 
-.waymeld-root.mobile-layout .mobile-planner-top {
+.wayknit-root.mobile-layout .mobile-planner-top {
   display: flex;
 }
 
-.waymeld-root.mobile-layout .mobile-top-bar,
-.waymeld-root.mobile-layout .mobile-dock {
+.wayknit-root.mobile-layout .mobile-top-bar,
+.wayknit-root.mobile-layout .mobile-dock {
   display: none !important;
 }
 
@@ -12336,7 +12336,7 @@ button {
   overflow: hidden;
 }
 
-.waymeld-root.mobile-layout:not(.presentation-mode) .mobile-planner-sheet {
+.wayknit-root.mobile-layout:not(.presentation-mode) .mobile-planner-sheet {
   display: flex;
 }
 
@@ -12518,11 +12518,11 @@ button {
   flex-direction: column;
 }
 
-.waymeld-root.mobile-layout.mobile-search-open .mobile-search-overlay {
+.wayknit-root.mobile-layout.mobile-search-open .mobile-search-overlay {
   display: flex;
 }
 
-.waymeld-root.mobile-layout.mobile-search-open .mobile-planner-sheet {
+.wayknit-root.mobile-layout.mobile-search-open .mobile-planner-sheet {
   display: none;
 }
 

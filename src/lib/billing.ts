@@ -30,9 +30,9 @@ export async function startPlusSubscription(userId: string): Promise<BillingResu
     channelKey: getPortOneChannelKey(),
     billingKeyMethod: 'CARD',
     issueId: `plus-${userId}-${Date.now()}`,
-    issueName: 'WayMeld Plus 구독',
+    issueName: 'Wayknit Plus 구독',
     customer: { customerId: userId },
-    orderName: 'WayMeld Plus (월간)',
+    orderName: 'Wayknit Plus (월간)',
     amount: { total: PLUS_MONTHLY_PRICE_KRW },
     currency: 'KRW',
   });

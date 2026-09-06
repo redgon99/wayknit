@@ -18,13 +18,13 @@ import {
   UsageBar,
 } from 'cursor/canvas';
 
-export default function MyRealTripVsWaymeld() {
+export default function MyRealTripVsWayknit() {
   return (
     <Stack gap={22}>
       <Stack gap={6}>
         <H1>여로담 vs 마이리얼트립</H1>
         <Text tone="secondary">
-          공개 사이트·보도자료와 여로담(WayMeld) 현재 제품 범위 기준. 직접 경쟁사가
+          공개 사이트·보도자료와 여로담(Wayknit) 현재 제품 범위 기준. 직접 경쟁사가
           아니라 여행 가치사슬의 다른 칸을 차지한다.
         </Text>
         <Row gap={8} wrap>

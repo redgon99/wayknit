@@ -1,5 +1,5 @@
 // =============================================
-// WayMeld 공통 타입 정의
+// Wayknit 공통 타입 정의
 // =============================================
 
 import type { VisitHoursStatus } from '../lib/openingHours';

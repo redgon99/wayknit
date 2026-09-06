@@ -18,7 +18,7 @@ export interface PresenceViewer extends PresenceIdentity {
   isSelf: boolean;
 }
 
-const GUEST_ID_KEY = 'waymeld:presence-guest-id';
+const GUEST_ID_KEY = 'wayknit:presence-guest-id';
 
 const COLORS = [
   '#2563eb',

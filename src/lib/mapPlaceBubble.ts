@@ -1,5 +1,5 @@
 import type { Place } from '../types';
-import { iconSvgMarkup } from '../icons/waymeld-icons';
+import { iconSvgMarkup } from '../icons/wayknit-icons';
 import i18n from './i18n';
 import { getCategoryMeta } from './categories';
 import { getPlaceEmoji } from './categoryEmoji';

@@ -75,7 +75,7 @@ async function buildDrafts(
     .map((t) => `- platform="${t.platform}" country="${t.country}" (${countryToLocale(t.country)}) — 규칙: ${PLATFORM_SPEC[t.platform]}`)
     .join('\n');
 
-  const prompt = `당신은 여로담(WayMeld, 한국여행 플래너 앱)의 소셜미디어 콘텐츠 에디터입니다.
+  const prompt = `당신은 여로담(Wayknit, 한국여행 플래너 앱)의 소셜미디어 콘텐츠 에디터입니다.
 아래 여행 가이드 콘텐츠를 소스로 삼아, 지정된 각 (플랫폼, 국가) 조합마다 게시글 초안을 하나씩 작성하세요.
 
 규칙:

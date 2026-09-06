@@ -161,7 +161,7 @@ export default function AdminAuditPage() {
         { header: '이전', value: (r) => (r.before ? JSON.stringify(r.before) : '') },
         { header: '이후', value: (r) => (r.after ? JSON.stringify(r.after) : '') },
       ]);
-      downloadCsv(csvFilename('waymeld_감사로그'), csv);
+      downloadCsv(csvFilename('wayknit_감사로그'), csv);
     } catch (e) {
       setError(e instanceof Error ? e.message : '내보내기 실패');
     } finally {

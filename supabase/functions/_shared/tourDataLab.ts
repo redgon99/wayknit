@@ -22,7 +22,7 @@ const OP_BY_LEVEL: Record<DataLabLevel, string> = {
 export function buildDataLabUrl(level: DataLabLevel, serviceKey: string, ymd: string): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     numOfRows: level === 'metco' ? '100' : '1000',
     pageNo: '1',

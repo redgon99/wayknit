@@ -9,7 +9,7 @@
  * DOM을 직접 다루는 이유: 출발점이 지도 SDK가 그리는 오버레이(React 밖)라
  * 컴포넌트 트리로 좌표를 넘기기 어렵고, 연출용 요소가 리렌더에 얽힐 이유도 없다.
  */
-import { iconSvgMarkup, type IconName } from '../icons/waymeld-icons';
+import { iconSvgMarkup, type IconName } from '../icons/wayknit-icons';
 
 const FLIGHT_MS = 620;
 const TAB_POP_MS = 420;

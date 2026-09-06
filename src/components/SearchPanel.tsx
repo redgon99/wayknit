@@ -39,7 +39,7 @@ import { PlaceReactionBadge } from './PlaceReactionBadge';
 import { MapProviderPicker } from './MapProviderPicker';
 import { LinkExtractResults } from './LinkExtractResults';
 import type { MapProvider } from '../lib/mapProvider';
-import type { IconName } from '../icons/waymeld-icons';
+import type { IconName } from '../icons/wayknit-icons';
 
 /** 검색 결과 정렬 — 거리·별점 */
 const SEARCH_SORT_KEYS = ['distance', 'rating'] as const satisfies readonly SortKey[];

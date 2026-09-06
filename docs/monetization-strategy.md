@@ -1,4 +1,4 @@
-# WayMeld (여로담) 수익화 전략 분석
+# Wayknit (여로담) 수익화 전략 분석
 
 > 작성 기준: 2026-05-29  
 > 출처: 다국어(i18n) 및 수익화 방향 계획, 코드베이스 구현 상태  
@@ -16,7 +16,7 @@
 
 ## 2. 제품 포지션과 수익의 관계
 
-| WayMeld 포지션 | 수익에 주는 의미 |
+| Wayknit 포지션 | 수익에 주는 의미 |
 |------------------|------------------|
 | 예약·결제 앱이 아님 (동선·일정 도구) | OTA·트리플과 **예약 수수료 경쟁 회피** |
 | 검색 → 핀업 → 시간표 동선 → 공유 | **「진지하게 코스 짜는 사람」**이 Plus 전환 후보 |
@@ -50,7 +50,7 @@ flowchart TB
 
 - 「서울 1일 / 제주 2일」 템플릿을 en / ja / zh로 제공
 - 공유마당(`SharePlazaPage`)에 **locale 태그** + 필터 → 해외 사용자 유입
-- DB: `waymeld_waymeld_trips.plaza_locale` (마이그레이션 반영됨)
+- DB: `wayknit_wayknit_trips.plaza_locale` (마이그레이션 반영됨)
 
 ### 4.2 API 비용 전가 (Plus)
 
@@ -60,7 +60,7 @@ flowchart TB
 ### 4.3 공유 링크 프리미엄
 
 - `/trip/:slug` + 방문자 UI 언어 자동 (`?lang=` / locale 라우트)
-- Plus(향후): 커스텀 제목·커버·「WayMeld 제거」(에이전시 니즈)
+- Plus(향후): 커스텀 제목·커버·「Wayknit 제거」(에이전시 니즈)
 
 ### 4.4 B2B 라이선스 (Team)
 
@@ -101,7 +101,7 @@ flowchart TB
 
 ## 7. 경쟁 대비 수익 포지션 (요약)
 
-| 경쟁사 | 수익 모델 | WayMeld 차별 |
+| 경쟁사 | 수익 모델 | Wayknit 차별 |
 |--------|-----------|----------------|
 | **Wayby** | (앱 내 구독·광고 추정) | 웹·로컬 즉시 시작, **다국어 export** |
 | **Triple** | 예약·커머스 | 동선 도구만 — **예약과 분리** |
@@ -152,7 +152,7 @@ flowchart TB
 
 - `public.profiles`: `plan`, `subscription_status`, `subscription_expires_at`
 - 신규 가입 시 `plan = 'free'` 트리거
-- `waymeld_waymeld_trips.plaza_locale`: 공유마당 언어 메타
+- `wayknit_wayknit_trips.plaza_locale`: 공유마당 언어 메타
 
 ### 9.4 아직 미완 / 보완 필요
 

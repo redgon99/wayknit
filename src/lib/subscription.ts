@@ -2,11 +2,11 @@ export type PlanId = 'free' | 'plus' | 'team';
 
 export const FREE_MAX_TRIPS = 3;
 export const FREE_DAILY_GOOGLE_SEARCHES = 40;
-/** Plus 월 구독료(원) — docs/Waymeld_수익화_실행계획_2026-08-27.md §0 */
+/** Plus 월 구독료(원) — docs/Wayknit_수익화_실행계획_2026-08-27.md §0 */
 export const PLUS_MONTHLY_PRICE_KRW = 4900;
 
-const SEARCH_COUNT_KEY = 'waymeld:google-search-count';
-const SEARCH_COUNT_DATE_KEY = 'waymeld:google-search-date';
+const SEARCH_COUNT_KEY = 'wayknit:google-search-count';
+const SEARCH_COUNT_DATE_KEY = 'wayknit:google-search-date';
 
 export function isPlusOrTeam(plan: PlanId): boolean {
   return plan === 'plus' || plan === 'team';

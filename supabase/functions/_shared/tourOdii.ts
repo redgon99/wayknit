@@ -19,7 +19,7 @@ export function buildOdiiSitesUrl(
 ): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     langCode: 'ko',
     numOfRows: String(options.numOfRows ?? 24),
@@ -36,7 +36,7 @@ export function buildOdiiSitesUrl(
 export function buildOdiiStoriesUrl(serviceKey: string, tid: string, tlid: string): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     langCode: 'ko',
     numOfRows: '50',
