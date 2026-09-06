@@ -340,7 +340,7 @@ async function readRemoteById(userId: string, tripId: string): Promise<Trip | nu
 
   const { data, error } = await scoped.maybeSingle();
   if (error || !data) return null;
-  return rowToTrip(data, roles.get(tripId));
+  return attachPins(rowToTrip(data, roles.get(tripId)));
 }
 
 async function readRemoteLatest(userId: string): Promise<Trip | null> {
@@ -362,7 +362,7 @@ async function readRemoteLatest(userId: string): Promise<Trip | null> {
     .limit(1)
     .maybeSingle();
   if (error || !data) return null;
-  return rowToTrip(data, roles.get(data.id));
+  return attachPins(rowToTrip(data, roles.get(data.id)));
 }
 
 async function readBySlugRemote(slug: string): Promise<Trip | null> {
@@ -375,15 +375,195 @@ async function readBySlugRemote(slug: string): Promise<Trip | null> {
     .eq('is_public', true)
     .maybeSingle();
   if (error || !data) return null;
-  return rowToTrip(data);
+  return attachPins(rowToTrip(data));
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+ * 핀 행(trip_pins) — 공동편집 1단계
+ *
+ * 핀은 더 이상 payload에 저장하지 않는다. payload 통짜 upsert는 두 사람이
+ * 같은 여행을 편집할 때 나중에 저장한 쪽이 상대 핀을 덮어써서 지웠다.
+ * 핀 1개 = 행 1개로 쪼개고, 저장할 때 "이 클라이언트가 마지막으로 동기화한
+ * 상태"와의 차이만 행 단위로 반영한다. 내가 모르는 상대 핀은 손대지 않으므로
+ * 서로의 편집이 살아남는다.
+ *
+ * 기존 payload.pinnedByDay는 이전 시점 그대로 남겨뒀다(롤백용 백업).
+ * 읽기는 trip_pins만 본다 — payload로 폴백하면 사용자가 핀을 전부 지웠을 때
+ * 옛 백업이 되살아난다.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+interface TripPinRow {
+  day: number;
+  place_id: string;
+  position: number;
+  data: PinnedPlace;
+}
+
+/**
+ * 이 클라이언트가 마지막으로 원격과 맞춘 핀 상태. 저장 시 diff의 기준점이다.
+ * 원격 DB의 현재 상태와 비교하면 안 된다 — 상대가 방금 추가한 핀이
+ * "내가 지운 것"으로 보여 그대로 삭제된다.
+ */
+const pinBaselines = new Map<string, Record<number, PinnedPlace[]>>();
+
+/** 키 순서에 흔들리지 않는 비교용 직렬화 */
+function canonicalPin(pin: PinnedPlace): string {
+  return JSON.stringify(
+    Object.keys(pin)
+      .sort()
+      .map((k) => [k, (pin as unknown as Record<string, unknown>)[k]])
+  );
+}
+
+function clonePinnedByDay(src: Record<number, PinnedPlace[]>): Record<number, PinnedPlace[]> {
+  const out: Record<number, PinnedPlace[]> = {};
+  for (const [day, list] of Object.entries(src)) out[Number(day)] = [...(list ?? [])];
+  return out;
+}
+
+async function readPinsRemote(tripId: string): Promise<Record<number, PinnedPlace[]> | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from('trip_pins')
+    .select('day, place_id, position, data')
+    .eq('trip_id', tripId)
+    .order('day', { ascending: true })
+    .order('position', { ascending: true })
+    // position은 클라이언트가 자기 관점으로 매기므로 동시 편집 중엔 겹치거나
+    // 틈이 생긴다. 겹쳤을 때 정렬이 클라이언트마다 달라지지 않도록 2차 기준을 둔다.
+    .order('created_at', { ascending: true });
+  if (error) {
+    console.warn('핀 조회 실패 — payload 값으로 진행한다', error);
+    return null;
+  }
+  const byDay: Record<number, PinnedPlace[]> = {};
+  for (const row of (data ?? []) as TripPinRow[]) {
+    (byDay[row.day] ??= []).push({ ...row.data, id: row.place_id, day: row.day });
+  }
+  // order 필드는 화면이 쓰는 표시용 번호 — 행 순서대로 다시 매긴다.
+  for (const list of Object.values(byDay)) list.forEach((p, i) => (p.order = i + 1));
+  return byDay;
+}
+
+/** 여러 여행의 핀을 한 번에 읽는다 (목록 화면의 N+1 방지). */
+async function readPinsForTrips(
+  tripIds: string[]
+): Promise<Map<string, Record<number, PinnedPlace[]>>> {
+  const out = new Map<string, Record<number, PinnedPlace[]>>();
+  const sb = getSupabase();
+  if (!sb || tripIds.length === 0) return out;
+  const { data, error } = await sb
+    .from('trip_pins')
+    .select('trip_id, day, place_id, position, data')
+    .in('trip_id', tripIds)
+    .order('day', { ascending: true })
+    .order('position', { ascending: true })
+    .order('created_at', { ascending: true });
+  if (error) {
+    console.warn('핀 목록 조회 실패', error);
+    return out;
+  }
+  for (const row of (data ?? []) as Array<TripPinRow & { trip_id: string }>) {
+    const byDay = out.get(row.trip_id) ?? {};
+    (byDay[row.day] ??= []).push({ ...row.data, id: row.place_id, day: row.day });
+    out.set(row.trip_id, byDay);
+  }
+  for (const byDay of out.values()) {
+    for (const list of Object.values(byDay)) list.forEach((p, i) => (p.order = i + 1));
+  }
+  return out;
+}
+
+/** 여행 한 건에 핀 행을 붙이고, 이후 저장 diff의 기준점을 기록한다. */
+async function attachPins(trip: Trip): Promise<Trip> {
+  const pins = await readPinsRemote(trip.id);
+  const pinnedByDay = pins ?? trip.pinnedByDay;
+  pinBaselines.set(trip.id, clonePinnedByDay(pinnedByDay));
+  return { ...trip, pinnedByDay };
+}
+
+/**
+ * 기준점 대비 바뀐 핀만 행 단위로 반영한다.
+ * 상대가 그 사이에 넣은 핀은 diff에 안 잡히므로 건드리지 않는다.
+ */
+async function syncPins(trip: Trip, userId: string | null): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  const baseline = pinBaselines.get(trip.id) ?? {};
+  const next = trip.pinnedByDay ?? {};
+  const days = new Set<number>([...Object.keys(baseline), ...Object.keys(next)].map(Number));
+
+  const upserts: Array<Record<string, unknown>> = [];
+  const deletions: Array<{ day: number; placeId: string }> = [];
+
+  for (const day of days) {
+    const beforeList = baseline[day] ?? [];
+    const afterList = next[day] ?? [];
+    const before = new Map(beforeList.map((p) => [p.id, p]));
+    const after = new Map(afterList.map((p) => [p.id, p]));
+
+    afterList.forEach((pin, idx) => {
+      const prev = before.get(pin.id);
+      const position = idx + 1;
+      // 순서가 그대로이고 내용도 같으면 보내지 않는다 — 상대와의 충돌 면적을 줄인다.
+      if (prev && canonicalPin(prev) === canonicalPin(pin) && beforeList.indexOf(prev) + 1 === position) {
+        return;
+      }
+      upserts.push({
+        trip_id: trip.id,
+        day,
+        place_id: pin.id,
+        position,
+        data: pin,
+        ...(prev ? {} : { created_by: userId }),
+        updated_by: userId,
+      });
+    });
+
+    for (const id of before.keys()) {
+      if (!after.has(id)) deletions.push({ day, placeId: id });
+    }
+  }
+
+  if (upserts.length > 0) {
+    const { error } = await sb
+      .from('trip_pins')
+      .upsert(upserts, { onConflict: 'trip_id,day,place_id' });
+    if (error) throw error;
+  }
+  for (const [day, ids] of groupDeletionsByDay(deletions)) {
+    const { error } = await sb
+      .from('trip_pins')
+      .delete()
+      .eq('trip_id', trip.id)
+      .eq('day', day)
+      .in('place_id', ids);
+    if (error) throw error;
+  }
+
+  pinBaselines.set(trip.id, clonePinnedByDay(next));
+}
+
+function groupDeletionsByDay(
+  deletions: Array<{ day: number; placeId: string }>
+): Map<number, string[]> {
+  const out = new Map<number, string[]>();
+  for (const d of deletions) {
+    const list = out.get(d.day);
+    if (list) list.push(d.placeId);
+    else out.set(d.day, [d.placeId]);
+  }
+  return out;
 }
 
 async function writeRemote(trip: Trip): Promise<void> {
   const sb = getSupabase();
   if (!sb || !trip.ownerId) return;
   const normalized = normalizeTrip(trip);
+  // pinnedByDay는 일부러 빠져 있다 — 핀은 trip_pins 행이 유일한 진실이다.
+  // 기존 payload.pinnedByDay는 이전 시점 값 그대로 남아 롤백 백업 역할만 한다.
   const payload = {
-    pinnedByDay: normalized.pinnedByDay,
     routeOptionsByDay: normalized.routeOptionsByDay,
     routeOptions: normalized.routeOptionsByDay[normalized.currentDay] ?? DEFAULT_ROUTE_OPTIONS,
     generatedRouteByDay: normalized.generatedRouteByDay,
@@ -413,6 +593,9 @@ async function writeRemote(trip: Trip): Promise<void> {
     { onConflict: 'id' }
   );
   if (error) throw error;
+
+  // 여행 행이 확실히 존재한 뒤에 핀을 쓴다 — trip_pins.trip_id가 FK다.
+  await syncPins(normalized, trip.ownerId ?? null);
 }
 
 // =============================================
@@ -579,7 +762,19 @@ async function listPlazaRemote(localeFilter?: string | null): Promise<PlazaListi
   }
   const { data, error } = await query.order('plaza_listed_at', { ascending: false });
   if (error || !data) return [];
-  return data.map((row) => rowToPlazaListing(row));
+  const listings = data.map((row) => rowToPlazaListing(row));
+  // 핀은 payload가 아니라 trip_pins가 진실이다. 목록이므로 건별 조회(N+1) 대신
+  // 한 번에 받아 붙인다.
+  const pinsByTrip = await readPinsForTrips(listings.map((l) => l.id));
+  return listings.map((l) => {
+    const pinnedByDay = pinsByTrip.get(l.id);
+    if (!pinnedByDay) return l;
+    return {
+      ...l,
+      pinnedByDay,
+      pinSummary: buildPlazaPinSummary(pinnedByDay, l.totalDays),
+    };
+  });
 }
 
 function listPlazaLocal(): PlazaListing[] {
