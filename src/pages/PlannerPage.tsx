@@ -69,6 +69,7 @@ import {
   createSlug,
   createTripId,
   applyPlazaPublish,
+  subscribeTripPins,
   type Trip,
   type TripSummary,
 } from '../lib/trips';
@@ -622,6 +623,24 @@ export default function PlannerPage() {
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
     };
   }, [trip, user?.id, hydrated, refreshTripList]);
+
+  // ============== 협업자 변경 실시간 반영 ==============
+  // 화면 상태를 ref로 넘긴다 — 구독을 매 렌더 다시 걸지 않으면서도
+  // 병합 시점에는 항상 최신 핀 목록을 봐야 한다.
+  const pinnedRef = useRef(trip.pinnedByDay);
+  pinnedRef.current = trip.pinnedByDay;
+  useEffect(() => {
+    if (!hydrated || !trip.id || !trip.ownerId) return;
+    return subscribeTripPins(
+      trip.id,
+      () => pinnedRef.current,
+      (merged) => {
+        // 병합 결과만 갈아끼운다. updatedAt은 건드리지 않는다 —
+        // 여기서 갱신하면 자동저장 이펙트가 깨어나 저장 루프가 돈다.
+        setTrip((prev) => ({ ...prev, pinnedByDay: merged }));
+      }
+    );
+  }, [trip.id, trip.ownerId, hydrated]);
 
   // ============== Trip 업데이트 헬퍼 ==============
   function patchTrip(next: Partial<Trip>) {

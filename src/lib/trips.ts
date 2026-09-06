@@ -476,6 +476,149 @@ async function readPinsForTrips(
 }
 
 /** 여행 한 건에 핀 행을 붙이고, 이후 저장 diff의 기준점을 기록한다. */
+/* ── 2단계: 실시간 반영 ────────────────────────────────────────────────
+ *
+ * 원격 변경 알림이 오면 핀을 다시 읽어 화면에 반영한다. 그런데 그냥 덮어쓰면
+ * 아직 저장 전(700ms 디바운스 안)인 내 편집이 사라진다. 그래서 3-way 병합을 한다:
+ *
+ *   기준점(마지막 동기화) ── 내 미저장 편집 ──▶ 지금 화면
+ *          │
+ *          └── 상대 편집 ──▶ 방금 읽은 원격
+ *
+ *   병합 결과 = 원격 + (내 미저장 편집)
+ *
+ * 병합 뒤 기준점을 "방금 읽은 원격"으로 옮긴다. 그러면 다음 저장 때
+ * syncPins의 diff가 정확히 내 미저장 편집만 집어낸다.
+ * ─────────────────────────────────────────────────────────────────── */
+
+interface PendingPinEdits {
+  /** 내가 추가했거나 내용을 바꾼 핀 (일차별) */
+  upserts: Map<number, PinnedPlace[]>;
+  /** 내가 지운 핀 id (일차별) */
+  removals: Map<number, Set<string>>;
+}
+
+/** 기준점 대비 지금 화면에서 내가 한 편집 */
+function pendingPinEdits(
+  baseline: Record<number, PinnedPlace[]>,
+  local: Record<number, PinnedPlace[]>
+): PendingPinEdits {
+  const upserts = new Map<number, PinnedPlace[]>();
+  const removals = new Map<number, Set<string>>();
+  const days = new Set<number>([...Object.keys(baseline), ...Object.keys(local)].map(Number));
+  for (const day of days) {
+    const before = new Map((baseline[day] ?? []).map((p) => [p.id, p]));
+    const after = local[day] ?? [];
+    const added = after.filter((p) => {
+      const prev = before.get(p.id);
+      return !prev || canonicalPin(prev) !== canonicalPin(p);
+    });
+    if (added.length > 0) upserts.set(day, added);
+    const afterIds = new Set(after.map((p) => p.id));
+    const gone = [...before.keys()].filter((id) => !afterIds.has(id));
+    if (gone.length > 0) removals.set(day, new Set(gone));
+  }
+  return { upserts, removals };
+}
+
+/** 원격 상태 위에 내 미저장 편집을 다시 얹는다. */
+function applyPendingEdits(
+  remote: Record<number, PinnedPlace[]>,
+  pending: PendingPinEdits,
+  localOrder: Record<number, PinnedPlace[]>
+): Record<number, PinnedPlace[]> {
+  const out: Record<number, PinnedPlace[]> = {};
+  const days = new Set<number>([
+    ...Object.keys(remote),
+    ...pending.upserts.keys(),
+    ...pending.removals.keys(),
+  ].map(Number));
+
+  for (const day of days) {
+    const removed = pending.removals.get(day) ?? new Set<string>();
+    const byId = new Map<string, PinnedPlace>();
+    for (const pin of remote[day] ?? []) {
+      if (!removed.has(pin.id)) byId.set(pin.id, pin);
+    }
+    // 내 편집이 원격보다 우선한다 — 아직 저장 안 됐을 뿐 사용자가 방금 한 행동이다.
+    for (const pin of pending.upserts.get(day) ?? []) byId.set(pin.id, pin);
+
+    // 순서는 내 화면 순서를 기준으로 하고, 내가 모르던 상대 핀은 뒤에 붙인다.
+    const localIds = (localOrder[day] ?? []).map((p) => p.id);
+    const ordered: PinnedPlace[] = [];
+    for (const id of localIds) {
+      const pin = byId.get(id);
+      if (pin) { ordered.push(pin); byId.delete(id); }
+    }
+    for (const pin of byId.values()) ordered.push(pin);
+    out[day] = ordered.map((p, i) => ({ ...p, order: i + 1 }));
+  }
+  return out;
+}
+
+function samePinnedByDay(a: Record<number, PinnedPlace[]>, b: Record<number, PinnedPlace[]>): boolean {
+  const days = new Set<number>([...Object.keys(a), ...Object.keys(b)].map(Number));
+  for (const day of days) {
+    const la = a[day] ?? [], lb = b[day] ?? [];
+    if (la.length !== lb.length) return false;
+    for (let i = 0; i < la.length; i++) {
+      if (canonicalPin(la[i]) !== canonicalPin(lb[i])) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * 이 여행의 핀 변경을 실시간으로 받아 병합 결과를 돌려준다.
+ * `getLocal`은 항상 최신 화면 상태를 돌려줘야 한다(ref 등으로 넘길 것).
+ * 반환값은 구독 해제 함수.
+ */
+export function subscribeTripPins(
+  tripId: string,
+  getLocal: () => Record<number, PinnedPlace[]>,
+  onMerged: (next: Record<number, PinnedPlace[]>) => void
+): () => void {
+  const sb = getSupabase();
+  if (!sb || !tripId) return () => {};
+
+  let disposed = false;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const refresh = async () => {
+    if (disposed) return;
+    const remote = await readPinsRemote(tripId);
+    if (disposed || !remote) return;
+    const local = getLocal();
+    const pending = pendingPinEdits(pinBaselines.get(tripId) ?? {}, local);
+    const merged = applyPendingEdits(remote, pending, local);
+    // 기준점을 원격으로 옮긴다 — 다음 저장의 diff가 내 미저장 편집만 담게 된다.
+    pinBaselines.set(tripId, clonePinnedByDay(remote));
+    // 내 저장이 되돌아온 에코면 화면이 그대로다 — 불필요한 리렌더를 막는다.
+    if (!samePinnedByDay(merged, local)) onMerged(merged);
+  };
+
+  const schedule = () => {
+    if (timer) clearTimeout(timer);
+    // 한 번의 저장이 여러 행을 건드리면 이벤트도 여러 개 온다 — 몰아서 한 번만 읽는다.
+    timer = setTimeout(() => void refresh(), 350);
+  };
+
+  const channel = sb
+    .channel(`trip-pins:${tripId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'trip_pins', filter: `trip_id=eq.${tripId}` },
+      schedule
+    )
+    .subscribe();
+
+  return () => {
+    disposed = true;
+    if (timer) clearTimeout(timer);
+    void sb.removeChannel(channel);
+  };
+}
+
 async function attachPins(trip: Trip): Promise<Trip> {
   const pins = await readPinsRemote(trip.id);
   const pinnedByDay = pins ?? trip.pinnedByDay;
