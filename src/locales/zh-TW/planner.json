@@ -231,8 +231,6 @@
       },
       "reserved": "預約",
       "reservedHint": "已預約的行程時間不會變動，其他行程會避開這個時間安排。",
-      "date": "造訪日期",
-      "dateHint": "填入日期後可依星期核對營業時間",
       "hoursFilter": "需核對營業時間 {{n}}",
       "optimizeCarOnly": "僅在開車時套用",
       "compareLoading": "正在比較路線…",
@@ -245,8 +243,7 @@
     "hours": {
       "closed": "抵達時已過營業時間（{{opens}}~{{closes}}）",
       "before-open": "在開門前抵達（{{opens}} 開門）",
-      "closes-early": "停留期間 {{closes}} 就會打烊",
-      "offday": "當天公休"
+      "closes-early": "停留期間 {{closes}} 就會打烊"
     }
   },
   "dock": {

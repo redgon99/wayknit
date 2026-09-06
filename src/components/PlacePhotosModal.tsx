@@ -24,6 +24,9 @@ interface Props {
   place: Place | null;
   onClose: () => void;
   onShowTaxiCard?: (place: Place) => void;
+  /** 상세를 닫았다가 다시 목록에서 핀을 누르는 번거로움을 줄이기 위해 모달 안에서도 핀업한다 */
+  pinned?: boolean;
+  onTogglePin?: (place: Place) => void;
   /** 상세에서 읽어낸 영업시간 원문 — 핀에 저장해 일정 검증에 쓴다 */
   onHoursResolved?: (placeId: string, hours: PlaceHoursText) => void;
 }
@@ -39,6 +42,8 @@ export function PlacePhotosModal({
   onClose,
   onShowTaxiCard,
   onHoursResolved,
+  pinned = false,
+  onTogglePin,
 }: Props) {
   const { t } = useTranslation('planner');
   const [tabs, setTabs] = useState<PlacePanelTab[]>(DEFAULT_TABS);
@@ -179,6 +184,17 @@ export function PlacePhotosModal({
         <header className="photos-header place-detail-header">
           <span className="photos-title">{place.name}</span>
           <PlaceReactionBadge reaction={getPlaceReaction(place)} />
+          {onTogglePin && (
+            <button
+              type="button"
+              className={`place-detail-pin-btn ${pinned ? 'pinned' : ''}`}
+              onClick={() => onTogglePin(place)}
+              aria-label={pinned ? t('search.unpin') : t('search.pin')}
+              title={pinned ? t('search.unpin') : t('search.pin')}
+            >
+              <Icon name={pinned ? 'check' : 'pinPlus'} size={20} />
+            </button>
+          )}
           <button
             type="button"
             className="icon-btn"

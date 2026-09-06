@@ -22,7 +22,7 @@ export function MobileSearchSheet({ open, onClose, ...searchProps }: Props) {
         <span className="mobile-search-fullscreen-title">Search · 검색</span>
       </header>
       <div className="mobile-search-fullscreen-body">
-        <SearchPanel {...searchProps} variant="compact" />
+        <SearchPanel {...searchProps} variant="compact" autoSearch />
       </div>
     </div>
   );

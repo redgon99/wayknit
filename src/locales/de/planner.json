@@ -245,8 +245,6 @@
       },
       "reserved": "Reserviert",
       "reservedHint": "Eine Reservierung verschiebt sich nicht; der übrige Tag richtet sich danach.",
-      "date": "Besuchsdatum",
-      "dateHint": "Mit Datum werden die Öffnungszeiten je Wochentag geprüft",
       "hoursFilter": "Zeiten prüfen {{n}}",
       "optimizeCarOnly": "Gilt nur für Autofahrten",
       "compareLoading": "Routen werden verglichen…",
@@ -259,8 +257,7 @@
     "hours": {
       "closed": "Ankunft nach Ladenschluss ({{opens}}–{{closes}})",
       "before-open": "Ankunft vor der Öffnung (öffnet {{opens}})",
-      "closes-early": "Schließt während des Besuchs um {{closes}}",
-      "offday": "An diesem Tag geschlossen"
+      "closes-early": "Schließt während des Besuchs um {{closes}}"
     }
   },
   "dock": {

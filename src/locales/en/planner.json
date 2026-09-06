@@ -245,8 +245,6 @@
       },
       "reserved": "Reserved",
       "reservedHint": "A reservation never moves. The rest of the day is planned around it.",
-      "date": "Visit date",
-      "dateHint": "Add a date to check day-of-week opening hours",
       "hoursFilter": "Hours to check {{n}}",
       "optimizeCarOnly": "Applies to driving only",
       "compareLoading": "Comparing routes…",
@@ -259,8 +257,7 @@
     "hours": {
       "closed": "Arrives after closing time ({{opens}}–{{closes}})",
       "before-open": "Arrives before it opens (opens {{opens}})",
-      "closes-early": "Closes at {{closes}} during your stay",
-      "offday": "Closed on this day"
+      "closes-early": "Closes at {{closes}} during your stay"
     }
   },
   "dock": {

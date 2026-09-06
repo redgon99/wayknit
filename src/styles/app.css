@@ -5164,8 +5164,8 @@ button {
 }
 
 .waymeld-root.mobile-layout .map-type-toggle {
-  /* 모바일은 앱바가 따로 없이 지도가 화면 최상단부터 시작 */
-  top: 16px;
+  /* 모바일 상단 바(검색·자료·더보기 + 날짜 탭) 아래로 — 더보기 버튼을 가려 탭을 가로채던 문제 수정 */
+  top: 108px;
   right: 16px;
 }
 
@@ -10451,11 +10451,12 @@ button {
 
 .route-depart-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .route-depart-chip {
-  flex: 1;
+  flex: 1 1 128px;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -10472,7 +10473,10 @@ button {
 }
 
 .route-depart-chip.origin {
-  flex: 1.55;
+  /* 시간·날짜 칩은 한 줄에 나란히 두기 충분히 좁지만, 출발지는 뱃지+아이콘+주소
+     텍스트가 길어질 수 있어 한 줄을 다 쓰지 않으면 잘린다 — flex-basis: 100%로
+     항상 자기 줄을 차지하게 강제한다(flex-wrap과 조합하는 표준 줄바꿈 트릭). */
+  flex: 1 1 100%;
   border-width: 1.5px;
   border-color: rgba(15, 23, 42, 0.14);
   background: #fff;
@@ -10730,6 +10734,18 @@ button {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.route-stay-drag {
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: grab;
+  touch-action: none;
+}
+
+.route-stay-drag:active {
+  cursor: grabbing;
 }
 
 .route-stay-body {
@@ -13553,6 +13569,32 @@ button {
   vertical-align: middle;
 }
 
+/* 상세 모달 안에서 바로 핀업. 헤더가 space-between이라 margin-left:auto로
+   남는 공간을 밀어내 닫기 버튼 옆에 붙인다. */
+.place-detail-pin-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.place-detail-pin-btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-primary);
+}
+
+.place-detail-pin-btn.pinned {
+  color: var(--color-primary);
+}
+
 .theme-match-badge {
   display: inline-flex;
   align-items: center;
@@ -14477,5 +14519,75 @@ button {
   .admin-landing-preview-pane {
     position: static;
     order: -1;
+  }
+}
+
+/* =============================================
+   모바일 시트 · 터치 영역 확대
+   손가락 터치 최소 권장 크기(약 44px)에 한참 못 미치던 핀 카드 버튼들
+   (드래그 핸들 17px, 택시·삭제 22px, 필수방문 24px)을 넓힌다.
+   아이콘 크기는 그대로 두고 버튼 박스만 키워 겉모습 변화는 최소화한다.
+   모바일 시트 안에서만 적용 — 지도 위 오버레이 칩(.pin-chip 기본형)은
+   공간이 빠듯해 그대로 둔다.
+   ============================================= */
+
+.mobile-planner-sheet .pinup-bar-panel .pin-chip {
+  /* 버튼이 커진 만큼 세로 여백을 줄여 행 높이 증가를 최소화 */
+  padding: 6px 10px;
+  gap: 6px;
+}
+
+/* 배경이 투명한 버튼들 — 박스만 키우므로 눈에 보이는 변화가 거의 없다 */
+.mobile-planner-sheet .pin-chip .chip-taxi,
+.mobile-planner-sheet .pin-chip .chip-delete,
+.mobile-planner-sheet .pin-chip .chip-required {
+  /* 40px까지 키우면 이름 칸이 너무 좁아져 36px로 절충 (기존 22px) */
+  width: 36px;
+  height: 36px;
+}
+
+/* 순번 배지 겸 드래그 핸들. 원 자체가 보이는 요소라 40px까지는 키우지 않고
+   집기 편한 선까지만 넓힌다. */
+.mobile-planner-sheet .pin-chip .chip-order.chip-drag {
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+}
+
+/* 카테고리 필터 토글은 색 배지라 크기를 바꾸면 눈에 띄므로,
+   보이는 크기는 두고 히트 영역만 넓힌다. 오른쪽 이웃은 클릭 대상이 아닌
+   라벨 텍스트라 영역이 겹쳐도 문제되지 않는다. */
+.mobile-planner-sheet .group-icon-toggle {
+  position: relative;
+}
+
+.mobile-planner-sheet .group-icon-toggle::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+}
+
+/* 표로 보기 — 모바일에서는 화면을 최대한 쓰고 칸을 좁힌다.
+   더보기 메뉴에서 열 수 있게 되면서 좁은 화면에서도 읽혀야 한다. */
+@media (max-width: 768px) {
+  .itinerary-table-modal-backdrop {
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .itinerary-table-modal {
+    max-height: 94vh;
+  }
+
+  .itinerary-table-modal-header {
+    padding: 12px 12px 10px;
+  }
+
+  .itinerary-table {
+    font-size: 12.5px;
+  }
+
+  .itinerary-table th,
+  .itinerary-table td {
+    padding: 8px 7px;
   }
 }

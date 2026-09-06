@@ -231,8 +231,6 @@
       },
       "reserved": "予約",
       "reservedHint": "予約した予定は時刻が動きません。ほかの予定がこの時刻を避けて配置されます。",
-      "date": "訪問日",
-      "dateHint": "日付を入れると曜日別の営業時間まで確認します",
       "hoursFilter": "営業時間の確認 {{n}}",
       "optimizeCarOnly": "車のときのみ適用されます",
       "compareLoading": "ルート比較中…",
@@ -245,8 +243,7 @@
     "hours": {
       "closed": "到着時刻は営業終了後です（{{opens}}~{{closes}}）",
       "before-open": "開店前に到着します（{{opens}} 開店）",
-      "closes-early": "滞在中の {{closes}} に営業が終わります",
-      "offday": "この日は休みです"
+      "closes-early": "滞在中の {{closes}} に営業が終わります"
     }
   },
   "dock": {

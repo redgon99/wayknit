@@ -24,8 +24,6 @@ export interface NormalizedHours {
   /** 0=일 … 6=토, EVERY_DAY=요일 구분 없음 */
   byDay: Record<number, HoursInterval[]>;
   alwaysOpen: boolean;
-  /** 휴무 요일 (0=일 … 6=토) */
-  closedDays: number[];
   raw: string;
 }
 
@@ -34,8 +32,7 @@ export type VisitHoursStatus =
   | 'open'
   | 'closes-early'
   | 'before-open'
-  | 'closed'
-  | 'offday';
+  | 'closed';
 
 export interface VisitHoursCheck {
   status: VisitHoursStatus;
@@ -55,7 +52,6 @@ const WEEKDAY_EN = [
   'saturday',
 ];
 
-const CLOSED_RE = /(휴무|휴관|휴점|정기휴|closed|휴일)/i;
 const ALWAYS_RE = /(24\s*시간|24\s*hours|open\s*24|상시\s*개방|연중\s*24)/i;
 
 function normalizeText(text: string): string {
@@ -181,18 +177,20 @@ function pushInterval(byDay: Record<number, HoursInterval[]>, day: number, iv: H
 }
 
 /**
- * 영업시간 원문(+휴무일 원문)을 요일별 구간으로 정규화한다.
+ * 영업시간 원문을 요일별 구간으로 정규화한다.
  * 읽어낼 수 있는 정보가 하나도 없으면 null.
+ *
+ * 요일 지정 없이 "10:00~20:00"처럼 적힌 구간은 EVERY_DAY로, "월-금 10~20시"처럼
+ * 요일이 붙은 구간은 그 요일별로 저장해 둔다 — 다만 우리는 실제 방문 요일을
+ * 모르므로(§ checkVisitWindow) 판정에는 EVERY_DAY만 쓴다. 요일별 구간을
+ * EVERY_DAY로 합쳐버리면 실제로는 쉬는 요일에 "영업중"이라고 잘못 확신하게
+ * 되므로 그렇게 하지 않는다(모르면 unknown이 틀린 open보다 낫다).
  */
-export function parseOpeningHours(
-  hoursText?: string | null,
-  restDateText?: string | null,
-): NormalizedHours | null {
-  const raw = [hoursText, restDateText].filter(Boolean).join('\n');
+export function parseOpeningHours(hoursText?: string | null): NormalizedHours | null {
+  const raw = hoursText ?? '';
   if (!raw.trim()) return null;
 
   const byDay: Record<number, HoursInterval[]> = {};
-  const closedDays = new Set<number>();
   let alwaysOpen = false;
 
   const hoursLines = normalizeText(hoursText ?? '')
@@ -210,10 +208,7 @@ export function parseOpeningHours(
       continue;
     }
 
-    if (intervals.length === 0) {
-      if (CLOSED_RE.test(line) && days) days.forEach((d) => closedDays.add(d));
-      continue;
-    }
+    if (intervals.length === 0) continue;
 
     if (days) {
       for (const d of days) for (const iv of intervals) pushInterval(byDay, d, iv);
@@ -222,55 +217,21 @@ export function parseOpeningHours(
     }
   }
 
-  const restLines = normalizeText(restDateText ?? '')
-    .split(/\n|\r|,|·|\//)
-    .map((l) => l.trim())
-    .filter(Boolean);
-
-  for (const line of restLines) {
-    if (/연중\s*무휴/.test(line)) continue;
-    if (!CLOSED_RE.test(line) && !/매주|every/i.test(line)) continue;
-    const days = weekdaysFromLabel(line);
-    days?.forEach((d) => closedDays.add(d));
-  }
-
   const hasIntervals = Object.keys(byDay).length > 0;
-  if (!hasIntervals && !alwaysOpen && closedDays.size === 0) return null;
+  if (!hasIntervals && !alwaysOpen) return null;
 
-  return {
-    byDay,
-    alwaysOpen,
-    closedDays: [...closedDays].sort((a, b) => a - b),
-    raw,
-  };
+  return { byDay, alwaysOpen, raw };
 }
 
-function intervalsForDay(
-  hours: NormalizedHours,
-  weekday: number | null,
-): HoursInterval[] | null {
-  if (weekday !== null && hours.byDay[weekday]?.length) return hours.byDay[weekday];
-  if (hours.byDay[EVERY_DAY]?.length) return hours.byDay[EVERY_DAY];
-  // 요일별로만 적혀 있는데 그 요일 정보가 없으면 판단하지 않는다
-  return null;
-}
-
-/**
- * 예정 방문 시각에 문을 여는지 판정한다.
- * weekday가 null이면 요일 정보 없이 시간대만 본다.
- */
+/** 예정 방문 시각에 문을 여는지 판정한다(요일 구분 없는 시간대만 본다). */
 export function checkVisitWindow(
   hours: NormalizedHours,
-  weekday: number | null,
   arriveMinutes: number,
   leaveMinutes?: number,
 ): VisitHoursCheck {
   if (hours.alwaysOpen) return { status: 'open' };
-  if (weekday !== null && hours.closedDays.includes(weekday)) {
-    return { status: 'offday' };
-  }
 
-  const intervals = intervalsForDay(hours, weekday);
+  const intervals = hours.byDay[EVERY_DAY];
   if (!intervals || intervals.length === 0) return { status: 'unknown' };
 
   const sorted = [...intervals].sort((a, b) => a.start - b.start);
@@ -291,19 +252,7 @@ export function checkVisitWindow(
   return { status: 'closed', opensAt: last.start, closesAt: last.end };
 }
 
-/** "YYYY-MM-DD" → 요일 (0=일 … 6=토). 형식이 아니면 null */
-export function weekdayFromDate(date?: string | null): number | null {
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
-  const d = new Date(`${date}T00:00:00`);
-  return Number.isNaN(d.getTime()) ? null : d.getDay();
-}
-
 /** 일정에 문제가 되는 상태인지 (열려 있음·모름은 문제 아님) */
 export function isHoursProblem(status: VisitHoursStatus | undefined): boolean {
-  return (
-    status === 'closed' ||
-    status === 'offday' ||
-    status === 'before-open' ||
-    status === 'closes-early'
-  );
+  return status === 'closed' || status === 'before-open' || status === 'closes-early';
 }

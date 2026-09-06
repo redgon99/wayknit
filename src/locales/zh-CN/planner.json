@@ -231,8 +231,6 @@
       },
       "reserved": "预约",
       "reservedHint": "已预约的行程时间不会变动，其他行程会避开这个时间安排。",
-      "date": "到访日期",
-      "dateHint": "填入日期后可按星期核对营业时间",
       "hoursFilter": "需核对营业时间 {{n}}",
       "optimizeCarOnly": "仅在驾车时生效",
       "compareLoading": "正在比较路线…",
@@ -245,8 +243,7 @@
     "hours": {
       "closed": "到达时已过营业时间（{{opens}}~{{closes}}）",
       "before-open": "在开门前到达（{{opens}} 开门）",
-      "closes-early": "停留期间 {{closes}} 就会打烊",
-      "offday": "当天休息"
+      "closes-early": "停留期间 {{closes}} 就会打烊"
     }
   },
   "dock": {

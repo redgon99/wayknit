@@ -48,6 +48,14 @@ const SORT_ICONS: Record<(typeof SEARCH_SORT_KEYS)[number], IconName> = {
   rating: 'star',
 };
 
+/** 자동 검색: 입력이 멈춘 뒤 기다리는 시간.
+ *  한글은 한 글자를 조합하는 데도 시간이 걸려 짧게 잡으면 글자마다 검색이 나간다. */
+const AUTO_SEARCH_DELAY_MS = 1000;
+/** 한 글자만으로는 결과가 무의미해 두 글자부터 자동 검색한다("카페" 같은 두 글자 질의 고려). */
+const AUTO_SEARCH_MIN_LENGTH = 2;
+/** 끝이 낱자(ㄱ, ㅏ 같은 호환 자모)로 끝나면 아직 글자를 만드는 중이라 보고 검색하지 않는다. */
+const INCOMPLETE_JAMO_RE = /[\u3131-\u3163]$/;
+
 interface Props {
   results: Place[];
   pinnedIds: Set<string>;
@@ -91,6 +99,8 @@ interface Props {
   /** PWA 공유 시트에서 넘어온 링크 추출 결과 (없으면 평소대로 빈 상태) */
   initialExtract?: LinkPlacesExtractResult | null;
   variant?: 'default' | 'compact';
+  /** 입력을 잠깐 멈추면 자동으로 검색한다. 돋보기 버튼을 따로 누르기 번거로운 모바일에서만 켠다. */
+  autoSearch?: boolean;
 }
 
 /** 선택한 테마 중 이 장소의 카테고리와 일치하는 테마들 */
@@ -159,6 +169,7 @@ export function SearchPanel({
   preferences = [],
   initialExtract = null,
   variant = 'default',
+  autoSearch = false,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: tc } = useTranslation('common');
@@ -384,7 +395,36 @@ export function SearchPanel({
     onQueryChange(normalized);
   };
 
+  // 자동 검색이 이미 처리한 질의. 같은 말을 두 번 검색하지 않기 위한 표시이며,
+  // 첫 렌더의 질의(이전 검색어가 남아있는 경우)로 초기화해 열자마자 재검색하는 것을 막는다.
+  const autoSearchedRef = useRef<string | null>(query.trim() || null);
+  const onSearchRef = useRef(onSearch);
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  });
+
+  useEffect(() => {
+    if (!autoSearch) return;
+    // 앞선 검색이 아직 진행 중이면 기다렸다가(loading이 풀리면 이 effect가 다시 돈다) 보낸다.
+    if (loading) return;
+    // 링크 추출·SNS 모드는 버튼 동작이 검색이 아니고, 붙여넣은 장소 목록은
+    // handleSubmit에서 쉼표 분리를 거쳐야 하므로 자동 검색 대상에서 뺀다.
+    if (isExtractMode || isSnsMode) return;
+    const q = query.trim();
+    if (q.length < AUTO_SEARCH_MIN_LENGTH) return;
+    if (autoSearchedRef.current === q) return;
+    if (looksLikePastedPlaceList(q)) return;
+    // "강남ㅋ"처럼 마지막 글자를 조합하다 만 상태로는 검색하지 않는다.
+    if (INCOMPLETE_JAMO_RE.test(q)) return;
+    const timer = setTimeout(() => {
+      autoSearchedRef.current = q;
+      onSearchRef.current();
+    }, AUTO_SEARCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [autoSearch, query, loading, isExtractMode, isSnsMode]);
+
   const handleSubmit = () => {
+    autoSearchedRef.current = query.trim() || null;
     if (isExtractMode) {
       void handleLinkExtract();
       return;

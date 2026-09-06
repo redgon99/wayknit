@@ -245,8 +245,6 @@
       },
       "reserved": "Réservation",
       "reservedHint": "L'heure d'une réservation ne bouge pas ; le reste de la journée s'organise autour.",
-      "date": "Date de visite",
-      "dateHint": "Ajoutez la date pour vérifier les horaires selon le jour",
       "hoursFilter": "Horaires à vérifier {{n}}",
       "optimizeCarOnly": "Uniquement en voiture",
       "compareLoading": "Comparaison des itinéraires…",
@@ -259,8 +257,7 @@
     "hours": {
       "closed": "Arrivée après la fermeture ({{opens}}–{{closes}})",
       "before-open": "Arrivée avant l’ouverture (ouvre à {{opens}})",
-      "closes-early": "Ferme à {{closes}} pendant votre visite",
-      "offday": "Fermé ce jour-là"
+      "closes-early": "Ferme à {{closes}} pendant votre visite"
     }
   },
   "dock": {

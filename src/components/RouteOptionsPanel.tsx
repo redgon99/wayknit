@@ -25,6 +25,7 @@ import {
 } from '../lib/routeCompare';
 import { BookingLinkCards } from './BookingLinkCards';
 import { BookingSearchSuggestions } from './BookingSearchSuggestions';
+import { SortableContainer, SortableItem } from './Sortable';
 
 interface Props {
   open: boolean;
@@ -46,6 +47,8 @@ interface Props {
   onUpdateItemKind?: (placeId: string, kind: PinnedPlace['itemKind']) => void;
   /** 핀 메모 — 예약 링크를 붙여 넣으면 카드로 렌더링된다 */
   onUpdateNote?: (placeId: string, note: string) => void;
+  /** "핀 순서"(autoOrder=false) 모드에서 방문 순서를 드래그로 바꿀 때 호출 */
+  onReorderPins?: (next: PinnedPlace[]) => void;
   /** 좌측 탭 패널 안에 임베드 (고정 우측 슬라이드 비활성) */
   embedded?: boolean;
   /** 최적화 3종 비교 경로 — 지도에 겹쳐 그리도록 상위로 올린다 */
@@ -77,6 +80,7 @@ export function RouteOptionsPanel({
   onUpdateFixedArrival,
   onUpdateItemKind,
   onUpdateNote,
+  onReorderPins,
   embedded = false,
   onCompareRoutesChange,
 }: Props) {
@@ -107,6 +111,23 @@ export function RouteOptionsPanel({
   const hoursProblemCount = hoursProblemStops.length;
   const stayRows: Array<PinnedPlace & Partial<RouteStop>> =
     hoursOnly && hoursProblemCount > 0 ? hoursProblemStops : (preview?.stops ?? pinned);
+
+  /**
+   * "핀 순서"(autoOrder=false) 모드에서만 드래그 재정렬을 허용한다 — 자동 모드는
+   * 매번 최적 순서로 재계산되므로 드래그해도 다음 렌더에서 그대로 되돌아간다.
+   * hoursOnly 필터가 켜져 있을 때는 stayRows가 전체 스톱의 부분집합이라 드래그
+   * 결과를 원래 배열에 정확히 되꽂을 수 없으므로 그때도 끈다.
+   */
+  const canReorderStops = !options.autoOrder && !hoursOnly && Boolean(onReorderPins);
+
+  function handleReorderStops(orderedIds: string[]) {
+    if (!onReorderPins) return;
+    const byId = new Map(pinned.map((p) => [p.id, p]));
+    const next = orderedIds
+      .map((id) => byId.get(id))
+      .filter((p): p is PinnedPlace => Boolean(p));
+    onReorderPins(next);
+  }
 
   /**
    * 최적화 3종 경로를 미리 받아 지도에 겹쳐 보여준다.
@@ -282,16 +303,6 @@ export function RouteOptionsPanel({
                 value={options.departTime}
                 onChange={(e) => patch('departTime', e.target.value)}
                 aria-label={t('route.options.departTime')}
-              />
-            </label>
-            <label className="route-depart-chip" title={t('route.options.dateHint')}>
-              <Icon name="calendar" size={16} />
-              <input
-                type="date"
-                lang={normalizeLocale(i18n.language)}
-                value={options.date ?? ''}
-                onChange={(e) => patch('date', e.target.value || undefined)}
-                aria-label={t('route.options.date')}
               />
             </label>
             <button
@@ -501,19 +512,39 @@ export function RouteOptionsPanel({
             <p className="route-ai-suggest-error">{t('route.options.aiSuggestError')}</p>
           )}
           <div className="route-stay-list">
+            <SortableContainer
+              ids={stayRows.map((p) => p.id)}
+              onReorder={canReorderStops ? handleReorderStops : undefined}
+            >
             {stayRows.map((p, idx) => {
               const meta = getCategoryMeta(p.categoryCode);
               const sug = suggestStayMinutes(p.category);
               const minutes = p.stayMinutes ?? sug.minutes;
               const reason = aiStayReasons[p.id] ?? stayReasonLabel(p.category, t);
-              return (
-                <div key={p.id} className="route-stay-card">
-                  <span
-                    className="route-stay-num"
-                    style={{ background: meta.bgColor, color: '#fff' }}
-                  >
-                    {idx + 1}
-                  </span>
+              const card = (
+                key: string,
+                handle?: { listeners: Record<string, unknown>; ref: (el: HTMLElement | null) => void }
+              ) => (
+                <div key={key} className="route-stay-card">
+                  {handle ? (
+                    <button
+                      type="button"
+                      className="route-stay-num route-stay-drag"
+                      style={{ background: meta.bgColor, color: '#fff' }}
+                      ref={handle.ref}
+                      {...handle.listeners}
+                      aria-label={t('route.dragReorder')}
+                    >
+                      {idx + 1}
+                    </button>
+                  ) : (
+                    <span
+                      className="route-stay-num"
+                      style={{ background: meta.bgColor, color: '#fff' }}
+                    >
+                      {idx + 1}
+                    </span>
+                  )}
                   <div className="route-stay-body">
                     <div className="route-stay-name">{p.name}</div>
                     <div className="route-stay-hint">
@@ -614,7 +645,17 @@ export function RouteOptionsPanel({
                   )}
                 </div>
               );
+              return canReorderStops ? (
+                <SortableItem key={p.id} id={p.id}>
+                  {({ listeners, setActivatorNodeRef }) =>
+                    card(p.id, { listeners, ref: setActivatorNodeRef })
+                  }
+                </SortableItem>
+              ) : (
+                card(p.id)
+              );
             })}
+            </SortableContainer>
           </div>
         </section>
       </div>

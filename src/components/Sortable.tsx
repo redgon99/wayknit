@@ -62,9 +62,10 @@ export function SortableContainer({
   direction = 'vertical',
   children,
 }: SortableContainerProps) {
-  if (!onReorder) {
-    return <>{children}</>;
-  }
+  // onReorder 유무로 갈리는 조기 return보다 먼저 훅을 호출해야 한다 — 같은
+  // 컴포넌트 인스턴스에서 onReorder가 런타임에 생겼다 사라졌다 하면(예: 모드
+  // 토글로 재정렬 가능 여부가 바뀌는 경우) 훅 호출 순서가 렌더마다 달라져
+  // React가 깨진다.
   const sensors = useSensors(
     useSensor(PointerSensor, {
       // 5px 이상 움직여야 드래그 시작 → 클릭과 구분
@@ -74,6 +75,10 @@ export function SortableContainer({
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  if (!onReorder) {
+    return <>{children}</>;
+  }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;

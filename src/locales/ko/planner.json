@@ -245,8 +245,6 @@
       },
       "reserved": "예약",
       "reservedHint": "예약한 일정은 시각이 움직이지 않습니다. 나머지 일정이 이 시각을 피해 배치됩니다.",
-      "date": "방문 날짜",
-      "dateHint": "날짜를 넣으면 요일별 영업시간까지 확인합니다",
       "hoursFilter": "영업시간 확인 {{n}}",
       "optimizeCarOnly": "자동차일 때만 적용됩니다",
       "compareLoading": "경로 비교 중…",
@@ -259,8 +257,7 @@
     "hours": {
       "closed": "도착 시각에 영업이 끝난 뒤입니다 ({{opens}}~{{closes}})",
       "before-open": "영업 시작 전에 도착합니다 ({{opens}} 오픈)",
-      "closes-early": "머무는 동안 {{closes}}에 영업이 끝납니다",
-      "offday": "이 날은 휴무일입니다"
+      "closes-early": "머무는 동안 {{closes}}에 영업이 끝납니다"
     }
   },
   "dock": {

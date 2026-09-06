@@ -1388,6 +1388,21 @@ export default function PlannerPage() {
     [currentDay]
   );
 
+  /**
+   * 동선 패널에서 드래그 재정렬. `next`는 동선 패널에 실제로 보이던 핀 목록
+   * (핀 탭에서 일부만 선택했다면 그 부분집합)이 재정렬된 것 — 나머지 핀은
+   * 원래 자리에 그대로 두고, 보였던 핀들 자리에만 새 순서를 되꽂는다.
+   */
+  const handleReorderRoutePins = useCallback(
+    (next: PinnedPlace[]) => {
+      const visibleIds = new Set(next.map((p) => p.id));
+      let i = 0;
+      const merged = pinned.map((p) => (visibleIds.has(p.id) ? next[i++] : p));
+      setPinnedForDay(currentDay, merged);
+    },
+    [pinned, currentDay]
+  );
+
   const handleImportPins = useCallback((result: PinImportResult) => {
     setTrip((prev) => {
       const nextTotal = Math.max(prev.totalDays, result.totalDays);
@@ -2240,6 +2255,7 @@ export default function PlannerPage() {
                 onUpdateFixedArrival={handleUpdateFixedArrival}
                 onUpdateItemKind={handleUpdateItemKind}
                 onUpdateNote={handleUpdateNote}
+                onReorderPins={handleReorderRoutePins}
                 onCopyFromPreviousDay={() => {
                   setTrip((prev) => copyRouteOptionsFromDay(prev, currentDay - 1, currentDay));
                   showToast(tp('toast.copiedDepart', { day: currentDay - 1 }));
@@ -2380,7 +2396,7 @@ export default function PlannerPage() {
               <MobileMoreMenu
                 onShare={openShareModal}
                 plazaNavVisible={plazaNavVisible}
-                onOpenScenario={isTourScenarioConfigured() ? () => setScenarioOpen(true) : undefined}
+                onOpenTableView={handleToggleTableView}
               />
             </div>
             <div className="mobile-planner-days">
@@ -2511,6 +2527,7 @@ export default function PlannerPage() {
                   onUpdateFixedArrival={handleUpdateFixedArrival}
                   onUpdateItemKind={handleUpdateItemKind}
                   onUpdateNote={handleUpdateNote}
+                  onReorderPins={handleReorderRoutePins}
                   onClose={() => setMobileSheetLevel('peek')}
                   onGenerate={() => void handleGenerate()}
                   onPickOriginFromMap={handlePickOriginFromMap}
@@ -2577,6 +2594,16 @@ export default function PlannerPage() {
                 label={tp('chrome.tabTrips')}
                 triggerClassName="mobile-tabbar-btn"
               />
+              {isTourScenarioConfigured() && (
+                <button
+                  type="button"
+                  className="mobile-tabbar-btn"
+                  onClick={() => setScenarioOpen(true)}
+                >
+                  <Icon name="sparkles" size={20} />
+                  {tp('chrome.tabScenario')}
+                </button>
+              )}
               <button
                 type="button"
                 className="mobile-tabbar-btn"
@@ -2654,6 +2681,8 @@ export default function PlannerPage() {
         onClose={() => setPhotosTarget(null)}
         onShowTaxiCard={(p) => setTaxiCardPlace(p)}
         onHoursResolved={handleHoursResolved}
+        pinned={photosTarget ? pinnedIds.has(photosTarget.id) : false}
+        onTogglePin={handleTogglePin}
       />
 
       <TaxiDriverCardModal

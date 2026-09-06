@@ -41,6 +41,10 @@
   color: var(--landing-ink);
   font-family: var(--font-sans);
   line-height: 1.5;
+  /* 히어로 글로우 등 장식 요소가 화면 밖으로 삐져나가 모바일에서 가로 스크롤이 생기던 문제.
+   * hidden이 아니라 clip을 쓰는 이유: hidden은 스크롤 컨테이너를 만들어
+   * 자식인 .landing-top(sticky 헤더)의 고정이 풀린다. clip은 스크롤 컨테이너를 만들지 않는다. */
+  overflow-x: clip;
 }
 
 .landing-page a,
