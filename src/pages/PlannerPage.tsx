@@ -69,9 +69,11 @@ import {
   createSlug,
   createTripId,
   applyPlazaPublish,
+  subscribeTripPins,
   type Trip,
   type TripSummary,
 } from '../lib/trips';
+import { logTripActivity } from '../lib/tripActivity';
 import type { ShareTripModalSubmit } from '../components/ShareTripModal';
 import { ShareTripModal } from '../components/ShareTripModal';
 import { CollaboratorsModal } from '../components/CollaboratorsModal';
@@ -623,6 +625,24 @@ export default function PlannerPage() {
     };
   }, [trip, user?.id, hydrated, refreshTripList]);
 
+  // ============== 협업자 변경 실시간 반영 ==============
+  // 화면 상태를 ref로 넘긴다 — 구독을 매 렌더 다시 걸지 않으면서도
+  // 병합 시점에는 항상 최신 핀 목록을 봐야 한다.
+  const pinnedRef = useRef(trip.pinnedByDay);
+  pinnedRef.current = trip.pinnedByDay;
+  useEffect(() => {
+    if (!hydrated || !trip.id || !trip.ownerId) return;
+    return subscribeTripPins(
+      trip.id,
+      () => pinnedRef.current,
+      (merged) => {
+        // 병합 결과만 갈아끼운다. updatedAt은 건드리지 않는다 —
+        // 여기서 갱신하면 자동저장 이펙트가 깨어나 저장 루프가 돈다.
+        setTrip((prev) => ({ ...prev, pinnedByDay: merged }));
+      }
+    );
+  }, [trip.id, trip.ownerId, hydrated]);
+
   // ============== Trip 업데이트 헬퍼 ==============
   function patchTrip(next: Partial<Trip>) {
     setTrip((prev) => ({ ...prev, ...next, updatedAt: Date.now() }));
@@ -1158,7 +1178,7 @@ export default function PlannerPage() {
   const occludedCenterShiftPx = useCallback(() => {
     if (typeof window === 'undefined') return 0;
     // 도킹 여부는 CSS와 같은 기준(.mobile-layout)으로 판단한다
-    if (document.querySelector('.waymeld-root.mobile-layout')) return 0;
+    if (document.querySelector('.wayknit-root.mobile-layout')) return 0;
     const styles = getComputedStyle(document.documentElement);
     const px = (name: string, fallback: number) =>
       parseFloat(styles.getPropertyValue(name)) || fallback;
@@ -1386,6 +1406,21 @@ export default function PlannerPage() {
       setPinnedForDay(currentDay, next);
     },
     [currentDay]
+  );
+
+  /**
+   * 동선 패널에서 드래그 재정렬. `next`는 동선 패널에 실제로 보이던 핀 목록
+   * (핀 탭에서 일부만 선택했다면 그 부분집합)이 재정렬된 것 — 나머지 핀은
+   * 원래 자리에 그대로 두고, 보였던 핀들 자리에만 새 순서를 되꽂는다.
+   */
+  const handleReorderRoutePins = useCallback(
+    (next: PinnedPlace[]) => {
+      const visibleIds = new Set(next.map((p) => p.id));
+      let i = 0;
+      const merged = pinned.map((p) => (visibleIds.has(p.id) ? next[i++] : p));
+      setPinnedForDay(currentDay, merged);
+    },
+    [pinned, currentDay]
   );
 
   const handleImportPins = useCallback((result: PinImportResult) => {
@@ -1659,6 +1694,9 @@ export default function PlannerPage() {
       const base = generateRoute(routePins, opts);
       reportRouteMetrics(base);
       setRouteForDay(currentDay, base);
+      if (trip.ownerId) {
+        void logTripActivity(trip.id, 'route_generate', null, { day: currentDay });
+      }
       setRouteOptionsOpen(false);
       setPanelOpen(false);
       setDockCollapsed(false);
@@ -1745,6 +1783,8 @@ export default function PlannerPage() {
         },
       })
     );
+    // 핀 밖의 행동이라 트리거가 못 잡는다 — 여기서 직접 기록한다.
+    if (trip.ownerId) void logTripActivity(trip.id, 'day_add', String(newDay), { day: newDay });
   }
   function removeDay(day: number) {
     if (trip.totalDays <= 1) return;
@@ -2015,7 +2055,7 @@ export default function PlannerPage() {
   }, [presentationMode, tableViewMode]);
 
   const rootClass = [
-    'waymeld-root',
+    'wayknit-root',
     panelOpen && !useMobileChrome ? 'panel-open' : '',
     !panelOpen && !useMobileChrome ? 'panel-collapsed' : '',
     materialsPanelOpen ? 'materials-open' : '',
@@ -2240,6 +2280,7 @@ export default function PlannerPage() {
                 onUpdateFixedArrival={handleUpdateFixedArrival}
                 onUpdateItemKind={handleUpdateItemKind}
                 onUpdateNote={handleUpdateNote}
+                onReorderPins={handleReorderRoutePins}
                 onCopyFromPreviousDay={() => {
                   setTrip((prev) => copyRouteOptionsFromDay(prev, currentDay - 1, currentDay));
                   showToast(tp('toast.copiedDepart', { day: currentDay - 1 }));
@@ -2380,7 +2421,7 @@ export default function PlannerPage() {
               <MobileMoreMenu
                 onShare={openShareModal}
                 plazaNavVisible={plazaNavVisible}
-                onOpenScenario={isTourScenarioConfigured() ? () => setScenarioOpen(true) : undefined}
+                onOpenTableView={handleToggleTableView}
               />
             </div>
             <div className="mobile-planner-days">
@@ -2511,6 +2552,7 @@ export default function PlannerPage() {
                   onUpdateFixedArrival={handleUpdateFixedArrival}
                   onUpdateItemKind={handleUpdateItemKind}
                   onUpdateNote={handleUpdateNote}
+                  onReorderPins={handleReorderRoutePins}
                   onClose={() => setMobileSheetLevel('peek')}
                   onGenerate={() => void handleGenerate()}
                   onPickOriginFromMap={handlePickOriginFromMap}
@@ -2577,6 +2619,16 @@ export default function PlannerPage() {
                 label={tp('chrome.tabTrips')}
                 triggerClassName="mobile-tabbar-btn"
               />
+              {isTourScenarioConfigured() && (
+                <button
+                  type="button"
+                  className="mobile-tabbar-btn"
+                  onClick={() => setScenarioOpen(true)}
+                >
+                  <Icon name="sparkles" size={20} />
+                  {tp('chrome.tabScenario')}
+                </button>
+              )}
               <button
                 type="button"
                 className="mobile-tabbar-btn"
@@ -2654,6 +2706,8 @@ export default function PlannerPage() {
         onClose={() => setPhotosTarget(null)}
         onShowTaxiCard={(p) => setTaxiCardPlace(p)}
         onHoursResolved={handleHoursResolved}
+        pinned={photosTarget ? pinnedIds.has(photosTarget.id) : false}
+        onTogglePin={handleTogglePin}
       />
 
       <TaxiDriverCardModal

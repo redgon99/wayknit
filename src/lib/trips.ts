@@ -87,8 +87,8 @@ export interface TripSummary {
   collaboratorRole?: CollaboratorRole;
 }
 
-const LS_STORE = 'waymeld:trips-store:v2';
-const LS_PLAZA_IMPORTED = 'waymeld:plaza-imported-ids';
+const LS_STORE = 'wayknit:trips-store:v2';
+const LS_PLAZA_IMPORTED = 'wayknit:plaza-imported-ids';
 
 interface LocalStore {
   activeId: string | null;
@@ -278,7 +278,7 @@ export function applyPlazaPublish(
 
 /**
  * 내가 협업자로 접근 가능한 trip_id → role 맵.
- * waymeld_trips 조회에서 owner_id 필터를 뺀 만큼(RLS가 owner OR collaborator를
+ * wayknit_trips 조회에서 owner_id 필터를 뺀 만큼(RLS가 owner OR collaborator를
  * 이미 허용) 여기서 role만 UI 표시용으로 별도 조회한다.
  */
 async function fetchCollaboratorRoles(userId: string): Promise<Map<string, CollaboratorRole>> {
@@ -295,9 +295,9 @@ async function fetchCollaboratorRoles(userId: string): Promise<Map<string, Colla
 /**
  * "내 여행" 범위를 쿼리에서 명시적으로 좁힌다.
  *
- * RLS에 맡기면 안 된다. waymeld_trips에는 SELECT 정책이 4개 있고 PostgreSQL은
+ * RLS에 맡기면 안 된다. wayknit_trips에는 SELECT 정책이 4개 있고 PostgreSQL은
  * permissive 정책을 OR로 합치므로, 필터를 빼면 `public_slug_select`(is_public)와
- * `waymeld_trips_admin_select`(is_admin)까지 열려 남의 여행이 내 목록에 섞인다.
+ * `wayknit_trips_admin_select`(is_admin)까지 열려 남의 여행이 내 목록에 섞인다.
  * RLS는 "접근해도 되는가"를 정하고, 내 목록은 그보다 의도적으로 좁은 질의다.
  */
 function collaboratorIdsOf(roles: Map<string, CollaboratorRole>): string[] {
@@ -310,7 +310,7 @@ async function listRemote(userId: string): Promise<TripSummary[]> {
   const roles = await fetchCollaboratorRoles(userId);
   const collabIds = collaboratorIdsOf(roles);
 
-  const base = sb.from('waymeld_trips').select('id, slug, title, total_days, updated_at');
+  const base = sb.from('wayknit_trips').select('id, slug, title, total_days, updated_at');
   const scoped =
     collabIds.length > 0
       ? base.or(`owner_id.eq.${userId},id.in.(${collabIds.join(',')})`)
@@ -335,12 +335,12 @@ async function readRemoteById(userId: string, tripId: string): Promise<Trip | nu
 
   // 협업자로 등록된 여행이면 소유자 조건 없이, 아니면 내 것만.
   // 공개 여행 열람은 /trip/:slug 공유 페이지와 "끌어오기"가 담당한다.
-  const base = sb.from('waymeld_trips').select(TRIP_SELECT).eq('id', tripId);
+  const base = sb.from('wayknit_trips').select(TRIP_SELECT).eq('id', tripId);
   const scoped = roles.has(tripId) ? base : base.eq('owner_id', userId);
 
   const { data, error } = await scoped.maybeSingle();
   if (error || !data) return null;
-  return rowToTrip(data, roles.get(tripId));
+  return attachPins(rowToTrip(data, roles.get(tripId)));
 }
 
 async function readRemoteLatest(userId: string): Promise<Trip | null> {
@@ -351,7 +351,7 @@ async function readRemoteLatest(userId: string): Promise<Trip | null> {
 
   // 범위를 좁히지 않으면 "전체에서 가장 최근 수정된 여행"이 잡혀,
   // 남의 여행이 앱을 열자마자 내 플래너로 열린다.
-  const base = sb.from('waymeld_trips').select(TRIP_SELECT);
+  const base = sb.from('wayknit_trips').select(TRIP_SELECT);
   const scoped =
     collabIds.length > 0
       ? base.or(`owner_id.eq.${userId},id.in.(${collabIds.join(',')})`)
@@ -362,34 +362,357 @@ async function readRemoteLatest(userId: string): Promise<Trip | null> {
     .limit(1)
     .maybeSingle();
   if (error || !data) return null;
-  return rowToTrip(data, roles.get(data.id));
+  return attachPins(rowToTrip(data, roles.get(data.id)));
 }
 
 async function readBySlugRemote(slug: string): Promise<Trip | null> {
   const sb = getSupabase();
   if (!sb) return null;
   const { data, error } = await sb
-    .from('waymeld_trips')
+    .from('wayknit_trips')
     .select(TRIP_SELECT)
     .eq('slug', slug)
     .eq('is_public', true)
     .maybeSingle();
   if (error || !data) return null;
-  return rowToTrip(data);
+  return attachPins(rowToTrip(data));
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+ * 핀 행(trip_pins) — 공동편집 1단계
+ *
+ * 핀은 더 이상 payload에 저장하지 않는다. payload 통짜 upsert는 두 사람이
+ * 같은 여행을 편집할 때 나중에 저장한 쪽이 상대 핀을 덮어써서 지웠다.
+ * 핀 1개 = 행 1개로 쪼개고, 저장할 때 "이 클라이언트가 마지막으로 동기화한
+ * 상태"와의 차이만 행 단위로 반영한다. 내가 모르는 상대 핀은 손대지 않으므로
+ * 서로의 편집이 살아남는다.
+ *
+ * 기존 payload.pinnedByDay는 이전 시점 그대로 남겨뒀다(롤백용 백업).
+ * 읽기는 trip_pins만 본다 — payload로 폴백하면 사용자가 핀을 전부 지웠을 때
+ * 옛 백업이 되살아난다.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+interface TripPinRow {
+  day: number;
+  place_id: string;
+  position: number;
+  data: PinnedPlace;
+}
+
+/**
+ * 이 클라이언트가 마지막으로 원격과 맞춘 핀 상태. 저장 시 diff의 기준점이다.
+ * 원격 DB의 현재 상태와 비교하면 안 된다 — 상대가 방금 추가한 핀이
+ * "내가 지운 것"으로 보여 그대로 삭제된다.
+ */
+const pinBaselines = new Map<string, Record<number, PinnedPlace[]>>();
+
+/** 키 순서에 흔들리지 않는 비교용 직렬화 */
+function canonicalPin(pin: PinnedPlace): string {
+  return JSON.stringify(
+    Object.keys(pin)
+      .sort()
+      .map((k) => [k, (pin as unknown as Record<string, unknown>)[k]])
+  );
+}
+
+function clonePinnedByDay(src: Record<number, PinnedPlace[]>): Record<number, PinnedPlace[]> {
+  const out: Record<number, PinnedPlace[]> = {};
+  for (const [day, list] of Object.entries(src)) out[Number(day)] = [...(list ?? [])];
+  return out;
+}
+
+async function readPinsRemote(tripId: string): Promise<Record<number, PinnedPlace[]> | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from('trip_pins')
+    .select('day, place_id, position, data')
+    .eq('trip_id', tripId)
+    .order('day', { ascending: true })
+    .order('position', { ascending: true })
+    // position은 클라이언트가 자기 관점으로 매기므로 동시 편집 중엔 겹치거나
+    // 틈이 생긴다. 겹쳤을 때 정렬이 클라이언트마다 달라지지 않도록 2차 기준을 둔다.
+    .order('created_at', { ascending: true });
+  if (error) {
+    console.warn('핀 조회 실패 — payload 값으로 진행한다', error);
+    return null;
+  }
+  const byDay: Record<number, PinnedPlace[]> = {};
+  for (const row of (data ?? []) as TripPinRow[]) {
+    (byDay[row.day] ??= []).push({ ...row.data, id: row.place_id, day: row.day });
+  }
+  // order 필드는 화면이 쓰는 표시용 번호 — 행 순서대로 다시 매긴다.
+  for (const list of Object.values(byDay)) list.forEach((p, i) => (p.order = i + 1));
+  return byDay;
+}
+
+/** 여러 여행의 핀을 한 번에 읽는다 (목록 화면의 N+1 방지). */
+async function readPinsForTrips(
+  tripIds: string[]
+): Promise<Map<string, Record<number, PinnedPlace[]>>> {
+  const out = new Map<string, Record<number, PinnedPlace[]>>();
+  const sb = getSupabase();
+  if (!sb || tripIds.length === 0) return out;
+  const { data, error } = await sb
+    .from('trip_pins')
+    .select('trip_id, day, place_id, position, data')
+    .in('trip_id', tripIds)
+    .order('day', { ascending: true })
+    .order('position', { ascending: true })
+    .order('created_at', { ascending: true });
+  if (error) {
+    console.warn('핀 목록 조회 실패', error);
+    return out;
+  }
+  for (const row of (data ?? []) as Array<TripPinRow & { trip_id: string }>) {
+    const byDay = out.get(row.trip_id) ?? {};
+    (byDay[row.day] ??= []).push({ ...row.data, id: row.place_id, day: row.day });
+    out.set(row.trip_id, byDay);
+  }
+  for (const byDay of out.values()) {
+    for (const list of Object.values(byDay)) list.forEach((p, i) => (p.order = i + 1));
+  }
+  return out;
+}
+
+/** 여행 한 건에 핀 행을 붙이고, 이후 저장 diff의 기준점을 기록한다. */
+/* ── 2단계: 실시간 반영 ────────────────────────────────────────────────
+ *
+ * 원격 변경 알림이 오면 핀을 다시 읽어 화면에 반영한다. 그런데 그냥 덮어쓰면
+ * 아직 저장 전(700ms 디바운스 안)인 내 편집이 사라진다. 그래서 3-way 병합을 한다:
+ *
+ *   기준점(마지막 동기화) ── 내 미저장 편집 ──▶ 지금 화면
+ *          │
+ *          └── 상대 편집 ──▶ 방금 읽은 원격
+ *
+ *   병합 결과 = 원격 + (내 미저장 편집)
+ *
+ * 병합 뒤 기준점을 "방금 읽은 원격"으로 옮긴다. 그러면 다음 저장 때
+ * syncPins의 diff가 정확히 내 미저장 편집만 집어낸다.
+ * ─────────────────────────────────────────────────────────────────── */
+
+interface PendingPinEdits {
+  /** 내가 추가했거나 내용을 바꾼 핀 (일차별) */
+  upserts: Map<number, PinnedPlace[]>;
+  /** 내가 지운 핀 id (일차별) */
+  removals: Map<number, Set<string>>;
+}
+
+/** 기준점 대비 지금 화면에서 내가 한 편집 */
+function pendingPinEdits(
+  baseline: Record<number, PinnedPlace[]>,
+  local: Record<number, PinnedPlace[]>
+): PendingPinEdits {
+  const upserts = new Map<number, PinnedPlace[]>();
+  const removals = new Map<number, Set<string>>();
+  const days = new Set<number>([...Object.keys(baseline), ...Object.keys(local)].map(Number));
+  for (const day of days) {
+    const before = new Map((baseline[day] ?? []).map((p) => [p.id, p]));
+    const after = local[day] ?? [];
+    const added = after.filter((p) => {
+      const prev = before.get(p.id);
+      return !prev || canonicalPin(prev) !== canonicalPin(p);
+    });
+    if (added.length > 0) upserts.set(day, added);
+    const afterIds = new Set(after.map((p) => p.id));
+    const gone = [...before.keys()].filter((id) => !afterIds.has(id));
+    if (gone.length > 0) removals.set(day, new Set(gone));
+  }
+  return { upserts, removals };
+}
+
+/** 원격 상태 위에 내 미저장 편집을 다시 얹는다. */
+function applyPendingEdits(
+  remote: Record<number, PinnedPlace[]>,
+  pending: PendingPinEdits,
+  localOrder: Record<number, PinnedPlace[]>
+): Record<number, PinnedPlace[]> {
+  const out: Record<number, PinnedPlace[]> = {};
+  const days = new Set<number>([
+    ...Object.keys(remote),
+    ...pending.upserts.keys(),
+    ...pending.removals.keys(),
+  ].map(Number));
+
+  for (const day of days) {
+    const removed = pending.removals.get(day) ?? new Set<string>();
+    const byId = new Map<string, PinnedPlace>();
+    for (const pin of remote[day] ?? []) {
+      if (!removed.has(pin.id)) byId.set(pin.id, pin);
+    }
+    // 내 편집이 원격보다 우선한다 — 아직 저장 안 됐을 뿐 사용자가 방금 한 행동이다.
+    for (const pin of pending.upserts.get(day) ?? []) byId.set(pin.id, pin);
+
+    // 순서는 내 화면 순서를 기준으로 하고, 내가 모르던 상대 핀은 뒤에 붙인다.
+    const localIds = (localOrder[day] ?? []).map((p) => p.id);
+    const ordered: PinnedPlace[] = [];
+    for (const id of localIds) {
+      const pin = byId.get(id);
+      if (pin) { ordered.push(pin); byId.delete(id); }
+    }
+    for (const pin of byId.values()) ordered.push(pin);
+    out[day] = ordered.map((p, i) => ({ ...p, order: i + 1 }));
+  }
+  return out;
+}
+
+function samePinnedByDay(a: Record<number, PinnedPlace[]>, b: Record<number, PinnedPlace[]>): boolean {
+  const days = new Set<number>([...Object.keys(a), ...Object.keys(b)].map(Number));
+  for (const day of days) {
+    const la = a[day] ?? [], lb = b[day] ?? [];
+    if (la.length !== lb.length) return false;
+    for (let i = 0; i < la.length; i++) {
+      if (canonicalPin(la[i]) !== canonicalPin(lb[i])) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * 이 여행의 핀 변경을 실시간으로 받아 병합 결과를 돌려준다.
+ * `getLocal`은 항상 최신 화면 상태를 돌려줘야 한다(ref 등으로 넘길 것).
+ * 반환값은 구독 해제 함수.
+ */
+export function subscribeTripPins(
+  tripId: string,
+  getLocal: () => Record<number, PinnedPlace[]>,
+  onMerged: (next: Record<number, PinnedPlace[]>) => void
+): () => void {
+  const sb = getSupabase();
+  if (!sb || !tripId) return () => {};
+
+  let disposed = false;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const refresh = async () => {
+    if (disposed) return;
+    const remote = await readPinsRemote(tripId);
+    if (disposed || !remote) return;
+    const local = getLocal();
+    const pending = pendingPinEdits(pinBaselines.get(tripId) ?? {}, local);
+    const merged = applyPendingEdits(remote, pending, local);
+    // 기준점을 원격으로 옮긴다 — 다음 저장의 diff가 내 미저장 편집만 담게 된다.
+    pinBaselines.set(tripId, clonePinnedByDay(remote));
+    // 내 저장이 되돌아온 에코면 화면이 그대로다 — 불필요한 리렌더를 막는다.
+    if (!samePinnedByDay(merged, local)) onMerged(merged);
+  };
+
+  const schedule = () => {
+    if (timer) clearTimeout(timer);
+    // 한 번의 저장이 여러 행을 건드리면 이벤트도 여러 개 온다 — 몰아서 한 번만 읽는다.
+    timer = setTimeout(() => void refresh(), 350);
+  };
+
+  const channel = sb
+    .channel(`trip-pins:${tripId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'trip_pins', filter: `trip_id=eq.${tripId}` },
+      schedule
+    )
+    .subscribe();
+
+  return () => {
+    disposed = true;
+    if (timer) clearTimeout(timer);
+    void sb.removeChannel(channel);
+  };
+}
+
+async function attachPins(trip: Trip): Promise<Trip> {
+  const pins = await readPinsRemote(trip.id);
+  const pinnedByDay = pins ?? trip.pinnedByDay;
+  pinBaselines.set(trip.id, clonePinnedByDay(pinnedByDay));
+  return { ...trip, pinnedByDay };
+}
+
+/**
+ * 기준점 대비 바뀐 핀만 행 단위로 반영한다.
+ * 상대가 그 사이에 넣은 핀은 diff에 안 잡히므로 건드리지 않는다.
+ */
+async function syncPins(trip: Trip, userId: string | null): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  const baseline = pinBaselines.get(trip.id) ?? {};
+  const next = trip.pinnedByDay ?? {};
+  const days = new Set<number>([...Object.keys(baseline), ...Object.keys(next)].map(Number));
+
+  const upserts: Array<Record<string, unknown>> = [];
+  const deletions: Array<{ day: number; placeId: string }> = [];
+
+  for (const day of days) {
+    const beforeList = baseline[day] ?? [];
+    const afterList = next[day] ?? [];
+    const before = new Map(beforeList.map((p) => [p.id, p]));
+    const after = new Map(afterList.map((p) => [p.id, p]));
+
+    afterList.forEach((pin, idx) => {
+      const prev = before.get(pin.id);
+      const position = idx + 1;
+      // 순서가 그대로이고 내용도 같으면 보내지 않는다 — 상대와의 충돌 면적을 줄인다.
+      if (prev && canonicalPin(prev) === canonicalPin(pin) && beforeList.indexOf(prev) + 1 === position) {
+        return;
+      }
+      upserts.push({
+        trip_id: trip.id,
+        day,
+        place_id: pin.id,
+        position,
+        data: pin,
+        ...(prev ? {} : { created_by: userId }),
+        updated_by: userId,
+      });
+    });
+
+    for (const id of before.keys()) {
+      if (!after.has(id)) deletions.push({ day, placeId: id });
+    }
+  }
+
+  if (upserts.length > 0) {
+    const { error } = await sb
+      .from('trip_pins')
+      .upsert(upserts, { onConflict: 'trip_id,day,place_id' });
+    if (error) throw error;
+  }
+  for (const [day, ids] of groupDeletionsByDay(deletions)) {
+    const { error } = await sb
+      .from('trip_pins')
+      .delete()
+      .eq('trip_id', trip.id)
+      .eq('day', day)
+      .in('place_id', ids);
+    if (error) throw error;
+  }
+
+  pinBaselines.set(trip.id, clonePinnedByDay(next));
+}
+
+function groupDeletionsByDay(
+  deletions: Array<{ day: number; placeId: string }>
+): Map<number, string[]> {
+  const out = new Map<number, string[]>();
+  for (const d of deletions) {
+    const list = out.get(d.day);
+    if (list) list.push(d.placeId);
+    else out.set(d.day, [d.placeId]);
+  }
+  return out;
 }
 
 async function writeRemote(trip: Trip): Promise<void> {
   const sb = getSupabase();
   if (!sb || !trip.ownerId) return;
   const normalized = normalizeTrip(trip);
+  // pinnedByDay는 일부러 빠져 있다 — 핀은 trip_pins 행이 유일한 진실이다.
+  // 기존 payload.pinnedByDay는 이전 시점 값 그대로 남아 롤백 백업 역할만 한다.
   const payload = {
-    pinnedByDay: normalized.pinnedByDay,
     routeOptionsByDay: normalized.routeOptionsByDay,
     routeOptions: normalized.routeOptionsByDay[normalized.currentDay] ?? DEFAULT_ROUTE_OPTIONS,
     generatedRouteByDay: normalized.generatedRouteByDay,
     materials: normalized.materials ?? [],
   };
-  const { error } = await sb.from('waymeld_trips').upsert(
+  const { error } = await sb.from('wayknit_trips').upsert(
     {
       id: trip.id,
       slug: trip.slug,
@@ -413,6 +736,9 @@ async function writeRemote(trip: Trip): Promise<void> {
     { onConflict: 'id' }
   );
   if (error) throw error;
+
+  // 여행 행이 확실히 존재한 뒤에 핀을 쓴다 — trip_pins.trip_id가 FK다.
+  await syncPins(normalized, trip.ownerId ?? null);
 }
 
 // =============================================
@@ -565,7 +891,7 @@ async function listPlazaRemote(localeFilter?: string | null): Promise<PlazaListi
   const sb = getSupabase();
   if (!sb) return [];
   let query = sb
-    .from('waymeld_trips')
+    .from('wayknit_trips')
     .select(PLAZA_LIST_SELECT)
     .eq('listed_in_plaza', true)
     .eq('is_public', true);
@@ -579,7 +905,19 @@ async function listPlazaRemote(localeFilter?: string | null): Promise<PlazaListi
   }
   const { data, error } = await query.order('plaza_listed_at', { ascending: false });
   if (error || !data) return [];
-  return data.map((row) => rowToPlazaListing(row));
+  const listings = data.map((row) => rowToPlazaListing(row));
+  // 핀은 payload가 아니라 trip_pins가 진실이다. 목록이므로 건별 조회(N+1) 대신
+  // 한 번에 받아 붙인다.
+  const pinsByTrip = await readPinsForTrips(listings.map((l) => l.id));
+  return listings.map((l) => {
+    const pinnedByDay = pinsByTrip.get(l.id);
+    if (!pinnedByDay) return l;
+    return {
+      ...l,
+      pinnedByDay,
+      pinSummary: buildPlazaPinSummary(pinnedByDay, l.totalDays),
+    };
+  });
 }
 
 function listPlazaLocal(): PlazaListing[] {
@@ -757,7 +1095,7 @@ async function deleteRemote(userId: string, tripId: string): Promise<void> {
   const sb = getSupabase();
   if (!sb) return;
   const { error } = await sb
-    .from('waymeld_trips')
+    .from('wayknit_trips')
     .delete()
     .eq('id', tripId)
     .eq('owner_id', userId);

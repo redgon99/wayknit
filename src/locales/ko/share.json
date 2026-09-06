@@ -97,7 +97,24 @@
     "editorBanner": "편집자로 공유받은 여행입니다",
     "copyLink": "링크 복사",
     "linkCopied": "복사됨",
-    "copyFailed": "링크를 복사하지 못했습니다."
+    "copyFailed": "링크를 복사하지 못했습니다.",
+    "activity": {
+      "tabPeople": "사람",
+      "tabActivity": "활동",
+      "empty": "아직 기록된 활동이 없습니다.",
+      "loading": "불러오는 중…",
+      "you": "나",
+      "pin_add": "{{actor}} · {{target}} 추가",
+      "pin_remove": "{{actor}} · {{target}} 삭제",
+      "pin_update": "{{actor}} · {{target}} 수정",
+      "pin_reorder": "{{actor}} · 순서 변경 ({{count}}건)",
+      "route_generate": "{{actor}} · 동선 생성",
+      "day_add": "{{actor}} · 일차 추가",
+      "day_remove": "{{actor}} · 일차 삭제",
+      "trip_rename": "{{actor}} · 여행 이름 변경",
+      "dayBadge": "{{day}}일차",
+      "system": "시스템"
+    }
   },
   "invite": {
     "heading": "여행 공동편집 초대",

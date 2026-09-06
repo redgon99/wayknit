@@ -21,7 +21,7 @@ import {
 type KindFilter = 'all' | TripMaterialKind;
 type ViewMode = 'grid' | 'list';
 
-const VIEW_MODE_KEY = 'waymeld:materials-view-v1';
+const VIEW_MODE_KEY = 'wayknit:materials-view-v1';
 
 interface PinOption {
   id: string;

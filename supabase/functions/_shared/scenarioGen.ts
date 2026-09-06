@@ -233,7 +233,7 @@ export function buildSelectPrompt(
     .join('\n\n');
 
   if (locale === 'ko') {
-    return `당신은 여로담(WayMeld)의 여행 시나리오 작가입니다.
+    return `당신은 여로담(Wayknit)의 여행 시나리오 작가입니다.
 테마 "${themeLabel}"에 맞는 ${days}일 여행 시나리오를 한국어로 작성하세요.
 
 절대 규칙:
@@ -252,7 +252,7 @@ ${regionListing}
 {"region":"선택한 지역명(목록에 있는 이름 그대로)","regionLabel":"표시용 지역명","title":"여행 시나리오 제목","intro":"3~5문장 도입부","days":[{"day":1,"dayTitle":"1일차 소제목","stops":[{"contentId":"...","title":"장소명","reason":"이 장소를 넣은 이유 한 줄","note":"..."}]}]}`;
   }
 
-  return `You are the travel-scenario writer for WayMeld, a Korea trip planner.
+  return `You are the travel-scenario writer for Wayknit, a Korea trip planner.
 Write a ${days}-day itinerary for the theme "${themeLabel}".
 
 LANGUAGE LOCK (critical):
@@ -309,7 +309,7 @@ export function buildNarratePrompt(
     })
     .join('\n\n');
 
-  return `You are the travel-scenario writer for WayMeld, a Korea trip planner.
+  return `You are the travel-scenario writer for Wayknit, a Korea trip planner.
 This exact "${themeLabel}" itinerary in region "${regionKey}" was already finalized — the region, day grouping, stop order, and contentId set are FINAL and must not change:
 
 ${dayListing}

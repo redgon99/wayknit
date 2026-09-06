@@ -16,7 +16,7 @@ function keyParam(serviceKey: string): string {
 function buildDetailUrl(base: string, contentId: string, serviceKey: string): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     contentId,
   });

@@ -1,5 +1,5 @@
 /**
- * WayMeld 아이콘 세트 — 여행·지도·핀·동선·자료함 UI용
+ * Wayknit 아이콘 세트 — 여행·지도·핀·동선·자료함 UI용
  * 24×24, stroke 1.75, currentColor (앱 accent·텍스트와 조화)
  */
 
@@ -96,7 +96,7 @@ export interface IconPath {
   evenodd?: boolean;
 }
 
-export const WAYMELD_ICONS: Record<IconName, IconPath[]> = {
+export const WAYKNIT_ICONS: Record<IconName, IconPath[]> = {
   search: [
     { d: 'M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0' },
     { d: 'M21 21L16.65 16.65' },
@@ -526,8 +526,8 @@ export const WAYMELD_ICONS: Record<IconName, IconPath[]> = {
   ],
 };
 
-/** Tabler 클래스명 → WayMeld 아이콘 (마이그레이션·문서용) */
-export const TABLER_TO_WAYMELD: Record<string, IconName> = {
+/** Tabler 클래스명 → Wayknit 아이콘 (마이그레이션·문서용) */
+export const TABLER_TO_WAYKNIT: Record<string, IconName> = {
   'ti-search': 'search',
   'ti-x': 'close',
   'ti-refresh': 'refresh',
@@ -581,7 +581,7 @@ export function iconSvgMarkup(
   const size = options?.size ?? 20;
   const cls = options?.className ? ` class="${options.className} wm-icon"` : ' class="wm-icon"';
   const style = options?.color ? ` style="color:${options.color}"` : '';
-  const paths = WAYMELD_ICONS[name]
+  const paths = WAYKNIT_ICONS[name]
     .map((p) =>
       p.fill
         ? `<path fill="currentColor" stroke="none"${p.evenodd ? ' fill-rule="evenodd"' : ''} d="${p.d}"/>`

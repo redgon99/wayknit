@@ -204,7 +204,13 @@ export async function fetchLandingPromo(
   let query = sb.from('landing_promo').select(LANDING_PROMO_SELECT).eq('locale', locale);
   if (options?.publishedOnly) query = query.eq('is_published', true);
   const { data, error } = await query.maybeSingle();
-  if (error || !data) return null;
+  // 조회 실패 시 랜딩은 하드코딩 폴백으로 조용히 넘어간다. 스키마 불일치 같은 문제를
+  // 알아채지 못하고 오래 방치되는 일이 있어 원인은 콘솔에 남긴다.
+  if (error) {
+    console.warn('[landingPromo] 랜딩 콘텐츠 조회 실패 — 기본 문구로 대체합니다.', error);
+    return null;
+  }
+  if (!data) return null;
   return fromRow(data as LandingPromoRow);
 }
 

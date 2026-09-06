@@ -93,7 +93,7 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
 
 /**
  * 사용자 목록. 집계·검색·페이지네이션을 전부 DB(admin_user_rows RPC)에서 한다.
- * 예전에는 waymeld_trips 전량을 받아 JS에서 owner_id별로 묶었는데, 여행이
+ * 예전에는 wayknit_trips 전량을 받아 JS에서 owner_id별로 묶었는데, 여행이
  * 늘수록 매 조회마다 전체를 내려받아야 했다.
  */
 export async function listAdminUserRows(

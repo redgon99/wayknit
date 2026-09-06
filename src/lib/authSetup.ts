@@ -1,4 +1,4 @@
-/** WayMeld 프로젝트 Supabase ref (VITE_SUPABASE_URL에서 추출) */
+/** Wayknit 프로젝트 Supabase ref (VITE_SUPABASE_URL에서 추출) */
 export const SUPABASE_PROJECT_REF = 'ainftwifvclgiookzrwm';
 
 export const SUPABASE_AUTH_CALLBACK_URL = `https://${SUPABASE_PROJECT_REF}.supabase.co/auth/v1/callback`;

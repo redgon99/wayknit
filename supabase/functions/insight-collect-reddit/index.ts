@@ -13,7 +13,7 @@ import {
   type CollectionPeriodInput,
 } from '../_shared/insightPeriod.ts';
 
-const USER_AGENT = 'waymeld-market-insights/1.0 (admin research bot)';
+const USER_AGENT = 'wayknit-market-insights/1.0 (admin research bot)';
 const POSTS_PER_SUBREDDIT = 25;
 
 interface RedditPostData {

@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "WayMeld — Reúne lugares. Une tu ruta.",
+    "title": "Wayknit — Reúne lugares. Une tu ruta.",
     "description": "Busca, fija lugares y arma un itinerario con horarios. Kakao y Google Maps, viajes de varios días, enlaces para compartir."
   },
   "brand": {
-    "primary": "WayMeld",
+    "primary": "Wayknit",
     "secondary": ""
   },
   "notice": {
@@ -49,7 +49,7 @@
   },
   "features": {
     "title": "Hecho para enrutar",
-    "subtitle": "A diferencia de las apps que recuerdan dónde has estado, WayMeld es para a dónde vas y a qué hora.",
+    "subtitle": "A diferencia de las apps que recuerdan dónde has estado, Wayknit es para a dónde vas y a qué hora.",
     "multiDay": {
       "title": "Pestañas de varios días",
       "body": "Separa pines y rutas en Día 1, Día 2, Día 3. Los viajes largos se mantienen ordenados."
@@ -73,7 +73,7 @@
   },
   "compare": {
     "title": "Posicionamiento",
-    "us": "WayMeld",
+    "us": "Wayknit",
     "them": "Registro de visitas / lista de deseos",
     "row1": ["Rutas para hoy y mañana", "Sitios donde ya has estado"],
     "row2": ["Itinerario con horarios", "Pines en un mapa"],
@@ -106,6 +106,6 @@
     "info": "Info de viaje en Corea",
     "login": "Iniciar sesión",
     "plan": "Planificador",
-    "rights": "© {{year}} WayMeld"
+    "rights": "© {{year}} Wayknit"
   }
 }

@@ -8,7 +8,7 @@ export function buildTourNearbyUrl(
 ): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     mapX: String(mapX),
     mapY: String(mapY),

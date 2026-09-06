@@ -1,13 +1,13 @@
 {
   "meta": {
-    "tripTitle": "{{title}} · WayMeld",
+    "tripTitle": "{{title}} · Wayknit",
     "tripFallback": "Viaje compartido",
     "tripDescription": "Consulta un itinerario día a día con tiempos de viaje y de estancia reales, e impórtalo a tu propio viaje.",
-    "plazaTitle": "Plaza de viajes · WayMeld",
+    "plazaTitle": "Plaza de viajes · Wayknit",
     "plazaDescription": "Explora itinerarios de varios días compartidos por otros viajeros e impórtalos a tu propio viaje."
   },
   "target": {
-    "metaTitle": "Reúne lugares desde un enlace compartido · WayMeld",
+    "metaTitle": "Reúne lugares desde un enlace compartido · Wayknit",
     "title": "Lugares del enlace compartido",
     "backToPlan": "Al planificador",
     "extracting": "Buscando lugares en este enlace…",
@@ -97,7 +97,24 @@
     "editorBanner": "Viaje compartido contigo como editor",
     "copyLink": "Copiar enlace",
     "linkCopied": "Copiado",
-    "copyFailed": "No se pudo copiar el enlace."
+    "copyFailed": "No se pudo copiar el enlace.",
+    "activity": {
+      "tabPeople": "Personas",
+      "tabActivity": "Actividad",
+      "empty": "Aún no hay actividad.",
+      "loading": "Cargando…",
+      "you": "Tú",
+      "pin_add": "{{actor}} añadió {{target}}",
+      "pin_remove": "{{actor}} eliminó {{target}}",
+      "pin_update": "{{actor}} editó {{target}}",
+      "pin_reorder": "{{actor}} reordenó los pines ({{count}})",
+      "route_generate": "{{actor}} generó una ruta",
+      "day_add": "{{actor}} añadió un día",
+      "day_remove": "{{actor}} eliminó un día",
+      "trip_rename": "{{actor}} renombró el viaje",
+      "dayBadge": "Día {{day}}",
+      "system": "Sistema"
+    }
   },
   "invite": {
     "heading": "Invitación a editar el viaje",

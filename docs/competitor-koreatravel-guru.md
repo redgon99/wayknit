@@ -1,4 +1,4 @@
-# 경쟁 분석 — koreatravel.guru vs WayMeld(여로담)
+# 경쟁 분석 — koreatravel.guru vs Wayknit(여로담)
 
 작성일: 2026-08-20
 대상: `https://koreatravel.guru/` (운영: The Korean Guru, 한국 소재 독립 사업체)
@@ -17,7 +17,7 @@
 
 **결론: 같은 시장(외국인 한국여행)을 노리지만 무기가 정반대다. 정면충돌 구간은 딱 하나 — 일정(itinerary)이다.**
 
-| | koreatravel.guru | WayMeld |
+| | koreatravel.guru | Wayknit |
 |---|---|---|
 | 본질 | **콘텐츠·커뮤니티 미디어** (장소 DB + 에디토리얼 + 리뷰) | **계산하는 플래너 도구** (동선·시간 엔진) |
 | 강점 | 유입(SEO 913페이지 + r/KoreaTravel 직접 운영), 어필리에이트 수익, UGC | 실도로 경로·시간 계산, 자동 최적화, 4개 언어, TourAPI 공공데이터 |
@@ -159,7 +159,7 @@
 
 ---
 
-## 3. WayMeld 현황 정리 (비교 기준선)
+## 3. Wayknit 현황 정리 (비교 기준선)
 
 코드 기준 실제 보유 기능:
 
@@ -214,7 +214,7 @@
 
 ### 4-1. 플래너 (직접 경쟁)
 
-| 항목 | koreatravel.guru | WayMeld | 우열 |
+| 항목 | koreatravel.guru | Wayknit | 우열 |
 |---|---|---|:--:|
 | 장소 추가 | 자체 큐레이션 DB 840곳 + 커스텀 좌표 | 카카오/구글 실시간 검색 + 지도 클릭 + 수동 핀 | 무승부(성격 다름) |
 | 순서 정렬 | 수동만 | 드래그 + **NN 자동 최적화** | **우리** |

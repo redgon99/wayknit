@@ -1,5 +1,5 @@
 import type { CategoryCode, SearchCategoryFilter, SearchRadiusMeters, SimpleCategory } from '../types';
-import type { IconName } from '../icons/waymeld-icons';
+import type { IconName } from '../icons/wayknit-icons';
 
 // =============================================
 // 카카오 카테고리 코드 → UI 카테고리 매핑

@@ -1,30 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="utf-8">
-<meta name="omelette-print-source" content="v1785978908887604 WayMeld Planner PC.dc.html">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-doc-page:not(:defined){visibility:hidden}
-* { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-* { animation-delay:-99s !important; animation-duration:.001s !important; animation-iteration-count:1 !important; animation-fill-mode:both !important; animation-play-state:running !important; transition-duration:0s !important; }
-body { margin:0; font-family:'Instrument Sans','Noto Sans KR',sans-serif; color:#0f172a; }
-a { color:#ca8a04; text-decoration:none; }
+body { margin:0; background:#1a1a1a; font-family:'Instrument Sans','Noto Sans KR',sans-serif; color:#0f172a; }
+a { color:#ca8a04; text-decoration:none; } a:hover { color:#a16207; }
 </style>
-</head>
-<body>
-<doc-page orientation="landscape" content-width="1392px" content-height="930px">
+</helmet>
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%">
 
-  <!-- ═══════ PAGE 1 · Plan view ═══════ -->
-  <section class="page">
-    <div style="padding:16px 16px 0">
-      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
-        <div style="width:22px;height:22px;border-radius:7px;background:#facc15;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px">여</div>
-        <span style="font-size:15px;font-weight:700">WayMeld 여로담 — Planner · 1/3 Plan view 계획 화면</span>
-        <span style="font-size:12px;color:#64748b">좌측 패널(검색/핀/동선 탭)과 지도. 핀 카드에 여행자 인사이트 뱃지.</span>
+  <section data-label="Title" data-speaker-notes="Wayknit planner redesign overview. Combined direction: left panel + bottom timeline, map maximized." style="background:#fafaf8;display:flex;flex-direction:column;justify-content:center;padding:0 160px;font-family:'Instrument Sans','Noto Sans KR',sans-serif">
+    <div style="display:flex;align-items:center;gap:18px;margin-bottom:48px">
+      <div style="width:64px;height:64px;border-radius:18px;background:#facc15;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:32px">여</div>
+      <div style="font-size:30px;font-weight:700">Wayknit <span style="color:#94a3b8;font-weight:500">여로담</span></div>
+    </div>
+    <h1 style="margin:0 0 24px;font-size:88px;font-weight:700;letter-spacing:-0.02em;line-height:1.08">Trip Planner<br>Redesign · 플래너 리디자인</h1>
+    <p style="margin:0 0 12px;font-size:32px;color:#475569;font-weight:500">Collect places. Knit your route.</p>
+    <p style="margin:0;font-size:26px;color:#94a3b8">가고 싶은 곳을 담으면, 여행길이 됩니다 · 2026.08</p>
+    <div style="position:absolute;bottom:64px;left:160px;right:160px;display:flex;justify-content:space-between;font-size:22px;color:#94a3b8">
+      <span>Design proposal — PC planner</span><span>wayknit.com</span>
+    </div>
+  </section>
+
+  <section data-label="System" data-speaker-notes="Design system: warm off-white, ink, yellow accent. Category pin colors and traveler insight badges." style="background:#fafaf8;padding:100px 160px;font-family:'Instrument Sans','Noto Sans KR',sans-serif">
+    <div style="font-size:24px;font-weight:700;color:#a16207;letter-spacing:0.08em;margin-bottom:14px">DESIGN SYSTEM</div>
+    <h2 style="margin:0 0 64px;font-size:60px;font-weight:700;letter-spacing:-0.01em">담백한 실용 톤 · One brand, four categories</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:48px">
+      <div style="background:#fff;border:1px solid rgba(15,23,42,0.08);border-radius:24px;padding:40px">
+        <div style="font-size:24px;font-weight:700;margin-bottom:28px">Color 컬러</div>
+        <div style="display:flex;flex-direction:column;gap:16px;font-size:24px">
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:44px;height:44px;border-radius:12px;background:#fafaf8;border:1px solid rgba(15,23,42,0.12)"></span>#fafaf8 오프화이트 배경</div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:44px;height:44px;border-radius:12px;background:#0f172a"></span>#0f172a 잉크 본문</div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:44px;height:44px;border-radius:12px;background:#facc15"></span>#facc15 옐로 액센트</div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:44px;height:44px;border-radius:12px;background:#64748b"></span>#64748b 보조 텍스트</div>
+        </div>
       </div>
-      <div style="position:relative;width:1360px;height:850px;border-radius:16px;overflow:hidden;border:1px solid rgba(15,23,42,0.12);background:#d8e9ee">
+      <div style="background:#fff;border:1px solid rgba(15,23,42,0.08);border-radius:24px;padding:40px">
+        <div style="font-size:24px;font-weight:700;margin-bottom:28px">Category pins 카테고리 핀</div>
+        <div style="display:flex;flex-direction:column;gap:18px;font-size:24px">
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:40px;height:40px;border-radius:99px;background:#c2410c;border:3px solid #fff;box-shadow:0 2px 8px rgba(15,23,42,0.25);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center">2</span>Food 맛집</div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:40px;height:40px;border-radius:99px;background:#0e7490;border:3px solid #fff;box-shadow:0 2px 8px rgba(15,23,42,0.25);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center">3</span>Sights 관광</div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:40px;height:40px;border-radius:99px;background:#475569;border:3px solid #fff;box-shadow:0 2px 8px rgba(15,23,42,0.25);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center">1</span>Stay 숙소</div>
+          <div style="display:flex;align-items:center;gap:14px"><span style="width:40px;height:40px;border-radius:99px;background:#4d7c0f;border:3px solid #fff;box-shadow:0 2px 8px rgba(15,23,42,0.25);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center">5</span>Mart 마트</div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid rgba(15,23,42,0.08);border-radius:24px;padding:40px">
+        <div style="font-size:24px;font-weight:700;margin-bottom:28px">Traveler insights 인사이트</div>
+        <div style="display:flex;flex-direction:column;gap:18px;align-items:flex-start">
+          <span style="background:#fef9c3;color:#a16207;font-size:22px;font-weight:700;padding:10px 22px;border-radius:99px">★ Trending 인기 급상승</span>
+          <span style="background:#f0fdf4;color:#15803d;font-size:22px;font-weight:700;padding:10px 22px;border-radius:99px">92% positive reviews</span>
+          <span style="background:#f1f5f9;color:#475569;font-size:22px;font-weight:700;padding:10px 22px;border-radius:99px">Cash only 현금 결제 후기</span>
+          <div style="font-size:21px;color:#64748b;line-height:1.55;margin-top:10px">후기·니즈 분석 데이터가 장소 카드 안에 뱃지와 인사이트 문장으로 노출됩니다.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section data-label="Plan view" data-speaker-notes="Plan view: single left panel with Search / Pins / Route tabs. Pins grouped by category with insight badges." style="background:#fafaf8;display:flex;align-items:center;gap:56px;padding:0 80px;font-family:'Instrument Sans','Noto Sans KR',sans-serif">
+    <div style="width:380px;flex-shrink:0">
+      <div style="font-size:24px;font-weight:700;color:#a16207;letter-spacing:0.08em;margin-bottom:14px">01 · PLAN</div>
+      <h2 style="margin:0 0 28px;font-size:52px;font-weight:700;letter-spacing:-0.01em;line-height:1.15">계획 화면<br>Plan view</h2>
+      <ul style="margin:0;padding-left:26px;font-size:25px;color:#475569;line-height:1.7">
+        <li>검색·핀·동선을 <strong style="color:#0f172a">탭 하나로 통합</strong>한 단일 좌측 패널</li>
+        <li>핀 목록은 카테고리 그룹 + 드래그 정렬</li>
+        <li>인사이트 뱃지가 카드 안에서 바로 보임</li>
+        <li>패널을 접으면 아이콘 레일만 남아 지도 전면</li>
+      </ul>
+    </div>
+    <div style="transform:scale(0.95);transform-origin:left center;flex-shrink:0;width:1360px;height:850px"><div style="position:relative;width:1360px;height:850px;border-radius:16px;overflow:hidden;border:1px solid rgba(15,23,42,0.12);background:#d8e9ee">
         <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">
           <rect width="1440" height="900" fill="#d8e9ee"></rect>
           <path d="M-60 740 C 120 580, 260 650, 400 560 C 540 470, 520 330, 690 265 C 860 200, 1010 260, 1120 355 C 1230 450, 1300 440, 1400 540 C 1490 630, 1460 800, 1300 850 C 1100 920, 320 950, 100 880 C -30 838, -80 800, -60 740 Z" fill="#f6f3ec"></path>
@@ -45,7 +96,7 @@ a { color:#ca8a04; text-decoration:none; }
         <div style="position:absolute;top:0;left:0;right:0;height:56px;background:rgba(255,255,255,0.94);border-bottom:1px solid rgba(15,23,42,0.08);display:flex;align-items:center;gap:14px;padding:0 18px">
           <div style="display:flex;align-items:center;gap:9px">
             <div style="width:26px;height:26px;border-radius:8px;background:#facc15;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">여</div>
-            <span style="font-size:15px;font-weight:700">WayMeld <span style="color:#94a3b8;font-weight:500">여로담</span></span>
+            <span style="font-size:15px;font-weight:700">Wayknit <span style="color:#94a3b8;font-weight:500">여로담</span></span>
           </div>
           <div style="width:1px;height:22px;background:rgba(15,23,42,0.08)"></div>
           <span style="font-size:14.5px;font-weight:700">Jeju Trip · 제주 여행</span>
@@ -127,18 +178,20 @@ a { color:#ca8a04; text-decoration:none; }
           </div>
         </div>
       </div>
-    </div>
   </section>
 
-  <!-- ═══════ PAGE 2 · Route view ═══════ -->
-  <section class="page">
-    <div style="padding:16px 16px 0">
-      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
-        <div style="width:22px;height:22px;border-radius:7px;background:#facc15;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px">여</div>
-        <span style="font-size:15px;font-weight:700">WayMeld 여로담 — Planner · 2/3 Route view 동선 화면</span>
-        <span style="font-size:12px;color:#64748b">동선 생성 후: 패널은 아이콘 레일로 접히고 하단 타임라인 독 + 장소 팝업(인사이트 포함).</span>
-      </div>
-      <div style="position:relative;width:1360px;height:850px;border-radius:16px;overflow:hidden;border:1px solid rgba(15,23,42,0.12);background:#d8e9ee">
+  <section data-label="Route view" data-speaker-notes="Route view: after building the route the panel collapses to a rail, bottom timeline dock shows times, stays and travel legs." style="background:#fafaf8;display:flex;align-items:center;gap:56px;padding:0 80px;font-family:'Instrument Sans','Noto Sans KR',sans-serif">
+    <div style="width:380px;flex-shrink:0">
+      <div style="font-size:24px;font-weight:700;color:#a16207;letter-spacing:0.08em;margin-bottom:14px">02 · ROUTE</div>
+      <h2 style="margin:0 0 28px;font-size:52px;font-weight:700;letter-spacing:-0.01em;line-height:1.15">동선 화면<br>Route view</h2>
+      <ul style="margin:0;padding-left:26px;font-size:25px;color:#475569;line-height:1.7">
+        <li>동선 생성 시 패널이 자동으로 접혀 <strong style="color:#0f172a">지도 최대화</strong></li>
+        <li>하단 타임라인 독: 도착·체류·이동을 시간축으로</li>
+        <li>장소 팝업에 여행자 인사이트(현금·웨이팅 등)</li>
+        <li>피로도 체크와 Kakao Map 연동</li>
+      </ul>
+    </div>
+    <div style="transform:scale(0.95);transform-origin:left center;flex-shrink:0;width:1360px;height:850px"><div style="position:relative;width:1360px;height:850px;border-radius:16px;overflow:hidden;border:1px solid rgba(15,23,42,0.12);background:#d8e9ee">
         <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">
           <rect width="1440" height="900" fill="#d8e9ee"></rect>
           <path d="M-60 740 C 120 580, 260 650, 400 560 C 540 470, 520 330, 690 265 C 860 200, 1010 260, 1120 355 C 1230 450, 1300 440, 1400 540 C 1490 630, 1460 800, 1300 850 C 1100 920, 320 950, 100 880 C -30 838, -80 800, -60 740 Z" fill="#f6f3ec"></path>
@@ -157,7 +210,7 @@ a { color:#ca8a04; text-decoration:none; }
         <div style="position:absolute;top:0;left:0;right:0;height:56px;background:rgba(255,255,255,0.94);border-bottom:1px solid rgba(15,23,42,0.08);display:flex;align-items:center;gap:14px;padding:0 18px">
           <div style="display:flex;align-items:center;gap:9px">
             <div style="width:26px;height:26px;border-radius:8px;background:#facc15;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">여</div>
-            <span style="font-size:15px;font-weight:700">WayMeld <span style="color:#94a3b8;font-weight:500">여로담</span></span>
+            <span style="font-size:15px;font-weight:700">Wayknit <span style="color:#94a3b8;font-weight:500">여로담</span></span>
           </div>
           <div style="width:1px;height:22px;background:rgba(15,23,42,0.08)"></div>
           <span style="font-size:14.5px;font-weight:700">Jeju Trip · 제주 여행</span>
@@ -234,18 +287,20 @@ a { color:#ca8a04; text-decoration:none; }
           </div>
         </div>
       </div>
-    </div>
   </section>
 
-  <!-- ═══════ PAGE 3 · Overview mode ═══════ -->
-  <section class="page">
-    <div style="padding:16px 16px 0">
-      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
-        <div style="width:22px;height:22px;border-radius:7px;background:#facc15;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px">여</div>
-        <span style="font-size:15px;font-weight:700">WayMeld 여로담 — Planner · 3/3 Overview 조감 모드</span>
-        <span style="font-size:12px;color:#64748b">지도 전체화면 + 이름 라벨 핀. 하단 범례로 카테고리·경로 표시 토글.</span>
-      </div>
-      <div style="position:relative;width:1360px;height:850px;border-radius:16px;overflow:hidden;border:1px solid rgba(15,23,42,0.12);background:#d8e9ee">
+  <section data-label="Overview mode" data-speaker-notes="Overview mode: fullscreen map with labeled pins, category legend toggles, route line toggle." style="background:#fafaf8;display:flex;align-items:center;gap:56px;padding:0 80px;font-family:'Instrument Sans','Noto Sans KR',sans-serif">
+    <div style="width:380px;flex-shrink:0">
+      <div style="font-size:24px;font-weight:700;color:#a16207;letter-spacing:0.08em;margin-bottom:14px">03 · OVERVIEW</div>
+      <h2 style="margin:0 0 28px;font-size:52px;font-weight:700;letter-spacing:-0.01em;line-height:1.15">조감 모드<br>Overview mode</h2>
+      <ul style="margin:0;padding-left:26px;font-size:25px;color:#475569;line-height:1.7">
+        <li>지도 전체화면 + <strong style="color:#0f172a">이름 라벨 핀</strong>으로 전체 조감</li>
+        <li>하단 범례에서 카테고리별 표시/숨김 토글</li>
+        <li>경로선 on/off로 분포와 동선을 번갈아 확인</li>
+        <li>핀 클릭 시 동일한 상세 팝업 사용</li>
+      </ul>
+    </div>
+    <div style="transform:scale(0.95);transform-origin:left center;flex-shrink:0;width:1360px;height:850px"><div style="position:relative;width:1360px;height:850px;border-radius:16px;overflow:hidden;border:1px solid rgba(15,23,42,0.12);background:#d8e9ee">
         <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">
           <rect width="1440" height="900" fill="#d8e9ee"></rect>
           <path d="M-60 740 C 120 580, 260 650, 400 560 C 540 470, 520 330, 690 265 C 860 200, 1010 260, 1120 355 C 1230 450, 1300 440, 1400 540 C 1490 630, 1460 800, 1300 850 C 1100 920, 320 950, 100 880 C -30 838, -80 800, -60 740 Z" fill="#f6f3ec"></path>
@@ -279,10 +334,10 @@ a { color:#ca8a04; text-decoration:none; }
           <span style="font-size:12px;color:#475569;background:rgba(255,255,255,0.85);border-radius:99px;padding:4px 14px">Click a category to focus · 카테고리를 눌러 집중해서 보기</span>
         </div>
       </div>
-    </div>
   </section>
 
-</doc-page>
-<script src="doc-page.js"></script>
+</x-import>
+
+</x-dc>
 </body>
 </html>

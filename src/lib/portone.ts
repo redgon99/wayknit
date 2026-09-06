@@ -6,7 +6,7 @@ declare global {
 
 // =============================================
 // 포트원(PortOne) V2 브라우저 SDK 로더 (싱글톤)
-// 참고: docs/Waymeld_수익화_실행계획_2026-08-27.md §1.4
+// 참고: docs/Wayknit_수익화_실행계획_2026-08-27.md §1.4
 // =============================================
 
 let sdkPromise: Promise<typeof window.PortOne> | null = null;

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { IconName } from '../icons/waymeld-icons';
+import type { IconName } from '../icons/wayknit-icons';
 import type { SearchCategoryFilter, SearchRadiusMeters, SortKey } from '../types';
 import {
   SEARCH_CATEGORY_FILTERS,

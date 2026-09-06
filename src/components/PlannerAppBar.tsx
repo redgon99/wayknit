@@ -115,12 +115,12 @@ export function PlannerAppBar({
     <>
     <header className="planner-app-bar desktop-only-overlay">
       {/* 1. 브랜드 + 여행 */}
-      <Link to="/" className="planner-brand" title="WayMeld">
+      <Link to="/" className="planner-brand" title="Wayknit">
         <span className="planner-brand-mark" aria-hidden>
           여
         </span>
         <span className="planner-brand-text">
-          WayMeld <span className="planner-brand-ko">{t('chrome.brandKo')}</span>
+          Wayknit <span className="planner-brand-ko">{t('chrome.brandKo')}</span>
         </span>
       </Link>
 

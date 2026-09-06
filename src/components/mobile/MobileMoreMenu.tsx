@@ -5,10 +5,11 @@ import { useTranslation } from 'react-i18next';
 interface Props {
   onShare: () => void;
   plazaNavVisible?: boolean;
-  onOpenScenario?: () => void;
+  /** 표로 보기 — 데스크톱에선 앱바 보기 전환 세그먼트에 있는 기능 */
+  onOpenTableView?: () => void;
 }
 
-export function MobileMoreMenu({ onShare, plazaNavVisible, onOpenScenario }: Props) {
+export function MobileMoreMenu({ onShare, plazaNavVisible, onOpenTableView }: Props) {
   const { t } = useTranslation('planner');
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -64,7 +65,7 @@ export function MobileMoreMenu({ onShare, plazaNavVisible, onOpenScenario }: Pro
       {open && (
         <div className="planner-more-menu" role="menu">
           {item(t('trip.share'), onShare)}
-          {onOpenScenario && item(t('scenario.menuLabel'), onOpenScenario)}
+          {onOpenTableView && item(t('view.table'), onOpenTableView)}
           {plazaNavVisible && item(t('plazaNav'), () => navigate('/plaza'))}
           {item(t('nav.setup'), () => navigate('/setup'))}
           {item(t('nav.help'), () => navigate('/help'))}

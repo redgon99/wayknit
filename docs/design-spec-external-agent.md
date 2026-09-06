@@ -1,9 +1,9 @@
-# WayMeld (여로담) — 외부 디자인 에이전트용 서비스 명세서
+# Wayknit (여로담) — 외부 디자인 에이전트용 서비스 명세서
 
 > **문서 목적**: 현재 구현된 웹 서비스의 제품·UX·비주얼 현황을 한 파일에 정리하여, 외부 디자인 에이전트가 **리디자인·브랜딩·UI 시스템·화면 시안** 작업을 수행할 수 있도록 한다.  
-> **작성 기준**: 코드베이스 `waymeld` v0.2.0 (2026-06)  
-> **라이브 URL**: https://waymeld.netlify.app/  
-> **플래너 URL**: https://waymeld.netlify.app/plan
+> **작성 기준**: 코드베이스 `wayknit` v0.2.0 (2026-06)  
+> **라이브 URL**: https://wayknit.netlify.app/  
+> **플래너 URL**: https://wayknit.netlify.app/plan
 
 ---
 
@@ -33,7 +33,7 @@
 
 ## 1. 한 줄 요약
 
-**WayMeld(여로담)** 는 대한민국을 방문하는 외국인 관광객을 주 타깃으로 한 **지도 중심 여행 동선 플래너**다. 사용자는 장소를 검색·핀업하고, 카테고리별로 정리한 뒤, 드래그로 순서를 바꾸고 **시간표가 포함된 일정·동선**을 생성한다. 실제 이동은 카카오맵·네이버지도·구글맵 링크와 **택시기사용 카드**로 연결한다.
+**Wayknit(여로담)** 는 대한민국을 방문하는 외국인 관광객을 주 타깃으로 한 **지도 중심 여행 동선 플래너**다. 사용자는 장소를 검색·핀업하고, 카테고리별로 정리한 뒤, 드래그로 순서를 바꾸고 **시간표가 포함된 일정·동선**을 생성한다. 실제 이동은 카카오맵·네이버지도·구글맵 링크와 **택시기사용 카드**로 연결한다.
 
 ```
 Find → Collect → Map → Route
@@ -48,10 +48,10 @@ Find → Collect → Map → Route
 
 | 구분 | 이름 |
 |------|------|
-| **영문 서비스명** | WayMeld |
+| **영문 서비스명** | Wayknit |
 | **한글 서비스명** | 여로담 |
-| **npm / 저장소명** | `waymeld` |
-| **영문 슬로건** | Collect places. Meld your route. |
+| **npm / 저장소명** | `wayknit` |
+| **영문 슬로건** | Collect places. Knit your route. |
 | **한글 슬로건** | 가고 싶은 곳을 담으면, 여행길이 됩니다. |
 
 ### 2.2 포지셔닝 한 줄
@@ -109,9 +109,9 @@ Find → Collect → Map → Route
 | 4 | 카카오/네이버/구글맵 + **택시기사용 카드**로 실제 이동 지원 |
 | 5 | 공항 이동, 교통카드, 1330 등 **한국 여행 실전 정보** 제공 |
 
-### Pin Traveler vs WayMeld
+### Pin Traveler vs Wayknit
 
-| | Pin Traveler | WayMeld |
+| | Pin Traveler | Wayknit |
 |--|--------------|---------|
 | 핵심 질문 | 어디를 가 봤나? | 다음에 어떻게 돌아다닐까? |
 | 산출물 | 방문 지도, 버킷리스트, 사진·통계 | **시간표 동선**, 다일차 일정 |
@@ -196,7 +196,7 @@ Find → Collect → Map → Route
 - Hero: eyebrow + 타이틀 + 서브타이틀 + Primary/Secondary CTA
 - Three pillars (검색·동선·공유)
 - Features grid (멀티데이, 카테고리 핀바, 듀얼 지도, 프레젠테이션 모드)
-- Positioning 비교표 (WayMeld vs Visit tracker)
+- Positioning 비교표 (Wayknit vs Visit tracker)
 - How to start (4단계)
 - Final CTA
 - Footer
@@ -497,7 +497,7 @@ font-family: -apple-system, BlinkMacSystemFont, 'Pretendard',
 
 ### 9.6 아이콘
 
-- **커스텀 SVG 세트**: `src/icons/waymeld-icons.ts`
+- **커스텀 SVG 세트**: `src/icons/wayknit-icons.ts`
 - 24×24, stroke 1.75, `currentColor`
 - 카테고리·검색·핀·동선·자료함 등 50+ 아이콘
 
@@ -819,7 +819,7 @@ font-family: -apple-system, BlinkMacSystemFont, 'Pretendard',
 
 | 파일 | 내용 |
 |------|------|
-| `docs/cursor_prd_yeorodam_waymeld.md` | 개발용 PRD (기능 상세) |
+| `docs/cursor_prd_yeorodam_wayknit.md` | 개발용 PRD (기능 상세) |
 | `docs/positioning-copy.md` | 포지셔닝·카피 |
 | `docs/mobile-mockups/` | 모바일 UI 목업 3종 |
 | `name.md` | 브랜드명 확정·네이밍 아카이브 |
@@ -834,16 +834,16 @@ font-family: -apple-system, BlinkMacSystemFont, 'Pretendard',
 | `src/lib/categories.ts` | 카테고리 색상·아이콘 |
 | `src/locales/en/planner.json` | 영문 UI 카피 |
 | `src/locales/en/landing.json` | 영문 랜딩 카피 |
-| `src/icons/waymeld-icons.ts` | 아이콘 세트 |
+| `src/icons/wayknit-icons.ts` | 아이콘 세트 |
 
 ### 라이브 서비스
 
-- **랜딩**: https://waymeld.netlify.app/
-- **플래너**: https://waymeld.netlify.app/plan
-- **공유마당**: https://waymeld.netlify.app/plaza
-- **Setup**: https://waymeld.netlify.app/setup
-- **Help**: https://waymeld.netlify.app/help
-- **Themes**: https://waymeld.netlify.app/themes
+- **랜딩**: https://wayknit.netlify.app/
+- **플래너**: https://wayknit.netlify.app/plan
+- **공유마당**: https://wayknit.netlify.app/plaza
+- **Setup**: https://wayknit.netlify.app/setup
+- **Help**: https://wayknit.netlify.app/help
+- **Themes**: https://wayknit.netlify.app/themes
 
 ---
 
@@ -894,4 +894,4 @@ totalDistanceKm, totalTravelMinutes
 
 ---
 
-*이 문서는 WayMeld 개발팀이 유지·갱신합니다. 질문은 프로젝트 저장소 이슈 또는 담당자에게 문의하세요.*
+*이 문서는 Wayknit 개발팀이 유지·갱신합니다. 질문은 프로젝트 저장소 이슈 또는 담당자에게 문의하세요.*

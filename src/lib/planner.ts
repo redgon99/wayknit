@@ -10,11 +10,7 @@ import type {
 import { TRAVEL_MODE_META, suggestStayMinutes } from './categories';
 import { computeFatigue } from './fatigue';
 import { haversineMeters } from './geo';
-import {
-  checkVisitWindow,
-  parseOpeningHours,
-  weekdayFromDate,
-} from './openingHours';
+import { checkVisitWindow, parseOpeningHours } from './openingHours';
 import { applyTimeAnchors, hasFixedArrival, orderWithFixedArrivals } from './scheduleAnchors';
 import { themeBoostScore } from './themes';
 import { formatHHMM, parseHHMM } from './timeOfDay';
@@ -137,14 +133,13 @@ function adjustForMealTime(
 // 영업시간 검증: 예정 도착·출발 시각에 문을 여는지
 // =============================================
 
-function annotateOpeningHours(stops: RouteStop[], date?: string): RouteStop[] {
-  const weekday = weekdayFromDate(date);
+function annotateOpeningHours(stops: RouteStop[]): RouteStop[] {
   return stops.map((stop) => {
-    const hours = parseOpeningHours(stop.openingHours, stop.closedDays);
+    const hours = parseOpeningHours(stop.openingHours);
     if (!hours) return stop;
     const arrive = parseHHMM(stop.arriveAt);
     const leave = parseHHMM(stop.leaveAt);
-    const check = checkVisitWindow(hours, weekday, arrive, leave < arrive ? undefined : leave);
+    const check = checkVisitWindow(hours, arrive, leave < arrive ? undefined : leave);
     return {
       ...stop,
       hoursStatus: check.status,
@@ -240,7 +235,7 @@ export function generateRoute(
   if (anchored.finishMinutes !== null) cursor = anchored.finishMinutes;
 
   // 6. 확정된 시각으로 영업 여부 판정
-  stops = annotateOpeningHours(stops, options.date);
+  stops = annotateOpeningHours(stops);
 
   const totalDistanceM = legs.reduce((s, l) => s + l.distanceMeters, 0);
   const totalTravelMin = legs.reduce((s, l) => s + l.durationMinutes, 0);
@@ -314,7 +309,7 @@ export async function refineRouteWithRealLegs(
   });
 
   const anchored = applyTimeAnchors(rescheduled);
-  const stops = annotateOpeningHours(anchored.stops, route.options.date);
+  const stops = annotateOpeningHours(anchored.stops);
   if (anchored.finishMinutes !== null) cursor = anchored.finishMinutes;
 
   const legs = newLegs.map((nl, i) => ({

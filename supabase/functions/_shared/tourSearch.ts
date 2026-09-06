@@ -2,7 +2,7 @@
 export function buildTourSearchUrl(keyword: string, serviceKey: string): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     keyword: keyword.trim(),
     numOfRows: '10',

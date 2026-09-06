@@ -1,5 +1,5 @@
 import type { SimpleCategory, TripTheme } from '../types';
-import type { IconName } from '../icons/waymeld-icons';
+import type { IconName } from '../icons/wayknit-icons';
 
 export const TRIP_THEMES: Array<{
   id: TripTheme;

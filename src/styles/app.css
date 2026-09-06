@@ -1,5 +1,5 @@
 /* =============================================
-   WayMeld 통합 스타일
+   Wayknit 통합 스타일
    ============================================= */
 
 :root {
@@ -103,7 +103,7 @@ button {
   cursor: pointer;
 }
 
-/* WayMeld 아이콘 세트 (src/icons/waymeld-icons.ts) */
+/* Wayknit 아이콘 세트 (src/icons/wayknit-icons.ts) */
 .wm-icon {
   display: inline-block;
   vertical-align: -0.15em;
@@ -125,7 +125,7 @@ button {
    레이아웃 루트
    ============================================= */
 
-.waymeld-root {
+.wayknit-root {
   position: relative;
   width: 100vw;
   height: 100vh;
@@ -1757,7 +1757,7 @@ button {
  * 배경을 비우고 pointer-events도 넘겨 지도를 계속 조작할 수 있게 한다.
  * (모바일은 좌측 패널이 없으므로 기존 전체화면 모달을 그대로 쓴다)
  */
-.waymeld-root:not(.mobile-layout) .photos-overlay {
+.wayknit-root:not(.mobile-layout) .photos-overlay {
   position: absolute;
   background: none;
   padding: 0;
@@ -1768,11 +1768,11 @@ button {
 /* 오버레이를 통과시킨 클릭이 뒤쪽 앱바(로그아웃 등)를 누르지 않도록,
  * 오버레이의 자식은 모두 클릭을 되받는다. 사진 라이트박스도 여기 자식이라
  * .photos-panel만 되돌리면 라이트박스 닫기가 로그아웃을 눌러버린다. */
-.waymeld-root:not(.mobile-layout) .photos-overlay > * {
+.wayknit-root:not(.mobile-layout) .photos-overlay > * {
   pointer-events: auto;
 }
 
-.waymeld-root:not(.mobile-layout) .photos-overlay > .photos-panel {
+.wayknit-root:not(.mobile-layout) .photos-overlay > .photos-panel {
   /* 앱바 아래 남은 세로 공간의 한가운데에 놓는다(위아래 auto 여백).
    * 지도 옆에 붙는 패널이 위쪽에만 붙어 있으면 지도와 눈높이가 어긋난다. */
   position: fixed;
@@ -5163,9 +5163,9 @@ button {
   cursor: pointer;
 }
 
-.waymeld-root.mobile-layout .map-type-toggle {
-  /* 모바일은 앱바가 따로 없이 지도가 화면 최상단부터 시작 */
-  top: 16px;
+.wayknit-root.mobile-layout .map-type-toggle {
+  /* 모바일 상단 바(검색·자료·더보기 + 날짜 탭) 아래로 — 더보기 버튼을 가려 탭을 가로채던 문제 수정 */
+  top: 108px;
   right: 16px;
 }
 
@@ -5381,11 +5381,11 @@ button {
     right: var(--mobile-gutter);
   }
 
-  .waymeld-root.panel-open .overlay-top-right {
+  .wayknit-root.panel-open .overlay-top-right {
     right: var(--mobile-gutter);
   }
 
-  .waymeld-root.presentation-mode.panel-open .overlay-map-header {
+  .wayknit-root.presentation-mode.panel-open .overlay-map-header {
     right: var(--mobile-gutter);
   }
 }
@@ -5481,48 +5481,48 @@ button {
   }
 
   /* --- 검색 확장 (목업 2) --- */
-  .waymeld-root.search-expanded .overlay-left {
+  .wayknit-root.search-expanded .overlay-left {
     max-height: var(--mobile-search-height-expanded);
   }
 
-  .waymeld-root.search-expanded .overlay-map-header {
+  .wayknit-root.search-expanded .overlay-map-header {
     max-height: var(--mobile-pinup-dock-compact);
   }
 
-  .waymeld-root.search-expanded .pinup-groups {
+  .wayknit-root.search-expanded .pinup-groups {
     max-height: min(100px, 14vh);
   }
 
-  .waymeld-root.search-expanded .overlay-map-tools {
+  .wayknit-root.search-expanded .overlay-map-tools {
     bottom: calc(var(--mobile-pinup-dock-compact) + var(--mobile-gutter) + 12px);
   }
 
-  .waymeld-root.search-expanded .overlay-bottom-left {
+  .wayknit-root.search-expanded .overlay-bottom-left {
     bottom: calc(var(--mobile-pinup-dock-compact) + var(--mobile-gutter) + 8px);
   }
 
   /* --- 프레젠테이션 모바일 (목업 3) --- */
-  .waymeld-root.presentation-mode .overlay-map-header {
+  .wayknit-root.presentation-mode .overlay-map-header {
     top: calc(var(--mobile-gutter) + env(safe-area-inset-top, 0px));
     bottom: auto;
     max-height: var(--mobile-pr-pinup-max);
     overflow-y: auto;
   }
 
-  .waymeld-root.presentation-mode .overlay-map-tools {
+  .wayknit-root.presentation-mode .overlay-map-tools {
     bottom: var(--mobile-gutter);
     left: var(--mobile-gutter);
   }
 
-  .waymeld-root.presentation-mode .pinup-groups {
+  .wayknit-root.presentation-mode .pinup-groups {
     max-height: min(200px, 28vh);
   }
 
-  .waymeld-root.presentation-mode .pinup-bar.presentation-active {
+  .wayknit-root.presentation-mode .pinup-bar.presentation-active {
     padding: 14px 16px;
   }
 
-  .waymeld-root.presentation-mode .pinup-bar.presentation-active .pinup-title {
+  .wayknit-root.presentation-mode .pinup-bar.presentation-active .pinup-title {
     font-size: 15px;
   }
 
@@ -5772,36 +5772,36 @@ button {
   opacity: 0.55;
 }
 
-.waymeld-root.panel-open .overlay-top-right {
+.wayknit-root.panel-open .overlay-top-right {
   right: 372px;
   transition: right 0.25s ease-out;
 }
 
 /* 프레젠테이션 모드 — 핀업 카드 상단 전폭 + 지도 유지, 검색·TripBar 등 다른 UI 카드만 숨김 */
-.waymeld-root.presentation-mode {
+.wayknit-root.presentation-mode {
   background: var(--color-map);
 }
 
-.waymeld-root.presentation-mode .overlay-left,
-.waymeld-root.presentation-mode .trip-day-card,
-.waymeld-root.presentation-mode .overlay-map-header-trip,
-.waymeld-root.presentation-mode .overlay-top-right {
+.wayknit-root.presentation-mode .overlay-left,
+.wayknit-root.presentation-mode .trip-day-card,
+.wayknit-root.presentation-mode .overlay-map-header-trip,
+.wayknit-root.presentation-mode .overlay-top-right {
   display: none !important;
 }
 
-.waymeld-root.presentation-mode .overlay-map-header {
+.wayknit-root.presentation-mode .overlay-map-header {
   left: 16px;
   right: 16px;
   top: 16px;
   bottom: auto;
 }
 
-.waymeld-root.presentation-mode.panel-open .overlay-map-header {
+.wayknit-root.presentation-mode.panel-open .overlay-map-header {
   right: 372px;
 }
 
-.waymeld-root.presentation-mode .overlay-map-pinup,
-.waymeld-root.presentation-mode .pinup-bar {
+.wayknit-root.presentation-mode .overlay-map-pinup,
+.wayknit-root.presentation-mode .pinup-bar {
   width: 100%;
   max-width: none;
 }
@@ -6305,15 +6305,15 @@ button {
    ============================================= */
 
 @media (max-width: 768px) {
-  .waymeld-root.mobile-layout .desktop-only-overlay {
+  .wayknit-root.mobile-layout .desktop-only-overlay {
     display: none !important;
   }
 
-  .waymeld-root.mobile-layout .map-canvas {
+  .wayknit-root.mobile-layout .map-canvas {
     inset: 0;
   }
 
-  .waymeld-root.mobile-layout.mobile-sheet-open .map-canvas::after {
+  .wayknit-root.mobile-layout.mobile-sheet-open .map-canvas::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -6322,24 +6322,24 @@ button {
     z-index: 14;
   }
 
-  .waymeld-root.mobile-layout .overlay-top-right {
+  .wayknit-root.mobile-layout .overlay-top-right {
     display: none;
   }
 
-  .waymeld-root.mobile-layout .auth-bar {
+  .wayknit-root.mobile-layout .auth-bar {
     padding: 6px 10px;
     font-size: 11px;
     max-width: 140px;
   }
 
-  .waymeld-root.mobile-layout .auth-bar .auth-email {
+  .wayknit-root.mobile-layout .auth-bar .auth-email {
     max-width: 72px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .waymeld-root.mobile-layout .overlay-bottom-left {
+  .wayknit-root.mobile-layout .overlay-bottom-left {
     bottom: calc(88px + env(safe-area-inset-bottom, 0px));
     left: var(--mobile-gutter);
     right: var(--mobile-gutter);
@@ -6348,18 +6348,18 @@ button {
     z-index: 15;
   }
 
-  .waymeld-root.mobile-layout.mobile-sheet-open .overlay-bottom-left {
+  .wayknit-root.mobile-layout.mobile-sheet-open .overlay-bottom-left {
     display: none;
   }
 
-  .waymeld-root.mobile-layout.mobile-sheet-open .mobile-top-bar {
+  .wayknit-root.mobile-layout.mobile-sheet-open .mobile-top-bar {
     opacity: 0;
     pointer-events: none;
     transform: translateY(-8px);
     transition: opacity 0.15s ease, transform 0.15s ease;
   }
 
-  .waymeld-root.mobile-layout.panel-open .mobile-dock {
+  .wayknit-root.mobile-layout.panel-open .mobile-dock {
     opacity: 0;
     pointer-events: none;
     transform: translateY(16px);
@@ -7484,7 +7484,7 @@ button {
   box-shadow: var(--shadow-float);
 }
 
-.waymeld-root.mobile-layout .trip-readonly-banner {
+.wayknit-root.mobile-layout .trip-readonly-banner {
   top: 16px;
 }
 
@@ -9054,7 +9054,7 @@ button {
     max-height: 40dvh;
     overflow: hidden;
   }
-  .waymeld-root.mobile-layout.mobile-sheet-open .overlay-bottom-left {
+  .wayknit-root.mobile-layout.mobile-sheet-open .overlay-bottom-left {
     display: none;
   }
 }
@@ -10451,11 +10451,12 @@ button {
 
 .route-depart-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .route-depart-chip {
-  flex: 1;
+  flex: 1 1 128px;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -10472,7 +10473,10 @@ button {
 }
 
 .route-depart-chip.origin {
-  flex: 1.55;
+  /* 시간·날짜 칩은 한 줄에 나란히 두기 충분히 좁지만, 출발지는 뱃지+아이콘+주소
+     텍스트가 길어질 수 있어 한 줄을 다 쓰지 않으면 잘린다 — flex-basis: 100%로
+     항상 자기 줄을 차지하게 강제한다(flex-wrap과 조합하는 표준 줄바꿈 트릭). */
+  flex: 1 1 100%;
   border-width: 1.5px;
   border-color: rgba(15, 23, 42, 0.14);
   background: #fff;
@@ -10730,6 +10734,18 @@ button {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.route-stay-drag {
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: grab;
+  touch-action: none;
+}
+
+.route-stay-drag:active {
+  cursor: grabbing;
 }
 
 .route-stay-body {
@@ -11464,15 +11480,15 @@ button {
   }
 }
 
-.waymeld-root.panel-collapsed .planner-side-panel {
+.wayknit-root.panel-collapsed .planner-side-panel {
   display: none;
 }
 
-.waymeld-root.presentation-mode .planner-app-bar,
-.waymeld-root.presentation-mode .planner-side-panel,
-.waymeld-root.presentation-mode .planner-icon-rail,
-.waymeld-root.presentation-mode .route-timeline-dock,
-.waymeld-root.presentation-mode .overlay-map-tools {
+.wayknit-root.presentation-mode .planner-app-bar,
+.wayknit-root.presentation-mode .planner-side-panel,
+.wayknit-root.presentation-mode .planner-icon-rail,
+.wayknit-root.presentation-mode .route-timeline-dock,
+.wayknit-root.presentation-mode .overlay-map-tools {
   display: none !important;
 }
 
@@ -12163,7 +12179,7 @@ button {
   box-shadow: 0 8px 28px rgba(15, 23, 42, 0.3);
 }
 
-.waymeld-root.presentation-mode .overview-chrome {
+.wayknit-root.presentation-mode .overview-chrome {
   display: flex;
 }
 
@@ -12207,7 +12223,7 @@ button {
   box-shadow: var(--shadow-panel);
 }
 
-.waymeld-root.presentation-mode .overview-legend {
+.wayknit-root.presentation-mode .overview-legend {
   display: flex;
 }
 
@@ -12237,12 +12253,12 @@ button {
   gap: 8px;
 }
 
-.waymeld-root.mobile-layout .mobile-planner-top {
+.wayknit-root.mobile-layout .mobile-planner-top {
   display: flex;
 }
 
-.waymeld-root.mobile-layout .mobile-top-bar,
-.waymeld-root.mobile-layout .mobile-dock {
+.wayknit-root.mobile-layout .mobile-top-bar,
+.wayknit-root.mobile-layout .mobile-dock {
   display: none !important;
 }
 
@@ -12320,7 +12336,7 @@ button {
   overflow: hidden;
 }
 
-.waymeld-root.mobile-layout:not(.presentation-mode) .mobile-planner-sheet {
+.wayknit-root.mobile-layout:not(.presentation-mode) .mobile-planner-sheet {
   display: flex;
 }
 
@@ -12502,11 +12518,11 @@ button {
   flex-direction: column;
 }
 
-.waymeld-root.mobile-layout.mobile-search-open .mobile-search-overlay {
+.wayknit-root.mobile-layout.mobile-search-open .mobile-search-overlay {
   display: flex;
 }
 
-.waymeld-root.mobile-layout.mobile-search-open .mobile-planner-sheet {
+.wayknit-root.mobile-layout.mobile-search-open .mobile-planner-sheet {
   display: none;
 }
 
@@ -13553,6 +13569,32 @@ button {
   vertical-align: middle;
 }
 
+/* 상세 모달 안에서 바로 핀업. 헤더가 space-between이라 margin-left:auto로
+   남는 공간을 밀어내 닫기 버튼 옆에 붙인다. */
+.place-detail-pin-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.place-detail-pin-btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-primary);
+}
+
+.place-detail-pin-btn.pinned {
+  color: var(--color-primary);
+}
+
 .theme-match-badge {
   display: inline-flex;
   align-items: center;
@@ -14478,4 +14520,133 @@ button {
     position: static;
     order: -1;
   }
+}
+
+/* =============================================
+   모바일 시트 · 터치 영역 확대
+   손가락 터치 최소 권장 크기(약 44px)에 한참 못 미치던 핀 카드 버튼들
+   (드래그 핸들 17px, 택시·삭제 22px, 필수방문 24px)을 넓힌다.
+   아이콘 크기는 그대로 두고 버튼 박스만 키워 겉모습 변화는 최소화한다.
+   모바일 시트 안에서만 적용 — 지도 위 오버레이 칩(.pin-chip 기본형)은
+   공간이 빠듯해 그대로 둔다.
+   ============================================= */
+
+.mobile-planner-sheet .pinup-bar-panel .pin-chip {
+  /* 버튼이 커진 만큼 세로 여백을 줄여 행 높이 증가를 최소화 */
+  padding: 6px 10px;
+  gap: 6px;
+}
+
+/* 배경이 투명한 버튼들 — 박스만 키우므로 눈에 보이는 변화가 거의 없다 */
+.mobile-planner-sheet .pin-chip .chip-taxi,
+.mobile-planner-sheet .pin-chip .chip-delete,
+.mobile-planner-sheet .pin-chip .chip-required {
+  /* 40px까지 키우면 이름 칸이 너무 좁아져 36px로 절충 (기존 22px) */
+  width: 36px;
+  height: 36px;
+}
+
+/* 순번 배지 겸 드래그 핸들. 원 자체가 보이는 요소라 40px까지는 키우지 않고
+   집기 편한 선까지만 넓힌다. */
+.mobile-planner-sheet .pin-chip .chip-order.chip-drag {
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+}
+
+/* 카테고리 필터 토글은 색 배지라 크기를 바꾸면 눈에 띄므로,
+   보이는 크기는 두고 히트 영역만 넓힌다. 오른쪽 이웃은 클릭 대상이 아닌
+   라벨 텍스트라 영역이 겹쳐도 문제되지 않는다. */
+.mobile-planner-sheet .group-icon-toggle {
+  position: relative;
+}
+
+.mobile-planner-sheet .group-icon-toggle::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+}
+
+/* 표로 보기 — 모바일에서는 화면을 최대한 쓰고 칸을 좁힌다.
+   더보기 메뉴에서 열 수 있게 되면서 좁은 화면에서도 읽혀야 한다. */
+@media (max-width: 768px) {
+  .itinerary-table-modal-backdrop {
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .itinerary-table-modal {
+    max-height: 94vh;
+  }
+
+  .itinerary-table-modal-header {
+    padding: 12px 12px 10px;
+  }
+
+  .itinerary-table {
+    font-size: 12.5px;
+  }
+
+  .itinerary-table th,
+  .itinerary-table td {
+    padding: 8px 7px;
+  }
+}
+
+/* ── 협업자 모달: 사람/활동 탭 (공동편집 3단계) ───────────────────── */
+.collab-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line, #e5e7eb);
+  margin: 4px 0 12px;
+}
+.collab-tab {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--text-muted, #6b7280);
+  cursor: pointer;
+}
+.collab-tab.active {
+  color: var(--text, #111827);
+  font-weight: 600;
+  border-bottom-color: currentColor;
+}
+.collab-activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+.collab-activity-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--line-soft, #f1f3f5);
+  font-size: 13px;
+}
+.collab-activity-item:last-child { border-bottom: 0; }
+.collab-activity-text {
+  min-width: 0;
+  word-break: break-word;
+}
+.collab-activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  color: var(--text-muted, #6b7280);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.collab-activity-day {
+  background: var(--chip-bg, #f1f3f5);
+  border-radius: 999px;
+  padding: 1px 7px;
 }

@@ -3,7 +3,7 @@ import type { Place, PinnedPlace, GeneratedRoute, Origin, SimpleCategory } from 
 import { getCategoryMeta } from '../lib/categories';
 import { coordsToAddress, findNearestPlaceNear } from '../lib/kakao';
 import { createMapPlaceBubbleElement } from '../lib/mapPlaceBubble';
-import { iconSvgMarkup } from '../icons/waymeld-icons';
+import { iconSvgMarkup } from '../icons/wayknit-icons';
 import {
   renderPlaceMarkerHtml,
   renderSearchCenterMarkerHtml,

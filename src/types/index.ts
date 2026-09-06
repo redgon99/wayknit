@@ -1,5 +1,5 @@
 // =============================================
-// WayMeld 공통 타입 정의
+// Wayknit 공통 타입 정의
 // =============================================
 
 import type { VisitHoursStatus } from '../lib/openingHours';
@@ -164,8 +164,6 @@ export interface Origin {
 export interface RouteOptions {
   origin: Origin;
   departTime: string;             // "09:00"
-  /** 실제 방문 날짜 "YYYY-MM-DD" — 영업시간 요일 판정에 쓰인다 (선택) */
-  date?: string;
   travelMode: TravelMode;
   optimizeBy: OptimizeBy;
   autoOrder: boolean;             // true=자동 최적화, false=핀업 순서

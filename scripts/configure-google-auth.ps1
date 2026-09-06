@@ -1,4 +1,4 @@
-# WayMeld (여로담) — Google OAuth + Supabase 연동 (반자동)
+# Wayknit (여로담) — Google OAuth + Supabase 연동 (반자동)
 # Google Client ID/Secret은 GCP에서 직접 발급해야 합니다.
 #
 # 사용 예:
@@ -12,7 +12,7 @@ $ProjectRef = 'ainftwifvclgiookzrwm'
 $CallbackUrl = "https://$ProjectRef.supabase.co/auth/v1/callback"
 
 Write-Host ""
-Write-Host "=== WayMeld Google 로그인 설정 ===" -ForegroundColor Cyan
+Write-Host "=== Wayknit Google 로그인 설정 ===" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "1) Google Cloud Console — OAuth 클라이언트 만들기"
 Write-Host "   승인된 리디렉션 URI에 아래를 추가:"

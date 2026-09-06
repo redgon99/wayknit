@@ -90,7 +90,7 @@ export async function fetchOfficialAddress(
   const service = SERVICE_BY_LOCALE[locale];
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     numOfRows: '10',
     keyword,

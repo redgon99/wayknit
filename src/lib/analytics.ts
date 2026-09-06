@@ -28,7 +28,7 @@ export interface AnalyticsRecord {
   at: number;
 }
 
-const STORAGE_KEY = 'waymeld:analytics-v1';
+const STORAGE_KEY = 'wayknit:analytics-v1';
 /** 로컬 버퍼 상한 — 브라우저 저장소를 계속 키우지 않는다 */
 const MAX_RECORDS = 500;
 

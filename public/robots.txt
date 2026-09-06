@@ -6,4 +6,4 @@ Disallow: /login
 Disallow: /*/admin
 Disallow: /*/login
 
-Sitemap: https://waymeld.netlify.app/sitemap.xml
+Sitemap: https://wayknit.netlify.app/sitemap.xml

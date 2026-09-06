@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import {
@@ -13,6 +13,11 @@ import {
   type TripInvite,
   type CollaboratorRole,
 } from '../lib/trips';
+import {
+  listTripActivity,
+  actorKind,
+  type TripActivityEntry,
+} from '../lib/tripActivity';
 
 interface Props {
   open: boolean;
@@ -33,6 +38,8 @@ export function CollaboratorsModal({ open, tripId, tripTitle, currentUserId, onC
   const [inviting, setInviting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [tab, setTab] = useState<'people' | 'activity'>('people');
+  const [activity, setActivity] = useState<TripActivityEntry[] | null>(null);
 
   /**
    * 아직 초대 메일을 보내는 수단이 없어서, 소유자가 링크를 복사해
@@ -62,9 +69,18 @@ export function CollaboratorsModal({ open, tripId, tripTitle, currentUserId, onC
     setEmail('');
     setRole('editor');
     setError(null);
+    setTab('people');
+    setActivity(null);
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, tripId]);
+
+  // 활동 탭을 열 때만 읽는다 — 사람 탭만 쓰는 경우가 대부분이라 미리 받지 않는다.
+  useEffect(() => {
+    if (!open || tab !== 'activity' || activity !== null) return;
+    void listTripActivity(tripId).then(setActivity);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, tab, tripId]);
 
   if (!open) return null;
 
@@ -121,6 +137,25 @@ export function CollaboratorsModal({ open, tripId, tripTitle, currentUserId, onC
             <input type="text" value={tripTitle} readOnly className="share-trip-modal-readonly" />
           </label>
 
+          <div className="collab-tabs" role="tablist">
+            {(['people', 'activity'] as const).map((id) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={tab === id}
+                className={`collab-tab ${tab === id ? 'active' : ''}`}
+                onClick={() => setTab(id)}
+              >
+                {id === 'people' ? t('collab.activity.tabPeople') : t('collab.activity.tabActivity')}
+              </button>
+            ))}
+          </div>
+
+          {tab === 'activity' ? (
+            <ActivityList entries={activity} currentUserId={currentUserId} />
+          ) : (
+          <>
           <p className="share-trip-modal-hint">{t('collab.hint')}</p>
 
           <form className="collab-invite-row" onSubmit={handleInvite}>
@@ -214,6 +249,8 @@ export function CollaboratorsModal({ open, tripId, tripTitle, currentUserId, onC
               )}
             </>
           )}
+          </>
+          )}
         </div>
 
         <footer className="share-trip-modal-footer">
@@ -223,5 +260,68 @@ export function CollaboratorsModal({ open, tripId, tripTitle, currentUserId, onC
         </footer>
       </div>
     </div>
+  );
+}
+
+/**
+ * 활동 목록. 재정렬은 lib에서 이미 묶어서 내려오므로 여기선 그대로 그린다.
+ */
+function ActivityList({
+  entries,
+  currentUserId,
+}: {
+  entries: TripActivityEntry[] | null;
+  currentUserId: string;
+}) {
+  const { t, i18n } = useTranslation('share');
+  // 브라우저 언어가 아니라 앱에서 고른 언어를 따라야 한다.
+  const fmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(i18n.language, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    [i18n.language]
+  );
+
+  if (entries === null) {
+    return <p className="share-trip-modal-hint">{t('collab.activity.loading')}</p>;
+  }
+  if (entries.length === 0) {
+    return <p className="share-trip-modal-hint">{t('collab.activity.empty')}</p>;
+  }
+  return (
+    <ul className="collab-activity-list">
+      {entries.map((e) => {
+        const actor = actorKind(e, currentUserId);
+        const who =
+          actor.kind === 'self'
+            ? t('collab.activity.you')
+            : actor.kind === 'system'
+              ? t('collab.activity.system')
+              : actor.name;
+        const day = e.detail?.day;
+        return (
+          <li key={e.id} className="collab-activity-item">
+            <span className="collab-activity-text">
+              {t(`collab.activity.${e.action}`, {
+                actor: who,
+                target: e.target ?? '',
+                count: e.count,
+                defaultValue: e.action,
+              })}
+            </span>
+            <span className="collab-activity-meta">
+              {typeof day === 'number' && (
+                <span className="collab-activity-day">{t('collab.activity.dayBadge', { day })}</span>
+              )}
+              <time dateTime={new Date(e.createdAt).toISOString()}>{fmt.format(e.createdAt)}</time>
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

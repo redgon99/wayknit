@@ -1,7 +1,7 @@
 import type { Place, SimpleCategory } from '../types';
 
 /**
- * WayMeld Planner PC 시안 아이콘 세트 — Unicode 컬러 이모지.
+ * Wayknit Planner PC 시안 아이콘 세트 — Unicode 컬러 이모지.
  * 맛집은 카테고리/상호 키워드로 세분화 (피자·치킨·고기 등).
  */
 export const CATEGORY_EMOJI: Record<SimpleCategory | 'mart' | 'sight', string> = {

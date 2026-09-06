@@ -14,7 +14,7 @@ export function buildPhotoGalleryUrl(
 ): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     arrange: 'C',
     numOfRows: String(options.numOfRows ?? 24),

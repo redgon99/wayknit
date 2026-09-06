@@ -1,13 +1,13 @@
 {
   "meta": {
-    "tripTitle": "{{title}} · WayMeld",
+    "tripTitle": "{{title}} · Wayknit",
     "tripFallback": "Shared trip",
     "tripDescription": "See a day-by-day itinerary with real travel times and stay durations, then import it into your own trip.",
-    "plazaTitle": "Share plaza · WayMeld",
+    "plazaTitle": "Share plaza · Wayknit",
     "plazaDescription": "Browse multi-day itineraries shared by other travelers and import them into your own trip."
   },
   "target": {
-    "metaTitle": "Collect places from a shared link · WayMeld",
+    "metaTitle": "Collect places from a shared link · Wayknit",
     "title": "Places from your shared link",
     "backToPlan": "To planner",
     "extracting": "Looking for places in this link…",
@@ -97,7 +97,24 @@
     "editorBanner": "Shared with you as an editor",
     "copyLink": "Copy link",
     "linkCopied": "Copied",
-    "copyFailed": "Could not copy the link."
+    "copyFailed": "Could not copy the link.",
+    "activity": {
+      "tabPeople": "People",
+      "tabActivity": "Activity",
+      "empty": "No activity yet.",
+      "loading": "Loading…",
+      "you": "You",
+      "pin_add": "{{actor}} added {{target}}",
+      "pin_remove": "{{actor}} removed {{target}}",
+      "pin_update": "{{actor}} edited {{target}}",
+      "pin_reorder": "{{actor}} reordered pins ({{count}})",
+      "route_generate": "{{actor}} generated a route",
+      "day_add": "{{actor}} added a day",
+      "day_remove": "{{actor}} removed a day",
+      "trip_rename": "{{actor}} renamed the trip",
+      "dayBadge": "Day {{day}}",
+      "system": "System"
+    }
   },
   "invite": {
     "heading": "Trip collaboration invite",

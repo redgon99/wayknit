@@ -46,7 +46,7 @@
 `DEFAULT_MAP_CENTER = { lat: 37.5665, lng: 126.978 }` ([mapViewport.ts:6](../../src/lib/mapViewport.ts))가 서울 좌표로 고정되어 있고, 새 Plan을 만들면 이 좌표에서 시작한다([PlannerPage.tsx:280-281](../../src/pages/PlannerPage.tsx)). `isKoreaRegion` 판정은 "현재 지도 중심"만 보므로, 사용자가 검색창에 파리나 도쿄를 직접 입력해 지도를 옮기기 **전까지는** 무조건 한국으로 판정되어 카카오가 선택된다. 여행 계획 데이터 모델(`src/types`)에 국가/목적지 필드가 없어서, 앱이 "이 여행은 해외"라는 사용자 의도를 사전에 알 방법이 좌표 외에는 없다.
 
 **원인 B — 프로바이더 선택이 브라우저 전역으로 저장되고, 좌표 판정보다 우선한다.**
-[mapProvider.ts:31-32](../../src/lib/mapProvider.ts)의 `resolveMapProvider`는 `choice === 'kakao'`이면 좌표나 `VITE_MAP_PROVIDER_FORCE`를 확인하기도 전에 즉시 `'kakao'`를 반환한다. 이 `choice`는 `localStorage`(`waymeld:map-provider-choice-v1`, [mapProviderPreference.ts](../../src/lib/mapProviderPreference.ts))에 브라우저 단위로 저장되므로, 한 번이라도 수동으로 카카오를 선택한 사용자는 이후 지도를 해외로 옮겨도 자동 전환되지 않는다. 국내 여행 A와 해외 여행 B를 같은 브라우저에서 오가는 사용자에게는 이 전역 설정 하나가 계속 꼬인다.
+[mapProvider.ts:31-32](../../src/lib/mapProvider.ts)의 `resolveMapProvider`는 `choice === 'kakao'`이면 좌표나 `VITE_MAP_PROVIDER_FORCE`를 확인하기도 전에 즉시 `'kakao'`를 반환한다. 이 `choice`는 `localStorage`(`wayknit:map-provider-choice-v1`, [mapProviderPreference.ts](../../src/lib/mapProviderPreference.ts))에 브라우저 단위로 저장되므로, 한 번이라도 수동으로 카카오를 선택한 사용자는 이후 지도를 해외로 옮겨도 자동 전환되지 않는다. 국내 여행 A와 해외 여행 B를 같은 브라우저에서 오가는 사용자에게는 이 전역 설정 하나가 계속 꼬인다.
 
 **원인 C — 관광공사(TourAPI) 보조 레이어는 설계상 한국 전용이다.**
 `isTourApiConfigured()` 게이트로 조건부 호출되는 TourAPI(`tourApi.ts`, `tourFestival.ts`)는 한국관광공사 데이터이므로 해외에서 자연히 빠진다. 이건 결함이 아니라 원래 그렇게 설계된 것이지만, "국내 여행보다 해외 여행의 정보량이 상대적으로 적어 보인다"는 체감에는 기여한다.
@@ -92,7 +92,7 @@
 
 | 시나리오 | 결과 |
 |---|---|
-| 새 계획 진입 | 지도 중심이 서울(`37.56, 126.98`). `localStorage` `waymeld:map-provider-choice-v1` = `kakao`라 `VITE_MAP_PROVIDER_FORCE=google`이 무시됨 → **원인 A·B 재현** |
+| 새 계획 진입 | 지도 중심이 서울(`37.56, 126.98`). `localStorage` `wayknit:map-provider-choice-v1` = `kakao`라 `VITE_MAP_PROVIDER_FORCE=google`이 무시됨 → **원인 A·B 재현** |
 | 카카오 상태에서 `도쿄타워` 전국 검색 | Kakao SDK는 로드됐으나 **결과 0건**. 프로바이더가 카카오면 해외 키워드가 구글로 자동 전환되지 않음 |
 | Google로 수동 전환 후 `도쿄타워` | 레거시 `PlacesService.textSearch` status **OK**. UI 1건: 도쿄 타워 ★4.5 · 99,766 · 도쿄 좌표. 거리는 서울 기준 **1157.3km**로 표시 |
 | 도쿄 타워 상세보기 | 사진 10장, 요약/후기/지도 탭. 주소·전화·영업시간·웹사이트 정상. 패널에 **「Places API (New) 데이터」** 표기 |

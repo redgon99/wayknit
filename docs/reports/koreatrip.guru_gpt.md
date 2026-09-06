@@ -1,12 +1,12 @@
-좋습니다. 현재 공개된 **KoreaTravel Guru** 기능과 지금까지 말씀해주신 **Waymeld의 “지도 기반 여행계획 앱” 방향**을 기준으로 비교하면, 핵심 전략은 명확합니다.
+좋습니다. 현재 공개된 **KoreaTravel Guru** 기능과 지금까지 말씀해주신 **Wayknit의 “지도 기반 여행계획 앱” 방향**을 기준으로 비교하면, 핵심 전략은 명확합니다.
 
-**KoreaTravel Guru와 POI 데이터 양으로 경쟁하기보다, Waymeld를 “여행 콘텐츠를 일정으로 변환하는 AI 여행설계 엔진”으로 만드는 편이 훨씬 유리합니다.**
+**KoreaTravel Guru와 POI 데이터 양으로 경쟁하기보다, Wayknit를 “여행 콘텐츠를 일정으로 변환하는 AI 여행설계 엔진”으로 만드는 편이 훨씬 유리합니다.**
 
 KoreaTravel Guru는 스스로를 단순 장소목록이 아니라, 검수된 장소와 실제 여행자 커뮤니티를 결합한 인터랙티브 여행지도라고 설명합니다. 사용자는 장소 추가, 리뷰 작성, 잘못된 정보 신고까지 할 수 있습니다. ([KoreaTravel Guru][1])
 
-## 1. KoreaTravel Guru vs Waymeld
+## 1. KoreaTravel Guru vs Wayknit
 
-| 기능             | KoreaTravel Guru | Waymeld 권장 방향                |
+| 기능             | KoreaTravel Guru | Wayknit 권장 방향                |
 | -------------- | ---------------- | ---------------------------- |
 | 관광지 DB         | ★★★★★            | ★★★★☆                        |
 | 음식점/카페         | ★★★★★            | ★★★★☆                        |
@@ -31,7 +31,7 @@ KoreaTravel Guru는 스스로를 단순 장소목록이 아니라, 검수된 장
 이 차이를 한 문장으로 만들면:
 
 > **KoreaTravel Guru = 어디를 갈지 찾는 서비스**
-> **Waymeld = 찾은 곳들을 실제 여행으로 만들어주는 서비스**
+> **Wayknit = 찾은 곳들을 실제 여행으로 만들어주는 서비스**
 
 입니다.
 
@@ -45,7 +45,7 @@ KoreaTravel Guru의 가장 좋은 부분입니다.
 
 예를 들어 한 장소에 주소뿐 아니라 운영정보, 특징, 편의시설, 주변 장소, Reddit, 리뷰, 예약, 숙박 등을 붙입니다. 실제 장소 페이지에는 `Nearby`, `Reddit discussion`, `Plan your visit`, `Reviews`, `Stay nearby`, `Similar places` 등이 함께 구성돼 있습니다. ([KoreaTravel Guru][2])
 
-Waymeld도 단순히
+Wayknit도 단순히
 
 `장소명 / 위도 / 경도`
 
@@ -79,13 +79,13 @@ PLACE
 
 ---
 
-# 3. KoreaTravel Guru보다 Waymeld가 앞설 수 있는 핵심
+# 3. KoreaTravel Guru보다 Wayknit가 앞설 수 있는 핵심
 
 바로 **여행 Context Engine**입니다.
 
 KoreaTravel Guru는 장소 중심입니다.
 
-Waymeld는 사람 중심으로 바꾸는 겁니다.
+Wayknit는 사람 중심으로 바꾸는 겁니다.
 
 예를 들어 사용자가:
 
@@ -101,7 +101,7 @@ Waymeld는 사람 중심으로 바꾸는 겁니다.
 
 이라고 입력했다고 하겠습니다.
 
-Waymeld는 이를 구조화합니다.
+Wayknit는 이를 구조화합니다.
 
 ```text
 출발지 = 춘천
@@ -131,7 +131,7 @@ Hotel = Haeundae
 + 비용 5%
 ```
 
-이게 Waymeld의 핵심 알고리즘이 될 수 있습니다.
+이게 Wayknit의 핵심 알고리즘이 될 수 있습니다.
 
 ---
 
@@ -151,11 +151,11 @@ Hotel = Haeundae
 |  6 | 동선 최적화        | ★★★★★ |
 |  7 | TourAPI 연동    | ★★★★★ |
 
-TourAPI는 기본 POI DB 역할을 맡기고 Waymeld는 그 위의 **추천·계획 레이어**가 되는 게 좋습니다.
+TourAPI는 기본 POI DB 역할을 맡기고 Wayknit는 그 위의 **추천·계획 레이어**가 되는 게 좋습니다.
 
 ---
 
-## P1 — Waymeld의 차별화
+## P1 — Wayknit의 차별화
 
 ### 8. Reddit 여행정보 AI 분석
 
@@ -186,7 +186,7 @@ Reddit 최근 의견
 
 KoreaTravel Guru는 Reddit 검색으로 연결하는 방식을 적극 활용하고 있습니다. ([KoreaTravel Guru][3])
 
-Waymeld는 한 단계 더 나아가 **분석 결과를 일정 생성에 입력**하는 겁니다.
+Wayknit는 한 단계 더 나아가 **분석 결과를 일정 생성에 입력**하는 겁니다.
 
 ---
 
@@ -289,7 +289,7 @@ Break time
 
 # 5. P2 — 콘텐츠를 여행으로 바꾸는 기능
 
-여기서 Waymeld가 상당히 재미있어질 수 있습니다.
+여기서 Wayknit가 상당히 재미있어질 수 있습니다.
 
 ### 13. URL → 여행지도
 
@@ -341,7 +341,7 @@ AI가:
 
 이 유형의 기능은 현재 별도의 여행 서비스에서도 이미 등장하고 있습니다. 예를 들어 Content2Map은 블로그·YouTube·Instagram 등의 URL에서 장소를 추출해 지도로 만드는 기능을 전면에 내세우고 있습니다. ([Content2Map][4])
 
-따라서 Waymeld에서는 여기서 **일정 생성까지 연결**해야 경쟁력이 있습니다.
+따라서 Wayknit에서는 여기서 **일정 생성까지 연결**해야 경쟁력이 있습니다.
 
 ---
 
@@ -446,11 +446,11 @@ AI가 기존 일정을 수정합니다.
 
 을 남깁니다.
 
-그러면 Waymeld에 장기적인 데이터가 축적됩니다.
+그러면 Wayknit에 장기적인 데이터가 축적됩니다.
 
 ---
 
-### 20. Waymeld AI Agent
+### 20. Wayknit AI Agent
 
 최종 단계입니다.
 
@@ -474,13 +474,13 @@ AI가
 
 ---
 
-# 7. Waymeld 화면 구조도 이렇게 가는 것을 추천합니다
+# 7. Wayknit 화면 구조도 이렇게 가는 것을 추천합니다
 
 현재 지도 기반이라는 장점을 살려 PC에서는:
 
 ```text
 ┌─────────────────────────────────────────────────────────┐
-│ Waymeld                    🔍 검색       👤 Profile      │
+│ Wayknit                    🔍 검색       👤 Profile      │
 ├──────────────┬──────────────────────────┬───────────────┤
 │              │                          │               │
 │   DAY 1      │                          │ 장소 상세     │
@@ -542,7 +542,7 @@ AI
                     └──────┬──────┘
                            │
                            ▼
-                       Waymeld
+                       Wayknit
 ```
 
 DB의 중심 테이블은 최소한:
@@ -577,7 +577,7 @@ ai_recommendations
 
 KoreaTravel Guru는 직접 장소를 검토하고 커뮤니티 참여로 정보를 갱신하는 구조입니다. ([KoreaTravel Guru][1])
 
-Waymeld는 다음처럼 가져가는 것을 권합니다.
+Wayknit는 다음처럼 가져가는 것을 권합니다.
 
 ```text
 공공데이터
@@ -591,16 +591,16 @@ Reddit ── 사용자 경험
         ↓
 AI ───── 요약/평가
         ↓
-Waymeld 자체 사용자 데이터
+Wayknit 자체 사용자 데이터
 ```
 
 즉 **어떤 한 데이터 공급자에게 의존하지 않는 구조**입니다.
 
-또한 KoreaTravel Guru의 이용약관은 콘텐츠의 상업적 복제·집계·활용에 제한을 두고 있으므로 해당 사이트 데이터를 크롤링해 Waymeld의 DB 원천으로 삼는 방식은 피하는 편이 안전합니다. ([KoreaTravel Guru][5])
+또한 KoreaTravel Guru의 이용약관은 콘텐츠의 상업적 복제·집계·활용에 제한을 두고 있으므로 해당 사이트 데이터를 크롤링해 Wayknit의 DB 원천으로 삼는 방식은 피하는 편이 안전합니다. ([KoreaTravel Guru][5])
 
 ---
 
-# 10. Waymeld의 가장 중요한 차별화 기능 3개
+# 10. Wayknit의 가장 중요한 차별화 기능 3개
 
 20개 중에서도 개발 리소스를 집중한다면 저는 **이 세 개부터** 갑니다.
 
@@ -624,7 +624,7 @@ AI
 최적 여행일정
 ```
 
-이것을 Waymeld의 **Core Engine**으로 둡니다.
+이것을 Wayknit의 **Core Engine**으로 둡니다.
 
 ### ② Social Travel Intelligence
 
@@ -661,7 +661,7 @@ AI 일정 재설계
 
 ---
 
-## 제가 생각하는 Waymeld의 최종 포지션
+## 제가 생각하는 Wayknit의 최종 포지션
 
 굳이 KoreaTravel Guru를 정면 경쟁자로 삼을 필요가 없습니다.
 
@@ -671,7 +671,7 @@ KoreaTravel Guru의 강점은:
 
 에 가깝습니다. 실제로 영어로 찾기 어려운 한국 여행정보를 커뮤니티 기반으로 제공하는 것이 서비스의 명시적인 목적입니다. ([KoreaTravel Guru][1])
 
-Waymeld는 오히려:
+Wayknit는 오히려:
 
 > **AI-powered Korea Travel Planning Workspace**
 
@@ -684,13 +684,13 @@ Waymeld는 오히려:
 
 입니다.
 
-그리고 제가 Waymeld를 개발한다면 **다음 개발 순서**로 잡겠습니다.
+그리고 제가 Wayknit를 개발한다면 **다음 개발 순서**로 잡겠습니다.
 
 **1단계 TourAPI POI 통합 → 2단계 지도+장소저장 → 3단계 날짜별 일정 → 4단계 이동시간/동선최적화 → 5단계 AI 일정생성 → 6단계 Reddit 분석 → 7단계 날씨 반영 → 8단계 URL→여행지도 → 9단계 Adaptive Trip Agent**
 
-특히 **5~9단계가 Waymeld의 진짜 경쟁력**이 됩니다.
+특히 **5~9단계가 Wayknit의 진짜 경쟁력**이 됩니다.
 
-다음 단계에서는 이걸 바로 개발에 쓸 수 있게 **`Waymeld 2.0`용 Cursor PRD**로 바꿔서, **화면별 기능 + Supabase DB 스키마 + TourAPI/Reddit/지도 API 구조 + AI 추천 알고리즘 + 개발 TASK 순서**까지 구체화하는 것이 가장 좋습니다.
+다음 단계에서는 이걸 바로 개발에 쓸 수 있게 **`Wayknit 2.0`용 Cursor PRD**로 바꿔서, **화면별 기능 + Supabase DB 스키마 + TourAPI/Reddit/지도 API 구조 + AI 추천 알고리즘 + 개발 TASK 순서**까지 구체화하는 것이 가장 좋습니다.
 
 [1]: https://koreatravel.guru/about "About | KoreaTravel Guru"
 [2]: https://koreatravel.guru/p/toxnfill-clinic-gangnam/?utm_source=chatgpt.com "Toxnfill Clinic Gangnam | KoreaTravel Guru"

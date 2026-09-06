@@ -452,7 +452,7 @@ async function extractWeb(
     redirect: 'follow',
     headers: {
       'User-Agent':
-        'Mozilla/5.0 (compatible; WayMeldBot/1.0; +https://waymeld.app; place-extract)',
+        'Mozilla/5.0 (compatible; WayknitBot/1.0; +https://wayknit.app; place-extract)',
       Accept: 'text/html,application/xhtml+xml',
       'Accept-Language': 'ko,en;q=0.8',
     },

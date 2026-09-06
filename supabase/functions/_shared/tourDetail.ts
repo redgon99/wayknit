@@ -9,7 +9,7 @@ function keyParam(serviceKey: string): string {
 function commonParams(): URLSearchParams {
   return new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
   });
 }

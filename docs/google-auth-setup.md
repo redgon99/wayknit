@@ -1,4 +1,4 @@
-# Google 로그인 설정 (WayMeld / 여로담)
+# Google 로그인 설정 (Wayknit / 여로담)
 
 프로젝트: `ainftwifvclgiookzrwm`  
 Supabase URL: `https://ainftwifvclgiookzrwm.supabase.co`

@@ -579,7 +579,7 @@ export default function AdminDistributionPage() {
                 style={{ flex: 1, minWidth: 140 }}
                 value={newHandle}
                 onChange={(e) => setNewHandle(e.currentTarget.value)}
-                placeholder="핸들 (@waymeld_us)"
+                placeholder="핸들 (@wayknit_us)"
               />
             </div>
             {newPlatform === 'x' && (

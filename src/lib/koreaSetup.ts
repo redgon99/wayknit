@@ -1,4 +1,4 @@
-const LS_KEY = 'waymeld:korea-setup:v1';
+const LS_KEY = 'wayknit:korea-setup:v1';
 
 export interface SetupItem {
   id: string;

@@ -16,7 +16,7 @@ export function buildTrailCourseUrl(
 ): string {
   const params = new URLSearchParams({
     MobileOS: 'ETC',
-    MobileApp: 'WayMeld',
+    MobileApp: 'Wayknit',
     _type: 'json',
     numOfRows: String(options.numOfRows ?? 30),
     pageNo: String(options.pageNo ?? 1),

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const DISMISS_KEY = 'waymeld:pwa-install-dismissed-v1';
+const DISMISS_KEY = 'wayknit:pwa-install-dismissed-v1';
 
 function isStandaloneMode(): boolean {
   if (typeof window === 'undefined') return false;

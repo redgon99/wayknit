@@ -1,4 +1,4 @@
-# WayMeld (여로담) 포지셔닝 카피
+# Wayknit (여로담) 포지셔닝 카피
 
 > 랜딩 페이지 [`src/pages/LandingPage.tsx`](../src/pages/LandingPage.tsx) · [`src/locales/ko/landing.json`](../src/locales/ko/landing.json)  
 > 참고 경쟁: [Pin Traveler](https://pintraveler.net/) — 방문 지도·버킷리스트·추억 기록
@@ -25,9 +25,9 @@ Search and pin spots—they group by category. Drag to reorder, then build a tim
 
 ---
 
-## Pin Traveler vs WayMeld (여로담)
+## Pin Traveler vs Wayknit (여로담)
 
-| | Pin Traveler | WayMeld (여로담) |
+| | Pin Traveler | Wayknit (여로담) |
 |--|--------------|-----------|
 | 핵심 질문 | 어디를 가 봤나? | 다음에 어떻게 돌아다닐까? |
 | 산출물 | 방문 지도, 버킷리스트, 사진·통계 | **시간표 동선**, 다일차 일정 |

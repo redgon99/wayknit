@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "WayMeld — Collectez des lieux. Assemblez votre itinéraire.",
+    "title": "Wayknit — Collectez des lieux. Assemblez votre itinéraire.",
     "description": "Recherchez, épinglez des lieux et créez un itinéraire horodaté. Kakao et Google Maps, voyages de plusieurs jours, liens à partager."
   },
   "brand": {
-    "primary": "WayMeld",
+    "primary": "Wayknit",
     "secondary": ""
   },
   "notice": {
@@ -49,7 +49,7 @@
   },
   "features": {
     "title": "Conçu pour l’itinéraire",
-    "subtitle": "Contrairement aux apps qui retiennent où vous êtes allé, WayMeld sert à savoir où vous allez — et à quelle heure.",
+    "subtitle": "Contrairement aux apps qui retiennent où vous êtes allé, Wayknit sert à savoir où vous allez — et à quelle heure.",
     "multiDay": {
       "title": "Onglets multi-jours",
       "body": "Séparez épingles et routes entre Jour 1, Jour 2, Jour 3. Les longs voyages restent clairs."
@@ -73,7 +73,7 @@
   },
   "compare": {
     "title": "Positionnement",
-    "us": "WayMeld",
+    "us": "Wayknit",
     "them": "Carnet de visites / liste de souhaits",
     "row1": ["Itinéraires pour aujourd’hui et demain", "Lieux où vous êtes déjà allé"],
     "row2": ["Planning horodaté", "Épingles sur une carte"],
@@ -106,6 +106,6 @@
     "info": "Infos voyage en Corée",
     "login": "Connexion",
     "plan": "Planificateur",
-    "rights": "© {{year}} WayMeld"
+    "rights": "© {{year}} Wayknit"
   }
 }

@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SITE_URL = (process.env.VITE_SITE_URL ?? 'https://waymeld.netlify.app').replace(/\/+$/, '');
+const SITE_URL = (process.env.VITE_SITE_URL ?? 'https://wayknit.netlify.app').replace(/\/+$/, '');
 
 const DEFAULT_LOCALE = 'ko';
 const LOCALES = ['ko', 'en', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'de', 'ru'];

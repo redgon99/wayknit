@@ -1,6 +1,6 @@
 import { KAKAO_LEVEL_DEFAULT } from './mapZoom';
 
-const LS_KEY = 'waymeld:map-viewport-v1';
+const LS_KEY = 'wayknit:map-viewport-v1';
 
 /** 서울 시청 근처 — 빈 여행·저장 뷰포트 없을 때 기본 */
 export const DEFAULT_MAP_CENTER = { lat: 37.5665, lng: 126.978 };
