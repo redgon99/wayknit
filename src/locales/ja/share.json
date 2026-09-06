@@ -97,7 +97,24 @@
     "editorBanner": "編集者として共有された旅行です",
     "copyLink": "リンクをコピー",
     "linkCopied": "コピーしました",
-    "copyFailed": "リンクをコピーできませんでした。"
+    "copyFailed": "リンクをコピーできませんでした。",
+    "activity": {
+      "tabPeople": "メンバー",
+      "tabActivity": "アクティビティ",
+      "empty": "まだ記録がありません。",
+      "loading": "読み込み中…",
+      "you": "自分",
+      "pin_add": "{{actor}}が{{target}}を追加",
+      "pin_remove": "{{actor}}が{{target}}を削除",
+      "pin_update": "{{actor}}が{{target}}を編集",
+      "pin_reorder": "{{actor}}が並び替え（{{count}}件）",
+      "route_generate": "{{actor}}がルートを作成",
+      "day_add": "{{actor}}が日程を追加",
+      "day_remove": "{{actor}}が日程を削除",
+      "trip_rename": "{{actor}}が旅行名を変更",
+      "dayBadge": "{{day}}日目",
+      "system": "システム"
+    }
   },
   "invite": {
     "heading": "旅行の共同編集への招待",

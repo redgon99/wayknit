@@ -73,6 +73,7 @@ import {
   type Trip,
   type TripSummary,
 } from '../lib/trips';
+import { logTripActivity } from '../lib/tripActivity';
 import type { ShareTripModalSubmit } from '../components/ShareTripModal';
 import { ShareTripModal } from '../components/ShareTripModal';
 import { CollaboratorsModal } from '../components/CollaboratorsModal';
@@ -1693,6 +1694,9 @@ export default function PlannerPage() {
       const base = generateRoute(routePins, opts);
       reportRouteMetrics(base);
       setRouteForDay(currentDay, base);
+      if (trip.ownerId) {
+        void logTripActivity(trip.id, 'route_generate', null, { day: currentDay });
+      }
       setRouteOptionsOpen(false);
       setPanelOpen(false);
       setDockCollapsed(false);
@@ -1779,6 +1783,8 @@ export default function PlannerPage() {
         },
       })
     );
+    // 핀 밖의 행동이라 트리거가 못 잡는다 — 여기서 직접 기록한다.
+    if (trip.ownerId) void logTripActivity(trip.id, 'day_add', String(newDay), { day: newDay });
   }
   function removeDay(day: number) {
     if (trip.totalDays <= 1) return;
