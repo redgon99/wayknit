@@ -1,14 +1,16 @@
 # HANDOFF — Wayknit(여로담) 작업 인계 문서
 
-최신 갱신: 2026-09-06 / 브랜치 `main`
+최신 갱신: 2026-09-07 / 브랜치 `main`
 
-이 문서는 같은 사용자가 다른 장소·다른 세션에서 작업을 이어받기 위한 인계 문서다. 아래 순서대로 읽으면 된다: **0(지금 상태) → 1(주의사항) → 필요한 상세는 2~7에서 찾아보기**.
+이 문서는 같은 사용자가 다른 장소·다른 세션에서 작업을 이어받기 위한 인계 문서다. 아래 순서대로 읽으면 된다: **0(지금 상태) → 1(주의사항) → 필요한 상세는 2~9에서 찾아보기**.
+
+**배포를 건드릴 일이 있으면 §9를 먼저 읽을 것** — 이 프로젝트의 Netlify 사이트는 **Git 연동이 없다.** 커밋·푸시만으로는 아무것도 배포되지 않는다.
 
 ---
 
 ## 0. 지금 상태 한눈에 보기
 
-여섯 작업 트랙이 있다.
+일곱 작업 트랙이 있다.
 
 1. **관리자 페이지 개선** (§2) — 사용자가 요청한 감사에서 나온 우선순위 4건 전부 완료, 확장 백로그도 대부분 완료. 남은 건 페이지별 세부 미비점(§2-7, 아직 착수 안 함).
 2. **동선짜기 UX 검토** (§3) — 발견 5건 **전부 완료.**
@@ -16,7 +18,8 @@
 4. **실시간 공동편집** (§5) — **A안 1~3단계 완료**(핀 행 분리·실시간 반영·활동 로그). 4단계(UX)가 남았다.
 5. **모바일 UX 감사·개선** (§6) — 2026-09-06 세션. 실제 모바일 화면을 전수 점검해 버그·불편 목록을 뽑고, 합의된 5단계를 **전부 완료.** 남은 결정 사항 있음(§6-7).
 
-6. **브랜드 개명** (§7) — 2026-09-06. `WayMeld` → `Wayknit`으로 폴더·저장소·코드·DB·스토리지 키 전부 전환 **완료.** 사용자 조치가 남아 있음(Netlify 사이트명·도메인 확보, §7-4).
+6. **브랜드 개명** (§7) — 2026-09-06. `WayMeld` → `Wayknit`으로 폴더·저장소·코드·DB·스토리지 키 전부 전환 **완료.** 개명 빌드 배포도 완료됐다(§7-4). 남은 사용자 조치는 카카오 콘솔 도메인 등록·`.com` 확보.
+7. **배포·환경변수** (§9) — 2026-09-07. 라이브에서 지도가 안 뜨는 신고로 시작해, **배포 빌드에 `VITE_*` 환경변수가 하나도 없던 것**을 찾아 고쳤다. 지도만이 아니라 Supabase가 통째로 미설정이라 로그인·저장·협업이 전부 죽어 있었다. 조치·검증 완료, 사용자 확인 대기.
 
 **검증은 사용자가 직접 한다 (2026-09-06 사용자 지시로 변경됨):** 이전 방침("크로미움 설치해서 직접 접속해 확인해줘", 2026-09-05)은 **폐기됐다.** 세션이 Playwright로 자체 검증하지 말고, 각 단계 끝에 **"어디서 무엇을 눌러 어떤 결과가 나와야 정상인지" 확인 절차를 설명**하고 사용자의 확인을 기다린다. 이유: 스크린샷·DOM 스냅샷·스크립트 결과가 실제 코드 수정보다 토큰을 더 많이 먹는다는 걸 사용자가 확인했다. 브라우저 자동화가 정말 필요할 때의 설치법은 §8에 남겨둔다.
 
@@ -74,6 +77,26 @@
 
 - `src/pages/PlannerPage.tsx` — `useEffect(() => { if (!useMobileChrome) setMobileSheet(null); }, [])`의 의존성 배열에서 `useMobileChrome`이 빠진 한 줄. 세션의 편집 이력에 없는(= 세션이 만들지 않은) 변경이라 커밋에 담지 않았다. 그대로 두면 데스크톱으로 전환해도 모바일 시트가 안 닫힌다 — **의도한 변경인지 확인하고, 아니면 되돌릴 것.**
 - `docs/산악사고 신고자 구조 전 안전관리 PWA 구축계획.md` — 사용자 문서, untracked 상태 유지.
+
+**2026-09-07 확인 결과 — 위 두 건의 현재 상태가 달라졌다:**
+
+- `PlannerPage.tsx`의 의존성 배열 한 줄은 **커밋에 이미 들어가 있고 문제도 그대로다**([PlannerPage.tsx:2044-2046](src/pages/PlannerPage.tsx#L2044-L2046)). 워킹트리 미커밋 항목이 아니라 **코드에 남은 버그**로 다뤄야 한다. 사용자 판단 대기 중.
+- `docs/산악사고 …` 문서는 untracked가 아니라 `2933439`에 **커밋돼 있었고, 지금은 워킹트리에서 삭제된 상태**(`git status`에 ` D`)다. 의도한 삭제인지 미확인이라 손대지 않았다.
+
+**2026-09-07 워킹트리에 남긴 것:**
+
+- `deno.lock` — Netlify 배포 시 Deno 번들러가 의존성 4줄을 **추가만** 한 변경(§9). 삭제 없음. 커밋 요청이 없어 그대로 뒀다.
+
+### 1-5. Windows에서 `.env.local`을 셸로 읽을 때 (2026-09-07)
+
+이 저장소의 `.env.local`은 **CRLF**다. Git Bash에서 `set -a; . ./.env.local; set +a`로 소싱하면 **모든 값 끝에 `\r`가 붙어** 비교·요청이 조용히 다 어긋난다. 실제로 2026-09-07 세션에서 배포 번들과 값을 대조하다 "전부 불일치"라는 잘못된 결론을 한 번 냈다.
+
+```bash
+tr -d '\r' < .env.local > /tmp/env.clean
+set -a; . /tmp/env.clean; set +a
+```
+
+§6-2의 curl 레시피도 Windows에서는 이 전처리를 거쳐야 한다.
 
 ---
 
@@ -632,7 +655,8 @@ anon INSERT는 `42501` 거부.
 ### 6-7. 남은 것 · 사용자 결정 사항
 
 - **조감(presentation) 뷰 모바일 지원 — 사용자가 "표 뷰만 먼저"를 선택해 보류.** 착수한다면 걸림돌을 먼저 볼 것: `useMobileChrome = isMobile && !presentationMode`라서 **모바일에서 조감을 켜면 모바일 크롬이 통째로 꺼지고 데스크톱 레이아웃으로 넘어간다.** 모바일 전용 조감 레이아웃을 새로 설계해야 한다.
-- **§6-2의 SQL이 실제로 적용됐는지 확인 필요** — 세션에는 Supabase MCP도 서비스 롤 키도 없어 DDL을 못 돌렸다. 위 curl로 컬럼 존재를 먼저 확인하고 시작할 것.
+- ~~**§6-2의 SQL이 실제로 적용됐는지 확인 필요**~~ → **2026-09-07 확인 완료. 적용돼 있다.** `landing_promo`에 `is_published`·`block_order` 둘 다 존재한다(Supabase MCP `execute_sql`로 `information_schema.columns` 조회). 단 §6-2의 주의사항은 그대로 유효하다 — `is_published` 기본값이 `false`라 **관리자에서 게시 토글 ON + 저장**을 하기 전까지 랜딩은 계속 기본 문구가 나온다.
+- **세션에 Supabase MCP가 붙어 있다** (이전 세션 기록에는 "없다"고 적혀 있었으나 2026-09-07 기준 사용 가능). 스키마 확인은 curl보다 `execute_sql`이 빠르다. DDL은 §1-2 절차대로 사용자 승인 후에만.
 - 감사에서 나왔지만 손대지 않은 것: **검색 결과 카드 밀도**(한 화면에 2~3개만 보여 스크롤이 잦음), **지도 위 경로 3종 비교선**이 좁은 화면에서 구분이 어려움.
 
 ### 6-8. 실기기 테스트 방법
@@ -676,19 +700,19 @@ anon INSERT는 `42501` 거부.
 
 반대로 **자동으로 따라오는 것**: FK 4개(`share_plaza_imports` 2·`trip_invites`·`trip_collaborators`), `supabase_realtime` publication 멤버십, RLS 정책의 부착 대상. 적용 후 실제로 확인했다 — 47행 보존, publication 유지, REST 조회 200.
 
-### 7-4. 배포 상태 · 남은 것 (2026-09-06 갱신)
+### 7-4. 배포 상태 · 남은 것 (2026-09-07 갱신)
 
-**🔴 최우선 — 라이브가 개명 전 빌드다.** `wayknit.netlify.app`은 응답 200이지만 올라가 있는 번들이 `waymeld_trips`를 참조한다(라이브 `assets/index-CPELGVbz.js`에서 7회 확인). DB는 이미 `wayknit_trips`로 바뀌었으므로 **여행 조회·저장이 전부 실패하는 상태**다. 스토리지 키도 아직 `waymeld:*`. → **개명 커밋을 배포하면 즉시 해소된다.** DB를 코드 배포보다 먼저 바꾼 순서 때문에 생긴 공백이다.
+~~**🔴 최우선 — 라이브가 개명 전 빌드다.**~~ → **2026-09-06 중 해소됐다.** 개명 커밋 `968954e`가 커밋·배포됐고, 이후 공동편집 1~3단계까지 배포됐다. 2026-09-07 라이브 번들 확인 결과 `waymeld_trips` 0회 / `wayknit_trips` 존재.
 
 | 항목 | 상태 |
 |---|---|
 | Netlify 사이트 `wayknit.netlify.app` | ✅ 사용자가 확보 (2026-09-06) |
-| `wayknit.com` | ⏳ 2026-09-07 중 등록 예정 |
-| 개명 코드 배포 | 🔴 **미배포** — 워킹트리에 미커밋 |
-| 구 사이트 `waymeld.netlify.app` | 아직 살아 있음(별개 사이트). 정리 여부 미정 |
+| `wayknit.com` | ⏳ 2026-09-07 기준 아직 미등록 |
+| 개명 코드 배포 | ✅ **배포됨** (`968954e`, 2026-09-06 12:42) |
+| 구 사이트 `waymeld.netlify.app` | 200 응답하나 `netlify sites:list`에는 안 보인다(다른 계정/팀이거나 클레임 안 된 사이트). 정리 여부 미정 |
 
 **남은 사용자 조치:**
-1. **카카오 개발자 콘솔** — 사이트 도메인에 `https://wayknit.netlify.app` 등록해야 지도가 뜬다(§6-8). `.com` 확보 후 그것도 추가.
+1. **카카오 개발자 콘솔** — 사이트 도메인에 `https://wayknit.netlify.app` 등록해야 지도가 뜬다(§6-8). `.com` 확보 후 그것도 추가. **2026-09-07 기준 등록 여부 미확인** — §9의 환경변수 문제를 고친 뒤에도 지도가 안 뜨면 이것이 원인이다.
 2. **`.com` 확보 후** `public/robots.txt`·`scripts/generate-sitemap.mjs`·`.env.example`의 기준 URL을 새 도메인으로 한 번 더 갱신(현재는 `wayknit.netlify.app` 기준).
 3. **Edge Function 재배포(선택)** — 18개 함수의 브랜드 문구(AI 프롬프트, `WayknitBot` User-Agent)가 바뀌었다. **DB 테이블을 참조하는 함수는 없어서 재배포 안 해도 깨지지 않는다.**
 
@@ -704,6 +728,108 @@ npm run dev         # 개발 서버
 
 Supabase 프로젝트 ref: `ainftwifvclgiookzrwm` (대시보드: `https://supabase.com/dashboard/project/ainftwifvclgiookzrwm`)
 
+**배포는 §9를 볼 것** — `git push`로는 배포되지 않는다.
+
 **브라우저 자동화 검증이 필요할 때:** 기본 방침은 **세션이 자체 검증하지 않는 것**이다(§0 참고 — 2026-09-06 변경). 사용자가 명시적으로 요청할 때만 쓴다: `npm install --no-save playwright && npx playwright install chromium`로 세션 내 설치 가능(프로젝트 파일에 안 남음). 스크립트는 `.pw-scratch/`(gitignore됨). 목업 로그인은 `/login`에서 이메일 `user1@mail.com`~`user30@mail.com`(약관 체크박스 2개 동의 필요) — 이미 여러 계정에 샘플 여행이 시드돼 있다(§1-1처럼 실제 네트워크 실패도 그대로 재현되니 참고).
 
 **주의:** `supabase db push` / `supabase migration repair`는 §1-2 때문에 그대로 쓰면 안 됨.
+
+---
+
+## 9. 배포 구조 · 환경변수 (2026-09-07)
+
+### 9-0. 발단
+
+사용자 신고: 배포 사이트(`wayknit.netlify.app/plan`)에서 **지도가 안 열린다.** 콘솔에 `VITE_KAKAO_JS_KEY 환경 변수가 필요합니다`.
+
+처음엔 §7-4의 "카카오 콘솔 도메인 미등록" 문제로 보였으나 **아니었다.** 훨씬 아래에 원인이 있었다.
+
+### 9-1. 🔴 이 프로젝트의 Netlify 사이트에는 Git 연동이 없다 — 가장 중요한 사실
+
+```
+getSite → build_settings: {}      deploy_hook: null      created_via: ""
+```
+
+**커밋·푸시해도 아무것도 배포되지 않는다.** 지금까지의 모든 배포는 로컬에서 빌드해 CLI로 올린 **수동 배포**였다. 배포 목록에 커밋 해시와 커밋 메시지가 찍혀 있어서 Git 연동처럼 보이는데, 그건 Netlify CLI가 git 저장소 안에서 실행될 때 HEAD 정보를 붙여주기 때문이다 — **연동의 증거가 아니다.** 여기에 속아서 "푸시했으니 배포됐겠지"로 넘어가지 말 것.
+
+파생되는 함정 둘:
+
+1. **Netlify UI/`env:set`에 등록한 환경변수는 빌드에 안 들어간다.** Netlify가 빌드를 안 하니 그 값이 쓰일 자리가 없다. 실제로 `VITE_KAKAO_JS_KEY`가 `builds` 스코프·`all` 컨텍스트로 멀쩡히 등록돼 있는데도 번들엔 `undefined`로 박혀 있었다.
+2. **빌드 훅은 200을 반환하지만 아무 일도 안 한다.** 빌드할 소스(연결된 저장소)가 없기 때문이다. 훅을 만들어 눌러보고 7분 기다렸다가 이 사실을 알았다. (만든 훅은 삭제함.)
+
+`netlify api createSiteBuild`는 이 사이트에서 `Not Found`를 낸다 — 같은 이유다.
+
+### 9-2. 그래서 무엇이 깨져 있었나
+
+배포 번들의 Supabase 초기화 코드가 이렇게 컴파일돼 있었다:
+
+```js
+const kS = void 0, SS = void 0, Ke = !!kS && !!SS;   // URL·KEY 둘 다 undefined → isSupabaseConfigured=false
+```
+
+Vite는 `import.meta.env.VITE_*`를 빌드 시점에 **상수로 인라인**한다. 값이 없으면 `undefined`가 박히고, `if (!key)` 같은 분기는 통째로 상수 접힘된다. 지도 쪽은 그래서 `console.error`만 무조건 실행되는 코드로 남아 있었다 — 사용자가 본 그 에러다.
+
+**즉 지도만의 문제가 아니었다. `VITE_*`가 하나도 없어 로그인·여행 저장·협업이 전부 죽어 있었고**, 앱은 로컬 저장 폴백으로만 돌고 있었다. 화면에 "Free 계정"·"내 여행"이 보이니 정상처럼 착각하기 쉽다.
+
+**진단에 쓴 방법 (재사용할 것):** 라이브 번들을 받아 값이 실제로 박혔는지 직접 본다. 환경변수는 "등록했는지"가 아니라 **"번들에 들어갔는지"로 확인해야 한다.**
+
+```bash
+A=$(curl -s https://wayknit.netlify.app/ | grep -o 'assets/index-[A-Za-z0-9_-]*\.js' | head -1)
+curl -s "https://wayknit.netlify.app/$A" -o /tmp/live.js
+tr -d '\r' < .env.local > /tmp/env.clean; set -a; . /tmp/env.clean; set +a   # CRLF 주의, §1-5
+grep -qF -- "$VITE_SUPABASE_URL" /tmp/live.js && echo PRESENT || echo ABSENT
+```
+
+에러 문자열의 **존재 여부가 반대 신호**라는 점도 기억할 것: `VITE_KAKAO_JS_KEY 환경 변수가 필요합니다`가 번들에 **있으면 키가 없는 것**이고, **없으면 키가 들어간 것**(분기가 제거됨)이다.
+
+### 9-3. 조치한 것
+
+1. Netlify에 누락된 4개를 등록(`env:set … --context all`). 기존엔 `VITE_KAKAO_JS_KEY`·`VITE_KAKAO_REST_KEY`·`NODE_VERSION` 3개뿐이었다.
+
+   | 추가한 변수 | 값 |
+   |---|---|
+   | `VITE_SUPABASE_URL` | `.env.local`과 동일 |
+   | `VITE_SUPABASE_ANON_KEY` | `.env.local`과 동일 |
+   | `VITE_GOOGLE_MAPS_API_KEY` | `.env.local`과 동일 |
+   | `VITE_ADMIN_EMAILS` | `redgon999@gmail.com` |
+
+2. **`.env.local`을 잠시 치우고** 프로덕션용 6개만 셸로 주입해 `npm run build` → `netlify deploy --prod --dir=dist`.
+
+   왜 치웠나: Vite는 `process.env`가 `.env` 파일보다 **우선**하지만, `.env.local`에만 있고 셸엔 없는 키(`VITE_PORTONE_STORE_ID` 등)는 그대로 로드된다. **개발용 값이 프로덕션 번들에 섞이는 걸 막으려면 파일 자체를 치우는 게 확실하다.** 배포 후 바이트 단위로 동일하게 복원했다.
+
+3. 검증: 라이브 번들 `index-CmmppRPE.js`에서 Supabase URL/ANON_KEY·Kakao JS 키·Google Maps 키·Admin 이메일 **전부 인라인 확인**, `const PS="https://ainftwifvclgiookzrwm.supabase.co"`로 바뀜, 카카오 에러 문자열 0회, `dapi.kakao.com/v2/maps/sdk.js?appkey=…` 경로 살아남음, PortOne 등 개발용 값 누출 없음.
+
+### 9-4. 일부러 프로덕션에 넣지 않은 것
+
+`.env.local`에는 있으나 라이브에 반영하지 않았다. 켜려면 사용자 결정이 필요하다.
+
+| 변수 | 로컬 값 | 뺀 이유 |
+|---|---|---|
+| `VITE_MAP_PROVIDER_FORCE` | `google` | `.env.example`에 "개발 테스트용"으로 명시. 프로덕션은 `auto`여야 한다 |
+| `VITE_AUTH_GOOGLE_ENABLED` | `true` | 켜면 구글 로그인 버튼이 노출된다. Supabase의 Google provider 설정 상태를 확인하지 못했다 |
+| `VITE_PORTONE_STORE_ID` | 설정됨 | 켜면 Plus 결제 UI가 열린다 |
+
+**`.env.local`을 Netlify에 통째로 붓지 말 것** — 위 세 개가 그대로 프로덕션 동작을 바꾼다.
+
+### 9-5. 앞으로 배포하는 법
+
+```bash
+npx tsc --noEmit
+# .env.local을 치우고 프로덕션 변수만 주입해 빌드 (§9-3의 2번)
+npm run build
+npx netlify deploy --prod --dir=dist --message "무엇을 배포하는지"
+```
+
+- `netlify link --id 1aa56799-32d7-4bfb-a043-068acf9ebfa1` (사이트 `wayknit`). `.netlify/`는 gitignore돼 있다.
+- 배포하면 `deno.lock`이 바뀔 수 있다 — Netlify Edge Function의 Deno 번들러가 의존성을 **추가만** 한다. 정상이다.
+- **PWA 서비스워커가 구 번들을 캐싱**한다. 배포 후 확인할 땐 강력 새로고침(Ctrl+Shift+R)을 안내할 것. 이걸 빼먹으면 "아직도 안 된다"는 오진이 나온다.
+
+**근본 해결(권장, 사용자 결정 필요):** Netlify 사이트를 `redgon99/wayknit` 저장소에 연결하면 푸시 → 자동 빌드가 되고, Netlify에 등록한 환경변수가 비로소 의미를 갖는다. 지금은 등록해 둔 값과 실제 배포된 값이 언제든 어긋날 수 있는 구조다.
+
+### 9-6. 사용자 확인 대기
+
+강력 새로고침 후 `wayknit.netlify.app/plan`에서:
+
+1. 콘솔의 `VITE_KAKAO_JS_KEY` 에러가 사라졌는지
+2. **지도가 뜨는지** — 안 뜨면 남은 원인은 **카카오 콘솔 도메인 미등록**(§7-4)이다. 프로덕션 Referer로 SDK 로더를 찔러 200을 받았으나, 실제 도메인 검사는 런타임에 일어나 이것만으로 단정할 수 없다
+3. 로그인이 되는지 — 되면 Supabase 연결이 살아난 것
