@@ -1,10 +1,10 @@
 # HANDOFF — Wayknit(여로담) 작업 인계 문서
 
-최신 갱신: 2026-09-07 (2차) / 브랜치 `main`
+최신 갱신: 2026-09-08 / 브랜치 `main`
 
-이 문서는 같은 사용자가 다른 장소·다른 세션에서 작업을 이어받기 위한 인계 문서다. 아래 순서대로 읽으면 된다: **0(지금 상태) → 1(주의사항) → 필요한 상세는 2~9에서 찾아보기**.
+이 문서는 같은 사용자가 다른 장소·다른 세션에서 작업을 이어받기 위한 인계 문서다. 아래 순서대로 읽으면 된다: **0(지금 상태) → 1(주의사항) → 필요한 상세는 2~12에서 찾아보기**.
 
-**배포를 건드릴 일이 있으면 §9를 먼저 읽을 것** — 이 프로젝트의 Netlify 사이트는 **Git 연동이 없다.** 커밋·푸시만으로는 아무것도 배포되지 않는다.
+**배포를 건드릴 일이 있으면 §9를 먼저 읽을 것** — 이 프로젝트의 Netlify 사이트는 **Git 연동이 없다.** 커밋·푸시만으로는 아무것도 배포되지 않는다. **Windows에서 배포한다면 §12도 먼저 읽을 것** — `npm run deploy`는 PowerShell이 아니라 **Git Bash**에서 돌려야 한다.
 
 ---
 
@@ -1069,3 +1069,86 @@ npm install
 **PowerShell 배포 스크립트(`scripts/deploy-prod.ps1`)는 아직 실행 검증이 안 됐다** —
 맥에 PowerShell이 없어 문법만 맞춰둔 상태다. Windows에서 처음 쓸 땐 `-DryRun`으로 먼저 돌려
 `.env.local`이 제대로 복원되는지 확인할 것.
+
+---
+
+## 12. 🔴 Windows에서 `npm run deploy` 가 깨졌던 이유 (2026-09-08)
+
+증상: PowerShell에서 `npm run deploy -- "메모"` 실행 시
+
+```
+scripts/deploy-prod.sh: line 21: $'\r': command not found
+: invalid option nameh: line 22: set: pipefail
+```
+
+**원인이 두 겹이다. 하나만 고치면 더 찾기 어려운 실패로 바뀐다.**
+
+### 12-1. `.sh` 가 CRLF로 체크아웃됐다
+
+`.gitattributes` 가 `* text=auto` 이고 이 PC는 `core.autocrlf=true` 라, 맥에서 LF로 커밋된
+스크립트가 Windows에서 **CRLF로 변환돼** 내려온다. bash 가 `\r` 을 명령으로 읽는다.
+
+**Git Bash(msys) 에서는 증상이 안 보인다** — CR 을 관대하게 넘긴다. 그래서 "Git Bash에서
+돌려보니 되더라"는 검증은 이 문제를 못 잡는다. 실제로 그렇게 잘못 결론 낸 적이 있다.
+
+→ `.gitattributes` 에 `*.sh text eol=lf` 를 못박았다. `*.ps1` 은 반대로 `eol=crlf`.
+
+**확인 방법 — msys 도구를 믿지 말 것.** `sed`·`grep` 은 CR 을 걸러내 보여주고, `od -c | grep '\r'`
+같은 조합도 오답을 낸다. 바이트로 직접 세는 게 유일하게 믿을 만하다:
+
+```bash
+python -c "d=open('scripts/deploy-prod.sh','rb').read(); print('CR:',d.count(b'\r'))"
+```
+
+### 12-2. PowerShell 의 `bash` 는 Git Bash 가 아니라 WSL 이다
+
+```
+C:\Windows\system32\bash.exe          ← PowerShell 이 잡는 것
+```
+
+npm 의 `script-shell` 이 설정돼 있지 않아, PowerShell 에서 `npm run deploy` 를 하면
+스크립트 전체가 **WSL 안에서** 돌면서 프로젝트를 `/mnt/d/...` 로 본다. `node_modules` 는
+Windows 네이티브라 rollup 이 죽는다.
+
+**12-1만 고치면 이 실패로 넘어간다** — 실제로 그렇게 됐고, 줄바꿈 오류보다 원인 찾기가 훨씬 어렵다.
+그래서 `deploy-prod.sh` 앞부분에 **WSL 감지 가드**를 넣었다(`/proc/version` 에 microsoft &&
+경로가 `/mnt/` 로 시작). 걸리면 즉시 중단하고 Git Bash 로 다시 하라고 안내한다.
+
+### 12-3. 그래서 Windows에서 배포하는 법
+
+```bash
+# Git Bash 를 열고 (PowerShell 아님)
+cd /d/project/wayknit
+npm run deploy -- "배포 메모"
+```
+
+맥과 **같은 명령**이다. 셸만 Git Bash 여야 한다.
+
+`scripts/deploy-prod.ps1` 은 PowerShell 전용 대안이지만 **권하지 않는다** — §12-4 참고.
+
+### 12-4. `.ps1` 은 `.sh` 의 안전 강화를 못 받았다
+
+2026-09-08 검증 결과, 정상 경로는 잘 돈다(`-DryRun` 전 구간 통과, `.env.local` MD5 동일 복원,
+`Die` 의 `exit 1` 에서도 `finally` 실행됨을 별도 테스트로 확인). 하지만 §9-5 가 사고 후에 넣은
+안전장치가 `.sh` 에만 들어가 있다.
+
+| | `.sh` | `.ps1` |
+|---|---|---|
+| 스태시 위치 | `$ROOT/.deploy-stash` — 프로젝트 안, 보임 | `%TEMP%\wayknit-env-<난수>` — **안 보임** |
+| 무엇을 옮겼는지 | `.manifest` 파일 | 메모리(`$Moved`)뿐 |
+| 복원 | trap EXIT/INT/TERM + 명시 호출 + 최종 검사 (3겹) | `finally` 1겹 |
+| 실패 시 | 수동 복구 명령 출력 | 없음 |
+
+`finally` 는 `exit` 에서는 돌지만 **강제 종료·창 닫기에서는 안 돈다.** 그러면 `.env.local` 이
+난수 이름 temp 폴더에 남고 단서가 없다 — 맥에서 났던 사고가 Windows 에서는 복구 단서 없이 난다.
+
+또 `.ps1` 은 `Set-Item Env:$k` 로 심은 프로덕션 값을 **세션에 남긴다.** 같은 창에서 이어서
+`npm run dev` 를 하면 Vite 가 `process.env` 를 `.env.local` 보다 우선해 개발 서버가 프로덕션
+값으로 뜬다. `.sh` 는 서브셸이라 이 문제가 없다.
+
+**결론: Windows 에서도 `npm run deploy`(Git Bash)로 통일할 것.** `.ps1` 을 계속 둘 거라면
+위 4가지를 `.sh` 수준으로 보강한 뒤에 쓸 것.
+
+### 12-5. 부수 확인 — `.sh` 의 3겹 복원은 실제 실패에서 작동했다
+
+WSL 에서 빌드가 죽었을 때(12-2) `.env.local` 이 **MD5 동일하게 복원돼 있었다.** 설계대로 돈다.

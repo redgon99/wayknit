@@ -28,6 +28,21 @@ SITE_URL="https://wayknit.netlify.app"
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
+# WSL 에서 돌리면 안 된다 (2026-09-08).
+#
+# PowerShell 에서 `bash` 는 Git Bash 가 아니라 WSL(C:\Windows\system32\bash.exe)로
+# 잡힌다. 그러면 이 스크립트 전체가 리눅스 안에서 돌면서 프로젝트를 /mnt/d/... 로
+# 보는데, node_modules 에는 Windows 네이티브 바이너리가 깔려 있어 rollup 이
+# "Cannot find module @rollup/rollup-linux-x64-gnu" 류로 죽는다. 원인을 찾기
+# 어려운 실패라 여기서 먼저 막는다.
+if grep -qi microsoft /proc/version 2>/dev/null && [ "${ROOT#/mnt/}" != "$ROOT" ]; then
+  echo "✗ WSL 에서 실행됐다. 이 프로젝트의 node_modules 는 Windows 용이라 빌드가 깨진다." >&2
+  echo "  Git Bash 를 열고 거기서 다시 실행할 것:" >&2
+  echo "      cd /d/project/wayknit && npm run deploy -- \"메모\"" >&2
+  echo "  (PowerShell 을 쓰려면 scripts/deploy-prod.ps1 을 직접 호출한다)" >&2
+  exit 1
+fi
+
 DRY_RUN=0
 MESSAGE=""
 for arg in "$@"; do
