@@ -62,7 +62,9 @@
     "resetResults": "結果をリセット",
     "insightTop": "人気1位",
     "insightPositive": "高評価",
-    "insightWait": "待ち時間長め"
+    "insightWait": "待ち時間長め",
+    "filters": "フィルター",
+    "subFilterCount": "条件{{count}}件"
   },
   "trip": {
     "newTrip": "新しい旅行",
@@ -507,7 +509,8 @@
     "sheetRouteTitle": "{{n}}日目のルート",
     "sheetPinsSummary": "ピン {{count}} · {{n}}日目",
     "tabTrips": "マイ旅行",
-    "tabAccount": "アカウント"
+    "tabAccount": "アカウント",
+    "sheetSearchSummary": "{{count}}件"
   },
   "map": {
     "centerHere": "ここを中心に検索",
@@ -519,7 +522,8 @@
     "insightHigh": "旅行者の評価が高い場所です。",
     "insightMixed": "最近の口コミ・営業時間・支払いを確認してください。",
     "pin": "ピン",
-    "pinned": "ピン済み"
+    "pinned": "ピン済み",
+    "searchThisArea": "このエリアを検索"
   },
   "toast": {
     "searchAtCenter": "この地点を中心に検索します",

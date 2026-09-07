@@ -101,6 +101,14 @@ interface Props {
   variant?: 'default' | 'compact';
   /** 입력을 잠깐 멈추면 자동으로 검색한다. 돋보기 버튼을 따로 누르기 번거로운 모바일에서만 켠다. */
   autoSearch?: boolean;
+  /**
+   * 범위·반경·하위필터를 "필터" 버튼 뒤로 접는다.
+   *
+   * 하단 시트처럼 세로가 귀한 곳에서 켠다 — 안 접으면 필터 줄이 시트 높이를
+   * 거의 다 먹어 결과가 한 장도 안 보인다. 검색어와 카테고리 칩은 자주 쓰는
+   * 조작이라 접지 않는다.
+   */
+  collapsibleTools?: boolean;
 }
 
 /** 선택한 테마 중 이 장소의 카테고리와 일치하는 테마들 */
@@ -170,6 +178,7 @@ export function SearchPanel({
   initialExtract = null,
   variant = 'default',
   autoSearch = false,
+  collapsibleTools = false,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: tc } = useTranslation('common');
@@ -177,6 +186,7 @@ export function SearchPanel({
   const sortLabels = useSortLabels();
   const appLocale = normalizeLocale(i18n.language);
   const compact = variant === 'compact';
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('distance');
   const subFilterGroup = getSearchSubFilterGroup(categoryFilter);
   const activeSubFilters =
@@ -530,7 +540,39 @@ export function SearchPanel({
         </button>
       </div>
 
-      <div className="search-pill-tools">
+      {collapsibleTools && (
+        <div className="search-tools-summary">
+          <span className="search-tools-summary-text">
+            {[
+              searchScope === 'nearby'
+                ? `${t('search.scopeNearby')} · ${searchRadius / 1000} km`
+                : t('search.scopeNationwide'),
+              activeSubFilters.length > 0
+                ? t('search.subFilterCount', {
+                    count: activeSubFilters.length,
+                    defaultValue: '{{count}}개 조건',
+                  })
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
+          <button
+            type="button"
+            className={`search-tools-toggle ${toolsOpen ? 'active' : ''}`}
+            onClick={() => setToolsOpen((v) => !v)}
+            aria-expanded={toolsOpen}
+          >
+            <Icon name={toolsOpen ? 'chevronDown' : 'chevronRight'} size={14} />
+            {t('search.filters', { defaultValue: '필터' })}
+          </button>
+        </div>
+      )}
+
+      <div
+        className="search-pill-tools"
+        hidden={collapsibleTools && !toolsOpen}
+      >
         <MapProviderPicker value={mapProvider} onChange={onMapProviderChange} />
         {onUseMyLocation && (
           <button type="button" className="search-tool-chip" onClick={onUseMyLocation}>
@@ -620,7 +662,7 @@ export function SearchPanel({
         })}
       </div>
 
-      {subFilterGroup && (
+      {subFilterGroup && !(collapsibleTools && !toolsOpen) && (
         <div className="search-subfilters">
           <span className="search-subfilters-label">{subFilterGroup.label}</span>
           <div className="search-subfilters-row" role="group" aria-label={subFilterGroup.label}>

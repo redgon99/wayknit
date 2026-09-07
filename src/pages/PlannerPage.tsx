@@ -70,6 +70,7 @@ import {
   createTripId,
   applyPlazaPublish,
   subscribeTripPins,
+  hasCollaborators,
   type Trip,
   type TripSummary,
 } from '../lib/trips';
@@ -95,7 +96,6 @@ import { PlacePhotosModal } from '../components/PlacePhotosModal';
 import { MapContextMenu } from '../components/MapContextMenu';
 import { ManualPinModal } from '../components/ManualPinModal';
 import { TripMaterialsPanel } from '../components/TripMaterialsPanel';
-import { MobileSearchSheet } from '../components/mobile/MobileSearchSheet';
 import { MobileMoreMenu } from '../components/mobile/MobileMoreMenu';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { createManualPlace } from '../lib/manualPlace';
@@ -116,9 +116,8 @@ import { isTourFestivalConfigured, searchTourFestivals } from '../lib/tourFestiv
 import { regionPrefixOf } from '../lib/koreaAreaCodes';
 import '../styles/app.css';
 
-type MobileSheetKind = 'search' | 'pins' | null;
 type MobileSheetLevel = 'peek' | 'half' | 'full';
-type MobileSheetTab = 'pins' | 'route';
+type MobileSheetTab = 'pins' | 'route' | 'search';
 
 interface PendingManualPin {
   lat: number;
@@ -127,6 +126,12 @@ interface PendingManualPin {
 }
 
 const DEFAULT_CENTER = DEFAULT_MAP_CENTER;
+
+/**
+ * 모바일 "이 지역 검색" 버튼이 나타나는 지도 이동 거리(m).
+ * 손가락이 살짝 스친 정도로는 뜨지 않을 만큼, 동네를 옮긴 건 잡아낼 만큼.
+ */
+const SEARCH_AGAIN_MIN_SHIFT_M = 250;
 
 function centerFromTrip(trip: Pick<Trip, 'pinnedByDay' | 'currentDay' | 'plazaCenterLat' | 'plazaCenterLng'>): {
   lat: number;
@@ -287,7 +292,6 @@ export default function PlannerPage() {
   // 최적화 3종 비교 경로 — 동선 패널이 받아와 지도에 겹쳐 그린다
   const [compareRoutes, setCompareRoutes] = useState<RouteComparison[]>([]);
   const isMobile = useIsMobile();
-  const [mobileSheet, setMobileSheet] = useState<MobileSheetKind>(null);
   const [mobileSheetLevel, setMobileSheetLevel] = useState<MobileSheetLevel>('half');
   const [mobileSheetTab, setMobileSheetTab] = useState<MobileSheetTab>('pins');
   const [selectedPinIds, setSelectedPinIds] = useState<Set<string>>(() => new Set());
@@ -336,6 +340,15 @@ export default function PlannerPage() {
   } | null>(null);
   const nearbySearchCenterRef = useRef(nearbySearchCenter);
   nearbySearchCenterRef.current = nearbySearchCenter;
+  /**
+   * 모바일 "이 지역 검색" 노출 여부.
+   *
+   * 기준점은 마지막으로 검색한 중심이고, 아직 주변 검색을 한 적이 없으면
+   * 지도를 처음 본 위치가 기준이 된다. 그만큼 벗어나야 버튼이 나타난다 —
+   * 상시 노출은 좁은 화면에서 지도를 계속 가린다.
+   */
+  const searchAnchorRef = useRef<{ lat: number; lng: number } | null>(null);
+  const [mapMovedFromAnchor, setMapMovedFromAnchor] = useState(false);
   const [mapPinCategoryFilter, setMapPinCategoryFilter] = useState<SimpleCategory | null>(
     null
   );
@@ -453,7 +466,6 @@ export default function PlannerPage() {
     if (params.get('autoRoute') !== '1') return;
     const guideTitle = params.get('guideTitle')?.trim();
     setMaterialsPanelOpen(false);
-    setMobileSheet(null);
     setTrip((prev) => {
       const opts = {
         ...getRouteOptionsForDay(prev, prev.currentDay ?? 1),
@@ -481,7 +493,6 @@ export default function PlannerPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('openScenario') !== '1') return;
-    setMobileSheet(null);
     setPanelTab('scenario');
     setPanelOpen(true);
   }, [location.search]);
@@ -694,7 +705,10 @@ export default function PlannerPage() {
   const openSearchPanel = useCallback(() => {
     setPanelOpen(true);
     setPanelTab('search');
-    setMobileSheet('search');
+    // 모바일: 결과를 보여줄 때는 지도가 같이 보여야 하므로 half로 연다.
+    // 이미 full로 펼쳐 놓고 검색한 경우라면 그 높이를 존중한다.
+    setMobileSheetTab('search');
+    setMobileSheetLevel((prev) => (prev === 'full' ? 'full' : 'half'));
   }, []);
 
   const runSearch = useCallback(
@@ -1040,6 +1054,14 @@ export default function PlannerPage() {
     mapCenterRef.current = next;
     setMapCenter(next);
     writeMapViewport(next, mapLevelRef.current);
+    // 첫 보고는 기준점 등록으로만 쓴다 — 아직 아무것도 안 움직였다
+    if (!searchAnchorRef.current) {
+      searchAnchorRef.current = next;
+      return;
+    }
+    setMapMovedFromAnchor(
+      haversineMeters(searchAnchorRef.current, next) > SEARCH_AGAIN_MIN_SHIFT_M
+    );
   }, []);
 
   const handleMapLevelChange = useCallback((level: number) => {
@@ -1146,28 +1168,47 @@ export default function PlannerPage() {
     []
   );
 
+  /**
+   * 주어진 좌표를 검색 중심으로 삼아 주변 검색을 실행한다.
+   *
+   * 데스크톱은 우클릭 메뉴에서, 모바일은 "이 지역 검색" 버튼에서 부른다 —
+   * 진입 제스처만 다르고 이후 동작은 같아야 하므로 한 곳에 모아둔다.
+   */
+  const runSearchAtCenter = useCallback(
+    (center: { lat: number; lng: number }) => {
+      nearbySearchCenterRef.current = center;
+      setNearbySearchCenter(center);
+      setMapCenter(center);
+      // 여기가 새 기준점 — 검색 직후엔 버튼이 사라져야 한다
+      searchAnchorRef.current = center;
+      setMapMovedFromAnchor(false);
+      // 축척이 큰(많이 축소된) 상태로 이 위치 검색을 하면 결과 마커가 한 점에
+      // 뭉쳐 보이므로, 기본 개요 레벨보다 더 축소돼 있을 때만 살짝 확대해준다.
+      if (mapLevelRef.current > KAKAO_LEVEL_DEFAULT) {
+        setMapLevel(KAKAO_LEVEL_DEFAULT);
+      }
+      setSearchScope('nearby');
+      setFitSearchBounds(false);
+      openSearchPanel();
+      showToast(tp('toast.searchAtCenter'));
+      void runSearch(1, false, {
+        scope: 'nearby',
+        center,
+        keepMapCenter: true,
+      });
+    },
+    [runSearch, openSearchPanel]
+  );
+
   const handleSetSearchCenterFromMap = useCallback(() => {
     if (!mapContextMenu) return;
-    const { lat, lng } = mapContextMenu;
-    const center = { lat, lng };
-    nearbySearchCenterRef.current = center;
-    setNearbySearchCenter(center);
-    setMapCenter(center);
-    // 축척이 큰(많이 축소된) 상태로 이 위치 검색을 하면 결과 마커가 한 점에
-    // 뭉쳐 보이므로, 기본 개요 레벨보다 더 축소돼 있을 때만 살짝 확대해준다.
-    if (mapLevelRef.current > KAKAO_LEVEL_DEFAULT) {
-      setMapLevel(KAKAO_LEVEL_DEFAULT);
-    }
-    setSearchScope('nearby');
-    setFitSearchBounds(false);
-    openSearchPanel();
-    showToast(tp('toast.searchAtCenter'));
-    void runSearch(1, false, {
-      scope: 'nearby',
-      center,
-      keepMapCenter: true,
-    });
-  }, [mapContextMenu, runSearch, openSearchPanel]);
+    runSearchAtCenter({ lat: mapContextMenu.lat, lng: mapContextMenu.lng });
+  }, [mapContextMenu, runSearchAtCenter]);
+
+  /** 모바일 "이 지역 검색" — 지금 보고 있는 지도 중심으로 다시 찾는다 */
+  const handleSearchThisArea = useCallback(() => {
+    runSearchAtCenter(mapCenterRef.current);
+  }, [runSearchAtCenter]);
 
   /**
    * 좌측 패널 + 장소 상세 패널이 지도 왼쪽을 가린다.
@@ -1451,7 +1492,6 @@ export default function PlannerPage() {
   }, []);
 
   const handleOpenMaterialsPanel = useCallback(() => {
-    setMobileSheet(null);
     setRouteOptionsOpen(false);
     setMaterialsPanelOpen(true);
   }, []);
@@ -1467,7 +1507,6 @@ export default function PlannerPage() {
       showToast(tp('toast.needTwoPins'));
       return;
     }
-    setMobileSheet(null);
     setMaterialsPanelOpen(false);
     setPanelTab('route');
     setPanelOpen(true);
@@ -2026,23 +2065,42 @@ export default function PlannerPage() {
   const isTripOwner = Boolean(user?.id) && Boolean(trip.ownerId) && trip.ownerId === user?.id;
   const isReadOnlyViewer = trip.collaboratorRole === 'viewer';
 
+  // presence 게이트 — 소유자 시점에서만 협업자 유무를 물어본다.
+  // 협업자 본인은 collaboratorRole만 봐도 공유 중임을 알아 조회가 필요 없다.
+  const [ownerHasCollaborators, setOwnerHasCollaborators] = useState(false);
+  useEffect(() => {
+    if (!isTripOwner || !trip.id) {
+      setOwnerHasCollaborators(false);
+      return;
+    }
+    // 초대 직후에도 아바타가 켜지도록 협업자 모달이 닫힐 때 다시 묻는다
+    if (collabModalOpen) return;
+    let alive = true;
+    void hasCollaborators(trip.id).then((has) => {
+      if (alive) setOwnerHasCollaborators(has);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [isTripOwner, trip.id, collabModalOpen]);
+
+  const presenceEnabled =
+    Boolean(trip.isPublic) || Boolean(trip.collaboratorRole) || ownerHasCollaborators;
+
   const useMobileChrome = isMobile && !presentationMode;
   const searchExpanded =
     !useMobileChrome &&
     (query.trim().length > 0 || searching || results.length > 0);
 
   const toggleMobileSheet = useCallback((sheet: 'search' | 'pins') => {
-    if (sheet === 'search') {
-      setMobileSheet((prev) => (prev === 'search' ? null : 'search'));
-      return;
-    }
-    setMobileSheet(null);
-    setMobileSheetTab('pins');
+    setMobileSheetTab(sheet === 'search' ? 'search' : 'pins');
     setMobileSheetLevel((prev) => (prev === 'peek' ? 'half' : prev));
   }, []);
 
-  useEffect(() => {
-    if (!useMobileChrome) setMobileSheet(null);
+  /** 상단 검색 pill — 입력하러 들어가는 것이므로 시트를 끝까지 펼친다 */
+  const openMobileSearchTab = useCallback(() => {
+    setMobileSheetTab('search');
+    setMobileSheetLevel('full');
   }, []);
 
   useEffect(() => {
@@ -2063,7 +2121,6 @@ export default function PlannerPage() {
     presentationMode ? 'presentation-mode' : '',
     searchExpanded ? 'search-expanded' : '',
     useMobileChrome ? 'mobile-layout' : '',
-    mobileSheet === 'search' ? 'mobile-search-open mobile-sheet-open' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -2173,6 +2230,7 @@ export default function PlannerPage() {
             onDeleteTrip={() => void handleDeleteTrip()}
             onShare={openShareModal}
             onManageCollaborators={isTripOwner ? () => setCollabModalOpen(true) : undefined}
+            presenceEnabled={presenceEnabled}
             presentationMode={presentationMode}
             onTogglePresentation={handleTogglePresentation}
             tableViewMode={tableViewMode}
@@ -2405,7 +2463,7 @@ export default function PlannerPage() {
               <button
                 type="button"
                 className="mobile-planner-search-pill"
-                onClick={() => setMobileSheet('search')}
+                onClick={openMobileSearchTab}
               >
                 <Icon name="search" size={18} />
                 {tp('search.ariaLabel')}
@@ -2442,7 +2500,22 @@ export default function PlannerPage() {
             </div>
           </div>
 
-          {generatedRoute && mobileSheetLevel === 'peek' && mobileSheet !== 'search' && (
+          {/*
+            지도를 옮긴 뒤에만 나타난다. 모바일에는 우클릭이 없어 검색 중심을
+            지정할 방법이 아예 없었다 — 롱프레스는 핀업이 이미 쓰고 있다.
+          */}
+          {mapMovedFromAnchor && mobileSheetLevel !== 'full' && !pickingPinFromMap && (
+            <button
+              type="button"
+              className="mobile-search-area-btn"
+              onClick={handleSearchThisArea}
+            >
+              <Icon name="search" size={15} />
+              {tp('map.searchThisArea')}
+            </button>
+          )}
+
+          {generatedRoute && mobileSheetLevel === 'peek' && mobileSheetTab !== 'search' && (
             <RouteTimelineDock
               variant="mobile"
               route={generatedRoute}
@@ -2476,17 +2549,31 @@ export default function PlannerPage() {
             </button>
             <div className="mobile-sheet-head">
               <span className="mobile-sheet-head-title">
-                {mobileSheetTab === 'route' && generatedRoute
-                  ? tp('chrome.sheetRouteTitle', { n: currentDay })
-                  : trip.title}
+                {mobileSheetTab === 'search'
+                  ? tp('search.ariaLabel')
+                  : mobileSheetTab === 'route' && generatedRoute
+                    ? tp('chrome.sheetRouteTitle', { n: currentDay })
+                    : trip.title}
               </span>
               <span className="mobile-sheet-head-summary">
-                {mobileSheetTab === 'route' && generatedRoute
-                  ? `${generatedRoute.totalDistanceKm} km · ${generatedRoute.totalTravelMinutes}m`
-                  : tp('chrome.sheetPinsSummary', { count: pinned.length, n: currentDay })}
+                {mobileSheetTab === 'search'
+                  ? tp('chrome.sheetSearchSummary', {
+                      count: displayResults.length,
+                      defaultValue: '결과 {{count}}개',
+                    })
+                  : mobileSheetTab === 'route' && generatedRoute
+                    ? `${generatedRoute.totalDistanceKm} km · ${generatedRoute.totalTravelMinutes}m`
+                    : tp('chrome.sheetPinsSummary', { count: pinned.length, n: currentDay })}
               </span>
             </div>
             <div className="mobile-sheet-tabs">
+              <button
+                type="button"
+                className={`mobile-sheet-tab ${mobileSheetTab === 'search' ? 'active' : ''}`}
+                onClick={() => setMobileSheetTab('search')}
+              >
+                {tp('chrome.tabSearch')}
+              </button>
               <button
                 type="button"
                 className={`mobile-sheet-tab ${mobileSheetTab === 'pins' ? 'active' : ''}`}
@@ -2506,7 +2593,50 @@ export default function PlannerPage() {
               </button>
             </div>
             <div className="mobile-sheet-content">
-              {mobileSheetTab === 'pins' ? (
+              {mobileSheetTab === 'search' ? (
+                <SearchPanel
+                  variant="compact"
+                  autoSearch
+                  collapsibleTools
+                  results={displayResults}
+                  pinnedIds={pinnedIds}
+                  selectedId={selectedPlaceId}
+                  loading={searching}
+                  enrichingStats={enrichingStats}
+                  searchEmpty={searchEmpty}
+                  searchScope={searchScope}
+                  onSearchScopeChange={handleSearchScopeChange}
+                  categoryFilter={categoryFilter}
+                  onCategoryFilterChange={handleCategoryFilterChange}
+                  searchRadius={searchRadius}
+                  onSearchRadiusChange={handleSearchRadiusChange}
+                  onUseMyLocation={handleUseMyLocationForSearch}
+                  onSearchFestivals={isTourFestivalConfigured() ? handleSearchFestivals : undefined}
+                  searchingFestivals={searchingFestivals}
+                  query={query}
+                  onQueryChange={setQuery}
+                  onSearch={handleSearch}
+                  onClear={handleResetSearch}
+                  onResetResults={handleResetSearch}
+                  onTogglePin={handleTogglePin}
+                  onSelectResult={handleSelectPlace}
+                  onOpenRoadview={(p) => setRoadviewTarget(p)}
+                  onOpenPlacePhotos={handleOpenPlacePhotos}
+                  hasMore={searchHasMore}
+                  loadingMore={loadingMore}
+                  onLoadMore={handleLoadMore}
+                  searchError={searchError}
+                  mapProvider={mapProvider}
+                  onMapProviderChange={handleMapProviderChange}
+                  onSearchCandidate={handleSearchCandidate}
+                  initialExtract={sharedExtract}
+                  foodRestrictions={trip.foodRestrictions ?? []}
+                  onFoodRestrictionsChange={handleFoodRestrictionsChange}
+                  categorySubFilters={categorySubFilters}
+                  onCategorySubFiltersChange={setCategorySubFilters}
+                  preferences={trip.preferences}
+                />
+              ) : mobileSheetTab === 'pins' ? (
                 <PinupBar
                   variant="panel"
                   hideHeader
@@ -2562,53 +2692,8 @@ export default function PlannerPage() {
             </div>
           </div>
 
-          {mobileSheet === 'search' && (
-            <div className="mobile-search-overlay">
-              <MobileSearchSheet
-                open
-                onClose={() => setMobileSheet(null)}
-                results={displayResults}
-                pinnedIds={pinnedIds}
-                selectedId={selectedPlaceId}
-                loading={searching}
-                enrichingStats={enrichingStats}
-                searchEmpty={searchEmpty}
-                searchScope={searchScope}
-                onSearchScopeChange={handleSearchScopeChange}
-                categoryFilter={categoryFilter}
-                onCategoryFilterChange={handleCategoryFilterChange}
-                searchRadius={searchRadius}
-                onSearchRadiusChange={handleSearchRadiusChange}
-                onUseMyLocation={handleUseMyLocationForSearch}
-                onSearchFestivals={isTourFestivalConfigured() ? handleSearchFestivals : undefined}
-                searchingFestivals={searchingFestivals}
-                query={query}
-                onQueryChange={setQuery}
-                onSearch={handleSearch}
-                onClear={handleResetSearch}
-                onResetResults={handleResetSearch}
-                onTogglePin={handleTogglePin}
-                onSelectResult={handleSelectPlace}
-                onOpenRoadview={(p) => setRoadviewTarget(p)}
-                onOpenPlacePhotos={handleOpenPlacePhotos}
-                hasMore={searchHasMore}
-                loadingMore={loadingMore}
-                onLoadMore={handleLoadMore}
-                searchError={searchError}
-                mapProvider={mapProvider}
-                onMapProviderChange={handleMapProviderChange}
-                onSearchCandidate={handleSearchCandidate}
-                initialExtract={sharedExtract}
-                foodRestrictions={trip.foodRestrictions ?? []}
-                onFoodRestrictionsChange={handleFoodRestrictionsChange}
-                categorySubFilters={categorySubFilters}
-                onCategorySubFiltersChange={setCategorySubFilters}
-                preferences={trip.preferences}
-              />
-            </div>
-          )}
 
-          {mobileSheet !== 'search' && (
+          {(
             <div className="mobile-planner-tabbar">
               <TripSelectMenu
                 summaries={tripSummaries}

@@ -62,7 +62,9 @@
     "resetResults": "重置结果",
     "insightTop": "人气首选",
     "insightPositive": "评价不错",
-    "insightWait": "排队较久"
+    "insightWait": "排队较久",
+    "filters": "筛选",
+    "subFilterCount": "{{count}} 项条件"
   },
   "trip": {
     "newTrip": "新旅行",
@@ -507,7 +509,8 @@
     "sheetRouteTitle": "第 {{n}} 天路线",
     "sheetPinsSummary": "{{count}} 个图钉 · 第 {{n}} 天",
     "tabTrips": "我的行程",
-    "tabAccount": "账户"
+    "tabAccount": "账户",
+    "sheetSearchSummary": "{{count}} 个结果"
   },
   "map": {
     "centerHere": "以此处为中心搜索",
@@ -519,7 +522,8 @@
     "insightHigh": "旅行者评分很高。",
     "insightMixed": "请查看近期评价、营业时间和支付方式。",
     "pin": "钉选",
-    "pinned": "已钉选"
+    "pinned": "已钉选",
+    "searchThisArea": "搜索该区域"
   },
   "toast": {
     "searchAtCenter": "正在以此处为中心搜索",

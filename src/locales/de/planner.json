@@ -72,7 +72,9 @@
     "resetResults": "Ergebnisse zurücksetzen",
     "insightTop": "Top-Tipp",
     "insightPositive": "Gut bewertet",
-    "insightWait": "Lange Wartezeit"
+    "insightWait": "Lange Wartezeit",
+    "filters": "Filter",
+    "subFilterCount": "{{count}} Kriterien"
   },
   "trip": {
     "newTrip": "Neue Reise",
@@ -712,7 +714,8 @@
     "sheetRouteTitle": "Route Tag {{n}}",
     "sheetPinsSummary": "{{count}} Pins · Tag {{n}}",
     "tabTrips": "Meine Reisen",
-    "tabAccount": "Konto"
+    "tabAccount": "Konto",
+    "sheetSearchSummary": "{{count}} Treffer"
   },
   "map": {
     "centerHere": "Hier in der Nähe suchen",
@@ -724,7 +727,8 @@
     "insightHigh": "Von Reisenden hoch bewertet.",
     "insightMixed": "Aktuelle Bewertungen, Zeiten und Zahlung prüfen.",
     "pin": "Anpinnen",
-    "pinned": "Angepinnt"
+    "pinned": "Angepinnt",
+    "searchThisArea": "Diesen Bereich suchen"
   },
   "toast": {
     "searchAtCenter": "Suche um diesen Punkt",

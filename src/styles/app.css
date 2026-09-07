@@ -5551,6 +5551,12 @@ button {
     width: auto;
     max-height: 85vh;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    /*
+     * 데스크톱의 z-index:20을 여기서 올린다. 모바일에선 이 패널이 우측
+     * 사이드패널이 아니라 하단 시트가 되는데, 같은 자리에 핀 시트(22)와
+     * 탭바(23)가 이미 있어 20으로는 둘 다에 가려진다.
+     */
+    z-index: 24;
     transform: translateY(100%);
     transition: transform 0.28s ease-out;
   }
@@ -12257,6 +12263,22 @@ button {
   display: flex;
 }
 
+/*
+ * 더보기(⋯) 드롭다운이 위성지도 토글에 덮이던 문제.
+ *
+ * .mobile-planner-top이 position+z-index로 쌓임 맥락을 만든다. 그 안의
+ * .planner-more-menu가 z-index:60이어도 바깥의 .map-type-toggle(40)은 이기지
+ * 못한다 — 자식은 부모 맥락의 천장(25)을 넘을 수 없기 때문이다. 그래서
+ * 메뉴 쪽 z-index를 올리는 방식으로는 고쳐지지 않는다. 올려야 하는 건 상단바다.
+ *
+ * 올리는 건 메뉴가 열려 있는 동안만이다(.planner-more-menu는 열렸을 때만
+ * 렌더된다). 상단바를 상시로 올리면 지도 위 다른 오버레이와의 위아래가
+ * 통째로 뒤집히므로, 필요한 순간에만 최소로 올린다.
+ */
+.wayknit-root.mobile-layout .mobile-planner-top:has(.planner-more-menu) {
+  z-index: 45;
+}
+
 .wayknit-root.mobile-layout .mobile-top-bar,
 .wayknit-root.mobile-layout .mobile-dock {
   display: none !important;
@@ -12317,6 +12339,83 @@ button {
 .mobile-planner-day.active {
   background: var(--color-primary);
   color: #fff;
+}
+
+/*
+ * "이 지역 검색" — 상단바(약 102px) 바로 아래 가운데.
+ * 위성지도 토글은 오른쪽 끝(right:16px)이라 가로로 겹치지 않는다.
+ * z-index는 지도 위·시트 아래(22 미만)면 충분하다 — 시트가 덮는 영역까지
+ * 내려오지 않는 위치다.
+ */
+/*
+ * 접이식 필터 요약 — 하단 시트의 검색 탭에서만 쓴다(SearchPanel collapsibleTools).
+ * 범위·반경·하위필터를 한 줄로 요약하고, 펼치기는 버튼 뒤로 보낸다.
+ */
+.search-tools-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.search-tools-summary-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-tools-toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-tools-toggle.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+/* 시트 안에서는 패널이 시트 높이를 그대로 채우고, 결과만 스크롤한다 */
+.mobile-sheet-content .search-panel {
+  height: 100%;
+}
+
+.mobile-search-area-btn {
+  position: absolute;
+  top: 112px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 21;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  backdrop-filter: var(--blur-surface);
+  -webkit-backdrop-filter: var(--blur-surface);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-float);
+  cursor: pointer;
 }
 
 .mobile-planner-sheet {
@@ -12523,6 +12622,15 @@ button {
 }
 
 .wayknit-root.mobile-layout.mobile-search-open .mobile-planner-sheet {
+  display: none;
+}
+
+/*
+ * 여행 자료 패널도 모바일에선 하단 시트라, 핀 시트와 같은 자리에 겹친다.
+ * z-index만 올리면 자료 시트가 짧을 때(자료 0개) 그 위로 핀 시트 윗부분이
+ * 삐져나와 시트가 두 장 겹쳐 보인다. 검색 오버레이와 같은 방식으로 감춘다.
+ */
+.wayknit-root.mobile-layout.materials-open .mobile-planner-sheet {
   display: none;
 }
 

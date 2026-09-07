@@ -72,7 +72,9 @@
     "resetResults": "Réinitialiser",
     "insightTop": "Coup de cœur",
     "insightPositive": "Bien noté",
-    "insightWait": "Longue attente"
+    "insightWait": "Longue attente",
+    "filters": "Filtres",
+    "subFilterCount": "{{count}} critères"
   },
   "trip": {
     "newTrip": "Nouveau voyage",
@@ -712,7 +714,8 @@
     "sheetRouteTitle": "Itinéraire jour {{n}}",
     "sheetPinsSummary": "{{count}} épingles · Jour {{n}}",
     "tabTrips": "Mes voyages",
-    "tabAccount": "Compte"
+    "tabAccount": "Compte",
+    "sheetSearchSummary": "{{count}} résultats"
   },
   "map": {
     "centerHere": "Chercher autour d’ici",
@@ -724,7 +727,8 @@
     "insightHigh": "Très bien noté par les voyageurs.",
     "insightMixed": "Vérifiez avis récents, horaires et paiement.",
     "pin": "Épingler",
-    "pinned": "Épinglé"
+    "pinned": "Épinglé",
+    "searchThisArea": "Rechercher dans cette zone"
   },
   "toast": {
     "searchAtCenter": "Recherche autour de ce point",

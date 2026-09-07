@@ -72,7 +72,9 @@
     "resetResults": "Restablecer resultados",
     "insightTop": "Favorito",
     "insightPositive": "Bien valorado",
-    "insightWait": "Mucha espera"
+    "insightWait": "Mucha espera",
+    "filters": "Filtros",
+    "subFilterCount": "{{count}} criterios"
   },
   "trip": {
     "newTrip": "Nuevo viaje",
@@ -712,7 +714,8 @@
     "sheetRouteTitle": "Ruta del día {{n}}",
     "sheetPinsSummary": "{{count}} pines · Día {{n}}",
     "tabTrips": "Mis viajes",
-    "tabAccount": "Cuenta"
+    "tabAccount": "Cuenta",
+    "sheetSearchSummary": "{{count}} resultados"
   },
   "map": {
     "centerHere": "Buscar alrededor de aquí",
@@ -724,7 +727,8 @@
     "insightHigh": "Muy bien valorado por viajeros.",
     "insightMixed": "Revisa reseñas recientes, horario y pago.",
     "pin": "Fijar",
-    "pinned": "Fijado"
+    "pinned": "Fijado",
+    "searchThisArea": "Buscar en esta zona"
   },
   "toast": {
     "searchAtCenter": "Buscando alrededor de este punto",

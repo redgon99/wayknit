@@ -38,6 +38,11 @@ interface Props {
   tableViewMode?: boolean;
   onToggleTableView?: () => void;
   plazaNavVisible?: boolean;
+  /**
+   * presence 채널을 열지 여부. 여행이 실제로 공유 중일 때만 켠다.
+   * 판단에 소유권·협업자 조회가 필요해 PlannerPage가 정하고 여기로 내려준다.
+   */
+  presenceEnabled?: boolean;
 }
 
 export function PlannerAppBar({
@@ -62,6 +67,7 @@ export function PlannerAppBar({
   tableViewMode = false,
   onToggleTableView,
   plazaNavVisible,
+  presenceEnabled = false,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: ts } = useTranslation('share');
@@ -69,8 +75,9 @@ export function PlannerAppBar({
   const [sheet, setSheet] = useState<AppSheet | null>(null);
   const [helpAirportFocus, setHelpAirportFocus] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
-  // 공유 중인 여행에서만 채널을 연다 (혼자 편집할 때는 열 이유가 없다)
-  const viewers = useTripPresence(trip.id, Boolean(trip.isPublic));
+  // 공유 중인 여행에서만 채널을 연다 (혼자 편집할 때는 열 이유가 없다).
+  // 공개 여행뿐 아니라 협업자가 붙은 여행도 포함 — 판단은 PlannerPage가 한다.
+  const viewers = useTripPresence(trip.id, presenceEnabled);
 
   useEffect(() => {
     if (!moreOpen) return;

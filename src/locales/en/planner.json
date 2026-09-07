@@ -72,7 +72,9 @@
     "resetResults": "Reset results",
     "insightTop": "Top pick",
     "insightPositive": "Well reviewed",
-    "insightWait": "Long wait"
+    "insightWait": "Long wait",
+    "filters": "Filters",
+    "subFilterCount": "{{count}} filters"
   },
   "trip": {
     "newTrip": "New trip",
@@ -712,7 +714,8 @@
     "sheetRouteTitle": "Day {{n}} route",
     "sheetPinsSummary": "{{count}} pins · Day {{n}}",
     "tabTrips": "My trips",
-    "tabAccount": "Account"
+    "tabAccount": "Account",
+    "sheetSearchSummary": "{{count}} results"
   },
   "map": {
     "centerHere": "Search around here",
@@ -724,7 +727,8 @@
     "insightHigh": "Highly rated by travelers.",
     "insightMixed": "Check recent reviews, hours, and payment.",
     "pin": "Pin",
-    "pinned": "Pinned"
+    "pinned": "Pinned",
+    "searchThisArea": "Search this area"
   },
   "toast": {
     "searchAtCenter": "Searching around this point",

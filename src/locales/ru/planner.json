@@ -72,7 +72,9 @@
     "resetResults": "Сбросить результаты",
     "insightTop": "Топ выбор",
     "insightPositive": "Хорошие отзывы",
-    "insightWait": "Долгая очередь"
+    "insightWait": "Долгая очередь",
+    "filters": "Фильтры",
+    "subFilterCount": "Условий: {{count}}"
   },
   "trip": {
     "newTrip": "Новая поездка",
@@ -712,7 +714,8 @@
     "sheetRouteTitle": "Маршрут дня {{n}}",
     "sheetPinsSummary": "{{count}} пинов · День {{n}}",
     "tabTrips": "Мои поездки",
-    "tabAccount": "Аккаунт"
+    "tabAccount": "Аккаунт",
+    "sheetSearchSummary": "Результатов: {{count}}"
   },
   "map": {
     "centerHere": "Искать вокруг этой точки",
@@ -724,7 +727,8 @@
     "insightHigh": "Высокие оценки у путешественников.",
     "insightMixed": "Проверьте свежие отзывы, часы и оплату.",
     "pin": "Закрепить",
-    "pinned": "Закреплено"
+    "pinned": "Закреплено",
+    "searchThisArea": "Искать в этой области"
   },
   "toast": {
     "searchAtCenter": "Поиск вокруг этой точки",

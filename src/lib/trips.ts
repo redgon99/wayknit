@@ -762,6 +762,24 @@ export async function listCollaborators(tripId: string): Promise<TripCollaborato
   }));
 }
 
+/**
+ * 협업자가 있는지만 알면 되는 곳을 위한 가벼운 조회.
+ *
+ * presence 채널을 열지 말지 정하는 데 쓴다 — 목록 자체는 필요 없고 0인지
+ * 아닌지만 보면 되므로 `head: true`로 행을 받지 않는다. 소유자만 이 질문을
+ * 한다(협업자는 자기 `collaboratorRole`만 봐도 공유 중임을 안다).
+ */
+export async function hasCollaborators(tripId: string): Promise<boolean> {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const { count, error } = await sb
+    .from('trip_collaborators')
+    .select('user_id', { count: 'exact', head: true })
+    .eq('trip_id', tripId);
+  if (error) return false;
+  return (count ?? 0) > 0;
+}
+
 /** 초대 링크. 아직 이메일 발송 수단이 없어 소유자가 직접 전달한다. */
 /**
  * 초대 링크.
