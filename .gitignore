@@ -42,3 +42,9 @@ lerna-debug.log*
 
 # Claude 세션의 Playwright 브라우저 검증용 스크래치 (커밋 대상 아님)
 .pw-scratch
+
+# 배포 스크립트가 읽는 Netlify 토큰
+.netlify-token
+
+# 배포 중 개발용 .env 파일을 잠시 옮겨두는 곳
+.deploy-stash/

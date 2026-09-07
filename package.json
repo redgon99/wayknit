@@ -10,7 +10,9 @@
     "lint": "eslint src --ext ts,tsx",
     "gen:icons": "node scripts/gen-pwa-icons.mjs",
     "gen:og": "node scripts/gen-og-image.mjs",
-    "gen:sitemap": "node scripts/generate-sitemap.mjs"
+    "gen:sitemap": "node scripts/generate-sitemap.mjs",
+    "deploy": "bash scripts/deploy-prod.sh",
+    "deploy:check": "bash scripts/deploy-prod.sh --dry-run"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
