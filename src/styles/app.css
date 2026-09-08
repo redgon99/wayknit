@@ -14753,3 +14753,50 @@ button {
   font-size: 11px;
   font-weight: 600;
 }
+
+/* ── 모바일 공동편집 마감: presence 아바타 · 지도 핀업 버튼 ────────── */
+/*
+ * 아바타는 검색 알약 옆에 선다. 혼자일 때는 PresenceStack이 렌더되지 않아
+ * 이 규칙도 걸리지 않는다 — 좁은 화면을 상시로 잡아먹지 않는다.
+ * 데스크톱 앱바보다 한 치수 작게 잡아 알약이 밀리는 폭을 줄인다.
+ */
+.mobile-planner-search-row .presence-stack {
+  flex: 0 0 auto;
+}
+.mobile-planner-search-row .presence-avatar {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+/* 알약이 줄어들 수 있어야 아바타가 늘어도 줄바꿈되지 않는다. */
+.mobile-planner-search-pill {
+  min-width: 0;
+}
+
+/*
+ * 지도 핀업 버튼. 위성지도 토글(top:108px, right:16px, 40px) 바로 아래에 둔다 —
+ * 오른쪽 세로줄에 지도 도구를 모아 두면 찾기 쉽고, 가운데의 "이 지역 검색"
+ * (top:112px, 가운데 정렬)과도 가로로 겹치지 않는다.
+ * z-index는 위성지도 토글과 같은 40 — 지도 위 도구끼리 같은 층에 둔다.
+ */
+.mobile-pin-from-map-btn {
+  position: absolute;
+  top: 156px;
+  right: 16px;
+  z-index: 40;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-panel);
+  color: var(--color-text-secondary);
+}
+.mobile-pin-from-map-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}

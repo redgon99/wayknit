@@ -99,6 +99,8 @@ import { MapContextMenu } from '../components/MapContextMenu';
 import { ManualPinModal } from '../components/ManualPinModal';
 import { TripMaterialsPanel } from '../components/TripMaterialsPanel';
 import { MobileMoreMenu } from '../components/mobile/MobileMoreMenu';
+import { PresenceStack } from '../components/PresenceStack';
+import { useTripPresence } from '../hooks/useTripPresence';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { createManualPlace } from '../lib/manualPlace';
 import type { PinImportResult } from '../lib/importPins';
@@ -2127,6 +2129,18 @@ export default function PlannerPage() {
     Boolean(trip.isPublic) || Boolean(trip.collaboratorRole) || ownerHasCollaborators;
 
   /**
+   * presence 채널을 여기서 연다 — 이전에는 `PlannerAppBar` 안에서 열었다.
+   *
+   * 앱바는 데스크톱에서만 렌더되므로(`desktop-only-overlay`) **모바일에는 아바타가
+   * 아예 없었다.** 폰으로 공동편집을 하면 상대가 접속 중인지 알 수 없다.
+   *
+   * 모바일 상단바에서 훅을 한 번 더 부르면 안 된다 — 같은 여행에 채널이 두 개
+   * 열려 자기 자신이 두 명으로 세어지고, `presence_multi_viewer` 이벤트도
+   * 두 번 나간다. 그래서 한 곳에서 열어 아바타 목록만 내려보낸다.
+   */
+  const presenceViewers = useTripPresence(trip.id, presenceEnabled);
+
+  /**
    * 핀 작성자 배지를 볼 수 있는 사람 — 소유자와 협업자뿐이다.
    *
    * presenceEnabled 를 그대로 쓰면 안 된다. 거기엔 isPublic 이 들어 있어서,
@@ -2282,7 +2296,7 @@ export default function PlannerPage() {
               isTripOwner || trip.collaboratorRole ? () => setCollabModalOpen(true) : undefined
             }
             collabEntryLabel={isTripOwner ? undefined : 'shared'}
-            presenceEnabled={presenceEnabled}
+            presenceViewers={presenceViewers}
             presentationMode={presentationMode}
             onTogglePresentation={handleTogglePresentation}
             tableViewMode={tableViewMode}
@@ -2530,6 +2544,12 @@ export default function PlannerPage() {
               >
                 <Icon name="folder" size={18} />
               </button>
+              {/*
+                혼자 편집할 때는 PresenceStack이 null을 돌려주므로 이 자리가
+                비어 있다 — 좁은 폰 화면에서 검색 알약을 상시로 밀어내지 않는다.
+                데스크톱보다 하나 적게(3명) 보여주고 나머지는 +N으로 접는다.
+              */}
+              <PresenceStack viewers={presenceViewers} max={3} />
               <MobileMoreMenu
                 onShare={openShareModal}
                 plazaNavVisible={plazaNavVisible}
@@ -2566,6 +2586,25 @@ export default function PlannerPage() {
             >
               <Icon name="search" size={15} />
               {tp('map.searchThisArea')}
+            </button>
+          )}
+
+          {/*
+            지도에서 핀 찍기 — 모바일에는 이 기능의 입구가 롱프레스밖에 없었다.
+            데스크톱의 `overlay-map-tools`는 `desktop-only-overlay`라 폰에서 숨는데,
+            대체 입구를 만들어 두지 않아 아는 사람만 쓰는 기능이 돼 있었다(§10-4).
+            검색이 지도를 덮고 있을 때(full)는 누를 대상이 없으므로 감춘다.
+          */}
+          {mobileSheetLevel !== 'full' && (
+            <button
+              type="button"
+              className={`mobile-pin-from-map-btn ${pickingPinFromMap ? 'active' : ''}`}
+              onClick={handleTogglePinFromMap}
+              aria-pressed={pickingPinFromMap}
+              title={tp('trip.pinFromMap')}
+              aria-label={tp('trip.pinFromMap')}
+            >
+              <Icon name="pinPlus" size={18} />
             </button>
           )}
 

@@ -11,10 +11,13 @@ import { HelpContent } from './HelpContent';
 import { KoreaSetupContent } from './KoreaSetupContent';
 import { SharePlazaPanel } from './SharePlazaPanel';
 import { PresenceStack } from './PresenceStack';
-import { useTripPresence } from '../hooks/useTripPresence';
+import type { PresenceViewer } from '../lib/tripPresence';
 import type { Trip, TripSummary } from '../lib/trips';
 
 type AppSheet = 'plaza' | 'setup' | 'help';
+
+/** 기본값을 매 렌더 새 배열로 만들지 않는다 — 불필요한 리렌더를 막는다. */
+const EMPTY_VIEWERS: PresenceViewer[] = [];
 
 interface Props {
   trip: Trip;
@@ -41,10 +44,11 @@ interface Props {
   onToggleTableView?: () => void;
   plazaNavVisible?: boolean;
   /**
-   * presence 채널을 열지 여부. 여행이 실제로 공유 중일 때만 켠다.
-   * 판단에 소유권·협업자 조회가 필요해 PlannerPage가 정하고 여기로 내려준다.
+   * 같은 여행을 보고 있는 사람들. 채널은 `PlannerPage` 가 연다 — 이 앱바는
+   * 데스크톱에서만 렌더되므로 여기서 열면 모바일에 아바타가 생기지 않고,
+   * 양쪽에서 각각 열면 같은 여행에 채널이 두 개 열린다.
    */
-  presenceEnabled?: boolean;
+  presenceViewers?: PresenceViewer[];
 }
 
 export function PlannerAppBar({
@@ -70,7 +74,7 @@ export function PlannerAppBar({
   tableViewMode = false,
   onToggleTableView,
   plazaNavVisible,
-  presenceEnabled = false,
+  presenceViewers = EMPTY_VIEWERS,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: ts } = useTranslation('share');
@@ -78,9 +82,6 @@ export function PlannerAppBar({
   const [sheet, setSheet] = useState<AppSheet | null>(null);
   const [helpAirportFocus, setHelpAirportFocus] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
-  // 공유 중인 여행에서만 채널을 연다 (혼자 편집할 때는 열 이유가 없다).
-  // 공개 여행뿐 아니라 협업자가 붙은 여행도 포함 — 판단은 PlannerPage가 한다.
-  const viewers = useTripPresence(trip.id, presenceEnabled);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -206,7 +207,7 @@ export function PlannerAppBar({
       <div className="planner-app-bar-divider" aria-hidden />
 
       {/* 4. 액션 */}
-      <PresenceStack viewers={viewers} />
+      <PresenceStack viewers={presenceViewers} />
 
       <SaveStatusBadge
         status={saveStatus}
