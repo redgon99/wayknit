@@ -66,6 +66,17 @@ export async function listTripActivity(
   return collapse((data ?? []) as ActivityRow[]);
 }
 
+/**
+ * 재정렬 묶기 창.
+ *
+ * 2026-09-08부터는 **DB 트리거가 같은 규칙으로 기록 시점에 먼저 묶는다**
+ * (`20260908180000_trip_activity_retention.sql`) — 한 번의 재정렬이 핀 개수만큼
+ * 행을 만들던 것을 막았다. 그래서 여기 오는 행은 대개 이미 1건이다.
+ *
+ * 그래도 이 로직은 남긴다. 마이그레이션 이전에 쌓인 행이 DB에 그대로 있고,
+ * 트리거가 못 묶는 경계(정확히 1분을 넘겨 들어온 연속 재정렬)도 있다.
+ * 둘의 창을 같은 60초로 맞춰 두는 게 중요하다 — 어긋나면 화면과 기록이 갈린다.
+ */
 const GROUP_WINDOW_MS = 60_000;
 
 function collapse(rows: ActivityRow[]): TripActivityEntry[] {

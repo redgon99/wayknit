@@ -107,7 +107,7 @@
       "pin_add": "{{actor}}が{{target}}を追加",
       "pin_remove": "{{actor}}が{{target}}を削除",
       "pin_update": "{{actor}}が{{target}}を編集",
-      "pin_reorder": "{{actor}}が並び替え（{{count}}件）",
+      "pin_reorder": "{{actor}}が並び替え",
       "route_generate": "{{actor}}がルートを作成",
       "day_add": "{{actor}}が日程を追加",
       "day_remove": "{{actor}}が日程を削除",

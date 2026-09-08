@@ -107,7 +107,7 @@
       "pin_add": "{{actor}} añadió {{target}}",
       "pin_remove": "{{actor}} eliminó {{target}}",
       "pin_update": "{{actor}} editó {{target}}",
-      "pin_reorder": "{{actor}} reordenó los pines ({{count}})",
+      "pin_reorder": "{{actor}} reordenó los pines",
       "route_generate": "{{actor}} generó una ruta",
       "day_add": "{{actor}} añadió un día",
       "day_remove": "{{actor}} eliminó un día",

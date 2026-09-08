@@ -107,7 +107,7 @@
       "pin_add": "{{actor}} добавил(а) {{target}}",
       "pin_remove": "{{actor}} удалил(а) {{target}}",
       "pin_update": "{{actor}} изменил(а) {{target}}",
-      "pin_reorder": "{{actor}} изменил(а) порядок ({{count}})",
+      "pin_reorder": "{{actor}} изменил(а) порядок",
       "route_generate": "{{actor}} построил(а) маршрут",
       "day_add": "{{actor}} добавил(а) день",
       "day_remove": "{{actor}} удалил(а) день",

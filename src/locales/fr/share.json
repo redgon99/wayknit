@@ -107,7 +107,7 @@
       "pin_add": "{{actor}} a ajouté {{target}}",
       "pin_remove": "{{actor}} a supprimé {{target}}",
       "pin_update": "{{actor}} a modifié {{target}}",
-      "pin_reorder": "{{actor}} a réordonné les épingles ({{count}})",
+      "pin_reorder": "{{actor}} a réordonné les épingles",
       "route_generate": "{{actor}} a généré un itinéraire",
       "day_add": "{{actor}} a ajouté un jour",
       "day_remove": "{{actor}} a supprimé un jour",

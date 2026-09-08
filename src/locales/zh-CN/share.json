@@ -107,7 +107,7 @@
       "pin_add": "{{actor}} 添加了 {{target}}",
       "pin_remove": "{{actor}} 删除了 {{target}}",
       "pin_update": "{{actor}} 修改了 {{target}}",
-      "pin_reorder": "{{actor}} 调整了顺序（{{count}} 项）",
+      "pin_reorder": "{{actor}} 调整了顺序",
       "route_generate": "{{actor}} 生成了路线",
       "day_add": "{{actor}} 添加了一天",
       "day_remove": "{{actor}} 删除了一天",

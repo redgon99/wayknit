@@ -107,7 +107,7 @@
       "pin_add": "{{actor}} · {{target}} 추가",
       "pin_remove": "{{actor}} · {{target}} 삭제",
       "pin_update": "{{actor}} · {{target}} 수정",
-      "pin_reorder": "{{actor}} · 순서 변경 ({{count}}건)",
+      "pin_reorder": "{{actor}} · 순서 변경",
       "route_generate": "{{actor}} · 동선 생성",
       "day_add": "{{actor}} · 일차 추가",
       "day_remove": "{{actor}} · 일차 삭제",
