@@ -2237,16 +2237,6 @@ button {
   justify-content: center;
 }
 
-.materials-album-hint {
-  font-size: 10px;
-  color: var(--color-text-tertiary);
-  margin-top: 2px;
-}
-
-.materials-grid-card--album {
-  padding-bottom: 10px;
-}
-
 .place-detail-tab-scroll {
   flex: 1;
   min-height: 0;
@@ -3535,15 +3525,6 @@ button {
   transform: translateX(0);
 }
 
-.materials-panel-header {
-  flex-shrink: 0;
-}
-
-.materials-panel-header .route-panel-header {
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
 .materials-export-menu {
   position: relative;
   flex-shrink: 0;
@@ -3606,56 +3587,6 @@ button {
   background: var(--color-bg-secondary);
 }
 
-.materials-compose {
-  flex-shrink: 0;
-  padding: 10px 14px;
-  border-bottom: 0.5px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.materials-dropzone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 72px;
-  padding: 12px;
-  border: 1.5px dashed var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
-  color: var(--color-text-secondary);
-  font-size: 11px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.materials-dropzone:hover,
-.materials-dropzone.drag-over {
-  border-color: var(--color-primary, #007aff);
-  background: rgba(0, 122, 255, 0.05);
-  color: var(--color-text-primary);
-}
-
-.materials-dropzone.uploading {
-  pointer-events: none;
-  opacity: 0.75;
-}
-
-.materials-dropzone-label {
-  line-height: 1.4;
-  max-width: 240px;
-}
-
-.materials-text-compose {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
 .materials-draft-text {
   font-size: 12px;
   line-height: 1.45;
@@ -3667,60 +3598,6 @@ button {
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-family: inherit;
-}
-
-.materials-text-save-btn {
-  align-self: flex-end;
-  font-size: 11px;
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--color-primary, #007aff);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-
-.materials-text-save-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.materials-view-toggle {
-  display: inline-flex;
-  border: 0.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  flex-shrink: 0;
-  margin-right: 4px;
-}
-
-.materials-view-btn {
-  width: 30px;
-  height: 28px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.materials-view-btn + .materials-view-btn {
-  border-left: 0.5px solid var(--color-border);
-}
-
-.materials-view-btn.active {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-}
-
-.materials-view-btn:hover:not(.active) {
-  background: var(--color-bg);
 }
 
 .materials-file-input {
@@ -3740,42 +3617,6 @@ button {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-}
-
-.materials-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 8px 14px;
-  border-bottom: 0.5px solid var(--color-border);
-  flex-shrink: 0;
-  align-items: center;
-}
-
-.materials-filter-chip {
-  font-size: 10px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  border: 0.5px solid var(--color-border);
-  background: transparent;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-}
-
-.materials-filter-chip.active {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  border-color: var(--color-border-hover);
-}
-
-.materials-place-filter {
-  font-size: 10px;
-  padding: 4px 6px;
-  border-radius: var(--radius-sm);
-  border: 0.5px solid var(--color-border);
-  background: var(--color-bg);
-  max-width: 140px;
-  margin-left: auto;
 }
 
 .materials-panel-body {
@@ -3806,22 +3647,10 @@ button {
   gap: 10px;
 }
 
-.materials-grid-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border: 0.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 8px;
-  background: var(--color-bg);
-  min-width: 0;
-}
-
 .materials-grid-card--text {
   grid-column: 1 / -1;
 }
 
-.materials-grid-text-icon,
 .materials-grid-file-icon {
   display: flex;
   align-items: center;
@@ -3844,14 +3673,6 @@ button {
   overflow: hidden;
   white-space: pre-wrap;
   word-break: break-word;
-}
-
-.materials-grid-caption {
-  font-size: 11px;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .materials-thumb-btn--large {
@@ -3965,10 +3786,6 @@ button {
   word-break: break-word;
 }
 
-.materials-meta--compact .materials-meta-select {
-  min-width: 64px;
-}
-
 .materials-thumb-btn img {
   width: 100%;
   height: 100%;
@@ -4070,43 +3887,6 @@ button {
 
 .materials-file-download:hover {
   text-decoration: underline;
-}
-
-.materials-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: center;
-}
-
-.materials-meta-select {
-  font-size: 10px;
-  padding: 3px 6px;
-  border-radius: var(--radius-sm);
-  border: 0.5px solid var(--color-border);
-  background: var(--color-bg);
-  flex: 1;
-  min-width: 72px;
-}
-
-.materials-delete-btn {
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-}
-
-.materials-delete-btn:hover {
-  background: rgba(255, 59, 48, 0.1);
-  color: #ff3b30;
 }
 
 .route-panel-header {
@@ -14799,4 +14579,452 @@ button {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+ * 여행 자료 패널 — A안 "조용한 캔버스" (§23)
+ *
+ * 바뀐 것: 입력 3층(드롭존·메모창·저장) → 한 줄 버튼 2개, 필터 칩 8개 →
+ * 세그먼트 하나 + 메뉴 둘, 카드에서 셀렉트 2개·휴지통을 걷어내 더보기 안으로.
+ * 아래 규칙이 .materials-compose / .materials-dropzone / .materials-filters /
+ * .materials-grid-card / .materials-meta* 계열을 대신한다.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+.materials-head {
+  flex-shrink: 0;
+  padding: 16px 18px 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.materials-head-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.materials-head-sub {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: 3px;
+}
+.materials-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.materials-head-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.materials-head-btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+/* 헤더에서는 보내기도 아이콘 하나로 — 라벨은 aria-label 로 남는다 */
+.materials-export-btn.icon-only {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+/* ── 한 줄 추가 바 ─────────────────────────────────────────────────── */
+.materials-add-row {
+  flex-shrink: 0;
+  padding: 0 18px 12px;
+  display: flex;
+  gap: 8px;
+}
+.materials-add-btn {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  border: none;
+  border-radius: 11px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.materials-add-btn:hover:not(:disabled) {
+  background: #e7ecf2;
+  color: var(--color-text-primary);
+}
+.materials-add-btn.active {
+  background: var(--color-primary-soft);
+  color: var(--color-amber);
+}
+.materials-add-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.materials-note-compose {
+  flex-shrink: 0;
+  padding: 0 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.materials-note-compose-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.materials-note-cancel,
+.materials-note-save {
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.materials-note-cancel {
+  border: 0.5px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+.materials-note-save {
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+}
+.materials-note-save:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 드롭 대상이 패널 전체다 — 끄는 동안에만 덮는다.
+   전에는 항상 자리를 차지하던 점선 상자가 이 역할을 했다. */
+.materials-drop-overlay {
+  position: absolute;
+  inset: 8px;
+  z-index: 5;
+  border-radius: 16px;
+  border: 2px dashed var(--color-accent-hover);
+  background: rgba(255, 251, 235, 0.94);
+  color: var(--color-amber);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* ── 한 줄 필터 ────────────────────────────────────────────────────── */
+.materials-filterbar {
+  flex-shrink: 0;
+  padding: 0 18px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 0.5px solid var(--color-border);
+}
+.materials-seg {
+  display: inline-flex;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  min-width: 0;
+}
+.materials-seg-btn {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.materials-seg-btn.active {
+  background: #fff;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.materials-filter-menus {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+.materials-filter-menu {
+  position: relative;
+}
+.materials-filter-menu-btn {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 8px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  max-width: 92px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.materials-filter-menu-btn:hover {
+  background: var(--color-bg-secondary);
+}
+.materials-filter-menu-btn.active {
+  background: var(--color-primary-soft);
+  color: var(--color-amber);
+  font-weight: 600;
+}
+.materials-filter-menu-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 140;
+  min-width: 150px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--color-surface-solid);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float-lg);
+  padding: 5px;
+}
+.materials-filter-menu-pop button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--color-text-primary);
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.materials-filter-menu-pop button:hover {
+  background: var(--color-bg-secondary);
+}
+.materials-filter-menu-pop button.active {
+  background: var(--color-primary-soft);
+  color: var(--color-amber);
+  font-weight: 600;
+}
+
+/* ── 카드: 테두리를 걷어 사진이 주인공 ─────────────────────────────── */
+.materials-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.materials-card--text {
+  grid-column: 1 / -1;
+  background: var(--color-accent-soft);
+  border-radius: var(--radius-lg);
+  padding: 11px 12px;
+  gap: 4px;
+}
+.materials-card--album {
+  padding-bottom: 2px;
+}
+.materials-card-caption {
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  margin-top: 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.materials-card-meta {
+  font-size: 10.5px;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.materials-card--text .materials-card-meta {
+  color: var(--color-amber);
+  opacity: 0.8;
+  margin-top: 6px;
+}
+/* 사진·파일 타일의 테두리를 없앤다 — 카드 테두리와 이중이었다 */
+.materials-card .materials-thumb-btn {
+  border: none;
+  border-radius: var(--radius-md);
+}
+.materials-card .materials-grid-file-icon {
+  height: auto;
+  aspect-ratio: 4 / 3;
+  flex-direction: column;
+  gap: 5px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 0.5px solid var(--color-border);
+  color: var(--color-text-tertiary);
+}
+.materials-card .materials-grid-file-icon .materials-file-size {
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+}
+
+/* 더보기 — 일차·장소·삭제를 여기로 모았다 */
+.materials-card-menu {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 3;
+}
+.materials-list-row .materials-card-menu {
+  position: static;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.materials-card-menu-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.16);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.materials-list-row .materials-card-menu-btn {
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-text-tertiary);
+}
+.materials-card-menu-btn:hover {
+  color: var(--color-text-primary);
+  background: #fff;
+}
+.materials-card-menu-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 140;
+  width: 190px;
+  background: var(--color-surface-solid);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float-lg);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.materials-card-menu-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+}
+.materials-card-menu-field select {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 7px;
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--color-border-strong);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  width: 100%;
+}
+.materials-card-menu-delete {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--color-danger-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.materials-card-menu-delete:hover {
+  background: var(--color-danger-bg);
+}
+
+/* ── 공유받은 자료 배지 (§22) ──────────────────────────────────────── */
+/* 색·이니셜 규칙은 핀 작성자 배지·presence 아바타와 같다. 남이 올린 것에만 붙는다. */
+.material-author-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 3;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  /* 사진 위에서도 읽히도록 흰 링 */
+  box-shadow:
+    0 0 0 1.5px rgba(255, 255, 255, 0.92),
+    0 1px 3px rgba(15, 23, 42, 0.28);
+}
+.materials-card--text .material-author-badge {
+  top: 10px;
+  left: 11px;
+}
+.materials-card--text .materials-text-title,
+.materials-card--text .materials-text-body {
+  padding-left: 26px;
+}
+/* 목록에서는 썸네일 모서리에 겹쳐 단다 */
+.materials-list-lead {
+  position: relative;
+  flex-shrink: 0;
+}
+.materials-list-lead .material-author-badge {
+  top: -5px;
+  left: -5px;
+  width: 18px;
+  height: 18px;
+  font-size: 9px;
+}
+
+/* 목록 행도 조작이 빠진 만큼 간결하게 */
+.materials-list-row .materials-list-main {
+  align-items: flex-start;
 }

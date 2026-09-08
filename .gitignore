@@ -48,3 +48,6 @@ lerna-debug.log*
 
 # 배포 중 개발용 .env 파일을 잠시 옮겨두는 곳
 .deploy-stash/
+
+# 디자인 캔버스 산출물 — .design/ 의 원본에서 언제든 다시 만든다(2.5MB 에디터 포함)
+trip-materials-redesign.html

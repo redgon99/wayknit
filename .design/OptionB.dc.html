@@ -1,0 +1,164 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+  <style>
+    :root{
+      --ink:#0f172a; --ink2:#475569; --ink3:#64748b; --ink4:#94a3b8;
+      --line:rgba(15,23,42,.08); --bg:#fafaf8; --bg2:#f1f5f9;
+      --amber:#a16207; --cream:#fffbeb; --soft:#fef9c3;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Instrument Sans','Noto Sans KR',system-ui,sans-serif;
+      background:#d8e9ee;color:var(--ink);-webkit-font-smoothing:antialiased}
+    a{color:#ca8a04}a:hover{color:#a16207}
+    .dayhead{display:flex;align-items:center;gap:8px;padding:9px 18px 7px;background:#fff;
+      border-bottom:.5px solid var(--line)}
+    .daynum{font-size:12px;font-weight:700;letter-spacing:-.01em}
+    .daycnt{font-size:10px;color:var(--ink4);background:var(--bg2);border-radius:99px;padding:1px 7px;font-weight:600}
+    .strip{display:flex;gap:8px;padding:10px 18px 14px;align-items:flex-start}
+    .sq{width:78px;flex:0 0 78px}
+    .sqimg{width:78px;height:78px;border-radius:11px;overflow:hidden;background:var(--bg2);border:.5px solid var(--line)}
+    .sqcap{font-size:9.5px;color:var(--ink4);margin-top:5px;line-height:1.3;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .seg{display:inline-flex;background:var(--bg2);border-radius:99px;padding:2px}
+    .seg > span{font-size:11px;padding:5px 12px;border-radius:99px;color:var(--ink3);white-space:nowrap}
+    .seg > span.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.08)}
+  </style>
+</helmet>
+
+<div style="width:400px;height:800px;display:flex;align-items:center;justify-content:center;background:
+  radial-gradient(circle at 20% 15%, rgba(255,255,255,.55), transparent 45%), #d8e9ee">
+
+  <div style="width:360px;height:760px;background:#fff;border:1px solid rgba(15,23,42,.12);
+    border-radius:20px;box-shadow:0 2px 8px rgba(15,23,42,.06),0 12px 36px rgba(15,23,42,.14);
+    display:flex;flex-direction:column;overflow:hidden">
+
+    <!-- header -->
+    <div style="padding:16px 18px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+      <div>
+        <div style="font-size:15px;font-weight:600;line-height:1.2;letter-spacing:-.01em">여행 자료</div>
+        <div style="font-size:11px;color:var(--ink4);margin-top:3px">춘천여행가자 · 6개</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:2px">
+        <div style="width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--ink3)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+            stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 12 5 4 5-4"/><path d="M4 21h16"/></svg>
+        </div>
+        <div style="width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--ink3)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+            stroke-linecap="round"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 종류 필터만 남는다. 일차 칩 4개는 아래 그룹 헤더가 대신한다 -->
+    <div style="padding:0 18px 12px">
+      <div class="seg" style="width:100%;display:flex">
+        <span class="on" style="flex:1;text-align:center">전체</span>
+        <span style="flex:1;text-align:center">사진</span>
+        <span style="flex:1;text-align:center">메모</span>
+        <span style="flex:1;text-align:center">파일</span>
+      </div>
+    </div>
+
+    <!-- body : 일차가 곧 목차 -->
+    <div style="flex:1;overflow:hidden;border-top:.5px solid var(--line)">
+
+      <!-- 미지정 -->
+      <div class="dayhead" style="background:var(--cream);border-bottom-color:#f3e4b8">
+        <span class="daynum" style="color:var(--amber)">일차 미지정</span>
+        <span class="daycnt" style="background:#fbeec4;color:var(--amber)">1</span>
+        <span style="margin-left:auto;font-size:9.5px;color:#b58a2b">아래 일차로 끌어 놓으세요</span>
+      </div>
+      <div class="strip">
+        <div class="sq">
+          <div class="sqimg" style="background:#fff;display:flex;align-items:flex-end;justify-content:center;padding-bottom:7px">
+            <div style="width:70%;height:44%;background:#cbd5e1;border-radius:6px 6px 2px 2px"></div>
+          </div>
+          <div class="sqcap">스크린샷 2026-08-26</div>
+        </div>
+      </div>
+
+      <!-- 1일차 -->
+      <div class="dayhead">
+        <span class="daynum">1일차</span><span class="daycnt">2</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--ink4)">춘천 도착</span>
+      </div>
+      <div class="strip" style="flex-direction:column;gap:9px">
+        <div style="background:var(--cream);border-radius:12px;padding:11px 12px;width:100%">
+          <div style="font-size:11.5px;line-height:1.5;color:#713f12;white-space:pre-line">닭갈비 골목은 6시 전에 가야 자리 있음.
+소양강 스카이워크는 우천시 폐쇄.</div>
+          <div style="font-size:10px;color:#a16207;opacity:.75;margin-top:7px">춘천 명동 닭갈비골목</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div class="sq">
+            <div class="sqimg" style="background:linear-gradient(150deg,#3f5c43,#26402c 60%,#1c2f21)"></div>
+            <div class="sqcap">스크린샷 2026-09-08</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3일차 -->
+      <div class="dayhead">
+        <span class="daynum">3일차</span><span class="daycnt">3</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--ink4)">남이섬</span>
+      </div>
+      <div class="strip">
+        <div class="sq">
+          <div class="sqimg" style="background:#fff;display:flex;align-items:center;justify-content:center">
+            <div style="width:80%;height:70%;background:linear-gradient(120deg,#fde68a 0 38%,#f8fafc 38%);border-radius:4px"></div>
+          </div>
+          <div class="sqcap">out-01-landing.png</div>
+        </div>
+        <div class="sq">
+          <div class="sqimg" style="background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.4"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/></svg>
+            <span style="font-size:8.5px;color:var(--ink4)">933 KB</span>
+          </div>
+          <div class="sqcap">모두의 창업 프로젝트</div>
+        </div>
+        <div class="sq">
+          <div class="sqimg" style="background:linear-gradient(160deg,#dbeafe,#93c5fd)"></div>
+          <div class="sqcap">남이섬 지도.png</div>
+        </div>
+      </div>
+
+      <!-- 4일차 (잘려서 스크롤을 암시) -->
+      <div class="dayhead">
+        <span class="daynum">4일차</span><span class="daycnt">1</span>
+      </div>
+      <div class="strip">
+        <div class="sq">
+          <div class="sqimg" style="background:linear-gradient(150deg,#fca5a5,#7f1d1d)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 바닥 고정 입력줄 : 메신저처럼 항상 한 줄 -->
+    <div style="flex-shrink:0;border-top:.5px solid var(--line);padding:10px 12px;display:flex;
+      align-items:center;gap:8px;background:#fff">
+      <div style="width:34px;height:34px;border-radius:11px;background:var(--bg2);display:flex;
+        align-items:center;justify-content:center;color:var(--ink2);flex:0 0 auto">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M15 7l-6.5 6.5a2.5 2.5 0 0 0 3.5 3.5L19 10a4.5 4.5 0 0 0-6.4-6.3L6 10.3"/></svg>
+      </div>
+      <div style="flex:1;height:34px;border-radius:11px;background:var(--bg2);display:flex;align-items:center;
+        padding:0 12px;font-size:12px;color:var(--ink4)">메모 남기기…</div>
+      <div style="width:34px;height:34px;border-radius:11px;background:#0f172a;display:flex;
+        align-items:center;justify-content:center;color:#fff;flex:0 0 auto">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L19 7"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

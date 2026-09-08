@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+  <style>
+    :root{
+      --ink:#0f172a; --ink2:#475569; --ink3:#64748b; --ink4:#94a3b8;
+      --line:rgba(15,23,42,.08); --bg:#fafaf8; --bg2:#f1f5f9;
+      --amber:#a16207; --cream:#fffbeb; --soft:#fef9c3; --accent:#facc15;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Instrument Sans','Noto Sans KR',system-ui,sans-serif;
+      background:#d8e9ee;color:var(--ink);-webkit-font-smoothing:antialiased}
+    a{color:#ca8a04}a:hover{color:#a16207}
+    .seg{display:inline-flex;background:var(--bg2);border-radius:99px;padding:2px}
+    .seg > span{font-size:11px;padding:5px 12px;border-radius:99px;color:var(--ink3);white-space:nowrap}
+    .seg > span.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.08)}
+    .tile{border-radius:12px;overflow:hidden;position:relative;background:var(--bg2);border:.5px solid var(--line)}
+    .cap{font-size:11px;font-weight:500;line-height:1.35;margin-top:6px;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .sub{font-size:10px;color:var(--ink4);margin-top:1px}
+    .check{position:absolute;top:7px;left:7px;width:20px;height:20px;border-radius:50%;
+      background:rgba(255,255,255,.9);box-shadow:0 1px 3px rgba(15,23,42,.2);
+      display:flex;align-items:center;justify-content:center}
+    .check.on{background:#0f172a}
+    .selring{box-shadow:0 0 0 2px #0f172a}
+    .act{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+      font-size:10px;color:#e2e8f0;font-weight:500}
+  </style>
+</helmet>
+
+<div style="width:400px;height:800px;display:flex;align-items:center;justify-content:center;background:
+  radial-gradient(circle at 20% 15%, rgba(255,255,255,.55), transparent 45%), #d8e9ee">
+
+  <div style="width:360px;height:760px;background:#fff;border:1px solid rgba(15,23,42,.12);
+    border-radius:20px;box-shadow:0 2px 8px rgba(15,23,42,.06),0 12px 36px rgba(15,23,42,.14);
+    display:flex;flex-direction:column;overflow:hidden;position:relative">
+
+    <!-- header -->
+    <div style="padding:16px 18px 11px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+      <div>
+        <div style="font-size:15px;font-weight:600;line-height:1.2;letter-spacing:-.01em">여행 자료</div>
+        <div style="font-size:11px;color:var(--ink4);margin-top:3px">춘천여행가자 · 6개</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:2px">
+        <div style="width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--ink3)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+            stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 12 5 4 5-4"/><path d="M4 21h16"/></svg>
+        </div>
+        <div style="width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--ink3)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+            stroke-linecap="round"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 검색 + 종류 -->
+    <div style="padding:0 18px 11px;display:flex;flex-direction:column;gap:9px">
+      <div style="height:34px;border-radius:11px;background:var(--bg2);display:flex;align-items:center;
+        gap:7px;padding:0 11px;font-size:12px;color:var(--ink4)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+          stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+        자료 검색
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div class="seg"><span class="on">전체</span><span>사진</span><span>메모</span><span>파일</span></div>
+        <div style="font-size:11px;color:var(--ink2);display:inline-flex;align-items:center;gap:3px;
+          padding:5px 9px;border-radius:99px;background:var(--soft);color:var(--amber);font-weight:600">
+          3일차
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:.5px;background:var(--line);margin:0 18px"></div>
+
+    <!-- body : 카드에 조작 버튼이 하나도 없다 -->
+    <div style="flex:1;overflow:hidden;padding:13px 18px 0;display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px;align-content:start">
+
+      <div>
+        <div class="tile selring" style="aspect-ratio:1;background:linear-gradient(150deg,#3f5c43,#26402c 60%,#1c2f21)">
+          <div class="check on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L19 7"/></svg></div>
+        </div>
+        <div class="cap">스크린샷 2026-09-08</div>
+        <div class="sub">4일차</div>
+      </div>
+
+      <div>
+        <div class="tile" style="aspect-ratio:1;background:#fff;display:flex;align-items:center;justify-content:center">
+          <div style="width:80%;height:70%;background:linear-gradient(120deg,#fde68a 0 38%,#f8fafc 38%);border-radius:5px"></div>
+          <div class="check"></div>
+        </div>
+        <div class="cap">out-01-landing.png</div>
+        <div class="sub">3일차</div>
+      </div>
+
+      <div style="grid-column:1 / -1">
+        <div style="background:var(--cream);border-radius:12px;padding:11px 12px;position:relative">
+          <div class="check" style="background:rgba(255,255,255,.94)"></div>
+          <div style="font-size:11.5px;line-height:1.5;color:#713f12;white-space:pre-line;padding-left:26px">닭갈비 골목은 6시 전에 가야 자리 있음.
+소양강 스카이워크는 우천시 폐쇄 — 전날 확인.</div>
+          <div style="font-size:10px;color:#a16207;opacity:.75;margin-top:7px;padding-left:26px">1일차 · 춘천 명동 닭갈비골목</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="tile selring" style="aspect-ratio:1;background:var(--bg);display:flex;flex-direction:column;
+          align-items:center;justify-content:center;gap:5px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.4"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/></svg>
+          <span style="font-size:9.5px;color:var(--ink4)">PDF · 933 KB</span>
+          <div class="check on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L19 7"/></svg></div>
+        </div>
+        <div class="cap">모두의 창업 프로젝트</div>
+        <div class="sub">3일차</div>
+      </div>
+
+      <div>
+        <div class="tile" style="aspect-ratio:1;background:#fff;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px">
+          <div style="width:74%;height:44%;background:#cbd5e1;border-radius:7px 7px 3px 3px"></div>
+          <div class="check"></div>
+        </div>
+        <div class="cap">스크린샷 2026-08-26</div>
+        <div class="sub">3일차</div>
+      </div>
+
+    </div>
+
+    <!-- 선택 액션 바 : 카드마다 있던 드롭다운·휴지통을 여기로 모은다 -->
+    <div style="position:absolute;left:14px;right:14px;bottom:14px;background:#0f172a;border-radius:16px;
+      box-shadow:0 12px 32px rgba(15,23,42,.34);padding:11px 8px 10px;display:flex;align-items:center">
+      <div style="padding:0 10px 0 8px;color:#fff;font-size:12px;font-weight:700;white-space:nowrap">2개</div>
+      <div style="width:.5px;height:26px;background:rgba(255,255,255,.16);margin-right:2px"></div>
+      <div class="act">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+          stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M3 10h18"/></svg>
+        일차
+      </div>
+      <div class="act">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+        장소
+      </div>
+      <div class="act">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 12 5 4 5-4"/><path d="M4 21h16"/></svg>
+        받기
+      </div>
+      <div class="act" style="color:#fca5a5">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7v13h12V7"/></svg>
+        삭제
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

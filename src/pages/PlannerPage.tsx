@@ -72,6 +72,7 @@ import {
   subscribeTripRealtime,
   hasCollaborators,
   getPinAuthors,
+  getMaterialAuthors,
   pinAuthorKey,
   type Trip,
   type TripSummary,
@@ -674,6 +675,12 @@ export default function PlannerPage() {
   useEffect(() => {
     setPinAuthors(getPinAuthors(trip.id));
   }, [trip.id, trip.pinnedByDay]);
+
+  /** 자료 작성자 — 같은 이유로 자료 목록이 갱신될 때마다 다시 읽는다(§22). */
+  const [materialAuthors, setMaterialAuthors] = useState<Record<string, string | null>>({});
+  useEffect(() => {
+    setMaterialAuthors(getMaterialAuthors(trip.id));
+  }, [trip.id, trip.materials]);
 
   // ============== Trip 업데이트 헬퍼 ==============
   function patchTrip(next: Partial<Trip>) {
@@ -2853,6 +2860,10 @@ export default function PlannerPage() {
         userId={user?.id ?? null}
         authConfigured={authConfigured}
         onNotify={showToast}
+        /* 핀 작성자 배지와 같은 게이트 — 공개 여행 열람자에게 협업자 이메일이
+           보이면 안 된다(§14-2). presenceEnabled 를 쓰면 안 되는 이유도 같다. */
+        materialAuthors={canSeePinAuthors ? materialAuthors : undefined}
+        currentUserEmail={user?.email ?? null}
       />
 
       {pickingOriginFromMap && (

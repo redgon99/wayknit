@@ -766,7 +766,8 @@ export function subscribeTripRealtime(
     }
 
     if (wantMat) {
-      const remote = await readMaterialsRemote(tripId);
+      // 구독은 소유자·협업자 화면에서만 돈다(플래너 이펙트가 ownerId 를 요구한다).
+      const remote = await readMaterialsRemote(tripId, true);
       if (disposed) return;
       if (remote) {
         const baseline = materialBaselines.get(tripId) ?? new Map<string, string>();
@@ -871,6 +872,24 @@ interface DayStateRow {
 interface MaterialRow {
   material_id: string;
   data: TripMaterial;
+  created_by_email: string | null;
+}
+
+/**
+ * 자료를 누가 올렸는지 — 핀 작성자(§14-1)와 같은 이유로 `TripMaterial` 에 얹지 않는다.
+ *
+ * 그 객체는 그대로 `trip_materials.data` jsonb 로 저장되고 `canonicalJson()` 비교에도
+ * 쓰이므로,
+ *   1. 이미 컬럼으로 있는 값이 jsonb 안에 중복 저장돼 시간이 지나면 어긋나고
+ *   2. 내용은 그대로인데 작성자 필드만 달라도 "바뀌었다"로 잡혀 불필요한 저장이 나간다.
+ *
+ * 키는 자료 id.
+ */
+const materialAuthorsByTrip = new Map<string, Record<string, string | null>>();
+
+/** 자료 작성자 이메일 맵. readMaterialsRemote 가 자료와 같은 응답에서 채운다. */
+export function getMaterialAuthors(tripId: string): Record<string, string | null> {
+  return materialAuthorsByTrip.get(tripId) ?? {};
 }
 
 interface DayStateSnapshot {
@@ -938,16 +957,37 @@ async function readDayStateRemote(tripId: string): Promise<DayStateSnapshot | nu
   return { routeOptionsByDay, generatedRouteByDay };
 }
 
-async function readMaterialsRemote(tripId: string): Promise<TripMaterial[] | null> {
+/**
+ * @param includeAuthors 작성자 이메일까지 읽을지.
+ *   공개 여행을 구경하는 비로그인 열람자는 이 컬럼을 읽을 권한이 없다(anon 에서
+ *   회수했다 — §22). 요청에 넣으면 조회 전체가 실패해 자료가 통째로 안 보이므로,
+ *   볼 자격이 있을 때만 넣는다. readPinsRemote 와 같은 구조다.
+ */
+async function readMaterialsRemote(
+  tripId: string,
+  includeAuthors = false
+): Promise<TripMaterial[] | null> {
   const sb = getSupabase();
   if (!sb) return null;
+  // 삼항을 select() 에 바로 넘기면 supabase-js 가 리터럴 유니온으로 추론해
+  // 타입체크가 깨진다(§14-4) — string 으로 낮춘다.
+  const columns: string = includeAuthors
+    ? 'material_id, data, created_by_email'
+    : 'material_id, data';
   const { data, error } = await sb
     .from('trip_materials')
-    .select('material_id, data')
+    .select(columns)
     .eq('trip_id', tripId)
     .order('created_at', { ascending: true });
   if (error || !data) return null;
-  return (data as unknown as MaterialRow[]).map((r) => r.data);
+
+  const rows = data as unknown as MaterialRow[];
+  if (includeAuthors) {
+    const authors: Record<string, string | null> = {};
+    for (const r of rows) authors[r.material_id] = r.created_by_email ?? null;
+    materialAuthorsByTrip.set(tripId, authors);
+  }
+  return rows.map((r) => r.data);
 }
 
 /**
@@ -995,7 +1035,7 @@ async function syncDayState(trip: Trip, userId: string | null): Promise<void> {
 }
 
 /** 기준점 대비 바뀐 자료만 행 단위로 반영한다 (핀과 같은 방식). */
-async function syncMaterials(trip: Trip, userId: string | null): Promise<void> {
+async function syncMaterials(trip: Trip): Promise<void> {
   const sb = getSupabase();
   if (!sb) return;
   const baseline = materialBaselines.get(trip.id) ?? new Map<string, string>();
@@ -1007,13 +1047,11 @@ async function syncMaterials(trip: Trip, userId: string | null): Promise<void> {
     const key = canonicalJson(m);
     next.set(m.id, key);
     if (baseline.get(m.id) === key) continue;
-    upserts.push({
-      trip_id: trip.id,
-      material_id: m.id,
-      data: m,
-      ...(baseline.has(m.id) ? {} : { created_by: userId }),
-      updated_by: userId,
-    });
+    // created_by / created_by_email / updated_by 는 보내지 않는다 —
+    // DB 트리거(`stamp_trip_material_author`)가 auth.uid() 로 찍고 클라이언트
+    // 값은 무시한다(§22). 여기서 보내면 "설정하는 것처럼 보이는데 무시되는" 코드가
+    // 되어 §19-4 처럼 다음 사람을 속인다.
+    upserts.push({ trip_id: trip.id, material_id: m.id, data: m });
   }
   const removed = [...baseline.keys()].filter((id) => !next.has(id));
 
@@ -1043,7 +1081,7 @@ async function attachPins(trip: Trip, includeAuthors = false): Promise<Trip> {
   const [pins, dayState, materials] = await Promise.all([
     readPinsRemote(trip.id, includeAuthors),
     readDayStateRemote(trip.id),
-    readMaterialsRemote(trip.id),
+    readMaterialsRemote(trip.id, includeAuthors),
   ]);
 
   const pinnedByDay = pins ?? trip.pinnedByDay;
@@ -1259,7 +1297,7 @@ async function syncRows(normalized: Trip): Promise<void> {
   const actorId = await currentUserId();
   await syncPins(normalized, actorId);
   await syncDayState(normalized, actorId);
-  await syncMaterials(normalized, actorId);
+  await syncMaterials(normalized);
 }
 
 /**

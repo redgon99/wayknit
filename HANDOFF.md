@@ -1867,3 +1867,108 @@ trip_materials_select_own:
 
 공개 여행 공유 페이지(`ShareTripPage`)는 자료를 보여주지 않으므로 지금은 드러나지 않는다.
 공개 여행에서도 사진을 보여주려면 **사진을 공개한다는 뜻**이라 별도 판단이 필요하다.
+
+---
+
+## 22. 여행 자료 패널 재설계 · 공유받은 자료 배지 (2026-09-09)
+
+사용자: "여행자료공유의 디자인이 좀 촌스러워 좀더 편하고 간편하게" → 3안을 그려
+**A안(조용한 캔버스)** 채택 + "공유받은 파일은 배지 추가".
+
+시안 캔버스: `trip-materials-redesign.html` (Claude Design 아티팩트).
+채택 안과 현재 화면이 1페이지에, 안 고른 B·C 는 2페이지에 남아 있다.
+
+### 22-1. 무엇이 촌스러웠나 (실측)
+
+| | 전 | 후 |
+|---|---|---|
+| 입력 | 드롭존 + 메모창 + 저장 버튼 **3층**이 패널의 약 40% | **한 줄 버튼 2개**. 메모는 누를 때만 펼침 |
+| 필터 | 칩 8개가 **두 줄로 접힘** + OS 기본 `<select>` | 세그먼트 1개 + `[일차▾][장소▾]` 메뉴 2개 |
+| 카드 | 셀렉트 2개 + 휴지통 = **조작 3개**가 사진보다 눈에 띔 | 전부 `⋯` 안으로. 카드에는 사진·제목·회색 한 줄 |
+| 드롭 | 점선 상자가 **항상** 자리를 차지 | 패널 전체가 드롭 대상, **끄는 동안에만** 오버레이 |
+
+**일차 칩은 구조적으로 넘친다** — 여행이 길어질수록 늘어나므로 칩으로 두면 언제든
+다시 두 줄이 된다. 메뉴로 바꾼 진짜 이유다.
+
+**보기 전환(그리드/목록)은 없애지 않았다.** 시안에는 없었지만 저장된 선호값이 있는
+기존 기능이라, 2버튼 세그먼트를 헤더의 **토글 버튼 하나**로 줄여 옮겼다.
+
+### 22-2. 🔴 iOS 파랑이 남아 있었다
+
+`.materials-dropzone:hover` 의 `rgba(0, 122, 255, .05)` 와 `.materials-text-save-btn` 의
+`var(--color-primary, #007aff)`. 앱 브랜드는 앰버(`#facc15` · `#ca8a04`)다.
+`--color-primary` 가 정의돼 있어 폴백은 안 탔지만 **호버 배경은 실제로 파랬다.**
+
+> 폴백에 다른 디자인 시스템의 색을 적어 두면, 토큰이 사라지는 날 조용히 그 색이 된다.
+
+### 22-3. 공유받은 자료 배지
+
+핀 작성자 배지(§14)와 **같은 규칙**: 색은 `presenceColor(email)`, 글자는
+`presenceInitial(email)`, 상단 presence 아바타와 색이 이어진다.
+
+- **내가 올린 것에는 안 붙는다.** 전부 내 것이면 배지가 하나도 없는 게 정상
+- 게이트는 `canSeePinAuthors`(소유자·협업자) — `presenceEnabled` 를 쓰면 **공개 여행
+  열람자에게 협업자 이메일이 보인다**(§14-2 와 같은 함정)
+- 사진 위에서도 읽히도록 흰 링 1.5px. 사진·파일은 타일 왼쪽 위(`⋯` 반대편),
+  목록은 썸네일 모서리
+- §19 이전 payload 에서 옮겨 온 자료 4건은 작성자가 비어 있어 배지가 없다 —
+  모르는 사람의 이니셜을 지어내는 것보다 낫다
+
+작성자는 `TripMaterial` jsonb 에 넣지 않았다(§14-1 과 같은 이유). `materialAuthorsByTrip`
+맵에 따로 두고 `readMaterialsRemote` 가 자료와 **같은 응답**에서 채운다.
+
+### 22-4. 🔴 트리거보다 backfill 을 먼저 해야 한다
+
+`created_by_email` 을 채우는 UPDATE 를 트리거를 만든 **뒤에** 돌렸더니 전 행이 NULL 로
+남았다. `stamp_trip_material_author` 의 UPDATE 분기가
+`new.created_by_email := old.created_by_email`(= NULL) 로 되돌리기 때문이다.
+**조용히 아무 효과도 없다** — 에러가 안 난다.
+
+이미 트리거가 있는 DB 라면 `disable trigger` / `enable trigger` 로 감쌀 것.
+마이그레이션 파일은 backfill 이 먼저 오도록 고쳐 뒀다.
+
+### 22-5. 🔴 anon 이 새 컬럼을 읽을 수 있었다 — §14-3 의 재발
+
+`trip_materials` 의 SELECT 정책도 부모 여행 가시성에 위임하고, **anon 에 테이블 전체
+SELECT 권한이 있었다**(실측). 이메일 컬럼을 그냥 추가했으면 공개 여행에서 REST 로
+그대로 읽혔다.
+
+§14-3 과 똑같이 처리했다 — 테이블 권한을 걷고 필요한 컬럼만 다시 준다:
+`grant select (trip_id, material_id, data, created_at, updated_at) to anon`.
+공개 열람 경로(`readMaterialsRemote`)가 쓰는 것만 남겼다. 하나라도 빠지면 공개 여행에서
+자료가 통째로 안 보인다.
+
+앱도 `readMaterialsRemote(tripId, includeAuthors)` 로 나눴다(핀과 같은 구조).
+
+> **같은 실수를 두 번 했다.** 자식 테이블을 새로 만들 때는 "부모 가시성 위임 + anon
+> 테이블 권한" 조합을 **기본적으로 의심할 것.** `trip_day_state` 도 같은 상태지만
+> 이메일 같은 컬럼이 없어 지금은 문제가 아니다 — 거기에 사람 관련 컬럼을 붙이는 날
+> 같이 막아야 한다.
+
+### 22-6. 작성자를 클라이언트가 보내지 않는다
+
+`syncMaterials` 에서 `created_by` · `updated_by` 를 **빼 버렸다.** 트리거가 `auth.uid()`
+로 찍고 클라이언트 값은 무시하므로, 남겨 두면 "설정하는 것처럼 보이는데 무시되는" 코드가
+되어 §19-4 처럼 다음 사람을 속인다.
+
+### 22-7. 죽은 CSS 를 같이 걷어냈다
+
+app.css **448줄 추가 / 220줄 삭제.** §1-3 이 경고하는 구간이라 근거를 만들고 지웠다:
+
+1. 클래스 17개가 TSX 에서 참조 0 건임을 grep 으로 확인
+2. 스크립트로 **콤마로 나뉜 모든 선택자가 죽은 클래스를 포함하는 규칙만** 삭제
+   (살아있는 선택자가 하나라도 섞이면 통째로 남긴다)
+3. 지운 선택자 30개를 전부 출력해 눈으로 확인
+4. 프로덕션 빌드 통과
+
+지운 것: `.materials-compose` · `.materials-dropzone*` · `.materials-text-compose` ·
+`.materials-text-save-btn*` · `.materials-view-toggle` · `.materials-view-btn*` ·
+`.materials-filters` · `.materials-filter-chip*` · `.materials-place-filter` ·
+`.materials-grid-card*` · `.materials-grid-caption` · `.materials-meta*` ·
+`.materials-delete-btn*` · `.materials-album-hint` · `.materials-panel-header*` ·
+`.materials-grid-text-icon`.
+
+### 22-8. 아이콘 2개를 추가했다
+
+`more`(가로 점 셋 — `grip` 은 세로 2열이라 좁은 자리에 안 맞는다), `pencil`.
+`IconName` 유니온에도 넣어야 한다 — `WAYKNIT_ICONS` 에만 넣으면 타입 에러가 난다.
