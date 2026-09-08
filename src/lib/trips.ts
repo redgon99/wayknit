@@ -633,8 +633,9 @@ export function subscribeTripPins(
     const merged = applyPendingEdits(remote, pending, local);
     // 기준점을 원격으로 옮긴다 — 다음 저장의 diff가 내 미저장 편집만 담게 된다.
     pinBaselines.set(tripId, clonePinnedByDay(remote));
+    const changed = !samePinnedByDay(merged, local);
     // 내 저장이 되돌아온 에코면 화면이 그대로다 — 불필요한 리렌더를 막는다.
-    if (!samePinnedByDay(merged, local)) onMerged(merged);
+    if (changed) onMerged(merged);
   };
 
   const schedule = () => {
@@ -648,9 +649,14 @@ export function subscribeTripPins(
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'trip_pins', filter: `trip_id=eq.${tripId}` },
-      schedule
+      () => schedule()
     )
-    .subscribe();
+    // 구독은 조용히 죽을 수 있다. 그러면 화면은 멀쩡해 보이는데 상대 편집만
+    // 영영 안 들어온다 — 알 방법이 없으니 실패 상태만이라도 남긴다.
+    .subscribe((status, err) => {
+      if (status === 'SUBSCRIBED' || status === 'CLOSED') return;
+      console.warn(`핀 실시간 구독 실패(${status})`, err ?? '');
+    });
 
   return () => {
     disposed = true;
@@ -752,6 +758,47 @@ async function writeRemote(trip: Trip): Promise<void> {
     generatedRouteByDay: normalized.generatedRouteByDay,
     materials: normalized.materials ?? [],
   };
+  // 협업자는 upsert를 쓸 수 없다.
+  //
+  // `.upsert()`는 INSERT ... ON CONFLICT DO UPDATE 다. 행이 이미 있어서
+  // 결과적으로 UPDATE가 되더라도 PostgreSQL은 INSERT 정책의 WITH CHECK를
+  // 먼저 본다. wayknit_trips의 정책은 이렇게 갈린다:
+  //   owner_insert  WITH CHECK (auth.uid() = owner_id)          ← 소유자만
+  //   owner_update  USING/CHECK (auth.uid() = owner_id OR is_trip_editor(id))
+  // 그래서 협업자가 저장하면 UPDATE는 허용되는데 INSERT에서 42501로 막혀
+  // "new row violates row-level security policy" 가 났다. 그리고 이 함수는
+  // 여기서 throw 하므로 아래 syncPins()까지 못 가서 — 협업자가 찍은 핀이
+  // 서버에 아예 안 써졌고, 소유자 화면에 Realtime 이벤트도 오지 않았다.
+  // (협업자 본인 화면에만 보였던 이유다.)
+  //
+  // 협업자 경로는 순수 UPDATE로 보낸다. 여행 행을 새로 만드는 건 소유자의
+  // 일이므로 이게 기능적으로도 맞다. 쓰는 컬럼도 공동편집이 실제로 바꾸는
+  // 것만 남긴다 — 소유권(owner_id·slug)과 공개 설정(is_public·plaza_*)은
+  // 소유자만 정한다. current_day는 보는 사람마다 다른 값이라 협업자가
+  // 소유자의 날짜를 끌고 가지 않도록 뺀다.
+  const isCollaborator = Boolean(trip.collaboratorRole);
+  if (isCollaborator) {
+    if (trip.collaboratorRole === 'viewer') return;
+    const { data, error } = await sb
+      .from('wayknit_trips')
+      .update({
+        title: trip.title,
+        total_days: trip.totalDays,
+        payload,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', trip.id)
+      .select('id');
+    if (error) throw error;
+    // 0행이면 RLS나 삭제로 조용히 아무것도 안 써진 것이다. 저장된 척하는
+    // 것보다 시끄럽게 실패하는 편이 낫다.
+    if (!data || data.length === 0) {
+      throw new Error(`협업 저장이 어떤 행에도 적용되지 않았다 (trip ${trip.id})`);
+    }
+    await syncPins(normalized, trip.ownerId ?? null);
+    return;
+  }
+
   const { error } = await sb.from('wayknit_trips').upsert(
     {
       id: trip.id,
