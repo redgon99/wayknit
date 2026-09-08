@@ -100,6 +100,8 @@ for r in rows:
     out.append(f"export {key}={shlex.quote(val)}")
     names.append(f"{key}<{len(val)}자>")
 open(sys.argv[2], "w").write("\n".join(out) + "\n")
+# 누출 검사에서 "Netlify 에도 있는 키"를 걸러내는 데 쓴다
+open(sys.argv[2] + ".keys", "w").write("|".join(n.split("<")[0] for n in names))
 print("  " + ("  ".join(names) if names else "(없음)"))
 if not names:
     raise SystemExit("VITE_* 환경변수가 하나도 없다 — 배포하면 또 미설정 번들이 나온다")
@@ -112,7 +114,29 @@ PY
 # 스태시는 프로젝트 안에 둔다(.gitignore됨). /var/folders 는 사고가 나면
 # 찾기 어렵고, 사람이 눈으로 확인할 수도 없다. 여기 있으면 바로 보인다.
 STASH="$ROOT/.deploy-stash"
-rm -rf "$STASH"; mkdir -p "$STASH"
+MANIFEST="$STASH/.manifest"
+
+# 이전 실행이 크래시로 남긴 스태시가 있으면 지우지 말고 먼저 되돌린다.
+# (예전엔 여기서 rm -rf 를 해서, 사고로 남은 .env.local 을 다음 실행이 지워버렸다.
+#  "눈에 보이고 손으로 되돌릴 수 있다"는 설계가 그 한 줄로 무력화돼 있었다.)
+if [ -d "$STASH" ]; then
+  echo "  이전 실행이 남긴 .deploy-stash 발견 — 먼저 되돌린다"
+  for f in .env .env.local .env.production .env.production.local; do
+    if [ -f "$STASH/$f" ]; then
+      if [ -f "$ROOT/$f" ]; then
+        echo "  ✗ $f 가 양쪽에 있다. 어느 쪽이 맞는지 사람이 판단할 것:" >&2
+        echo "      작업트리: $ROOT/$f" >&2
+        echo "      스태시  : $STASH/$f" >&2
+        exit 1
+      fi
+      mv -f "$STASH/$f" "$ROOT/$f" && echo "    되돌림: $f"
+    fi
+  done
+  rm -f "$MANIFEST"
+  rmdir "$STASH" 2>/dev/null || true
+fi
+mkdir -p "$STASH"
+: > "$MANIFEST"
 
 # 복원은 몇 번 불려도 안전해야 하고, 중간에 하나 실패해도 나머지를 계속해야 한다.
 # set -e 가 트랩 안에서 함수를 중간에 끊어버리지 않도록 각 단계를 || true 로 감싼다.
@@ -130,18 +154,38 @@ restore() {
       fi
     fi
   done
+  # 매니페스트를 먼저 지워야 rmdir 이 성공한다 (남으면 다음 실행이
+  # "이전 스태시 발견"으로 오인한다)
+  rm -f "$MANIFEST" 2>/dev/null || true
   rmdir "$STASH" 2>/dev/null || true
-  rm -f "$ENVJSON" "$ENVSH" 2>/dev/null || true
+  rm -f "$ENVJSON" "$ENVSH" "$ENVSH.keys" 2>/dev/null || true
   return $missing
 }
 
 # 정상 종료·중단·실패 어느 경로로도 반드시 되돌린다.
 trap 'restore || true' EXIT INT TERM
 
+# 실제로 치우는 단계. 2026-09-08 까지 이 블록이 통째로 빠져 있었다 —
+# 스태시도 restore() 도 트랩도 다 있는데 파일을 넣는 코드만 없어서, .env.local 이
+# 그대로 남은 채 빌드됐다. 셸 변수가 우선하는 키는 괜찮지만 파일에만 있는 키
+# (VITE_MAP_PROVIDER_FORCE, VITE_AUTH_GOOGLE_ENABLED 등)는 프로덕션 번들로 샌다.
+say "개발용 .env 파일 격리"
+moved_any=0
+for f in .env .env.local .env.production .env.production.local; do
+  if [ -f "$ROOT/$f" ]; then
+    mv "$ROOT/$f" "$STASH/$f" || die "$f 를 치우지 못했다 — 중단한다"
+    echo "$f" >> "$MANIFEST"
+    echo "  치움: $f"
+    moved_any=1
+  fi
+done
+[ "$moved_any" = "1" ] || echo "  (치울 파일 없음)"
+
 # ── 빌드 ────────────────────────────────────────────────────────────────
 say "빌드"
 # shellcheck disable=SC1090
 set -a; . "$ENVSH"; set +a
+PROD_KEYS="$(cat "$ENVSH.keys" 2>/dev/null || true)"
 export VITE_SITE_URL="${VITE_SITE_URL:-$SITE_URL}"
 npm run build || die "빌드 실패"
 
@@ -156,12 +200,25 @@ for k in VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY VITE_KAKAO_JS_KEY; do
   elif grep -qF -- "$v" "$BUNDLE"; then echo "  ✅ $k 인라인됨"
   else echo "  ✗ $k 가 번들에 없다"; fail=1; fi
 done
-# 개발 전용 값이 새어 들어갔는지 (§9-4)
-for leak in PORTONE MAP_PROVIDER_FORCE; do
-  if grep -q "$leak" "$BUNDLE" 2>/dev/null; then
-    printf '  \033[33m⚠ 번들에 %s 흔적이 있다 — 확인할 것\033[0m\n' "$leak"
-  fi
-done
+# 개발 전용 값이 새어 들어갔는지 (§9-4).
+# 이름이 아니라 "치워둔 .env.local 의 실제 값"과 대조한다 — Vite 는 식별자를
+# 값으로 치환하므로 VITE_XXX 라는 이름은 번들에 남지 않는다. 이름만 grep 하던
+# 예전 검사는 사실상 아무것도 잡지 못했다.
+# Netlify 에도 있는 키는 정상이므로 제외하고, 8자 미만 값은 흔한 문자열
+# ("true", "auto" 등)이라 오탐이 나서 건너뛴다.
+if [ -f "$STASH/.env.local" ]; then
+  while IFS='=' read -r lk lv; do
+    case "$lk" in VITE_*) ;; *) continue ;; esac
+    lv="$(printf '%s' "$lv" | tr -d '\r' | sed 's/^"//; s/"$//')"
+    [ ${#lv} -ge 8 ] || continue
+    # Netlify 에 같은 키가 있으면 그 값이 정본이다
+    case "|${PROD_KEYS:-}|" in *"|$lk|"*) continue ;; esac
+    if grep -qF -- "$lv" "$BUNDLE"; then
+      printf '  \033[33m⚠ %s 의 로컬 값이 번들에 있다 — 격리가 안 됐다\033[0m\n' "$lk"
+      fail=1
+    fi
+  done < "$STASH/.env.local"
+fi
 [ $fail -eq 0 ] || die "번들 검증 실패 — 배포하지 않는다"
 
 if [ $DRY_RUN -eq 1 ]; then
