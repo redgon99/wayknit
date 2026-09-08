@@ -12628,27 +12628,10 @@ button {
   display: none;
 }
 
-.mobile-search-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 40;
-  background: #fff;
-  display: none;
-  flex-direction: column;
-}
-
-.wayknit-root.mobile-layout.mobile-search-open .mobile-search-overlay {
-  display: flex;
-}
-
-.wayknit-root.mobile-layout.mobile-search-open .mobile-planner-sheet {
-  display: none;
-}
-
 /*
  * 여행 자료 패널도 모바일에선 하단 시트라, 핀 시트와 같은 자리에 겹친다.
  * z-index만 올리면 자료 시트가 짧을 때(자료 0개) 그 위로 핀 시트 윗부분이
- * 삐져나와 시트가 두 장 겹쳐 보인다. 검색 오버레이와 같은 방식으로 감춘다.
+ * 삐져나와 시트가 두 장 겹쳐 보인다. 그래서 아예 감춘다.
  */
 .wayknit-root.mobile-layout.materials-open .mobile-planner-sheet {
   display: none;
@@ -13778,54 +13761,6 @@ button {
   flex-direction: column;
   gap: 6px;
   flex-shrink: 0;
-}
-
-.mobile-search-overlay {
-  padding: 0;
-}
-
-.mobile-search-fullscreen {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: #fff;
-}
-
-.mobile-search-fullscreen-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink: 0;
-}
-
-.mobile-search-back {
-  width: 38px;
-  height: 38px;
-  border: none;
-  border-radius: 12px;
-  background: var(--color-bg-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mobile-search-fullscreen-title {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.mobile-search-fullscreen-body {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-}
-
-.mobile-search-fullscreen-body .search-panel {
-  border: none;
-  box-shadow: none;
-  height: 100%;
 }
 
 .result-card {
