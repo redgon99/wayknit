@@ -665,11 +665,239 @@ export function subscribeTripPins(
   };
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+ * 일차 상태(trip_day_state) · 여행 자료(trip_materials) — 공동편집 5단계
+ *
+ * §5-2에서 핀만 먼저 행으로 쪼갰고, `routeOptionsByDay`·`generatedRouteByDay`·
+ * `materials`는 payload jsonb 한 덩어리로 남아 있었다. 그래서 핀에서 고쳤던
+ * last-write-wins가 이 셋에는 그대로 있었다 — 두 사람이 각자 동선을 만들면
+ * 나중에 저장한 쪽이 상대 것을 지웠다.
+ *
+ * 쪼개는 단위:
+ *   자료   → 행 1개 = 자료 1개 (항목마다 id가 있다. 핀과 같다)
+ *   일차   → 행 1개 = (여행, 일차). 동선은 "그 일차 전체를 다시 계산한 결과"라
+ *            부분 병합이 의미를 갖지 않는다. 일차 단위면 서로 다른 날을 만지는
+ *            흔한 경우에 충돌이 사라지고, 같은 날을 동시에 생성하는 것은
+ *            나중 것이 이기는 게 의미상 맞다.
+ *
+ * 읽기는 새 테이블만 본다. payload로 폴백하면 사용자가 자료를 전부 지웠을 때
+ * 옛 백업이 되살아난다 — 핀에서와 같은 판단이다.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+interface DayStateRow {
+  day: number;
+  route_options: RouteOptions | null;
+  generated_route: GeneratedRoute | null;
+}
+
+interface MaterialRow {
+  material_id: string;
+  data: TripMaterial;
+}
+
+interface DayStateSnapshot {
+  routeOptionsByDay: Record<number, RouteOptions>;
+  generatedRouteByDay: Record<number, GeneratedRoute | null>;
+}
+
+/**
+ * 마지막으로 원격과 맞춘 상태. 저장 시 diff의 기준점이다.
+ * 핀과 같은 이유로 원격의 "지금" 상태와 비교하면 안 된다 — 상대가 방금 만든
+ * 동선이 "내가 지운 것"으로 보인다.
+ *
+ * 값은 정규화된 JSON 문자열로 들고 있는다. 원본 객체를 들고 있으면 화면 쪽에서
+ * 같은 참조를 변형했을 때 기준점까지 함께 바뀌어 diff가 항상 비어 버린다.
+ */
+const dayStateBaselines = new Map<string, Map<number, string>>();
+const materialBaselines = new Map<string, Map<string, string>>();
+
+/** 키 순서에 흔들리지 않는 비교용 직렬화 (canonicalPin과 같은 방식) */
+function canonicalJson(value: unknown): string {
+  if (value === null || value === undefined) return 'null';
+  if (typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  const obj = value as Record<string, unknown>;
+  return `{${Object.keys(obj)
+    .sort()
+    .map((k) => `${JSON.stringify(k)}:${canonicalJson(obj[k])}`)
+    .join(',')}}`;
+}
+
+/** 한 일차 행의 비교 키 — 옵션과 동선을 함께 본다 */
+function dayStateKey(options: RouteOptions | undefined, route: GeneratedRoute | null): string {
+  return `${canonicalJson(options ?? null)}|${canonicalJson(route ?? null)}`;
+}
+
+function snapshotDayState(snap: DayStateSnapshot): Map<number, string> {
+  const out = new Map<number, string>();
+  const days = new Set<number>([
+    ...Object.keys(snap.routeOptionsByDay).map(Number),
+    ...Object.keys(snap.generatedRouteByDay).map(Number),
+  ]);
+  for (const day of days) {
+    out.set(day, dayStateKey(snap.routeOptionsByDay[day], snap.generatedRouteByDay[day] ?? null));
+  }
+  return out;
+}
+
+async function readDayStateRemote(tripId: string): Promise<DayStateSnapshot | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from('trip_day_state')
+    .select('day, route_options, generated_route')
+    .eq('trip_id', tripId)
+    .order('day', { ascending: true });
+  if (error || !data) return null;
+
+  const routeOptionsByDay: Record<number, RouteOptions> = {};
+  const generatedRouteByDay: Record<number, GeneratedRoute | null> = {};
+  for (const row of data as unknown as DayStateRow[]) {
+    if (row.route_options) routeOptionsByDay[row.day] = row.route_options;
+    // null도 담는다 — "그 일차는 동선이 없다"는 것도 상태다.
+    generatedRouteByDay[row.day] = row.generated_route ?? null;
+  }
+  return { routeOptionsByDay, generatedRouteByDay };
+}
+
+async function readMaterialsRemote(tripId: string): Promise<TripMaterial[] | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from('trip_materials')
+    .select('material_id, data')
+    .eq('trip_id', tripId)
+    .order('created_at', { ascending: true });
+  if (error || !data) return null;
+  return (data as unknown as MaterialRow[]).map((r) => r.data);
+}
+
+/**
+ * 기준점 대비 바뀐 일차만 쓴다.
+ * 상대가 그 사이에 만든 다른 일차의 동선은 diff에 안 잡히므로 건드리지 않는다.
+ */
+async function syncDayState(trip: Trip, userId: string | null): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  const baseline = dayStateBaselines.get(trip.id) ?? new Map<number, string>();
+  const next = snapshotDayState({
+    routeOptionsByDay: trip.routeOptionsByDay ?? {},
+    generatedRouteByDay: trip.generatedRouteByDay ?? {},
+  });
+
+  const upserts: Array<Record<string, unknown>> = [];
+  for (const [day, key] of next) {
+    if (baseline.get(day) === key) continue;
+    upserts.push({
+      trip_id: trip.id,
+      day,
+      route_options: trip.routeOptionsByDay?.[day] ?? null,
+      generated_route: trip.generatedRouteByDay?.[day] ?? null,
+      updated_by: userId,
+    });
+  }
+  const removedDays = [...baseline.keys()].filter((d) => !next.has(d));
+
+  if (upserts.length > 0) {
+    const { error } = await sb
+      .from('trip_day_state')
+      .upsert(upserts, { onConflict: 'trip_id,day' });
+    if (error) throw error;
+  }
+  if (removedDays.length > 0) {
+    const { error } = await sb
+      .from('trip_day_state')
+      .delete()
+      .eq('trip_id', trip.id)
+      .in('day', removedDays);
+    if (error) throw error;
+  }
+
+  dayStateBaselines.set(trip.id, next);
+}
+
+/** 기준점 대비 바뀐 자료만 행 단위로 반영한다 (핀과 같은 방식). */
+async function syncMaterials(trip: Trip, userId: string | null): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  const baseline = materialBaselines.get(trip.id) ?? new Map<string, string>();
+  const list = trip.materials ?? [];
+  const next = new Map<string, string>();
+  const upserts: Array<Record<string, unknown>> = [];
+
+  for (const m of list) {
+    const key = canonicalJson(m);
+    next.set(m.id, key);
+    if (baseline.get(m.id) === key) continue;
+    upserts.push({
+      trip_id: trip.id,
+      material_id: m.id,
+      data: m,
+      ...(baseline.has(m.id) ? {} : { created_by: userId }),
+      updated_by: userId,
+    });
+  }
+  const removed = [...baseline.keys()].filter((id) => !next.has(id));
+
+  if (upserts.length > 0) {
+    const { error } = await sb
+      .from('trip_materials')
+      .upsert(upserts, { onConflict: 'trip_id,material_id' });
+    if (error) throw error;
+  }
+  if (removed.length > 0) {
+    const { error } = await sb
+      .from('trip_materials')
+      .delete()
+      .eq('trip_id', trip.id)
+      .in('material_id', removed);
+    if (error) throw error;
+  }
+
+  materialBaselines.set(trip.id, next);
+}
+
+/**
+ * 여행 본체 행에 붙어 있지 않은 것들(핀·일차 상태·자료)을 한 번에 읽어 붙인다.
+ * 셋은 서로를 기다릴 이유가 없으므로 병렬로 나간다.
+ */
 async function attachPins(trip: Trip, includeAuthors = false): Promise<Trip> {
-  const pins = await readPinsRemote(trip.id, includeAuthors);
+  const [pins, dayState, materials] = await Promise.all([
+    readPinsRemote(trip.id, includeAuthors),
+    readDayStateRemote(trip.id),
+    readMaterialsRemote(trip.id),
+  ]);
+
   const pinnedByDay = pins ?? trip.pinnedByDay;
   pinBaselines.set(trip.id, clonePinnedByDay(pinnedByDay));
-  return { ...trip, pinnedByDay };
+
+  // 조회가 실패했으면 기준점을 세우지 않는다. 빈 값으로 기준을 잡으면
+  // 다음 저장이 "전부 지워졌다"고 판단해 원격 행을 실제로 지운다.
+  const routeOptionsByDay = dayState?.routeOptionsByDay ?? trip.routeOptionsByDay;
+  const generatedRouteByDay = dayState?.generatedRouteByDay ?? trip.generatedRouteByDay;
+  if (dayState) {
+    dayStateBaselines.set(trip.id, snapshotDayState(dayState));
+  } else {
+    dayStateBaselines.delete(trip.id);
+  }
+
+  const nextMaterials = materials ?? trip.materials ?? [];
+  if (materials) {
+    materialBaselines.set(
+      trip.id,
+      new Map(materials.map((m) => [m.id, canonicalJson(m)]))
+    );
+  } else {
+    materialBaselines.delete(trip.id);
+  }
+
+  return {
+    ...trip,
+    pinnedByDay,
+    routeOptionsByDay,
+    generatedRouteByDay,
+    materials: nextMaterials,
+  };
 }
 
 /**
@@ -750,14 +978,19 @@ async function writeRemote(trip: Trip): Promise<void> {
   const sb = getSupabase();
   if (!sb || !trip.ownerId) return;
   const normalized = normalizeTrip(trip);
-  // pinnedByDay는 일부러 빠져 있다 — 핀은 trip_pins 행이 유일한 진실이다.
-  // 기존 payload.pinnedByDay는 이전 시점 값 그대로 남아 롤백 백업 역할만 한다.
-  const payload = {
-    routeOptionsByDay: normalized.routeOptionsByDay,
-    routeOptions: normalized.routeOptionsByDay[normalized.currentDay] ?? DEFAULT_ROUTE_OPTIONS,
-    generatedRouteByDay: normalized.generatedRouteByDay,
-    materials: normalized.materials ?? [],
-  };
+  // payload는 이제 비어 있다. 여기 있던 것이 전부 자기 행으로 옮겨갔다:
+  //   pinnedByDay          → trip_pins        (공동편집 1단계)
+  //   routeOptionsByDay    ┐
+  //   generatedRouteByDay  ├→ trip_day_state  (5단계)
+  //   materials            → trip_materials   (5단계)
+  //
+  // 컬럼 자체는 남긴다 — NOT NULL 이고, 나중에 여행 본체에 붙는 작은 값이
+  // 생기면 다시 쓸 자리다. 기존 값은 `20260908200000` 마이그레이션이 새 테이블로
+  // 옮긴 뒤이고, 되돌릴 근거는 `wayknit_trips_payload_backup_20260908` 에 있다.
+  //
+  // 부수 효과: 자동저장이 700ms마다 다시 쓰던 덩어리가 사라졌다(실측 최대 151kB).
+  // 이제 저장은 바뀐 일차·자료·핀의 행만 건드린다.
+  const payload = {};
   // 협업자는 upsert를 쓸 수 없다.
   //
   // `.upsert()`는 INSERT ... ON CONFLICT DO UPDATE 다. 행이 이미 있어서
@@ -795,7 +1028,7 @@ async function writeRemote(trip: Trip): Promise<void> {
     if (!data || data.length === 0) {
       throw new Error(`협업 저장이 어떤 행에도 적용되지 않았다 (trip ${trip.id})`);
     }
-    await syncPins(normalized, trip.ownerId ?? null);
+    await syncRows(normalized);
     return;
   }
 
@@ -824,8 +1057,39 @@ async function writeRemote(trip: Trip): Promise<void> {
   );
   if (error) throw error;
 
-  // 여행 행이 확실히 존재한 뒤에 핀을 쓴다 — trip_pins.trip_id가 FK다.
-  await syncPins(normalized, trip.ownerId ?? null);
+  // 여행 행이 확실히 존재한 뒤에 자식 행을 쓴다 — 셋 다 trip_id가 FK다.
+  await syncRows(normalized);
+}
+
+/**
+ * 여행 본체 밖에 사는 것들을 한 번에 맞춘다.
+ *
+ * 셋은 서로 독립이지만 **순차로 보낸다.** 병렬로 던지면 하나가 실패했을 때
+ * 나머지가 이미 나가 있어, 어디까지 반영됐는지 알 수 없는 상태가 된다.
+ * 저장은 700ms 디바운스라 왕복 몇 번이 문제가 되지 않는다.
+ */
+async function syncRows(normalized: Trip): Promise<void> {
+  const actorId = await currentUserId();
+  await syncPins(normalized, actorId);
+  await syncDayState(normalized, actorId);
+  await syncMaterials(normalized, actorId);
+}
+
+/**
+ * 지금 로그인한 사람.
+ *
+ * `trip.ownerId`를 쓰면 안 된다 — 협업자가 저장할 때도 소유자 id가 찍혀
+ * 자료를 누가 올렸는지가 통째로 틀어진다. 핀은 DB 트리거
+ * (`stamp_trip_pin_author`)가 `auth.uid()`로 덮어써서 드러나지 않았지만,
+ * `trip_day_state`·`trip_materials`에는 그런 트리거가 없다.
+ *
+ * `getSession()`은 로컬 저장소만 본다 — 네트워크 왕복이 아니다.
+ */
+async function currentUserId(): Promise<string | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data } = await sb.auth.getSession();
+  return data.session?.user?.id ?? null;
 }
 
 // =============================================
