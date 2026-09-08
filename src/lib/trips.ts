@@ -609,33 +609,202 @@ function samePinnedByDay(a: Record<number, PinnedPlace[]>, b: Record<number, Pin
 }
 
 /**
- * 이 여행의 핀 변경을 실시간으로 받아 병합 결과를 돌려준다.
+ * 실시간으로 받아 화면에 얹을 조각. 실제로 달라진 것만 담긴다.
+ * 아무것도 안 바뀌었으면 콜백 자체를 부르지 않는다 — 그러지 않으면
+ * 상대의 저장 → 내 화면 갱신 → 내 자동저장 → 상대 화면 갱신으로 끝없이 돈다.
+ */
+export interface TripRealtimePatch {
+  pinnedByDay?: Record<number, PinnedPlace[]>;
+  totalDays?: number;
+  title?: string;
+  routeOptionsByDay?: Record<number, RouteOptions>;
+  generatedRouteByDay?: Record<number, GeneratedRoute | null>;
+  materials?: TripMaterial[];
+}
+
+/**
+ * 여행 본체 행의 스칼라 기준점.
+ *
+ * `total_days`·`title`은 `wayknit_trips` 컬럼이라 행으로 쪼갤 수 없다.
+ * 대신 "마지막으로 원격과 맞춘 값"을 들고 있다가, 지금 화면 값이 그것과 같으면
+ * (= 내가 안 건드렸으면) 원격을 받아들이고, 다르면(= 내 미저장 편집이 있으면)
+ * 내 것을 지킨다. 핀·자료의 3-way 병합과 같은 원리를 스칼라에 적용한 것이다.
+ */
+const tripScalarBaselines = new Map<string, { totalDays: number; title: string }>();
+
+function mergeDayStateRemote(
+  remote: DayStateSnapshot,
+  baseline: Map<number, string>,
+  local: DayStateSnapshot
+): DayStateSnapshot {
+  const routeOptionsByDay: Record<number, RouteOptions> = {};
+  const generatedRouteByDay: Record<number, GeneratedRoute | null> = {};
+  const days = new Set<number>([
+    ...Object.keys(remote.routeOptionsByDay).map(Number),
+    ...Object.keys(remote.generatedRouteByDay).map(Number),
+    ...Object.keys(local.routeOptionsByDay).map(Number),
+    ...Object.keys(local.generatedRouteByDay).map(Number),
+  ]);
+
+  for (const day of days) {
+    const localOpts = local.routeOptionsByDay[day];
+    const localRoute = local.generatedRouteByDay[day] ?? null;
+    const localKey = dayStateKey(localOpts, localRoute);
+    const hasLocalEdit = baseline.get(day) !== localKey;
+
+    if (hasLocalEdit) {
+      // 아직 저장 전인 내 편집이다 — 원격보다 우선한다.
+      if (localOpts) routeOptionsByDay[day] = localOpts;
+      if (day in local.generatedRouteByDay) generatedRouteByDay[day] = localRoute;
+      continue;
+    }
+    // 내가 안 건드린 일차는 원격을 따른다(원격에서 사라졌으면 같이 사라진다).
+    if (remote.routeOptionsByDay[day]) routeOptionsByDay[day] = remote.routeOptionsByDay[day];
+    if (day in remote.generatedRouteByDay) {
+      generatedRouteByDay[day] = remote.generatedRouteByDay[day];
+    }
+  }
+  return { routeOptionsByDay, generatedRouteByDay };
+}
+
+function mergeMaterialsRemote(
+  remote: TripMaterial[],
+  baseline: Map<string, string>,
+  local: TripMaterial[]
+): TripMaterial[] {
+  const localById = new Map(local.map((m) => [m.id, m]));
+  const remoteById = new Map(remote.map((m) => [m.id, m]));
+  const out: TripMaterial[] = [];
+
+  // 원격 순서를 기준으로 깔고, 내 미저장 편집이 있으면 그것으로 바꾼다.
+  for (const m of remote) {
+    const mine = localById.get(m.id);
+    if (!mine) {
+      // 원격에는 있는데 내 화면에 없다. 둘 중 하나다:
+      //   기준점에 있었다  → 내가 방금 지웠다. 되살리지 않는다.
+      //   기준점에도 없다  → 상대가 방금 만든 것이다. 받는다.
+      if (!baseline.has(m.id)) out.push(m);
+      continue;
+    }
+    const hasLocalEdit = baseline.get(m.id) !== canonicalJson(mine);
+    out.push(hasLocalEdit ? mine : m);
+  }
+  // 원격에 없는 것: 내가 방금 만든 것만 살린다.
+  // 기준점에 있었는데 원격에서 사라졌다면 상대가 지운 것이므로 따라 지운다.
+  for (const m of local) {
+    if (remoteById.has(m.id)) continue;
+    if (!baseline.has(m.id)) out.push(m);
+  }
+  return out;
+}
+
+/**
+ * 이 여행의 원격 변경을 실시간으로 받아 화면에 얹을 조각을 돌려준다.
+ *
+ * 핀만 보던 것을 여행 전체로 넓혔다. **일차 추가·삭제가 상대에게 안 가던
+ * 문제(§20)가 여기서 왔다** — `total_days`는 `wayknit_trips` 컬럼인데 그 테이블을
+ * 아무도 구독하지 않았다. 상대가 만든 일차의 핀은 도착하는데 그 일차 탭이 없어
+ * 보이지 않았고, 게다가 각자 자기 `total_days`를 계속 되쓰고 있었다.
+ *
  * `getLocal`은 항상 최신 화면 상태를 돌려줘야 한다(ref 등으로 넘길 것).
  * 반환값은 구독 해제 함수.
  */
-export function subscribeTripPins(
+export function subscribeTripRealtime(
   tripId: string,
-  getLocal: () => Record<number, PinnedPlace[]>,
-  onMerged: (next: Record<number, PinnedPlace[]>) => void
+  getLocal: () => Trip,
+  onPatch: (patch: TripRealtimePatch) => void
 ): () => void {
   const sb = getSupabase();
   if (!sb || !tripId) return () => {};
 
   let disposed = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
+  // 무엇이 바뀌었다고 알림이 왔는지 — 필요한 것만 다시 읽는다.
+  // 상대가 제목을 타이핑하면 700ms마다 여행 행 UPDATE가 오는데,
+  // 그때마다 핀·일차·자료까지 전부 다시 읽으면 낭비가 크다.
+  let needPins = false;
+  let needDayState = false;
+  let needMaterials = false;
+  let needTripRow = false;
 
   const refresh = async () => {
     if (disposed) return;
-    const remote = await readPinsRemote(tripId, true);
-    if (disposed || !remote) return;
+    const [wantPins, wantDay, wantMat, wantRow] =
+      [needPins, needDayState, needMaterials, needTripRow];
+    needPins = needDayState = needMaterials = needTripRow = false;
+
     const local = getLocal();
-    const pending = pendingPinEdits(pinBaselines.get(tripId) ?? {}, local);
-    const merged = applyPendingEdits(remote, pending, local);
-    // 기준점을 원격으로 옮긴다 — 다음 저장의 diff가 내 미저장 편집만 담게 된다.
-    pinBaselines.set(tripId, clonePinnedByDay(remote));
-    const changed = !samePinnedByDay(merged, local);
-    // 내 저장이 되돌아온 에코면 화면이 그대로다 — 불필요한 리렌더를 막는다.
-    if (changed) onMerged(merged);
+    const patch: TripRealtimePatch = {};
+
+    if (wantPins) {
+      const remote = await readPinsRemote(tripId, true);
+      if (disposed) return;
+      if (remote) {
+        const pending = pendingPinEdits(pinBaselines.get(tripId) ?? {}, local.pinnedByDay);
+        const merged = applyPendingEdits(remote, pending, local.pinnedByDay);
+        pinBaselines.set(tripId, clonePinnedByDay(remote));
+        if (!samePinnedByDay(merged, local.pinnedByDay)) patch.pinnedByDay = merged;
+      }
+    }
+
+    if (wantDay) {
+      const remote = await readDayStateRemote(tripId);
+      if (disposed) return;
+      if (remote) {
+        const baseline = dayStateBaselines.get(tripId) ?? new Map<number, string>();
+        const localSnap: DayStateSnapshot = {
+          routeOptionsByDay: local.routeOptionsByDay ?? {},
+          generatedRouteByDay: local.generatedRouteByDay ?? {},
+        };
+        const merged = mergeDayStateRemote(remote, baseline, localSnap);
+        dayStateBaselines.set(tripId, snapshotDayState(remote));
+        if (canonicalJson(merged) !== canonicalJson(localSnap)) {
+          patch.routeOptionsByDay = merged.routeOptionsByDay;
+          patch.generatedRouteByDay = merged.generatedRouteByDay;
+        }
+      }
+    }
+
+    if (wantMat) {
+      const remote = await readMaterialsRemote(tripId);
+      if (disposed) return;
+      if (remote) {
+        const baseline = materialBaselines.get(tripId) ?? new Map<string, string>();
+        const merged = mergeMaterialsRemote(remote, baseline, local.materials ?? []);
+        materialBaselines.set(tripId, new Map(remote.map((m) => [m.id, canonicalJson(m)])));
+        if (canonicalJson(merged) !== canonicalJson(local.materials ?? [])) {
+          patch.materials = merged;
+        }
+      }
+    }
+
+    if (wantRow) {
+      const { data } = await sb
+        .from('wayknit_trips')
+        .select('total_days, title')
+        .eq('id', tripId)
+        .maybeSingle();
+      if (disposed) return;
+      if (data) {
+        const base = tripScalarBaselines.get(tripId);
+        // 내가 안 건드린 값만 원격으로 바꾼다. 건드렸다면 아직 저장 전인
+        // 내 편집이므로 지킨다(다음 저장에서 내 값이 원격이 된다).
+        if (base && local.totalDays === base.totalDays && data.total_days !== local.totalDays) {
+          patch.totalDays = data.total_days;
+        }
+        if (base && local.title === base.title && data.title !== local.title) {
+          patch.title = data.title;
+        }
+        tripScalarBaselines.set(tripId, {
+          totalDays: patch.totalDays ?? local.totalDays,
+          title: patch.title ?? local.title,
+        });
+      }
+    }
+
+    // 달라진 게 없으면 부르지 않는다 — 내 저장이 되돌아온 에코일 뿐이고,
+    // 여기서 setState를 하면 자동저장이 깨어나 두 클라이언트가 끝없이 주고받는다.
+    if (Object.keys(patch).length > 0) onPatch(patch);
   };
 
   const schedule = () => {
@@ -644,18 +813,27 @@ export function subscribeTripPins(
     timer = setTimeout(() => void refresh(), 350);
   };
 
+  const filter = `trip_id=eq.${tripId}`;
   const channel = sb
-    .channel(`trip-pins:${tripId}`)
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'trip_pins', filter: `trip_id=eq.${tripId}` },
-      () => schedule()
-    )
+    .channel(`trip-realtime:${tripId}`)
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'trip_pins', filter },
+      () => { needPins = true; schedule(); })
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'trip_day_state', filter },
+      () => { needDayState = true; schedule(); })
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'trip_materials', filter },
+      () => { needMaterials = true; schedule(); })
+    .on('postgres_changes',
+      // 여행 본체는 자연키가 id다 — 위의 trip_id 필터를 쓰면 아무것도 안 온다.
+      { event: 'UPDATE', schema: 'public', table: 'wayknit_trips', filter: `id=eq.${tripId}` },
+      () => { needTripRow = true; schedule(); })
     // 구독은 조용히 죽을 수 있다. 그러면 화면은 멀쩡해 보이는데 상대 편집만
     // 영영 안 들어온다 — 알 방법이 없으니 실패 상태만이라도 남긴다.
     .subscribe((status, err) => {
       if (status === 'SUBSCRIBED' || status === 'CLOSED') return;
-      console.warn(`핀 실시간 구독 실패(${status})`, err ?? '');
+      console.warn(`여행 실시간 구독 실패(${status})`, err ?? '');
     });
 
   return () => {
@@ -891,6 +1069,9 @@ async function attachPins(trip: Trip, includeAuthors = false): Promise<Trip> {
     materialBaselines.delete(trip.id);
   }
 
+  // 여행 행 스칼라의 기준점. 방금 읽은 값이 곧 "원격과 맞춘 값"이다.
+  tripScalarBaselines.set(trip.id, { totalDays: trip.totalDays, title: trip.title });
+
   return {
     ...trip,
     pinnedByDay,
@@ -1069,6 +1250,12 @@ async function writeRemote(trip: Trip): Promise<void> {
  * 저장은 700ms 디바운스라 왕복 몇 번이 문제가 되지 않는다.
  */
 async function syncRows(normalized: Trip): Promise<void> {
+  // 방금 원격에 쓴 값이 새 기준점이다. 이걸 안 옮기면 내가 저장한 뒤에도
+  // "내 미저장 편집이 있다"고 판단해 상대의 일차 수 변경을 영영 안 받는다.
+  tripScalarBaselines.set(normalized.id, {
+    totalDays: normalized.totalDays,
+    title: normalized.title,
+  });
   const actorId = await currentUserId();
   await syncPins(normalized, actorId);
   await syncDayState(normalized, actorId);

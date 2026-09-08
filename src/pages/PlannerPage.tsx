@@ -69,7 +69,7 @@ import {
   createSlug,
   createTripId,
   applyPlazaPublish,
-  subscribeTripPins,
+  subscribeTripRealtime,
   hasCollaborators,
   getPinAuthors,
   pinAuthorKey,
@@ -642,18 +642,26 @@ export default function PlannerPage() {
 
   // ============== 협업자 변경 실시간 반영 ==============
   // 화면 상태를 ref로 넘긴다 — 구독을 매 렌더 다시 걸지 않으면서도
-  // 병합 시점에는 항상 최신 핀 목록을 봐야 한다.
-  const pinnedRef = useRef(trip.pinnedByDay);
-  pinnedRef.current = trip.pinnedByDay;
+  // 병합 시점에는 항상 최신 상태를 봐야 한다.
+  const tripRef = useRef(trip);
+  tripRef.current = trip;
   useEffect(() => {
     if (!hydrated || !trip.id || !trip.ownerId) return;
-    return subscribeTripPins(
+    return subscribeTripRealtime(
       trip.id,
-      () => pinnedRef.current,
-      (merged) => {
-        // 병합 결과만 갈아끼운다. updatedAt은 건드리지 않는다 —
-        // 여기서 갱신하면 자동저장 이펙트가 깨어나 저장 루프가 돈다.
-        setTrip((prev) => ({ ...prev, pinnedByDay: merged }));
+      () => tripRef.current,
+      (patch) => {
+        // 실제로 달라진 것만 담겨 온다(아무것도 안 바뀌면 애초에 안 불린다).
+        // updatedAt은 건드리지 않는다 — 여기서 갱신하면 자동저장 이펙트가
+        // 깨어나 두 클라이언트가 저장을 끝없이 주고받는다.
+        setTrip((prev) => {
+          const next = { ...prev, ...patch };
+          // 일차가 줄었는데 그 날을 보고 있으면 빈 화면이 된다.
+          if (patch.totalDays !== undefined && next.currentDay > patch.totalDays) {
+            next.currentDay = patch.totalDays;
+          }
+          return next;
+        });
       }
     );
   }, [trip.id, trip.ownerId, hydrated]);
