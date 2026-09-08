@@ -113,8 +113,14 @@
       "day_remove": "{{actor}} removed a day",
       "trip_rename": "{{actor}} renamed the trip",
       "dayBadge": "Day {{day}}",
-      "system": "System"
-    }
+      "system": "System",
+      "refresh": "Refresh"
+    },
+    "titleShared": "Shared editing",
+    "entryShared": "People editing this trip",
+    "hintCollaborator": "This trip was shared with you. You can see who else is editing it and what changed recently.",
+    "emptyCollaborator": "No one else is editing this trip.",
+    "meBadge": "you"
   },
   "invite": {
     "heading": "Trip collaboration invite",

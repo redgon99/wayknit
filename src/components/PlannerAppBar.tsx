@@ -33,6 +33,8 @@ interface Props {
   onDeleteTrip?: () => void;
   onShare: () => void;
   onManageCollaborators?: () => void;
+  /** 협업자에게는 "관리"가 아니라 함께 편집 중인 사람을 보는 입구다. */
+  collabEntryLabel?: 'manage' | 'shared';
   presentationMode: boolean;
   onTogglePresentation: () => void;
   tableViewMode?: boolean;
@@ -62,6 +64,7 @@ export function PlannerAppBar({
   onDeleteTrip,
   onShare,
   onManageCollaborators,
+  collabEntryLabel = 'manage',
   presentationMode,
   onTogglePresentation,
   tableViewMode = false,
@@ -236,8 +239,8 @@ export function PlannerAppBar({
           type="button"
           className="planner-bar-icon-btn"
           onClick={onManageCollaborators}
-          title={ts('collab.entry')}
-          aria-label={ts('collab.entry')}
+          title={ts(collabEntryLabel === 'shared' ? 'collab.entryShared' : 'collab.entry')}
+          aria-label={ts(collabEntryLabel === 'shared' ? 'collab.entryShared' : 'collab.entry')}
         >
           <Icon name="facilityGroup" size={17} />
         </button>

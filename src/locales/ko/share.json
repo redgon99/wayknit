@@ -113,8 +113,14 @@
       "day_remove": "{{actor}} · 일차 삭제",
       "trip_rename": "{{actor}} · 여행 이름 변경",
       "dayBadge": "{{day}}일차",
-      "system": "시스템"
-    }
+      "system": "시스템",
+      "refresh": "새로고침"
+    },
+    "titleShared": "함께 편집 중",
+    "entryShared": "함께 편집 중인 사람",
+    "hintCollaborator": "공유받은 여행입니다. 함께 편집하는 사람과 최근 변경 내역을 볼 수 있습니다.",
+    "emptyCollaborator": "함께 편집하는 사람이 없습니다.",
+    "meBadge": "나"
   },
   "invite": {
     "heading": "여행 공동편집 초대",

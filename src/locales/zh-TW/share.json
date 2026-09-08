@@ -113,8 +113,14 @@
       "day_remove": "{{actor}} 刪除了一天",
       "trip_rename": "{{actor}} 重新命名了行程",
       "dayBadge": "第 {{day}} 天",
-      "system": "系統"
-    }
+      "system": "系統",
+      "refresh": "重新整理"
+    },
+    "titleShared": "協作編輯中",
+    "entryShared": "正在協作的人",
+    "hintCollaborator": "這是分享給你的行程。你可以查看還有誰在編輯，以及最近的變更紀錄。",
+    "emptyCollaborator": "沒有其他人在編輯此行程。",
+    "meBadge": "我"
   },
   "invite": {
     "heading": "行程協作邀請",

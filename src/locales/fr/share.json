@@ -113,8 +113,14 @@
       "day_remove": "{{actor}} a supprimé un jour",
       "trip_rename": "{{actor}} a renommé le voyage",
       "dayBadge": "Jour {{day}}",
-      "system": "Système"
-    }
+      "system": "Système",
+      "refresh": "Actualiser"
+    },
+    "titleShared": "Édition partagée",
+    "entryShared": "Personnes qui modifient le voyage",
+    "hintCollaborator": "Ce voyage a été partagé avec vous. Vous pouvez voir qui le modifie et ce qui a changé récemment.",
+    "emptyCollaborator": "Personne d’autre ne modifie ce voyage.",
+    "meBadge": "vous"
   },
   "invite": {
     "heading": "Invitation à co-éditer le voyage",

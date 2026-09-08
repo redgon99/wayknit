@@ -1856,6 +1856,9 @@ export default function PlannerPage() {
       pinnedByDay: newPinned,
       generatedRouteByDay: newRoutes,
     });
+    // day_add와 같은 이유로 여기서 직접 기록한다. 상대가 갑자기 일차가
+    // 사라진 걸 발견했을 때 누가 지웠는지 남아 있어야 한다.
+    if (trip.ownerId) void logTripActivity(trip.id, 'day_remove', String(day), { day });
   }
 
   const handleTitleChange = useCallback((title: string) => {
@@ -1863,6 +1866,31 @@ export default function PlannerPage() {
       prev.collaboratorRole === 'viewer' ? prev : { ...prev, title, updatedAt: Date.now() }
     );
   }, []);
+
+  /**
+   * 여행 이름 변경 기록.
+   *
+   * handleTitleChange는 타이핑 한 글자마다 불린다 — 거기서 기록하면 활동 로그가
+   * 한 글자씩 도배된다. 입력이 멎은 뒤 한 번만 남긴다.
+   *
+   * 여행을 바꿔 실었을 때는 기준만 새로 잡고 기록하지 않는다. 그러지 않으면
+   * 다른 여행의 제목과 비교해 "이름 변경"이 거짓으로 찍힌다.
+   */
+  const loggedTitleRef = useRef<{ tripId: string; title: string } | null>(null);
+  useEffect(() => {
+    if (!hydrated || !trip.id || !trip.ownerId) return;
+    const seen = loggedTitleRef.current;
+    if (!seen || seen.tripId !== trip.id) {
+      loggedTitleRef.current = { tripId: trip.id, title: trip.title };
+      return;
+    }
+    if (seen.title === trip.title) return;
+    const timer = window.setTimeout(() => {
+      loggedTitleRef.current = { tripId: trip.id, title: trip.title };
+      void logTripActivity(trip.id, 'trip_rename', trip.title);
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [trip.title, trip.id, trip.ownerId, hydrated]);
 
   const handleSelectTrip = useCallback(
     async (tripId: string) => {
@@ -2250,7 +2278,10 @@ export default function PlannerPage() {
             onNewTrip={handleNewTrip}
             onDeleteTrip={() => void handleDeleteTrip()}
             onShare={openShareModal}
-            onManageCollaborators={isTripOwner ? () => setCollabModalOpen(true) : undefined}
+            onManageCollaborators={
+              isTripOwner || trip.collaboratorRole ? () => setCollabModalOpen(true) : undefined
+            }
+            collabEntryLabel={isTripOwner ? undefined : 'shared'}
             presenceEnabled={presenceEnabled}
             presentationMode={presentationMode}
             onTogglePresentation={handleTogglePresentation}
@@ -2866,12 +2897,15 @@ export default function PlannerPage() {
         onConfirm={handleShareConfirm}
       />
 
-      {isTripOwner && user?.id && (
+      {/* 협업자에게도 연다 — 누구와 함께 편집하는지와 최근 변경 이력은
+          공동편집에 필요한 정보다. 관리 조작은 모달 안에서 isOwner로 가린다. */}
+      {(isTripOwner || trip.collaboratorRole) && user?.id && (
         <CollaboratorsModal
           open={collabModalOpen}
           tripId={trip.id}
           tripTitle={trip.title}
           currentUserId={user.id}
+          isOwner={isTripOwner}
           onClose={() => setCollabModalOpen(false)}
         />
       )}
