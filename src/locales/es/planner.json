@@ -159,7 +159,8 @@
     "mustVisitOnly": "Imprescindible",
     "markRequired": "Marcar como imprescindible",
     "unmarkRequired": "Quitar imprescindible",
-    "requiredBadge": "Lugar imprescindible"
+    "requiredBadge": "Lugar imprescindible",
+    "addedBy": "Añadido por {{who}}"
   },
   "route": {
     "fixedArrivalAt": "Llegada fijada a las {{time}}",

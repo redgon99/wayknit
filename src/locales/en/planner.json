@@ -159,7 +159,8 @@
     "mustVisitOnly": "Must visit",
     "markRequired": "Mark as must visit",
     "unmarkRequired": "Remove must visit",
-    "requiredBadge": "Must-visit place"
+    "requiredBadge": "Must-visit place",
+    "addedBy": "Added by {{who}}"
   },
   "route": {
     "fixedArrivalAt": "Arrival fixed at {{time}}",

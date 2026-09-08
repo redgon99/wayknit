@@ -25,6 +25,8 @@ import { SortableItem } from './Sortable';
 import { PinExportMenu } from './PinExportMenu';
 import { PinImportMenu } from './PinImportMenu';
 import type { PinImportResult } from '../lib/importPins';
+import { pinAuthorKey } from '../lib/trips';
+import { presenceColor, presenceInitial } from '../lib/tripPresence';
 
 interface Props {
   pinned: PinnedPlace[];
@@ -55,6 +57,13 @@ interface Props {
   variant?: 'default' | 'compact' | 'panel';
   hideTransferMenus?: boolean;
   hideHeader?: boolean;
+  /**
+   * 핀 작성자 이메일 맵 (`pinAuthorKey(day, placeId)` → email).
+   * 혼자 쓰는 여행에서는 전부 "나"라서 표시할 이유가 없다 — 협업 중일 때만 넘긴다.
+   */
+  pinAuthors?: Record<string, string | null>;
+  /** 내 이메일. 내가 넣은 핀에는 배지를 달지 않는다. */
+  currentUserEmail?: string | null;
 }
 
 function DroppableGroupChips({
@@ -104,6 +113,8 @@ export function PinupBar({
   variant = 'default',
   hideTransferMenus = false,
   hideHeader = false,
+  pinAuthors,
+  currentUserEmail,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: tc } = useTranslation('common');
@@ -236,6 +247,11 @@ export function PinupBar({
                   const meta = getCategoryMeta(p.categoryCode);
                   const borderColor = meta.bgColor;
                   const isSelected = selectedPinIds.has(p.id);
+                  // 남이 넣은 핀만 표시한다. 내 것까지 달면 전부 배지가 붙어
+                  // "누가 넣었나"라는 정보가 오히려 안 보인다.
+                  const authorEmail = pinAuthors?.[pinAuthorKey(p.day, p.id)] ?? null;
+                  const showAuthor =
+                    !!authorEmail && authorEmail !== (currentUserEmail ?? '');
                   return (
                     <SortableItem key={p.id} id={p.id}>
                       {({ listeners, setActivatorNodeRef, isDragging }) => (
@@ -261,6 +277,22 @@ export function PinupBar({
                           >
                             {p.order}
                           </span>
+                          {showAuthor && (
+                            <span
+                              className="chip-author"
+                              style={{ background: presenceColor(authorEmail) }}
+                              title={t('pinup.addedBy', {
+                                who: authorEmail,
+                                defaultValue: '{{who}} 님이 추가',
+                              })}
+                              aria-label={t('pinup.addedBy', {
+                                who: authorEmail,
+                                defaultValue: '{{who}} 님이 추가',
+                              })}
+                            >
+                              {presenceInitial(authorEmail)}
+                            </span>
+                          )}
                           {onToggleRequired && (
                             <button
                               type="button"

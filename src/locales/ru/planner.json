@@ -159,7 +159,8 @@
     "mustVisitOnly": "Обязательно",
     "markRequired": "Отметить как обязательное",
     "unmarkRequired": "Снять отметку «обязательно»",
-    "requiredBadge": "Обязательное место"
+    "requiredBadge": "Обязательное место",
+    "addedBy": "Добавил(а) {{who}}"
   },
   "route": {
     "fixedArrivalAt": "Прибытие зафиксировано на {{time}}",

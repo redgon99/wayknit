@@ -340,7 +340,7 @@ async function readRemoteById(userId: string, tripId: string): Promise<Trip | nu
 
   const { data, error } = await scoped.maybeSingle();
   if (error || !data) return null;
-  return attachPins(rowToTrip(data, roles.get(tripId)));
+  return attachPins(rowToTrip(data, roles.get(tripId)), true);
 }
 
 async function readRemoteLatest(userId: string): Promise<Trip | null> {
@@ -362,7 +362,7 @@ async function readRemoteLatest(userId: string): Promise<Trip | null> {
     .limit(1)
     .maybeSingle();
   if (error || !data) return null;
-  return attachPins(rowToTrip(data, roles.get(data.id)));
+  return attachPins(rowToTrip(data, roles.get(data.id)), true);
 }
 
 async function readBySlugRemote(slug: string): Promise<Trip | null> {
@@ -397,6 +397,29 @@ interface TripPinRow {
   place_id: string;
   position: number;
   data: PinnedPlace;
+  created_by_email: string | null;
+}
+
+/**
+ * 핀을 누가 넣었는지 — 핀 객체가 아니라 여기에 따로 둔다.
+ *
+ * PinnedPlace 에 얹으면 안 된다. 그 객체는 그대로 `trip_pins.data` jsonb 로
+ * 저장되고 canonicalPin() 비교에도 쓰이므로,
+ *   1. 이미 컬럼으로 존재하는 값이 jsonb 안에 중복 저장돼 시간이 지나면 어긋나고
+ *   2. 내용은 그대로인데 작성자 필드만 달라도 "핀이 바뀌었다"로 잡혀
+ *      불필요한 저장이 나간다 — 동시 편집 중이면 충돌 면적이 넓어진다.
+ *
+ * 키는 `${day}:${placeId}` (trip_pins 의 자연키에서 trip_id 를 뺀 것).
+ */
+const pinAuthorsByTrip = new Map<string, Record<string, string | null>>();
+
+export function pinAuthorKey(day: number, placeId: string): string {
+  return `${day}:${placeId}`;
+}
+
+/** 핀 작성자 이메일 맵. readPinsRemote 가 갱신하므로 핀 목록과 항상 같은 시점이다. */
+export function getPinAuthors(tripId: string): Record<string, string | null> {
+  return pinAuthorsByTrip.get(tripId) ?? {};
 }
 
 /**
@@ -421,12 +444,26 @@ function clonePinnedByDay(src: Record<number, PinnedPlace[]>): Record<number, Pi
   return out;
 }
 
-async function readPinsRemote(tripId: string): Promise<Record<number, PinnedPlace[]> | null> {
+/**
+ * @param includeAuthors 작성자 이메일까지 읽을지.
+ *   공개 여행을 구경하는 비로그인 열람자는 이 컬럼을 읽을 권한이 없다
+ *   (anon 에서 회수했다). 요청에 넣으면 조회 전체가 실패해 핀이 통째로
+ *   안 보이므로, 볼 자격이 있을 때만 넣는다.
+ */
+async function readPinsRemote(
+  tripId: string,
+  includeAuthors = false
+): Promise<Record<number, PinnedPlace[]> | null> {
   const sb = getSupabase();
   if (!sb) return null;
+  // supabase-js 는 select 문자열의 리터럴 타입으로 결과를 추론한다.
+  // 삼항으로 넘기면 유니온이 되어 파싱에 실패하므로 string 으로 낮춘다.
+  const columns: string = includeAuthors
+    ? 'day, place_id, position, data, created_by_email'
+    : 'day, place_id, position, data';
   const { data, error } = await sb
     .from('trip_pins')
-    .select('day, place_id, position, data')
+    .select(columns)
     .eq('trip_id', tripId)
     .order('day', { ascending: true })
     .order('position', { ascending: true })
@@ -438,9 +475,12 @@ async function readPinsRemote(tripId: string): Promise<Record<number, PinnedPlac
     return null;
   }
   const byDay: Record<number, PinnedPlace[]> = {};
-  for (const row of (data ?? []) as TripPinRow[]) {
+  const authors: Record<string, string | null> = {};
+  for (const row of (data ?? []) as unknown as TripPinRow[]) {
     (byDay[row.day] ??= []).push({ ...row.data, id: row.place_id, day: row.day });
+    authors[pinAuthorKey(row.day, row.place_id)] = row.created_by_email ?? null;
   }
+  if (includeAuthors) pinAuthorsByTrip.set(tripId, authors);
   // order 필드는 화면이 쓰는 표시용 번호 — 행 순서대로 다시 매긴다.
   for (const list of Object.values(byDay)) list.forEach((p, i) => (p.order = i + 1));
   return byDay;
@@ -586,7 +626,7 @@ export function subscribeTripPins(
 
   const refresh = async () => {
     if (disposed) return;
-    const remote = await readPinsRemote(tripId);
+    const remote = await readPinsRemote(tripId, true);
     if (disposed || !remote) return;
     const local = getLocal();
     const pending = pendingPinEdits(pinBaselines.get(tripId) ?? {}, local);
@@ -619,8 +659,8 @@ export function subscribeTripPins(
   };
 }
 
-async function attachPins(trip: Trip): Promise<Trip> {
-  const pins = await readPinsRemote(trip.id);
+async function attachPins(trip: Trip, includeAuthors = false): Promise<Trip> {
+  const pins = await readPinsRemote(trip.id, includeAuthors);
   const pinnedByDay = pins ?? trip.pinnedByDay;
   pinBaselines.set(trip.id, clonePinnedByDay(pinnedByDay));
   return { ...trip, pinnedByDay };

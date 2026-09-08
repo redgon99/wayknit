@@ -159,7 +159,8 @@
     "mustVisitOnly": "Pflichtbesuch",
     "markRequired": "Als Pflichtbesuch markieren",
     "unmarkRequired": "Pflichtbesuch entfernen",
-    "requiredBadge": "Pflichtbesuch-Ort"
+    "requiredBadge": "Pflichtbesuch-Ort",
+    "addedBy": "Von {{who}} hinzugefügt"
   },
   "route": {
     "fixedArrivalAt": "Ankunft auf {{time}} festgelegt",

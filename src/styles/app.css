@@ -3364,6 +3364,26 @@ button {
   font-weight: 500;
 }
 
+/*
+ * 남이 넣은 핀 표시 (공동편집 4단계).
+ * presence 아바타와 같은 색·이니셜 규칙을 쓴다 — 상단 아바타에서 본 사람과
+ * 핀의 배지가 같은 색이어야 "저 사람이 넣었구나"가 바로 읽힌다.
+ * 순서 배지(.chip-order)보다 작게 두어 순서를 먼저 읽는 흐름을 방해하지 않는다.
+ */
+.chip-author {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0;
+}
+
 .chip-body {
   flex: 1;
   min-width: 0;

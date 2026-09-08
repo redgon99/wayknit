@@ -159,7 +159,8 @@
     "mustVisitOnly": "필수만",
     "markRequired": "필수 방문으로 표시",
     "unmarkRequired": "필수 방문 해제",
-    "requiredBadge": "필수 방문 장소"
+    "requiredBadge": "필수 방문 장소",
+    "addedBy": "{{who}} 님이 추가"
   },
   "route": {
     "fixedArrivalAt": "도착 시각 고정 {{time}}",

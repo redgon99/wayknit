@@ -71,6 +71,8 @@ import {
   applyPlazaPublish,
   subscribeTripPins,
   hasCollaborators,
+  getPinAuthors,
+  pinAuthorKey,
   type Trip,
   type TripSummary,
 } from '../lib/trips';
@@ -653,6 +655,15 @@ export default function PlannerPage() {
       }
     );
   }, [trip.id, trip.ownerId, hydrated]);
+
+  /**
+   * 핀 작성자 — 핀 목록이 갱신되는 시점마다 다시 읽는다.
+   * readPinsRemote 가 핀과 같은 응답에서 채우므로 두 값이 어긋나지 않는다.
+   */
+  const [pinAuthors, setPinAuthors] = useState<Record<string, string | null>>({});
+  useEffect(() => {
+    setPinAuthors(getPinAuthors(trip.id));
+  }, [trip.id, trip.pinnedByDay]);
 
   // ============== Trip 업데이트 헬퍼 ==============
   function patchTrip(next: Partial<Trip>) {
@@ -2087,6 +2098,16 @@ export default function PlannerPage() {
   const presenceEnabled =
     Boolean(trip.isPublic) || Boolean(trip.collaboratorRole) || ownerHasCollaborators;
 
+  /**
+   * 핀 작성자 배지를 볼 수 있는 사람 — 소유자와 협업자뿐이다.
+   *
+   * presenceEnabled 를 그대로 쓰면 안 된다. 거기엔 isPublic 이 들어 있어서,
+   * 공개 여행을 구경하는 아무나에게 협업자 이메일이 보인다. §5-2-3 에서
+   * 활동 로그를 공개 여행에서도 감춘 것과 같은 판단이다 — 누가 무엇을
+   * 넣었는지는 열람자에게 줄 정보가 아니다.
+   */
+  const canSeePinAuthors = isTripOwner || Boolean(trip.collaboratorRole);
+
   const useMobileChrome = isMobile && !presentationMode;
   const searchExpanded =
     !useMobileChrome &&
@@ -2297,6 +2318,8 @@ export default function PlannerPage() {
                 <PinupBar
                   variant="panel"
                   hideHeader
+                  pinAuthors={canSeePinAuthors ? pinAuthors : undefined}
+                  currentUserEmail={user?.email ?? null}
                   pinned={pinned}
                   tripTitle={trip.title}
                   currentDay={currentDay}
@@ -2640,6 +2663,8 @@ export default function PlannerPage() {
                 <PinupBar
                   variant="panel"
                   hideHeader
+                  pinAuthors={canSeePinAuthors ? pinAuthors : undefined}
+                  currentUserEmail={user?.email ?? null}
                   pinned={pinned}
                   tripTitle={trip.title}
                   currentDay={currentDay}
