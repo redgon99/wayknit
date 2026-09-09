@@ -14456,11 +14456,22 @@ button {
   border-radius: 4px;
 }
 
+/*
+ * 실제 랜딩페이지(landing.css .landing-gallery)와 같은 기준: 모바일 2열,
+ * 768px 이상 3열. 처음엔 이 규칙을 안 옮기고 항상 3열로 고정해 놔서,
+ * "모바일" 토글을 눌러도 사진 배치가 안 바뀌는 것처럼 보였다(실측으로 확인).
+ * 기본값을 모바일(2열)로 두고 데스크톱에서만 3열로 넓힌다 — 실제 CSS도
+ * 모바일 우선이라 순서를 맞췄다.
+ */
 .admin-landing-preview-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   padding: 0 16px 16px;
+}
+
+.admin-landing-preview-frame:not(.is-mobile) .admin-landing-preview-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .admin-landing-preview-grid figure {
