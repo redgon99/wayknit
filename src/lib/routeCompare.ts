@@ -21,6 +21,17 @@ export const COMPARE_COLORS: Record<OptimizeBy, string> = {
   'no-toll': '#2563eb',
 };
 
+/**
+ * 미선택 두 경로가 같은 도로를 지날 때 색만으로는 구분이 안 됐다(§6-7).
+ * 굵기를 다르게 주고 얇은 쪽을 위에 그리면, 겹치는 구간에서 두꺼운 쪽의
+ * 양옆 테두리가 삐져나와 보여 좁은 화면에서도 층이 구분된다.
+ */
+export const COMPARE_LINE_WEIGHT: Record<OptimizeBy, number> = {
+  distance: 5,
+  time: 4,
+  'no-toll': 3,
+};
+
 export const COMPARE_ORDER: OptimizeBy[] = ['distance', 'time', 'no-toll'];
 
 export interface RouteComparison {

@@ -5384,6 +5384,40 @@ button {
     font-size: 12px;
     padding: 8px 10px;
   }
+
+  /*
+   * 검색 결과 카드 밀도(§6-7). 실측: 배지 3종이 각각 줄을 잡아먹는 문제는
+   * 위에서 .search-result-badges 로 이미 묶었다. 여기서는 좁은 화면에서
+   * 카드 자체의 여백·글자를 줄여 한 화면에 2~3개가 아니라 4~5개가 보이게
+   * 한다. 데스크톱은 건드리지 않는다 — 사이드 패널은 세로가 넉넉하다.
+   */
+  .search-result-card {
+    gap: 10px;
+    padding: 9px 10px;
+  }
+
+  .search-result-card .result-thumb {
+    width: 34px;
+    height: 34px;
+  }
+
+  .search-result-body {
+    gap: 3px;
+  }
+
+  .search-result-name {
+    font-size: 13.5px;
+  }
+
+  .search-result-en {
+    /* 두 줄째까지 잡아먹지 않도록 — 원문 이름만으로 충분히 식별된다 */
+    display: none;
+  }
+
+  .search-pin-btn {
+    width: 34px;
+    height: 34px;
+  }
 }
 
 /* =============================================
@@ -13873,6 +13907,14 @@ button {
   font-size: 12px;
   font-weight: 500;
   color: #64748b;
+}
+
+/* theme-match·rating·reaction 배지를 한 줄로 흐르게(§6-7) */
+.search-result-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
 }
 
 .search-result-stats {

@@ -13,6 +13,8 @@ import type { MapProvider } from '../lib/mapProvider';
 import { useLongPress } from '../hooks/useLongPress';
 import { mapCentersNear, searchResultFitPadding, shouldAnimateMapCenter, validMapPoints, type MapLatLng } from '../lib/mapCenterMotion';
 import i18n from '../lib/i18n';
+import { COMPARE_LINE_WEIGHT } from '../lib/routeCompare';
+import type { OptimizeBy } from '../types';
 
 interface Props {
   provider?: MapProvider;
@@ -807,13 +809,16 @@ function KakaoMapView({
     for (const r of compareRoutes) {
       if (r.path.length < 2) continue;
       const selected = r.optimizeBy === selectedOptimizeBy;
+      const baseWeight = COMPARE_LINE_WEIGHT[r.optimizeBy as OptimizeBy] ?? 4;
       const line = new window.kakao.maps.Polyline({
         path: r.path.map((p) => new window.kakao.maps.LatLng(p.lat, p.lng)),
-        strokeWeight: selected ? 6 : 4,
+        strokeWeight: selected ? 7 : baseWeight,
         strokeColor: r.color,
-        strokeOpacity: selected ? 0.9 : 0.4,
+        strokeOpacity: selected ? 0.9 : 0.6,
         strokeStyle: 'solid',
-        zIndex: selected ? 3 : 2,
+        // 선택된 것이 항상 맨 위, 미선택끼리는 얇은 쪽이 위 — 겹치는 구간에서
+        // 두꺼운 쪽 테두리가 옆으로 드러나 층이 보인다(§6-7).
+        zIndex: selected ? 10 : 10 - baseWeight,
       });
       line.setMap(mapRef.current);
       comparePolylinesRef.current.push(line);

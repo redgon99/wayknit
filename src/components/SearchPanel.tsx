@@ -786,16 +786,23 @@ export function SearchPanel({
                       </span>
                     )}
                   </div>
-                  {themeMatches.length > 0 && (
-                    <span className="theme-match-badge">
-                      <Icon name={themeMatches[0].icon} size={11} />
-                      {t(themeMatches[0].labelKey)}
-                    </span>
+                  {(themeMatches.length > 0 || badge || reaction) && (
+                    /* 배지 3종이 각각 독립된 flex-column 항목이라 하나씩 있어도
+                       줄을 셋 잡아먹었다 — 화면이 작을수록 카드가 커져 한 화면에
+                       2~3개만 보이던 원인 중 하나였다(§6-7). 한 줄로 묶어 흐르게 한다. */
+                    <div className="search-result-badges">
+                      {themeMatches.length > 0 && (
+                        <span className="theme-match-badge">
+                          <Icon name={themeMatches[0].icon} size={11} />
+                          {t(themeMatches[0].labelKey)}
+                        </span>
+                      )}
+                      {badge && (
+                        <span className={`rating-badge ${badge.kind}`}>{badge.label}</span>
+                      )}
+                      <PlaceReactionBadge reaction={reaction} />
+                    </div>
                   )}
-                  {badge && (
-                    <span className={`rating-badge ${badge.kind}`}>{badge.label}</span>
-                  )}
-                  <PlaceReactionBadge reaction={reaction} />
                 </div>
                 <button
                   type="button"

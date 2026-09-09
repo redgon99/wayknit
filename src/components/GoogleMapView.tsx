@@ -22,6 +22,8 @@ import {
 import { useLongPress } from '../hooks/useLongPress';
 import { mapCentersNear, searchResultFitPadding, shouldAnimateMapCenter, validMapPoints, type MapLatLng } from '../lib/mapCenterMotion';
 import i18n from '../lib/i18n';
+import { COMPARE_LINE_WEIGHT } from '../lib/routeCompare';
+import type { OptimizeBy } from '../types';
 
 interface Props {
   mapsReady?: boolean;
@@ -519,14 +521,17 @@ export function GoogleMapView({
     for (const r of compareRoutes) {
       if (r.path.length < 2) continue;
       const selected = r.optimizeBy === selectedOptimizeBy;
+      const baseWeight = COMPARE_LINE_WEIGHT[r.optimizeBy as OptimizeBy] ?? 4;
       compareLinesRef.current.push(
         new window.google.maps.Polyline({
           map: mapRef.current,
           path: r.path,
           strokeColor: r.color,
-          strokeOpacity: selected ? 0.9 : 0.4,
-          strokeWeight: selected ? 6 : 4,
-          zIndex: selected ? 3 : 2,
+          strokeOpacity: selected ? 0.9 : 0.6,
+          strokeWeight: selected ? 7 : baseWeight,
+          // 선택된 것이 항상 맨 위, 미선택끼리는 얇은 쪽이 위 — 겹치는 구간에서
+          // 두꺼운 쪽 테두리가 옆으로 드러나 층이 보인다(§6-7).
+          zIndex: selected ? 10 : 10 - baseWeight,
         }),
       );
     }
