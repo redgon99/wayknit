@@ -2038,3 +2038,58 @@ pg_cron 3개 잡)은 전부 원격과 일치한다. `waymeld_trips→wayknit_tri
 마이그레이션(`20260906120000`)이 `pg_get_functiondef` + `replace`로 **함수 본문의
 테이블 참조까지 훑어 재생성**하는 방식이라, 개명 이후에도 `admin_user_rows` 등
 관리자 RPC 5개가 전부 정상 참조하는 것을 실제 정의를 읽어 확인했다.
+
+---
+
+## 24. 관리자 페이지 미비점 — C6 "빠른 것들" 4건 (2026-09-09)
+
+§2-7 목록 20건 중 반나절 내 처리 가능한 4건. 나머지(SNS 게시 커넥터 등 대형 작업)는
+그대로 남겨둔다.
+
+### 24-1. 랜딩페이지 관리자 미리보기 — 모바일 폭 전환
+
+`AdminLandingPage.tsx`의 미리보기(`PreviewForest`)는 실제 페이지를 그대로 렌더링하는
+게 아니라 **무엇이 켜져 있는지 보여주는 별도 요약 마크업**이다. 뷰포트 기준
+`@media` 규칙을 흉내 낼 방법이 없어(컨테이너 쿼리 아님) "모바일 미리보기"를 정확한
+복제로는 만들 수 없다 — 그 대신 미리보기 틀 자체의 폭을 390px로 좁히는
+데스크톱/모바일 토글을 추가했다. flex-wrap·grid로 반응하는 부분(이미지 그리드,
+CTA 줄바꿈)은 실제로 다르게 보인다. **정확한 재현이 아니라 근사치임을 인지할 것.**
+
+### 24-2. 시장 인사이트 — 원문 삭제 · AI 오분류 재분류
+
+`insight_raw_items`·`insight_analysis`는 SELECT 정책만 있어 관리자도 잘못 수집된
+원문을 지우거나 잘못 분류된 카테고리를 고칠 방법이 없었다(DB 직접 조작만 가능).
+
+- `20260910000000_insight_raw_delete_and_recategorize.sql` — `insight_raw_items_admin_delete`,
+  `insight_analysis_admin_update` 두 정책 추가. 원격에 적용 확인.
+- `adminInsights.ts` — `deleteInsightRawItem()`, `updateInsightAnalysisCategory()`
+- `AdminInsightsPage.tsx` — 표의 카테고리 칸이 배지에서 `<select>`로, "삭제" 열 추가
+
+**🔴 알아둘 것 — `place_reactions` 집계가 자동으로 안 맞춰진다.** 원문을 지우면
+`insight_analysis`·`insight_place_mentions`은 FK cascade로 같이 지워지지만,
+`place_reactions`(장소 카드가 읽는 공개 집계)는 그대로 남는다.
+`refresh_place_reactions()`가 서비스 롤 전용(RPC 권한 회수됨)이라 관리자 화면에서
+직접 재계산을 부를 수 없다. **이미 집계에 반영된 원문을 지우면 그 집계가 다음
+정기 수집·매칭 전까지 부풀어 있다.** 지금은 분석 전 원문 정리 용도로 우선 쓰고,
+집계 재계산까지 필요해지면 관리자용 REFRESH 경로(RPC 권한 재부여 또는 관리자
+전용 wrapper 함수)를 따로 만들 것.
+
+### 24-3. 신고 검수 — 여러 건 일괄 처리
+
+체크박스로 여러 신고를 골라 **신고 큐 상태값만** 한 번에 바꾼다(검토 중/조치
+완료/반려). `contentReports.ts`의 `bulkUpdateContentReports(ids, {status})` —
+단일 `UPDATE ... WHERE id IN (...)`.
+
+**일부러 안 한 것: 콘텐츠 제재(비공개 전환 등)는 일괄로 묶지 않았다.** 신고마다
+대상 유형·id가 다르고, `admin_moderate_report()`는 신고 1건을 받아 그 행에서
+대상을 직접 읽는 구조라(§2-5, "호출자가 어긋나게 지정 불가") 여러 건을 한 RPC로
+묶으면 그 안전장치가 깨진다. 콘텐츠 제재는 계속 건별로만 가능하다.
+
+DB 스키마 변경 없음 — 기존 `content_reports_admin_update` 정책 그대로 사용.
+
+### 24-4. 남은 §2-7 (미착수)
+
+현황관리 Tier3 후속 액션 · 공지 예약발행 · 수집 진행률 표시/취소 · 가이드 카드
+발행 전 렌더링 미리보기 · 가이드 일괄 편집 · 배포관리 SNS 5개 플랫폼 게시 커넥터 ·
+계정 자격증명 교체 UI · 게시 실패 재시도 · 예약 게시 UI · 시나리오 대량 재생성
+diff 뷰 · 신고자 처리결과 통보.

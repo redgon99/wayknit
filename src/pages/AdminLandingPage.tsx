@@ -55,6 +55,7 @@ export default function AdminLandingPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [previewWidth, setPreviewWidth] = useState<'desktop' | 'mobile'>('desktop');
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -513,9 +514,38 @@ export default function AdminLandingPage() {
           <aside className="admin-section admin-landing-preview-pane">
             <div className="admin-landing-preview-head">
               <h2>랜딩 미리보기</h2>
-              <span>켜 둔 메뉴만</span>
+              <div className="admin-landing-preview-head-right">
+                <div className="admin-landing-preview-toggle">
+                  <button
+                    type="button"
+                    className={previewWidth === 'desktop' ? 'active' : ''}
+                    onClick={() => setPreviewWidth('desktop')}
+                  >
+                    데스크톱
+                  </button>
+                  <button
+                    type="button"
+                    className={previewWidth === 'mobile' ? 'active' : ''}
+                    onClick={() => setPreviewWidth('mobile')}
+                  >
+                    모바일
+                  </button>
+                </div>
+                <span>켜 둔 메뉴만</span>
+              </div>
             </div>
-            <div className="admin-landing-preview-frame">
+            {/*
+              실제 페이지를 그대로 렌더링하는 게 아니라 무엇이 켜져 있는지 보여주는
+              별도 요약 마크업이라(PreviewForest), 뷰포트 기준 미디어쿼리를 그대로
+              흉내 낼 수는 없다. 폭만 폰 크기로 좁혀 이미지 그리드·CTA 줄바꿈처럼
+              flex/grid로 반응하는 부분만이라도 미리 보이게 한다 — 정확한 복제가
+              아니라 "폭이 좁아지면 이렇게 흐른다" 정도의 근사치임을 라벨로 밝힌다.
+            */}
+            <div
+              className={`admin-landing-preview-frame ${
+                previewWidth === 'mobile' ? 'is-mobile' : ''
+              }`}
+            >
               <PreviewForest nodes={visible} />
             </div>
           </aside>
