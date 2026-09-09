@@ -2099,3 +2099,101 @@ DB 스키마 변경 없음 — 기존 `content_reports_admin_update` 정책 그�
 발행 전 렌더링 미리보기 · 가이드 일괄 편집 · 배포관리 SNS 5개 플랫폼 게시 커넥터 ·
 계정 자격증명 교체 UI · 게시 실패 재시도 · 예약 게시 UI · 시나리오 대량 재생성
 diff 뷰 · 신고자 처리결과 통보.
+
+---
+
+## 25. 모바일 상단바·하단내비·일정 탭 재구성 — A+C 조합안 (2026-09-09)
+
+### 25-0. 배경
+
+`§6`/`§10`(모바일 UX 1·2차) 이후에도 모바일 화면 "통제 지점이 6곳으로 흩어져
+있다"는 지적: 검색줄+일차탭이 별도 2행, 지도 위에 위성지도 토글·핀업 버튼이
+따로 떠 있고, 하단 시트는 검색/핀/동선 3탭, 하단내비는 내 여행/시나리오/계정.
+
+Claude Design 캔버스로 A(한 줄 툴바+통합내비)/B(탭 없는 통합 시트)/C(뷰 모드
+전환) 세 목업을 만들어 비교했다(`.design/mobile-redesign/` — `gen_current.py`
+`gen_a.py` `gen_b.py` `gen_c.py` `build.py` `canvas.json`, **저장소엔 커밋 안 함**,
+아래 25-5 참고). 사용자가 **A안 뼈대 + C안의 목록/동선 세그먼트 조합**으로
+확정해 그대로 구현했다.
+
+### 25-1. 바뀐 것
+
+**하단내비** — `내 여행 / 시나리오 / 계정` 3개 → **`지도 / 자료 / 시나리오 / 메뉴`**
+4개(`PlannerPage.tsx`의 `.mobile-planner-tabbar`). "지도"는 열려 있던 자료·시나리오를
+전부 닫는 홈 버튼, "자료"는 `TripMaterialsPanel`을 토글, "메뉴"(`MobileMoreMenu.tsx`)가
+공유·함께편집·표로보기·공유마당·설정·도움말에 더해 **계정(요금제 배지)까지 흡수**했다
+— 전용 "계정" 탭이 없어지면서 갈 곳이 필요했다. 여행 전환(`TripSelectMenu`)은
+하단내비에서 **상단으로 이동**.
+
+**상단 툴바** — 검색 알약+자료+더보기 버튼이 있던 1행을 **여행 칩(제목+`TripSelectMenu`
+트리거) + presence**로, 지도 위에 따로 떠 있던 위성지도 토글(`.map-type-toggle`)·
+지도 핀업 버튼(`.mobile-pin-from-map-btn`)을 **일차 필 줄 끝으로 끌어와** 검색
+아이콘과 함께 한 뭉치(`.mobile-planner-tools`, 공용 클래스 `.mobile-tool-btn`)로
+묶었다. **일차 필은 그대로 뒀다** — B/C 목업처럼 칩+드롭다운 뒤로 숨기면 여행
+플래너에서 가장 잦은 조작인 일차 전환이 한 탭 더 필요해진다고 판단해 A+C
+조합에서 의도적으로 뺐다. `.map-type-toggle`은 데스크톱에서만 렌더되도록
+`{!useMobileChrome && (...)}`로 분리.
+
+**시트 탭** — `검색 / 핀 N / 동선` 3탭 → **`검색 / 일정 N`** 2탭. "일정" 탭
+내부에 `목록으로 보기 / 동선으로 보기` 세그먼트(`.mobile-view-toggle`)를 넣어
+`PinupBar`↔`RouteOptionsPanel` 전환은 그대로 내부 상태(`mobileSheetTab`의
+`'pins'`/`'route'`)를 재사용했다 — 새 상태 없이 라벨과 배치만 바꿨다. 목록
+보기에는 동선이 있을 때만 뜨는 **동선 요약 카드**(`.mobile-route-summary-card`
+— "오늘 동선 · Xkm · Y분" + "다시 짜기" → `handleOpenRouteOptions`)를 추가해,
+예전에 "동선" 탭과 별도 플로팅 카드(`RouteTimelineDock`)로 나뉘어 있던 정보를
+목록 안에 흡수했다. `RouteTimelineDock`(peek 상태 플로팅 요약)은 그대로 둠 —
+용도가 다르다(시트를 접었을 때의 요약).
+
+**바뀐 파일:** `PlannerPage.tsx`, `MobileMoreMenu.tsx`(계정 배지 추가, 트리거를
+탭바 스타일로), `TripSelectMenu.tsx`(`label`/`triggerClassName` prop 삭제 — 하단
+탭바 전용이던 용도가 없어져 전 사용처에서 미사용 확인 후 제거), `app.css`,
+9개 로케일 `planner.json`에 `chrome.tabMap/tabItinerary/tabMenu/viewList/viewRoute/
+viewToggleAria/routeSummary/replanCta` 추가.
+
+### 25-2. 🔴 Playwright로 찾은 버그 2건 — 코드 리뷰만으로는 안 보였던 것
+
+사용자가 "playwright로 확인해줘"라고 지시해 실제로 눌러보다가 발견. 정적 코드
+검토·`tsc`·`vite build`는 전부 클린이었지만 **런타임 상호작용**에서만 드러났다.
+
+1. **"지도" 탭이 자료 패널을 못 닫음.** `.materials-panel`이 모바일에서
+   `bottom:0`(탭바 밑까지 깔림, 탭바 z-index 23 < 패널 24)이라 "지도" 버튼
+   자체가 패널 밑에 깔려 클릭이 안 먹었다. 예전엔 이 패널을 닫는 유일한
+   방법이 패널 자체의 X버튼이라 문제가 안 됐는데, 이번에 "지도=닫기" 기능을
+   더하면서 처음 드러난 충돌이다. `--mobile-tabbar-h`를 `.mobile-planner-sheet`
+   지역변수에서 `:root`로 올려 `.materials-panel`도 `bottom: calc(var(--mobile-tabbar-h)
+   + safe-area)`를 쓰게 고쳐, 탭바 위에서 끝나도록 했다.
+2. **드롭다운 2개가 화면 밖으로 넘침.** 여행 칩의 `TripSelectMenu` 드롭다운과
+   "메뉴" 팝오버(`.planner-more-menu`) 둘 다 트리거가 화면 오른쪽 끝에 있는데
+   드롭다운 기본값(`left:0`, 오른쪽으로 펼침)을 그대로 써서 320px/168px짜리
+   박스가 390px 화면 밖으로 나갔다(실측 시도 시 `left:6px`로 잘못 고쳤다가
+   메뉴가 반대쪽으로 튀어나가는 걸 다시 확인하고 `right:6px`로 재수정 —
+   왼쪽 정렬 탭바 항목과 오른쪽 정렬 항목을 헷갈리지 말 것). 둘 다
+   `left:auto; right:0`(또는 `right:6px`)로 왼쪽으로 펼치게 고침.
+
+### 25-3. 검증
+
+`tsc -b`·`vite build` 클린. Playwright(390px·360px 뷰포트, 스크린샷+
+`scrollWidth` 오버플로 체크)로: 일차 전환·여행 전환 드롭다운·자료/시나리오/메뉴
+탭·일정 세그먼트 전환까지 전부 확인. **실데이터 전 과정도 확인** — "경복궁"
+검색(결과 25개) → 2곳 핀업 → 일정 탭에 반영 → 동선 만들기(자동차·최적화
+옵션) → 실제 경로 반영 → 목록 보기로 돌아오면 동선 요약 카드가 정확한
+값("0.5km·4분")으로 표시됨. 콘솔·페이지 에러 없음(카카오맵 SDK가 테스트
+샌드박스 네트워크에서 막힌 것 하나뿐 — 코드와 무관, 검색 자체는 서버
+프록시라 정상 동작).
+
+### 25-4. 참고 — 검증 방식 재도입
+
+§0에 "검증은 사용자가 직접 한다(2026-09-06 지시로 Playwright 자체 검증 폐기)"
+라고 적혀 있지만, **이번엔 사용자가 명시적으로 "playwright로 확인해줘"라고
+재요청**해 진행했다. 즉 기본값은 여전히 "사용자가 직접 확인"이고, Playwright는
+사용자가 요청할 때만 쓰는 것으로 유지한다. 설치는 프로젝트에 넣지 않고
+OS 임시 디렉터리(세션 스크래치패드)에 별도 `npm install playwright`로
+진행했다 — 이 저장소의 `package.json`/`node_modules`는 그대로다.
+
+### 25-5. 커밋에서 제외한 것
+
+- `.design/mobile-redesign/` — A/B/C 목업 소스(Claude Design 캔버스용 `.dc.html`+
+  생성 스크립트)와 `__pycache__`. 디자인 결정 과정 기록으로 워킹트리에는
+  남겨두되, 앱 소스가 아니라 커밋하지 않았다.
+- `wayknit-mobile-redesign.html` — 위 목업을 발행했던 캔버스 페이로드(에디터
+  코드 포함 11000줄+). 재생성 가능한 산출물이라 커밋 대상 아님.

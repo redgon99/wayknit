@@ -11,10 +11,6 @@ interface Props {
   /** 여행 허브: 새 여행·삭제 등을 같은 메뉴에 묶음 */
   onNewTrip?: () => void;
   onDeleteTrip?: () => void;
-  /** 지정 시 트리거 버튼에 아이콘과 함께 라벨을 표시 (예: 모바일 탭바 재사용) */
-  label?: string;
-  /** 트리거 버튼에 추가할 클래스 (예: 모바일 탭바 아이템 스타일) */
-  triggerClassName?: string;
 }
 
 export function TripSelectMenu({
@@ -24,8 +20,6 @@ export function TripSelectMenu({
   compact = false,
   onNewTrip,
   onDeleteTrip,
-  label,
-  triggerClassName,
 }: Props) {
   const { t } = useTranslation('planner');
   const [open, setOpen] = useState(false);
@@ -73,7 +67,7 @@ export function TripSelectMenu({
     >
       <button
         type="button"
-        className={`trip-select-trigger ${triggerClassName ?? ''}`.trim()}
+        className="trip-select-trigger"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup={isHub ? 'menu' : 'listbox'}
@@ -86,8 +80,7 @@ export function TripSelectMenu({
         }
         title={isHub ? t('trip.hubAria', { defaultValue: '여행 설정' }) : currentLabel}
       >
-        <Icon name={label ? 'folder' : 'chevronDown'} size={label ? 20 : compact ? 16 : 18} />
-        {label && <span className="trip-select-trigger-label">{label}</span>}
+        <Icon name="chevronDown" size={compact ? 16 : 18} />
       </button>
 
       {open && (

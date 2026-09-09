@@ -716,7 +716,15 @@
     "sheetPinsSummary": "{{count}} pines · Día {{n}}",
     "tabTrips": "Mis viajes",
     "tabAccount": "Cuenta",
-    "sheetSearchSummary": "{{count}} resultados"
+    "sheetSearchSummary": "{{count}} resultados",
+    "tabMap": "Mapa",
+    "tabItinerary": "Itinerario {{count}}",
+    "tabMenu": "Menú",
+    "viewList": "Ver como lista",
+    "viewRoute": "Ver como ruta",
+    "viewToggleAria": "Cambiar vista",
+    "routeSummary": "Ruta de hoy · {{km}} km · {{min}} min",
+    "replanCta": "Replanificar"
   },
   "map": {
     "centerHere": "Buscar alrededor de aquí",

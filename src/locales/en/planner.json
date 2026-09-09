@@ -716,7 +716,15 @@
     "sheetPinsSummary": "{{count}} pins · Day {{n}}",
     "tabTrips": "My trips",
     "tabAccount": "Account",
-    "sheetSearchSummary": "{{count}} results"
+    "sheetSearchSummary": "{{count}} results",
+    "tabMap": "Map",
+    "tabItinerary": "Itinerary {{count}}",
+    "tabMenu": "Menu",
+    "viewList": "View as list",
+    "viewRoute": "View as route",
+    "viewToggleAria": "Switch view",
+    "routeSummary": "Today's route · {{km}}km · {{min}}min",
+    "replanCta": "Re-plan"
   },
   "map": {
     "centerHere": "Search around here",

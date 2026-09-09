@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Icon } from '../Icon';
+import type { PlanId } from '../../lib/subscription';
 
 interface Props {
   onShare: () => void;
@@ -14,6 +16,10 @@ interface Props {
   onOpenCollaborators?: () => void;
   /** 협업자에게는 "관리"가 아니라 함께 편집 중인 사람을 보는 입구다(§14). */
   collabEntryLabel?: 'manage' | 'shared';
+  /** 요금제 배지 — 데스크톱에선 계정 탭이 따로 있었지만, 하단내비가 4칸으로
+   *  줄면서(지도·자료·시나리오·메뉴) 계정도 이 메뉴 안으로 들어온다. */
+  plan: PlanId;
+  onOpenUpgrade: () => void;
 }
 
 export function MobileMoreMenu({
@@ -22,9 +28,12 @@ export function MobileMoreMenu({
   onOpenTableView,
   onOpenCollaborators,
   collabEntryLabel = 'manage',
+  plan,
+  onOpenUpgrade,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: ts } = useTranslation('share');
+  const { t: tb } = useTranslation('billing');
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -47,7 +56,7 @@ export function MobileMoreMenu({
     };
   }, [open]);
 
-  const item = (label: string, action: () => void) => (
+  const item = (label: string, action: () => void, content?: ReactNode) => (
     <button
       type="button"
       role="menuitem"
@@ -57,7 +66,7 @@ export function MobileMoreMenu({
         action();
       }}
     >
-      {label}
+      {content ?? label}
     </button>
   );
 
@@ -65,16 +74,14 @@ export function MobileMoreMenu({
     <div className="planner-bar-more mobile-more-menu" ref={rootRef}>
       <button
         type="button"
-        className={`mobile-planner-menu-btn ${open ? 'active' : ''}`}
+        className={`mobile-tabbar-btn ${open ? 'active' : ''}`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label={t('nav.more', { defaultValue: '더보기' })}
-        title={t('nav.more', { defaultValue: '더보기' })}
+        aria-label={t('chrome.tabMenu')}
       >
-        <span className="planner-bar-more-dots" aria-hidden>
-          ⋯
-        </span>
+        <Icon name="menu" size={20} />
+        {t('chrome.tabMenu')}
       </button>
       {open && (
         <div className="planner-more-menu" role="menu">
@@ -88,6 +95,15 @@ export function MobileMoreMenu({
           {plazaNavVisible && item(t('plazaNav'), () => navigate('/plaza'))}
           {item(t('nav.setup'), () => navigate('/setup'))}
           {item(t('nav.help'), () => navigate('/help'))}
+          <div className="planner-more-sep" aria-hidden />
+          {item(
+            t('chrome.tabAccount'),
+            onOpenUpgrade,
+            <span className="planner-more-item-account">
+              {t('chrome.tabAccount')}
+              <span className={`mobile-tabbar-plan-badge plan-${plan}`}>{tb(`plan.${plan}`)}</span>
+            </span>
+          )}
         </div>
       )}
     </div>

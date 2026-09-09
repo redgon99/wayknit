@@ -716,7 +716,15 @@
     "sheetPinsSummary": "{{count}} Pins · Tag {{n}}",
     "tabTrips": "Meine Reisen",
     "tabAccount": "Konto",
-    "sheetSearchSummary": "{{count}} Treffer"
+    "sheetSearchSummary": "{{count}} Treffer",
+    "tabMap": "Karte",
+    "tabItinerary": "Reiseplan {{count}}",
+    "tabMenu": "Menü",
+    "viewList": "Als Liste anzeigen",
+    "viewRoute": "Als Route anzeigen",
+    "viewToggleAria": "Ansicht wechseln",
+    "routeSummary": "Heutige Route · {{km}} km · {{min}} Min.",
+    "replanCta": "Neu planen"
   },
   "map": {
     "centerHere": "Hier in der Nähe suchen",

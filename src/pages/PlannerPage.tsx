@@ -2290,15 +2290,17 @@ export default function PlannerPage() {
         />
       )}
 
-      <button
-        type="button"
-        className={`map-type-toggle ${mapType === 'satellite' ? 'active' : ''}`}
-        onClick={() => setMapType((prev) => (prev === 'satellite' ? 'roadmap' : 'satellite'))}
-        title={tp(mapType === 'satellite' ? 'view.mapTypeRoadmap' : 'view.mapTypeSatellite')}
-        aria-label={tp(mapType === 'satellite' ? 'view.mapTypeRoadmap' : 'view.mapTypeSatellite')}
-      >
-        <Icon name="layers" size={18} />
-      </button>
+      {!useMobileChrome && (
+        <button
+          type="button"
+          className={`map-type-toggle ${mapType === 'satellite' ? 'active' : ''}`}
+          onClick={() => setMapType((prev) => (prev === 'satellite' ? 'roadmap' : 'satellite'))}
+          title={tp(mapType === 'satellite' ? 'view.mapTypeRoadmap' : 'view.mapTypeSatellite')}
+          aria-label={tp(mapType === 'satellite' ? 'view.mapTypeRoadmap' : 'view.mapTypeSatellite')}
+        >
+          <Icon name="layers" size={18} />
+        </button>
+      )}
 
       <InviteBanner />
 
@@ -2563,55 +2565,79 @@ export default function PlannerPage() {
         <>
           <div className="mobile-planner-top">
             <div className="mobile-planner-search-row">
-              <button
-                type="button"
-                className="mobile-planner-search-pill"
-                onClick={openMobileSearchTab}
-              >
-                <Icon name="search" size={18} />
-                {tp('search.ariaLabel')}
-              </button>
-              <button
-                type="button"
-                className="mobile-planner-menu-btn"
-                onClick={handleOpenMaterialsPanel}
-                aria-label={tp('trip.materials')}
-              >
-                <Icon name="folder" size={18} />
-              </button>
+              <div className="mobile-planner-trip-chip">
+                <span className="mobile-planner-trip-title">{trip.title}</span>
+                <TripSelectMenu
+                  summaries={tripSummaries}
+                  currentTripId={trip.id}
+                  onSelect={handleSelectTrip}
+                  onNewTrip={handleNewTrip}
+                  onDeleteTrip={() => void handleDeleteTrip()}
+                  compact
+                />
+              </div>
               {/*
                 혼자 편집할 때는 PresenceStack이 null을 돌려주므로 이 자리가
-                비어 있다 — 좁은 폰 화면에서 검색 알약을 상시로 밀어내지 않는다.
+                비어 있다 — 좁은 폰 화면에서 여행 칩을 상시로 밀어내지 않는다.
                 데스크톱보다 하나 적게(3명) 보여주고 나머지는 +N으로 접는다.
               */}
               <PresenceStack viewers={presenceViewers} max={3} />
-              <MobileMoreMenu
-                onShare={openShareModal}
-                plazaNavVisible={plazaNavVisible}
-                onOpenTableView={handleToggleTableView}
-                onOpenCollaborators={
-                  isTripOwner || trip.collaboratorRole
-                    ? () => setCollabModalOpen(true)
-                    : undefined
-                }
-                collabEntryLabel={isTripOwner ? undefined : 'shared'}
-              />
             </div>
-            <div className="mobile-planner-days">
-              {Array.from({ length: trip.totalDays }, (_, i) => i + 1).map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  className={`mobile-planner-day ${d === currentDay ? 'active' : ''}`}
-                  onClick={() => selectDay(d)}
-                >
-                  {tp('day.tab', { n: d })}
-                  {(countsByDay[d] ?? 0) > 0 ? ` · ${countsByDay[d]}` : ''}
+            <div className="mobile-planner-days-row">
+              <div className="mobile-planner-days">
+                {Array.from({ length: trip.totalDays }, (_, i) => i + 1).map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    className={`mobile-planner-day ${d === currentDay ? 'active' : ''}`}
+                    onClick={() => selectDay(d)}
+                  >
+                    {tp('day.tab', { n: d })}
+                    {(countsByDay[d] ?? 0) > 0 ? ` · ${countsByDay[d]}` : ''}
+                  </button>
+                ))}
+                <button type="button" className="mobile-planner-day" onClick={addDay}>
+                  {tp('chrome.addDayShort')}
                 </button>
-              ))}
-              <button type="button" className="mobile-planner-day" onClick={addDay}>
-                {tp('chrome.addDayShort')}
-              </button>
+              </div>
+              <div className="mobile-planner-tools">
+                <button
+                  type="button"
+                  className="mobile-tool-btn"
+                  onClick={openMobileSearchTab}
+                  title={tp('search.ariaLabel')}
+                  aria-label={tp('search.ariaLabel')}
+                >
+                  <Icon name="search" size={17} />
+                </button>
+                <button
+                  type="button"
+                  className={`mobile-tool-btn ${mapType === 'satellite' ? 'active' : ''}`}
+                  onClick={() => setMapType((prev) => (prev === 'satellite' ? 'roadmap' : 'satellite'))}
+                  title={tp(mapType === 'satellite' ? 'view.mapTypeRoadmap' : 'view.mapTypeSatellite')}
+                  aria-label={tp(mapType === 'satellite' ? 'view.mapTypeRoadmap' : 'view.mapTypeSatellite')}
+                >
+                  <Icon name="layers" size={17} />
+                </button>
+                {/*
+                  지도에서 핀 찍기 — 모바일에는 이 기능의 입구가 롱프레스밖에 없었다.
+                  데스크톱의 `overlay-map-tools`는 `desktop-only-overlay`라 폰에서 숨는데,
+                  대체 입구를 만들어 두지 않아 아는 사람만 쓰는 기능이 돼 있었다(§10-4).
+                  검색이 지도를 덮고 있을 때(full)는 누를 대상이 없으므로 감춘다.
+                */}
+                {mobileSheetLevel !== 'full' && (
+                  <button
+                    type="button"
+                    className={`mobile-tool-btn ${pickingPinFromMap ? 'active' : ''}`}
+                    onClick={handleTogglePinFromMap}
+                    aria-pressed={pickingPinFromMap}
+                    title={tp('trip.pinFromMap')}
+                    aria-label={tp('trip.pinFromMap')}
+                  >
+                    <Icon name="pinPlus" size={17} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -2627,25 +2653,6 @@ export default function PlannerPage() {
             >
               <Icon name="search" size={15} />
               {tp('map.searchThisArea')}
-            </button>
-          )}
-
-          {/*
-            지도에서 핀 찍기 — 모바일에는 이 기능의 입구가 롱프레스밖에 없었다.
-            데스크톱의 `overlay-map-tools`는 `desktop-only-overlay`라 폰에서 숨는데,
-            대체 입구를 만들어 두지 않아 아는 사람만 쓰는 기능이 돼 있었다(§10-4).
-            검색이 지도를 덮고 있을 때(full)는 누를 대상이 없으므로 감춘다.
-          */}
-          {mobileSheetLevel !== 'full' && (
-            <button
-              type="button"
-              className={`mobile-pin-from-map-btn ${pickingPinFromMap ? 'active' : ''}`}
-              onClick={handleTogglePinFromMap}
-              aria-pressed={pickingPinFromMap}
-              title={tp('trip.pinFromMap')}
-              aria-label={tp('trip.pinFromMap')}
-            >
-              <Icon name="pinPlus" size={18} />
             </button>
           )}
 
@@ -2710,20 +2717,10 @@ export default function PlannerPage() {
               </button>
               <button
                 type="button"
-                className={`mobile-sheet-tab ${mobileSheetTab === 'pins' ? 'active' : ''}`}
-                onClick={() => setMobileSheetTab('pins')}
+                className={`mobile-sheet-tab ${mobileSheetTab !== 'search' ? 'active' : ''}`}
+                onClick={() => setMobileSheetTab((prev) => (prev === 'search' ? 'pins' : prev))}
               >
-                {tp('chrome.tabPins', { count: pinned.length })}
-              </button>
-              <button
-                type="button"
-                className={`mobile-sheet-tab ${mobileSheetTab === 'route' ? 'active' : ''}`}
-                onClick={() => {
-                  setMobileSheetTab('route');
-                  setRouteOptionsOpen(true);
-                }}
-              >
-                {tp('chrome.tabRoute')}
+                {tp('chrome.tabItinerary', { count: pinned.length })}
               </button>
             </div>
             <div className="mobile-sheet-content">
@@ -2770,98 +2767,162 @@ export default function PlannerPage() {
                   onCategorySubFiltersChange={setCategorySubFilters}
                   preferences={trip.preferences}
                 />
-              ) : mobileSheetTab === 'pins' ? (
-                <PinupBar
-                  variant="panel"
-                  hideHeader
-                  pinAuthors={canSeePinAuthors ? pinAuthors : undefined}
-                  currentUserEmail={user?.email ?? null}
-                  pinned={pinned}
-                  tripTitle={trip.title}
-                  currentDay={currentDay}
-                  totalDays={trip.totalDays}
-                  pinnedByDay={trip.pinnedByDay}
-                  generatedRouteByDay={trip.generatedRouteByDay}
-                  onExportNotify={showToast}
-                  onUpgradeRequest={() => setUpgradeOpen(true)}
-                  onImportPins={handleImportPins}
-                  mapCategoryFilter={mapPinCategoryFilter}
-                  onToggleMapCategoryFilter={handleToggleMapCategoryFilter}
-                  onRemove={handleRemovePin}
-                  onReorder={handleReorderPinned}
-                  onSelectPin={(p) => {
-                    handleSelectPlace(p);
-                    setMobileSheetLevel('peek');
-                  }}
-                  selectedPinIds={selectedPinIds}
-                  onTogglePinSelection={handleTogglePinSelection}
-                  onClearAll={handleClearAllPins}
-                  onOpenRouteOptions={handleOpenRouteOptions}
-                  routeOptionsOpen={routeOptionsOpen}
-                  mustVisitOnly={mustVisitOnly}
-                  onToggleMustVisitOnly={() => setMustVisitOnly((v) => !v)}
-                  onToggleRequired={handleToggleRequired}
-                  onShowTaxiCard={(p) => setTaxiCardPlace(p)}
-                />
               ) : (
-                <RouteOptionsPanel
-                  embedded
-                  open
-                  onCompareRoutesChange={setCompareRoutes}
-                  pinned={routePins}
-                  currentDay={currentDay}
-                  totalDays={trip.totalDays}
-                  options={routeOptions}
-                  hasExistingRoute={!!generatedRoute}
-                  onChange={setRouteOptions}
-                  onUpdateStayMinutes={handleUpdateStayMinutes}
-                  onUpdateFixedArrival={handleUpdateFixedArrival}
-                  onUpdateItemKind={handleUpdateItemKind}
-                  onUpdateNote={handleUpdateNote}
-                  onReorderPins={handleReorderRoutePins}
-                  onClose={() => setMobileSheetLevel('peek')}
-                  onGenerate={() => void handleGenerate()}
-                  onPickOriginFromMap={handlePickOriginFromMap}
-                  pickingOriginFromMap={pickingOriginFromMap}
-                />
+                <div className="mobile-itinerary-view">
+                  <div className="mobile-view-toggle" role="group" aria-label={tp('chrome.viewToggleAria')}>
+                    <button
+                      type="button"
+                      className={`mobile-view-toggle-btn ${mobileSheetTab === 'pins' ? 'active' : ''}`}
+                      onClick={() => setMobileSheetTab('pins')}
+                    >
+                      {tp('chrome.viewList')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`mobile-view-toggle-btn ${mobileSheetTab === 'route' ? 'active' : ''}`}
+                      onClick={() => {
+                        setMobileSheetTab('route');
+                        setRouteOptionsOpen(true);
+                      }}
+                    >
+                      {tp('chrome.viewRoute')}
+                    </button>
+                  </div>
+                  {mobileSheetTab === 'pins' ? (
+                    <>
+                      {generatedRoute && (
+                        <div className="mobile-route-summary-card">
+                          <Icon name="route" size={18} />
+                          <span className="mobile-route-summary-text">
+                            {tp('chrome.routeSummary', {
+                              km: generatedRoute.totalDistanceKm,
+                              min: generatedRoute.totalTravelMinutes,
+                            })}
+                          </span>
+                          <button
+                            type="button"
+                            className="mobile-route-replan-btn"
+                            onClick={handleOpenRouteOptions}
+                          >
+                            {tp('chrome.replanCta')}
+                          </button>
+                        </div>
+                      )}
+                      <PinupBar
+                        variant="panel"
+                        hideHeader
+                        pinAuthors={canSeePinAuthors ? pinAuthors : undefined}
+                        currentUserEmail={user?.email ?? null}
+                        pinned={pinned}
+                        tripTitle={trip.title}
+                        currentDay={currentDay}
+                        totalDays={trip.totalDays}
+                        pinnedByDay={trip.pinnedByDay}
+                        generatedRouteByDay={trip.generatedRouteByDay}
+                        onExportNotify={showToast}
+                        onUpgradeRequest={() => setUpgradeOpen(true)}
+                        onImportPins={handleImportPins}
+                        mapCategoryFilter={mapPinCategoryFilter}
+                        onToggleMapCategoryFilter={handleToggleMapCategoryFilter}
+                        onRemove={handleRemovePin}
+                        onReorder={handleReorderPinned}
+                        onSelectPin={(p) => {
+                          handleSelectPlace(p);
+                          setMobileSheetLevel('peek');
+                        }}
+                        selectedPinIds={selectedPinIds}
+                        onTogglePinSelection={handleTogglePinSelection}
+                        onClearAll={handleClearAllPins}
+                        onOpenRouteOptions={handleOpenRouteOptions}
+                        routeOptionsOpen={routeOptionsOpen}
+                        mustVisitOnly={mustVisitOnly}
+                        onToggleMustVisitOnly={() => setMustVisitOnly((v) => !v)}
+                        onToggleRequired={handleToggleRequired}
+                        onShowTaxiCard={(p) => setTaxiCardPlace(p)}
+                      />
+                    </>
+                  ) : (
+                    <RouteOptionsPanel
+                      embedded
+                      open
+                      onCompareRoutesChange={setCompareRoutes}
+                      pinned={routePins}
+                      currentDay={currentDay}
+                      totalDays={trip.totalDays}
+                      options={routeOptions}
+                      hasExistingRoute={!!generatedRoute}
+                      onChange={setRouteOptions}
+                      onUpdateStayMinutes={handleUpdateStayMinutes}
+                      onUpdateFixedArrival={handleUpdateFixedArrival}
+                      onUpdateItemKind={handleUpdateItemKind}
+                      onUpdateNote={handleUpdateNote}
+                      onReorderPins={handleReorderRoutePins}
+                      onClose={() => setMobileSheetLevel('peek')}
+                      onGenerate={() => void handleGenerate()}
+                      onPickOriginFromMap={handlePickOriginFromMap}
+                      pickingOriginFromMap={pickingOriginFromMap}
+                    />
+                  )}
+                </div>
               )}
             </div>
           </div>
 
-
-          {(
-            <div className="mobile-planner-tabbar">
-              <TripSelectMenu
-                summaries={tripSummaries}
-                currentTripId={trip.id}
-                onSelect={handleSelectTrip}
-                onNewTrip={handleNewTrip}
-                onDeleteTrip={() => void handleDeleteTrip()}
-                label={tp('chrome.tabTrips')}
-                triggerClassName="mobile-tabbar-btn"
-              />
-              {isTourScenarioConfigured() && (
-                <button
-                  type="button"
-                  className="mobile-tabbar-btn"
-                  onClick={() => setScenarioOpen(true)}
-                >
-                  <Icon name="sparkles" size={20} />
-                  {tp('chrome.tabScenario')}
-                </button>
-              )}
+          <div className="mobile-planner-tabbar">
+            <button
+              type="button"
+              className={`mobile-tabbar-btn ${!materialsPanelOpen && !scenarioOpen ? 'active' : ''}`}
+              onClick={() => {
+                setMaterialsPanelOpen(false);
+                setScenarioOpen(false);
+              }}
+            >
+              <Icon name="mapPin" size={20} />
+              {tp('chrome.tabMap')}
+            </button>
+            <button
+              type="button"
+              className={`mobile-tabbar-btn ${materialsPanelOpen ? 'active' : ''}`}
+              onClick={() => {
+                if (materialsPanelOpen) {
+                  setMaterialsPanelOpen(false);
+                  return;
+                }
+                setScenarioOpen(false);
+                handleOpenMaterialsPanel();
+              }}
+            >
+              <Icon name="folder" size={20} />
+              {tp('trip.materials')}
+            </button>
+            {isTourScenarioConfigured() && (
               <button
                 type="button"
-                className="mobile-tabbar-btn"
-                onClick={() => setUpgradeOpen(true)}
+                className={`mobile-tabbar-btn ${scenarioOpen ? 'active' : ''}`}
+                onClick={() =>
+                  setScenarioOpen((prev) => {
+                    const next = !prev;
+                    if (next) setMaterialsPanelOpen(false);
+                    return next;
+                  })
+                }
               >
-                <span className={`mobile-tabbar-plan-badge plan-${plan}`}>
-                  {tb(`plan.${plan}`)}
-                </span>
-                {tp('chrome.tabAccount')}
+                <Icon name="sparkles" size={20} />
+                {tp('chrome.tabScenario')}
               </button>
-            </div>
-          )}
+            )}
+            <MobileMoreMenu
+              onShare={openShareModal}
+              plazaNavVisible={plazaNavVisible}
+              onOpenTableView={handleToggleTableView}
+              onOpenCollaborators={
+                isTripOwner || trip.collaboratorRole ? () => setCollabModalOpen(true) : undefined
+              }
+              collabEntryLabel={isTripOwner ? undefined : 'shared'}
+              plan={plan}
+              onOpenUpgrade={() => setUpgradeOpen(true)}
+            />
+          </div>
         </>
       )}
 

@@ -716,7 +716,15 @@
     "sheetPinsSummary": "{{count}} épingles · Jour {{n}}",
     "tabTrips": "Mes voyages",
     "tabAccount": "Compte",
-    "sheetSearchSummary": "{{count}} résultats"
+    "sheetSearchSummary": "{{count}} résultats",
+    "tabMap": "Carte",
+    "tabItinerary": "Itinéraire {{count}}",
+    "tabMenu": "Menu",
+    "viewList": "Voir en liste",
+    "viewRoute": "Voir l’itinéraire",
+    "viewToggleAria": "Changer de vue",
+    "routeSummary": "Itinéraire du jour · {{km}} km · {{min}} min",
+    "replanCta": "Replanifier"
   },
   "map": {
     "centerHere": "Chercher autour d’ici",

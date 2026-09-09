@@ -511,7 +511,15 @@
     "sheetPinsSummary": "ピン {{count}} · {{n}}日目",
     "tabTrips": "マイ旅行",
     "tabAccount": "アカウント",
-    "sheetSearchSummary": "{{count}}件"
+    "sheetSearchSummary": "{{count}}件",
+    "tabMap": "地図",
+    "tabItinerary": "旅程 {{count}}",
+    "tabMenu": "メニュー",
+    "viewList": "リスト表示",
+    "viewRoute": "ルート表示",
+    "viewToggleAria": "表示切替",
+    "routeSummary": "本日のルート · {{km}}km · {{min}}分",
+    "replanCta": "再作成"
   },
   "map": {
     "centerHere": "ここを中心に検索",

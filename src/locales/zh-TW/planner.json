@@ -511,7 +511,15 @@
     "sheetPinsSummary": "{{count}} 個圖釘 · 第 {{n}} 天",
     "tabTrips": "我的行程",
     "tabAccount": "帳戶",
-    "sheetSearchSummary": "{{count}} 個結果"
+    "sheetSearchSummary": "{{count}} 個結果",
+    "tabMap": "地圖",
+    "tabItinerary": "行程 {{count}}",
+    "tabMenu": "選單",
+    "viewList": "查看清單",
+    "viewRoute": "查看路線",
+    "viewToggleAria": "切換檢視",
+    "routeSummary": "今日路線 · {{km}}公里 · {{min}}分鐘",
+    "replanCta": "重新規劃"
   },
   "map": {
     "centerHere": "以此處為中心搜索",

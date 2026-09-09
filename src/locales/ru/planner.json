@@ -716,7 +716,15 @@
     "sheetPinsSummary": "{{count}} пинов · День {{n}}",
     "tabTrips": "Мои поездки",
     "tabAccount": "Аккаунт",
-    "sheetSearchSummary": "Результатов: {{count}}"
+    "sheetSearchSummary": "Результатов: {{count}}",
+    "tabMap": "Карта",
+    "tabItinerary": "План {{count}}",
+    "tabMenu": "Меню",
+    "viewList": "Список",
+    "viewRoute": "Маршрут",
+    "viewToggleAria": "Переключить вид",
+    "routeSummary": "Маршрут на сегодня · {{km}} км · {{min}} мин",
+    "replanCta": "Пересчитать"
   },
   "map": {
     "centerHere": "Искать вокруг этой точки",

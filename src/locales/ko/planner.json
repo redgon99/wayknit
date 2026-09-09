@@ -716,7 +716,15 @@
     "sheetPinsSummary": "핀 {{count}} · {{n}}일차",
     "tabTrips": "내 여행",
     "tabAccount": "계정",
-    "sheetSearchSummary": "결과 {{count}}개"
+    "sheetSearchSummary": "결과 {{count}}개",
+    "tabMap": "지도",
+    "tabItinerary": "일정 {{count}}",
+    "tabMenu": "메뉴",
+    "viewList": "목록으로 보기",
+    "viewRoute": "동선으로 보기",
+    "viewToggleAria": "보기 전환",
+    "routeSummary": "오늘 동선 · {{km}}km · {{min}}분",
+    "replanCta": "다시 짜기"
   },
   "map": {
     "centerHere": "현재 위치를 중심으로",
