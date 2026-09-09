@@ -7,10 +7,24 @@ interface Props {
   plazaNavVisible?: boolean;
   /** 표로 보기 — 데스크톱에선 앱바 보기 전환 세그먼트에 있는 기능 */
   onOpenTableView?: () => void;
+  /**
+   * 함께 편집 — 데스크톱에선 앱바 아이콘으로 여는 입구다. 모바일에는 입구가
+   * 아예 없어서, 협업자는 누구와 편집 중인지도 활동 기록도 볼 수 없었다.
+   */
+  onOpenCollaborators?: () => void;
+  /** 협업자에게는 "관리"가 아니라 함께 편집 중인 사람을 보는 입구다(§14). */
+  collabEntryLabel?: 'manage' | 'shared';
 }
 
-export function MobileMoreMenu({ onShare, plazaNavVisible, onOpenTableView }: Props) {
+export function MobileMoreMenu({
+  onShare,
+  plazaNavVisible,
+  onOpenTableView,
+  onOpenCollaborators,
+  collabEntryLabel = 'manage',
+}: Props) {
   const { t } = useTranslation('planner');
+  const { t: ts } = useTranslation('share');
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -65,6 +79,11 @@ export function MobileMoreMenu({ onShare, plazaNavVisible, onOpenTableView }: Pr
       {open && (
         <div className="planner-more-menu" role="menu">
           {item(t('trip.share'), onShare)}
+          {onOpenCollaborators &&
+            item(
+              ts(collabEntryLabel === 'shared' ? 'collab.entryShared' : 'collab.entry'),
+              onOpenCollaborators
+            )}
           {onOpenTableView && item(t('view.table'), onOpenTableView)}
           {plazaNavVisible && item(t('plazaNav'), () => navigate('/plaza'))}
           {item(t('nav.setup'), () => navigate('/setup'))}

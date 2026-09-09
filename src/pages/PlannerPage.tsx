@@ -245,6 +245,16 @@ export default function PlannerPage() {
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [collabModalOpen, setCollabModalOpen] = useState(false);
+  /*
+   * 공유받은 여행 알림은 모바일에서 잠깐만 보인다.
+   *
+   * 이 알약은 z-index 40 으로 상단 바(.mobile-planner-top, 25) 위에 떠서
+   * 검색·여행자료·더보기 버튼을 통째로 덮어 누를 수 없게 만들고 있었다.
+   * 390px 폭에 170px 알약이 상시로 앉을 자리가 없다 — 데스크톱처럼 지도
+   * 여백에 두는 방법이 폰에는 없다. 그래서 알리고 사라지게 한다.
+   * 사라진 뒤에도 상태는 ⋯ > 함께 편집 중인 사람에서 확인한다.
+   */
+  const [collabBannerFaded, setCollabBannerFaded] = useState(false);
   const [shareSaving, setShareSaving] = useState(false);
   const [plazaNavVisible, setPlazaNavVisible] = useState(() => isPlazaNavUnlocked());
 
@@ -2182,6 +2192,16 @@ export default function PlannerPage() {
   }, []);
 
   useEffect(() => {
+    if (!useMobileChrome || !trip.collaboratorRole) {
+      setCollabBannerFaded(false);
+      return;
+    }
+    setCollabBannerFaded(false);
+    const id = window.setTimeout(() => setCollabBannerFaded(true), 4500);
+    return () => window.clearTimeout(id);
+  }, [useMobileChrome, trip.collaboratorRole, trip.id]);
+
+  useEffect(() => {
     if (!presentationMode || tableViewMode) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setPresentationMode(false);
@@ -2283,7 +2303,7 @@ export default function PlannerPage() {
       <InviteBanner />
 
       {trip.collaboratorRole && (
-        <div className="trip-readonly-banner">
+        <div className={`trip-readonly-banner ${collabBannerFaded ? 'faded' : ''}`}>
           <Icon name={isReadOnlyViewer ? 'lock' : 'pushpin'} size={14} />
           {ts(isReadOnlyViewer ? 'collab.readOnlyBanner' : 'collab.editorBanner')}
         </div>
@@ -2569,6 +2589,12 @@ export default function PlannerPage() {
                 onShare={openShareModal}
                 plazaNavVisible={plazaNavVisible}
                 onOpenTableView={handleToggleTableView}
+                onOpenCollaborators={
+                  isTripOwner || trip.collaboratorRole
+                    ? () => setCollabModalOpen(true)
+                    : undefined
+                }
+                collabEntryLabel={isTripOwner ? undefined : 'shared'}
               />
             </div>
             <div className="mobile-planner-days">

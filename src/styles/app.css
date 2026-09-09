@@ -7288,6 +7288,13 @@ button {
   font-size: 12.5px;
   font-weight: 600;
   box-shadow: var(--shadow-float);
+  /* 누를 것이 없는 알림이다 — 아래 버튼의 탭을 가로채면 안 된다 */
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.trip-readonly-banner.faded {
+  opacity: 0;
 }
 
 .wayknit-root.mobile-layout .trip-readonly-banner {
@@ -14579,6 +14586,27 @@ button {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: #fff;
+}
+
+/*
+ * 여행 자료 시트가 올라오면 오른쪽 지도 도구를 치운다.
+ *
+ * 모바일에서 이 패널은 사이드 패널이 아니라 max-height:85vh 바텀 시트가 된다.
+ * 시트 윗변이 대략 y=127px 이라 top:108/156 인 두 버튼이 시트 내용 위에
+ * 그대로 얹혔다. z-index 도 40 대 24 라 버튼이 이긴다. 시트가 지도를 덮고
+ * 있는 동안에는 위성 전환도 지도 핀업도 누를 대상이 없으니 숨기는 것이 옳다.
+ *
+ * 경로 패널은 여기서 다루지 않는다. `.route-panel` 의 모바일 바텀 시트 규칙은
+ * 남아 있지만 실제로는 쓰이지 않는다 — RouteOptionsPanel 은 두 곳 모두
+ * `embedded open` 으로 렌더돼 슬롯(데스크톱 사이드패널 / 모바일 시트) 안에
+ * 들어가고, `open` 은 embedded 면 무조건 붙는다. 그래서 `:has(.route-panel.open)`
+ * 로 잡으면 동선 탭을 한 번 연 뒤로는 영원히 매칭돼 버튼이 돌아오지 않는다.
+ * 게다가 겹치지도 않는다 — 모바일 시트는 sheet-full 이 top:18%(≈152px)이고
+ * 핀업 버튼은 그 단계에서 이미 렌더되지 않는다.
+ */
+.wayknit-root.mobile-layout.materials-open .map-type-toggle,
+.wayknit-root.mobile-layout.materials-open .mobile-pin-from-map-btn {
+  display: none;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
