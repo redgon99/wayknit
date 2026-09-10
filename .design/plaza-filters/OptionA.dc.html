@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Instrument Sans', 'Noto Sans KR', system-ui, sans-serif; }
+    a { color: #ca8a04; }
+    a:hover { color: #a16207; }
+  </style>
+</helmet>
+
+<div style="width: 390px; background: #fafaf8; border-radius: 20px; border: 1px solid rgba(15,23,42,0.10); box-shadow: 0 16px 40px rgba(15,23,42,0.14); overflow: hidden; display: flex; flex-direction: column;">
+
+  <!-- 헤더 -->
+  <div style="padding: 24px 20px 0;">
+    <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a;">공유마당</h1>
+    <p style="margin: 8px 0 0; font-size: 13px; color: #475569; line-height: 1.45;">다른 여행자가 공유한 다일차 일정을 둘러보고 그대로 내 여행으로 끌어오세요.</p>
+  </div>
+
+  <!-- 테마 칩 바 (가로 스크롤, 8개: 전체+7테마) -->
+  <div style="margin-top: 16px; padding: 0 20px; display: flex; gap: 8px; overflow-x: auto;">
+
+    <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px; padding: 8px 12px; border-radius: 14px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
+      <span style="font-size: 11px; font-weight: 700; white-space: nowrap;">전체</span>
+    </div>
+
+    <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px; padding: 8px 12px; border-radius: 14px; border: 1px solid #0f172a; background: #0f172a; color: #fff;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18"/><path d="M4 10a8 8 0 0 0 16 0"/><path d="M9 6c.5-1 1-1.5 1-2"/><path d="M14 6c-.5-1-1-1.5-1-2"/></svg>
+      <span style="font-size: 11px; font-weight: 700; white-space: nowrap;">K-푸드</span>
+    </div>
+
+    <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px; padding: 8px 12px; border-radius: 14px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      <span style="font-size: 11px; font-weight: 700; white-space: nowrap;">K-팝</span>
+    </div>
+
+    <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px; padding: 8px 12px; border-radius: 14px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+      <span style="font-size: 11px; font-weight: 700; white-space: nowrap;">쇼핑</span>
+    </div>
+
+    <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px; padding: 8px 12px; border-radius: 14px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19C6 10 12 5 19 5c0 7-5 13-14 14Z"/><path d="M6 19c3-3 6-6 9-10"/></svg>
+      <span style="font-size: 11px; font-weight: 700; white-space: nowrap;">자연</span>
+    </div>
+
+    <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px; padding: 8px 12px; border-radius: 14px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 10v9h14v-9"/><path d="M10 19v-5h4v5"/></svg>
+      <span style="font-size: 11px; font-weight: 700; white-space: nowrap;">역사</span>
+    </div>
+
+    <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px; padding: 8px 12px; border-radius: 14px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/><path d="M17 3v4"/><path d="M15 5h4"/></svg>
+      <span style="font-size: 11px; font-weight: 700; white-space: nowrap;">나이트라이프</span>
+    </div>
+
+    <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px; padding: 8px 12px; border-radius: 14px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="7" r="2.2"/><path d="M15 20c.2-2.6 1.6-4.6 3.5-5"/></svg>
+      <span style="font-size: 11px; font-weight: 700; white-space: nowrap;">가족</span>
+    </div>
+
+  </div>
+
+  <!-- 일수 · 언어 보조 필터 줄 -->
+  <div style="margin-top: 10px; padding: 0 20px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+    <span style="font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; color: #94a3b8; margin-right: 2px;">일수</span>
+    <span style="border: 1px solid rgba(15,23,42,0.12); border-radius: 99px; background: #0f172a; color: #fff; padding: 5px 10px; font-size: 12px; font-weight: 600;">1일</span>
+    <span style="border: 1px solid rgba(15,23,42,0.12); border-radius: 99px; background: #fff; color: #475569; padding: 5px 10px; font-size: 12px; font-weight: 600;">2일</span>
+    <span style="border: 1px solid rgba(15,23,42,0.12); border-radius: 99px; background: #fff; color: #475569; padding: 5px 10px; font-size: 12px; font-weight: 600;">3일+</span>
+    <label style="margin-left: auto; display: flex; align-items: center; gap: 6px;">
+      <span style="font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; color: #94a3b8;">언어</span>
+      <select style="border: 1px solid rgba(15,23,42,0.12); border-radius: 99px; padding: 5px 10px; font-size: 12px; font-weight: 600; background: #fff; color: #475569; font-family: inherit;">
+        <option>전체</option>
+        <option>한국어</option>
+      </select>
+    </label>
+  </div>
+
+  <!-- 게시판/지도 탭 -->
+  <div style="display: flex; gap: 4px; margin-top: 16px; padding: 0 20px; border-bottom: 1px solid rgba(15,23,42,0.08);">
+    <div style="padding: 10px 16px; font-size: 14px; font-weight: 500; color: #0f172a; border-bottom: 2px solid #0f172a; margin-bottom: -1px;">게시판</div>
+    <div style="padding: 10px 16px; font-size: 14px; font-weight: 500; color: #475569;">지도</div>
+  </div>
+
+  <!-- 결과 카드 -->
+  <div style="padding: 16px 20px 28px; display: flex; flex-direction: column; gap: 12px;">
+
+    <div style="background: #fff; border: 1px solid rgba(15,23,42,0.08); border-radius: 12px; padding: 14px 16px;">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 12px; color: #475569;">
+        <span style="font-weight: 600; color: #0f172a;">목업33</span>
+        <span>2026년 9월 8일</span>
+      </div>
+      <h2 style="margin: 8px 0 4px; font-size: 17px; color: #0f172a;">성수 K-푸드 미식 투어</h2>
+      <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.45;">1일차: 대림창고, 성수족발거리, 커먼그라운드</p>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px;">
+        <span style="font-size: 13px; color: #2563eb;">상세 보기</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid #16a34a; background: #f0fdf4; color: #15803d; font-size: 13px; font-weight: 500;">끌어오기</span>
+      </div>
+    </div>
+
+    <div style="background: #fff; border: 1px solid rgba(15,23,42,0.08); border-radius: 12px; padding: 14px 16px;">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 12px; color: #475569;">
+        <span style="font-weight: 600; color: #0f172a;">목업31</span>
+        <span>2026년 9월 7일</span>
+      </div>
+      <h2 style="margin: 8px 0 4px; font-size: 17px; color: #0f172a;">광장시장 먹방 하루</h2>
+      <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.45;">1일차: 광장시장, 종로타워, 청계천</p>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px;">
+        <span style="font-size: 13px; color: #2563eb;">상세 보기</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid #16a34a; background: #f0fdf4; color: #15803d; font-size: 13px; font-weight: 500;">끌어오기</span>
+      </div>
+    </div>
+
+    <div style="background: #fff; border: 1px solid rgba(15,23,42,0.08); border-radius: 12px; padding: 14px 16px;">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 12px; color: #475569;">
+        <span style="font-weight: 600; color: #0f172a;">익명</span>
+        <span>2026년 9월 5일</span>
+      </div>
+      <h2 style="margin: 8px 0 4px; font-size: 17px; color: #0f172a;">전주 한옥마을 맛집 코스</h2>
+      <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.45;">1일차: 전주한옥마을, 남부시장, 경기전</p>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px;">
+        <span style="font-size: 13px; color: #2563eb;">상세 보기</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid #16a34a; background: #f0fdf4; color: #15803d; font-size: 13px; font-weight: 500;">끌어오기</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

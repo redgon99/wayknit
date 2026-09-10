@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Instrument Sans', 'Noto Sans KR', system-ui, sans-serif; }
+    a { color: #ca8a04; }
+    a:hover { color: #a16207; }
+  </style>
+</helmet>
+
+<div style="display: flex; gap: 40px; align-items: flex-start;">
+
+  <!-- 상태 1: 기본 화면 (필터 닫힘) -->
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-size: 12px; font-weight: 700; color: #94a3b8; letter-spacing: 0.02em;">기본 화면</span>
+    <div style="width: 390px; background: #fafaf8; border-radius: 20px; border: 1px solid rgba(15,23,42,0.10); box-shadow: 0 16px 40px rgba(15,23,42,0.14); overflow: hidden;">
+
+      <div style="padding: 24px 20px 0;">
+        <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a;">공유마당</h1>
+        <p style="margin: 8px 0 0; font-size: 13px; color: #475569; line-height: 1.45;">다른 여행자가 공유한 다일차 일정을 둘러보고 그대로 내 여행으로 끌어오세요.</p>
+      </div>
+
+      <!-- 필터 요약 바 -->
+      <div style="margin-top: 16px; padding: 0 20px; display: flex; align-items: center; gap: 8px;">
+        <span style="flex: 1; min-width: 0; font-size: 12px; font-weight: 600; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">선택한 조건 없음 · 전체 42개</span>
+        <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border: 1.5px solid #0f172a; border-radius: 99px; background: #0f172a; color: #fff; font-size: 12px; font-weight: 700;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+          필터
+        </span>
+      </div>
+
+      <div style="display: flex; gap: 4px; margin-top: 16px; padding: 0 20px; border-bottom: 1px solid rgba(15,23,42,0.08);">
+        <div style="padding: 10px 16px; font-size: 14px; font-weight: 500; color: #0f172a; border-bottom: 2px solid #0f172a; margin-bottom: -1px;">게시판</div>
+        <div style="padding: 10px 16px; font-size: 14px; font-weight: 500; color: #475569;">지도</div>
+      </div>
+
+      <div style="padding: 16px 20px 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="background: #fff; border: 1px solid rgba(15,23,42,0.08); border-radius: 12px; padding: 14px 16px;">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 12px; color: #475569;">
+            <span style="font-weight: 600; color: #0f172a;">목업30</span>
+            <span>2026년 9월 4일</span>
+          </div>
+          <h2 style="margin: 8px 0 4px; font-size: 17px; color: #0f172a;">거제 바람의언덕 하루</h2>
+          <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.45;">1일차: 바람의언덕, 외도보타니아, 해금강</p>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px;">
+            <span style="font-size: 13px; color: #2563eb;">상세 보기</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid #16a34a; background: #f0fdf4; color: #15803d; font-size: 13px; font-weight: 500;">끌어오기</span>
+          </div>
+        </div>
+        <div style="background: #fff; border: 1px solid rgba(15,23,42,0.08); border-radius: 12px; padding: 14px 16px;">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 12px; color: #475569;">
+            <span style="font-weight: 600; color: #0f172a;">익명</span>
+            <span>2026년 9월 4일</span>
+          </div>
+          <h2 style="margin: 8px 0 4px; font-size: 17px; color: #0f172a;">원주1일여행</h2>
+          <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.45;">1일차: 치악산국립공원 황골탐방지원센터 외 3곳</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상태 2: 필터 시트 열림 -->
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-size: 12px; font-weight: 700; color: #94a3b8; letter-spacing: 0.02em;">필터 버튼 탭 → 바텀시트</span>
+    <div style="width: 390px; height: 844px; background: #fafaf8; border-radius: 20px; border: 1px solid rgba(15,23,42,0.10); box-shadow: 0 16px 40px rgba(15,23,42,0.14); overflow: hidden; position: relative;">
+
+      <!-- 뒤의 목록 (딤 처리) -->
+      <div style="padding: 24px 20px 0; opacity: 0.35;">
+        <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a;">공유마당</h1>
+        <p style="margin: 8px 0 0; font-size: 13px; color: #475569;">다른 여행자가 공유한 다일차 일정을 둘러보고 그대로 내 여행으로 끌어오세요.</p>
+        <div style="margin-top: 24px; height: 90px; border-radius: 12px; background: #fff; border: 1px solid rgba(15,23,42,0.08);"></div>
+      </div>
+      <div style="position: absolute; inset: 0; background: rgba(15,23,42,0.32);"></div>
+
+      <!-- 바텀시트 -->
+      <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 32px rgba(15,23,42,0.18); padding: 10px 20px 20px;">
+        <div style="width: 36px; height: 4px; border-radius: 99px; background: rgba(15,23,42,0.14); margin: 0 auto 14px;"></div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+          <span style="font-size: 16px; font-weight: 800; color: #0f172a;">필터</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.75" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </div>
+
+        <!-- 테마 -->
+        <div style="font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 8px;">테마</div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px;">
+
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px; padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
+            <span style="font-size: 10.5px; font-weight: 700;">전체</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px; padding: 10px 4px; border-radius: 12px; border: 1px solid #facc15; background: #fffbeb; color: #a16207;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18"/><path d="M4 10a8 8 0 0 0 16 0"/><path d="M9 6c.5-1 1-1.5 1-2"/><path d="M14 6c-.5-1-1-1.5-1-2"/></svg>
+            <span style="font-size: 10.5px; font-weight: 700;">K-푸드</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px; padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <span style="font-size: 10.5px; font-weight: 700;">K-팝</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px; padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+            <span style="font-size: 10.5px; font-weight: 700;">쇼핑</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px; padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19C6 10 12 5 19 5c0 7-5 13-14 14Z"/><path d="M6 19c3-3 6-6 9-10"/></svg>
+            <span style="font-size: 10.5px; font-weight: 700;">자연</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px; padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 10v9h14v-9"/><path d="M10 19v-5h4v5"/></svg>
+            <span style="font-size: 10.5px; font-weight: 700;">역사</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px; padding: 10px 4px; border-radius: 12px; border: 1px solid #facc15; background: #fffbeb; color: #a16207;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/><path d="M17 3v4"/><path d="M15 5h4"/></svg>
+            <span style="font-size: 10.5px; font-weight: 700; line-height:1.2; text-align:center;">나이트라이프</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px; padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(15,23,42,0.12); background: #fff; color: #475569;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="7" r="2.2"/><path d="M15 20c.2-2.6 1.6-4.6 3.5-5"/></svg>
+            <span style="font-size: 10.5px; font-weight: 700;">가족</span>
+          </div>
+        </div>
+
+        <!-- 일수 -->
+        <div style="font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 8px;">여행 일수</div>
+        <div style="display: flex; gap: 6px; margin-bottom: 16px;">
+          <span style="border: 1px solid #facc15; border-radius: 99px; background: #fffbeb; color: #a16207; padding: 6px 14px; font-size: 12px; font-weight: 600;">1일</span>
+          <span style="border: 1px solid rgba(15,23,42,0.12); border-radius: 99px; background: #fff; color: #475569; padding: 6px 14px; font-size: 12px; font-weight: 600;">2일</span>
+          <span style="border: 1px solid rgba(15,23,42,0.12); border-radius: 99px; background: #fff; color: #475569; padding: 6px 14px; font-size: 12px; font-weight: 600;">3일</span>
+          <span style="border: 1px solid rgba(15,23,42,0.12); border-radius: 99px; background: #fff; color: #475569; padding: 6px 14px; font-size: 12px; font-weight: 600;">4일+</span>
+        </div>
+
+        <!-- 언어 (기존 셀렉트 그대로) -->
+        <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
+          <span style="font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; color: #94a3b8;">언어</span>
+          <select style="border: 1px solid rgba(15,23,42,0.12); border-radius: 8px; padding: 7px 10px; font-size: 13px; font-weight: 600; background: #fff; color: #0f172a; font-family: inherit;">
+            <option>전체</option>
+          </select>
+        </label>
+
+        <span style="display: block; width: 100%; text-align: center; background: #facc15; color: #0f172a; border-radius: 99px; padding: 12px 0; font-size: 13.5px; font-weight: 800;">8개 결과 보기</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+</body>
+</html>
