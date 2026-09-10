@@ -521,6 +521,10 @@
     "viewList": "リスト表示",
     "viewRoute": "ルート表示",
     "viewToggleAria": "表示切替",
+    "sheetLevelPeek": "プレビュー",
+    "sheetLevelHalf": "半分表示",
+    "sheetLevelFull": "全体表示",
+    "sheetHandleAria": "パネルサイズ切替、現在{{current}}、タップで{{next}}へ切替",
     "routeSummary": "本日のルート · {{km}}km · {{min}}分",
     "replanCta": "再作成"
   },

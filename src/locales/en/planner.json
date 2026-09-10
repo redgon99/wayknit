@@ -727,6 +727,10 @@
     "viewList": "View as list",
     "viewRoute": "View as route",
     "viewToggleAria": "Switch view",
+    "sheetLevelPeek": "Peek",
+    "sheetLevelHalf": "Half view",
+    "sheetLevelFull": "Full view",
+    "sheetHandleAria": "Resize panel, currently {{current}}, tap to switch to {{next}}",
     "routeSummary": "Today's route · {{km}}km · {{min}}min",
     "replanCta": "Re-plan"
   },

@@ -727,6 +727,10 @@
     "viewList": "Voir en liste",
     "viewRoute": "Voir l’itinéraire",
     "viewToggleAria": "Changer de vue",
+    "sheetLevelPeek": "Aperçu",
+    "sheetLevelHalf": "Vue mi-hauteur",
+    "sheetLevelFull": "Vue complète",
+    "sheetHandleAria": "Redimensionner le panneau, actuellement {{current}}, appuyez pour passer à {{next}}",
     "routeSummary": "Itinéraire du jour · {{km}} km · {{min}} min",
     "replanCta": "Replanifier"
   },

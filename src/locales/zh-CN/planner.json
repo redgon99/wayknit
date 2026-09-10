@@ -521,6 +521,10 @@
     "viewList": "查看列表",
     "viewRoute": "查看路线",
     "viewToggleAria": "切换视图",
+    "sheetLevelPeek": "预览",
+    "sheetLevelHalf": "半屏",
+    "sheetLevelFull": "全屏",
+    "sheetHandleAria": "调整面板大小，当前{{current}}，点击切换为{{next}}",
     "routeSummary": "今日路线 · {{km}}公里 · {{min}}分钟",
     "replanCta": "重新规划"
   },

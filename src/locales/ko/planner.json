@@ -727,6 +727,10 @@
     "viewList": "목록으로 보기",
     "viewRoute": "동선으로 보기",
     "viewToggleAria": "보기 전환",
+    "sheetLevelPeek": "미리보기",
+    "sheetLevelHalf": "반보기",
+    "sheetLevelFull": "전체보기",
+    "sheetHandleAria": "패널 크기 조절, 현재 {{current}}, 탭하면 {{next}}로 전환",
     "routeSummary": "오늘 동선 · {{km}}km · {{min}}분",
     "replanCta": "다시 짜기"
   },

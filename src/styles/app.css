@@ -9015,6 +9015,28 @@ button {
   font-size: 13px;
   color: var(--color-text-secondary);
 }
+
+/* F08(모바일 감사 보고서) — 클래스 없이 브라우저 기본 버튼(~26px)으로
+   렌더되고 있었다. 카드 안에 세로 여유가 있어 44px까지 그대로 확보. */
+.phrase-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.phrase-copy-btn:hover {
+  background: var(--color-bg);
+}
 .themes-board-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -10203,13 +10225,16 @@ button {
 }
 
 .planner-more-item {
+  /* F08(모바일 감사 보고서) — 35px 높이였다. 세로로 쌓이는 목록이라
+     아이콘 버튼들과 달리 옆으로 밀어낼 이웃이 없어 목표(44px)에 맞췄다.
+     데스크톱·모바일 더보기 메뉴가 이 클래스를 같이 쓴다. */
   display: block;
   width: 100%;
   text-align: left;
   border: none;
   background: transparent;
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 13px 10px;
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-primary);
@@ -12347,8 +12372,12 @@ button {
 }
 
 .mobile-planner-trip-trigger .trip-select-trigger {
-  width: 36px;
-  height: 36px;
+  /* F08(모바일 감사 보고서) — 36px는 WCAG 최소(24px)는 넘지만 권장(44px)엔
+     못 미쳤다. 상단 한 줄이 이미 빠듯해(§27) 44px까진 못 가고 40px로
+     절충 — §6-4의 핀 카드 터치영역 때와 같은 판단(꽉 채우면 옆 요소가
+     밀린다, 조금이라도 키우는 쪽을 택한다). */
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-strong);
   background: var(--color-surface);
@@ -12391,9 +12420,12 @@ button {
 }
 
 .mobile-planner-day {
+  /* F08(모바일 감사 보고서) — 32px 높이였다. 아이콘 버튼과 달리 정사각형
+     제약이 없어 세로 패딩만 늘리면 되므로 다른 셋보다 목표(44px)에
+     가깝게 갈 수 있었다. */
   border: none;
   border-radius: var(--radius-pill);
-  padding: 7px 14px;
+  padding: 12px 14px;
   font-size: 12.5px;
   font-weight: 600;
   background: rgba(255, 255, 255, 0.94);
@@ -12416,9 +12448,11 @@ button {
 }
 
 .mobile-tool-btn {
+  /* F08(모바일 감사 보고서) — 40px로 절충. 같은 줄의 여행 전환 버튼과
+     같은 이유(§27 상단 한 줄이 빠듯함). */
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -12685,10 +12719,17 @@ button {
   top: 18%;
 }
 
+/*
+ * F09(모바일 감사 보고서, 2026-09-10) — 시트 핸들 버튼이 시각적 바(4px)
+ * 기준 padding만 있어 실제 터치 높이가 18px에 불과했다. sheet-peek일 때
+ * 보이는 건 이 핸들 + .mobile-sheet-head뿐이고 그 둘을 합쳐도 peek 높이
+ * 예산(92px)에 여유가 있어(핸들 44px + head ~28px ≈ 72px), §6-4/F08과
+ * 달리 타협 없이 WCAG 44px을 그대로 적용했다.
+ */
 .mobile-sheet-handle-btn {
   border: none;
   background: transparent;
-  padding: 9px 0 5px;
+  padding: 20px 0;
   display: flex;
   justify-content: center;
   width: 100%;

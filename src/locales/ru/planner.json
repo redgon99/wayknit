@@ -727,6 +727,10 @@
     "viewList": "Список",
     "viewRoute": "Маршрут",
     "viewToggleAria": "Переключить вид",
+    "sheetLevelPeek": "Предпросмотр",
+    "sheetLevelHalf": "Половина экрана",
+    "sheetLevelFull": "Весь экран",
+    "sheetHandleAria": "Изменить размер панели, сейчас {{current}}, нажмите для {{next}}",
     "routeSummary": "Маршрут на сегодня · {{km}} км · {{min}} мин",
     "replanCta": "Пересчитать"
   },

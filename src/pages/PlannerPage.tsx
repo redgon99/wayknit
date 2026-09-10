@@ -2701,6 +2701,19 @@ export default function PlannerPage() {
               type="button"
               className="mobile-sheet-handle-btn"
               onClick={cycleMobileSheet}
+              aria-label={tp('chrome.sheetHandleAria', {
+                current: tp(
+                  `chrome.sheetLevel${
+                    mobileSheetLevel === 'peek' ? 'Peek' : mobileSheetLevel === 'half' ? 'Half' : 'Full'
+                  }`
+                ),
+                next: tp(
+                  `chrome.sheetLevel${
+                    mobileSheetLevel === 'peek' ? 'Half' : mobileSheetLevel === 'half' ? 'Full' : 'Peek'
+                  }`
+                ),
+              })}
+              aria-expanded={mobileSheetLevel !== 'peek'}
             >
               <span className="mobile-sheet-handle-bar" />
             </button>

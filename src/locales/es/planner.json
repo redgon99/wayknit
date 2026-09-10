@@ -727,6 +727,10 @@
     "viewList": "Ver como lista",
     "viewRoute": "Ver como ruta",
     "viewToggleAria": "Cambiar vista",
+    "sheetLevelPeek": "Vista previa",
+    "sheetLevelHalf": "Vista media",
+    "sheetLevelFull": "Vista completa",
+    "sheetHandleAria": "Cambiar tamaño del panel, actualmente {{current}}, toca para cambiar a {{next}}",
     "routeSummary": "Ruta de hoy · {{km}} km · {{min}} min",
     "replanCta": "Replanificar"
   },

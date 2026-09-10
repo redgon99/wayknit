@@ -2756,6 +2756,69 @@ import), `app.css`(`.upgrade-price*` 3개), 9개 로케일 `billing.json`에
 `tsc --noEmit`·`npm run build` 클린. **세션이 자체 브라우저 검증을 하지
 않았다** — 확인 방법은 대화 쪽으로.
 
+### 27-13. ✅ P2 시작 — F08 터치 영역 4곳 확대 (2026-09-11)
+
+**P1(7건) 완료 후 P2(11건, 모바일 조작성·가독성)로 진입.** F08부터
+순서대로. 보고서가 지목한 4곳의 실제 렌더 높이를 CSS로 먼저 확인:
+검색/위성지도 아이콘 36px, 일차 버튼 32px, 더보기 메뉴 항목 35px,
+도움말 회화 카드의 "복사" 버튼은 **클래스 없이 브라우저 기본 버튼**
+(~26px)으로 렌더되고 있었다.
+
+**44px로 일괄 강제하지 않았다** — §6-4(핀 카드 터치영역)에서 이미 같은
+문제를 풀었을 때의 판단을 그대로 따랐다: 옆에 밀어낼 이웃이 있는
+아이콘 버튼은 여유만큼만, 세로로 쌓이거나 혼자 있는 요소는 목표까지
+채운다.
+
+| 대상 | 전 | 후 | 판단 |
+|---|---|---|---|
+| 상단 여행 전환·검색·위성지도 아이콘(`.mobile-tool-btn`·`.trip-select-trigger`) | 36px | **40px** | §27로 이미 빠듯한 한 줄. 44px까지 가면 여행 제목이 더 잘린다 — 40px로 절충 |
+| 일차 선택 버튼(`.mobile-planner-day`, §27-1) | 32px | **~42px** | 정사각형 제약 없어 세로 패딩만 늘리면 됨. 이웃을 안 밀어냄 |
+| 더보기 메뉴 항목(`.planner-more-item`, 데스크톱·모바일 공유) | 35px | **44px** | 세로 목록이라 그대로 목표치까지 |
+| 도움말 "복사" 버튼 | ~26px(무스타일) | **44px** | 카드 안에 여유 있어 새 클래스(`.phrase-copy-btn`)로 정식 스타일링 |
+
+**변경 파일:** `app.css`(4곳), `HelpContent.tsx`(스타일 없던 버튼에
+`phrase-copy-btn` 클래스 부여).
+
+`tsc --noEmit`·`npm run build` 클린. **세션이 자체 브라우저 검증을 하지
+않았다** — 확인 방법은 대화 쪽으로.
+
+### 27-14. ✅ F09 시트 핸들 버튼 — aria-label·터치영역 44px (2026-09-11)
+
+**증상:** 하단 시트를 peek/half/full로 순환시키는 드래그 핸들 버튼
+(`.mobile-sheet-handle-btn`)이 시각적 바(4px) 기준 padding(`9px 0 5px`)만
+있어 실제 터치 높이가 **18px**였고, 접근성 트리에도 이름이 전혀 없어
+스크린리더 사용자는 이 버튼이 뭘 하는지 알 수 없었다.
+
+**터치영역:** §6-4/F08과 달리 타협 없이 44px 그대로 적용했다 — 이
+버튼은 sheet-peek 상태(`top: calc(100% - 92px)`, 92px 예산)에서
+`.mobile-sheet-head`(제목+요약 행, ~28px)와 함께 유일하게 보이는
+요소라 44px(핸들)+28px(head) ≈ 72px로 92px 예산 안에 여유 있게
+들어간다. `padding: 9px 0 5px` → `padding: 20px 0`(바 4px 포함 총 44px).
+
+**aria-label:** `cycleMobileSheet`가 `peek → half → full → peek` 3단
+순환이라 단순 boolean expand/collapse로는 상태를 다 설명 못 한다.
+그래서 "현재 상태 + 탭하면 어디로 전환되는지"를 함께 읽어주는 문자열로
+구성했다 — `chrome.sheetHandleAria`(현재/다음 두 값을 보간)와
+`chrome.sheetLevelPeek/Half/Full`(각 상태 이름) 4개 키를 9개 로케일
+모두에 추가. 보조로 `aria-expanded={mobileSheetLevel !== 'peek'}`도
+붙였다(peek을 "접힘"으로 간주).
+
+**변경 파일:** `PlannerPage.tsx`(핸들 버튼에 `aria-label`·`aria-expanded`
+추가), `app.css`(`.mobile-sheet-handle-btn` padding), 9개 `planner.json`
+(`chrome.sheetHandleAria`, `sheetLevelPeek/Half/Full`).
+
+`tsc --noEmit`·`npm run build` 클린. 자체 브라우저 검증 없음 — 확인
+방법은 대화 쪽으로.
+
+**확인 방법:**
+1. 모바일 화면(또는 브라우저 폭 축소)에서 플래너 열기 → 하단 시트 위
+   드래그 핸들(가운데 회색 막대) 탭 → peek → half → full 순서로
+   시트 높이가 바뀌는지 확인 (기능은 F09 이전과 동일, 안 바뀌었어야 함).
+2. 핸들 버튼 터치 영역이 이전보다 커졌는지 — 핸들 막대 위아래로
+   여유 공간이 이전보다 넓어졌는지 육안 확인.
+3. 스크린리더(VoiceOver 등) 켜고 핸들 버튼에 포커스 이동 → "패널 크기
+   조절, 현재 반보기, 탭하면 전체보기로 전환"처럼 읽히는지 확인.
+
 ## 26. Google 로그인 프로덕션 버그 + 공유마당 필터 고도화 (2026-09-10)
 
 ### 26-0. 세션 시작 상태
