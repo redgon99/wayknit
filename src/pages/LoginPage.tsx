@@ -308,7 +308,7 @@ export default function LoginPage() {
                     {ta('login.google')}
                   </button>
                 </>
-              ) : configured ? (
+              ) : configured && import.meta.env.DEV ? (
                 <details className="login-google-setup">
                   <summary>Google 로그인 설정 안내 (관리자)</summary>
                   <p>
