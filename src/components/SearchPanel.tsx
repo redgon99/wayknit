@@ -38,6 +38,7 @@ import { OpenStatusBadge } from './OpenStatusBadge';
 import { PlaceReactionBadge } from './PlaceReactionBadge';
 import { MapProviderPicker } from './MapProviderPicker';
 import { LinkExtractResults } from './LinkExtractResults';
+import { AppSheetModal } from './AppSheetModal';
 import type { MapProvider } from '../lib/mapProvider';
 import type { IconName } from '../icons/wayknit-icons';
 
@@ -508,6 +509,95 @@ export function SearchPanel({
     return fallback;
   };
 
+  /**
+   * 모바일(collapsibleTools)에서 검색줄 아래에 항상 보이는 요약 한 줄 —
+   * 범위·반경·부가조건·결과수를 한 줄로 합쳐서, 예전에 따로 있던
+   * search-tools-summary·search-meta-line 두 줄을 하나로 줄인다(§C5 후속).
+   */
+  const summaryText = [
+    searchScope === 'nearby'
+      ? `${t('search.scopeNearby')} · ${searchRadius / 1000} km`
+      : t('search.scopeNationwide'),
+    activeSubFilters.length > 0
+      ? t('search.subFilterCount', { count: activeSubFilters.length })
+      : null,
+    results.length > 0 ? t('search.resultsCountShort', { count: results.length }) : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  /** "필터" 버튼 배지 — 하위조건 개수만 센다. 범위/반경은 요약 텍스트에 이미 항상 보인다. */
+  const filterActiveCount = activeSubFilters.length;
+
+  const toolsPanel = (
+    <div className="search-pill-tools">
+      <MapProviderPicker value={mapProvider} onChange={onMapProviderChange} />
+      {onUseMyLocation && (
+        <button type="button" className="search-tool-chip" onClick={onUseMyLocation}>
+          <Icon name="location" size={14} /> {t('search.myLocation')}
+        </button>
+      )}
+      {onSearchFestivals && (
+        <button
+          type="button"
+          className="search-tool-chip"
+          onClick={onSearchFestivals}
+          disabled={searchingFestivals}
+        >
+          {searchingFestivals ? (
+            <Icon name="loader" spin size={14} />
+          ) : (
+            <Icon name="sparkles" size={14} />
+          )}
+          {t('search.festivals', { defaultValue: '축제/행사' })}
+        </button>
+      )}
+      <button
+        type="button"
+        className={`search-tool-chip ${searchScope === 'nearby' ? 'active' : ''}`}
+        onClick={() => onSearchScopeChange(searchScope === 'nearby' ? 'nationwide' : 'nearby')}
+      >
+        {searchScope === 'nearby' ? t('search.scopeNearby') : t('search.scopeNationwide')}
+      </button>
+      {searchScope === 'nearby' && (
+        <select
+          className="search-tool-select"
+          value={searchRadius}
+          onChange={(e) => onSearchRadiusChange(Number(e.target.value) as SearchRadiusMeters)}
+          aria-label={t('search.radiusAria')}
+        >
+          {[1000, 3000, 5000, 10000, 20000].map((v) => (
+            <option key={v} value={v}>
+              {v / 1000} km
+            </option>
+          ))}
+        </select>
+      )}
+    </div>
+  );
+
+  const subFiltersPanel = subFilterGroup && (
+    <div className="search-subfilters">
+      <span className="search-subfilters-label">{subFilterGroup.label}</span>
+      <div className="search-subfilters-row" role="group" aria-label={subFilterGroup.label}>
+        {subFilterGroup.options.map((opt) => {
+          const active = activeSubFilters.includes(opt.id);
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              className={`search-subfilters-chip ${active ? 'active' : ''}`}
+              aria-pressed={active}
+              onClick={() => toggleSubFilter(opt.id)}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
     <div className={`search-panel search-panel-v2 ${compact ? 'search-panel-compact' : ''}`}>
       <div className={`search-pill ${isLinkMode ? 'is-link' : ''}`}>
@@ -540,84 +630,48 @@ export function SearchPanel({
         </button>
       </div>
 
-      {collapsibleTools && (
-        <div className="search-tools-summary">
-          <span className="search-tools-summary-text">
-            {[
-              searchScope === 'nearby'
-                ? `${t('search.scopeNearby')} · ${searchRadius / 1000} km`
-                : t('search.scopeNationwide'),
-              activeSubFilters.length > 0
-                ? t('search.subFilterCount', {
-                    count: activeSubFilters.length,
-                    defaultValue: '{{count}}개 조건',
-                  })
-                : null,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
+      {collapsibleTools ? (
+        <div className="search-summary-row">
+          <span className="search-summary-text">
+            {loading ? t('search.loading') : enrichingStats ? t('search.enriching') : summaryText}
           </span>
+          {results.length > 0 && !loading && (
+            <div
+              className="search-summary-sort"
+              role="group"
+              aria-label={t('search.sortAria', { defaultValue: '검색 결과 정렬' })}
+            >
+              {SEARCH_SORT_KEYS.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`search-summary-sort-btn ${sortKey === key ? 'active' : ''}`}
+                  aria-pressed={sortKey === key}
+                  aria-label={sortLabels[key]}
+                  title={sortLabels[key]}
+                  onClick={() => setSortKey(key)}
+                >
+                  <Icon name={SORT_ICONS[key]} size={13} />
+                </button>
+              ))}
+            </div>
+          )}
           <button
             type="button"
-            className={`search-tools-toggle ${toolsOpen ? 'active' : ''}`}
-            onClick={() => setToolsOpen((v) => !v)}
+            className={`search-filter-btn ${toolsOpen ? 'active' : ''}`}
+            onClick={() => setToolsOpen(true)}
+            aria-haspopup="dialog"
             aria-expanded={toolsOpen}
           >
-            <Icon name={toolsOpen ? 'chevronDown' : 'chevronRight'} size={14} />
             {t('search.filters', { defaultValue: '필터' })}
+            {filterActiveCount > 0 && (
+              <span className="search-filter-badge">{filterActiveCount}</span>
+            )}
           </button>
         </div>
+      ) : (
+        toolsPanel
       )}
-
-      <div
-        className="search-pill-tools"
-        hidden={collapsibleTools && !toolsOpen}
-      >
-        <MapProviderPicker value={mapProvider} onChange={onMapProviderChange} />
-        {onUseMyLocation && (
-          <button type="button" className="search-tool-chip" onClick={onUseMyLocation}>
-            <Icon name="location" size={14} /> {t('search.myLocation')}
-          </button>
-        )}
-        {onSearchFestivals && (
-          <button
-            type="button"
-            className="search-tool-chip"
-            onClick={onSearchFestivals}
-            disabled={searchingFestivals}
-          >
-            {searchingFestivals ? (
-              <Icon name="loader" spin size={14} />
-            ) : (
-              <Icon name="sparkles" size={14} />
-            )}
-            {t('search.festivals', { defaultValue: '축제/행사' })}
-          </button>
-        )}
-        <button
-          type="button"
-          className={`search-tool-chip ${searchScope === 'nearby' ? 'active' : ''}`}
-          onClick={() => onSearchScopeChange(searchScope === 'nearby' ? 'nationwide' : 'nearby')}
-        >
-          {searchScope === 'nearby' ? t('search.scopeNearby') : t('search.scopeNationwide')}
-        </button>
-        {searchScope === 'nearby' && (
-          <select
-            className="search-tool-select"
-            value={searchRadius}
-            onChange={(e) =>
-              onSearchRadiusChange(Number(e.target.value) as SearchRadiusMeters)
-            }
-            aria-label={t('search.radiusAria')}
-          >
-            {[1000, 3000, 5000, 10000, 20000].map((v) => (
-              <option key={v} value={v}>
-                {v / 1000} km
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
 
       {pasteHint && <p className="search-paste-hint">{pasteHint}</p>}
 
@@ -662,29 +716,9 @@ export function SearchPanel({
         })}
       </div>
 
-      {subFilterGroup && !(collapsibleTools && !toolsOpen) && (
-        <div className="search-subfilters">
-          <span className="search-subfilters-label">{subFilterGroup.label}</span>
-          <div className="search-subfilters-row" role="group" aria-label={subFilterGroup.label}>
-            {subFilterGroup.options.map((opt) => {
-              const active = activeSubFilters.includes(opt.id);
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  className={`search-subfilters-chip ${active ? 'active' : ''}`}
-                  aria-pressed={active}
-                  onClick={() => toggleSubFilter(opt.id)}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {!collapsibleTools && subFiltersPanel}
 
-      {(results.length > 0 || loading || enrichingStats) && (
+      {!collapsibleTools && (results.length > 0 || loading || enrichingStats) && (
         <p className="search-meta-line">
           {loading || enrichingStats
             ? loading
@@ -694,7 +728,7 @@ export function SearchPanel({
         </p>
       )}
 
-      {results.length > 0 && !loading && (
+      {!collapsibleTools && results.length > 0 && !loading && (
         <div className="search-sort-row">
           <span className="search-sort-label">{t('search.sortLabel', { defaultValue: 'Sort 정렬' })}</span>
           <div className="search-sort-chips" role="group" aria-label={t('search.sortAria', { defaultValue: '검색 결과 정렬' })}>
@@ -716,6 +750,24 @@ export function SearchPanel({
 
       {sortKey === 'rating' && results.length > 0 && !hasRatings && !enrichingStats && (
         <p className="search-sort-hint">{t('search.ratingHint')}</p>
+      )}
+
+      {collapsibleTools && (
+        <AppSheetModal
+          open={toolsOpen}
+          title={t('search.filters', { defaultValue: '필터' })}
+          onClose={() => setToolsOpen(false)}
+        >
+          {toolsPanel}
+          {subFiltersPanel}
+          <button
+            type="button"
+            className="search-filter-apply"
+            onClick={() => setToolsOpen(false)}
+          >
+            {t('search.filterApply', { count: results.length, defaultValue: '{{count}}개 결과 보기' })}
+          </button>
+        </AppSheetModal>
       )}
 
       {searchError && (

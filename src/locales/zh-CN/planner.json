@@ -64,7 +64,9 @@
     "insightPositive": "评价不错",
     "insightWait": "排队较久",
     "filters": "筛选",
-    "subFilterCount": "{{count}} 项条件"
+    "subFilterCount": "{{count}} 项条件",
+    "resultsCountShort": "{{count}} 个结果",
+    "filterApply": "查看 {{count}} 个结果"
   },
   "trip": {
     "newTrip": "新旅行",

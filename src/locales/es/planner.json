@@ -74,7 +74,9 @@
     "insightPositive": "Bien valorado",
     "insightWait": "Mucha espera",
     "filters": "Filtros",
-    "subFilterCount": "{{count}} criterios"
+    "subFilterCount": "{{count}} criterios",
+    "resultsCountShort": "{{count}} resultados",
+    "filterApply": "Ver {{count}} resultados"
   },
   "trip": {
     "newTrip": "Nuevo viaje",

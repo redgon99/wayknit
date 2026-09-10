@@ -19,7 +19,7 @@ import {
   kakaoLevelToGoogleZoom,
   MIN_PLANNER_GOOGLE_ZOOM,
 } from '../lib/mapZoom';
-import { useLongPress } from '../hooks/useLongPress';
+import { useLongPress, type LongPressPoint } from '../hooks/useLongPress';
 import { mapCentersNear, searchResultFitPadding, shouldAnimateMapCenter, validMapPoints, type MapLatLng } from '../lib/mapCenterMotion';
 import i18n from '../lib/i18n';
 import { COMPARE_LINE_WEIGHT } from '../lib/routeCompare';
@@ -46,7 +46,8 @@ interface Props {
   pickingPinFromMap?: boolean;
   onOriginPicked?: (lat: number, lng: number, address: string) => void;
   onPinLocationPicked?: (lat: number, lng: number, address: string) => void;
-  onMapLongPress?: () => void;
+  /** 모바일 지도 롱프레스 — 누른 지점(뷰포트 픽셀)을 함께 전달해 말풍선이 그 자리를 가리키게 한다 */
+  onMapLongPress?: (point: LongPressPoint) => void;
   draftPinLocation?: { lat: number; lng: number } | null;
   onSelectPlace?: (place: Place) => void;
   onPinnedMarkerClick?: (place: Place) => void;
@@ -626,7 +627,7 @@ export function GoogleMapView({
     origin?.lng,
   ]);
 
-  const longPress = useLongPress(() => onMapLongPress?.());
+  const longPress = useLongPress((point) => onMapLongPress?.(point));
 
   return (
     <div

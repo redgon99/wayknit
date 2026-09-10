@@ -64,7 +64,9 @@
     "insightPositive": "評價不錯",
     "insightWait": "排隊較久",
     "filters": "篩選",
-    "subFilterCount": "{{count}} 項條件"
+    "subFilterCount": "{{count}} 項條件",
+    "resultsCountShort": "{{count}} 個結果",
+    "filterApply": "查看 {{count}} 個結果"
   },
   "trip": {
     "newTrip": "新旅行",

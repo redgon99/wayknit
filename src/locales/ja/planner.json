@@ -64,7 +64,9 @@
     "insightPositive": "高評価",
     "insightWait": "待ち時間長め",
     "filters": "フィルター",
-    "subFilterCount": "条件{{count}}件"
+    "subFilterCount": "条件{{count}}件",
+    "resultsCountShort": "{{count}}件",
+    "filterApply": "{{count}}件の結果を見る"
   },
   "trip": {
     "newTrip": "新しい旅行",

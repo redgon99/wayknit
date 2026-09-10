@@ -74,7 +74,9 @@
     "insightPositive": "Gut bewertet",
     "insightWait": "Lange Wartezeit",
     "filters": "Filter",
-    "subFilterCount": "{{count}} Kriterien"
+    "subFilterCount": "{{count}} Kriterien",
+    "resultsCountShort": "{{count}} Ergebnisse",
+    "filterApply": "{{count}} Ergebnisse anzeigen"
   },
   "trip": {
     "newTrip": "Neue Reise",

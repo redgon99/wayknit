@@ -74,7 +74,9 @@
     "insightPositive": "Хорошие отзывы",
     "insightWait": "Долгая очередь",
     "filters": "Фильтры",
-    "subFilterCount": "Условий: {{count}}"
+    "subFilterCount": "Условий: {{count}}",
+    "resultsCountShort": "Результатов: {{count}}",
+    "filterApply": "Показать {{count}}"
   },
   "trip": {
     "newTrip": "Новая поездка",

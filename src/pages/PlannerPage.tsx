@@ -97,7 +97,9 @@ import { Toast } from '../components/Toast';
 import { RoadviewModal } from '../components/RoadviewModal';
 import { PlacePhotosModal } from '../components/PlacePhotosModal';
 import { MapContextMenu } from '../components/MapContextMenu';
+import { MapPinPickHint } from '../components/MapPinPickHint';
 import { ManualPinModal } from '../components/ManualPinModal';
+import type { LongPressPoint } from '../hooks/useLongPress';
 import { TripMaterialsPanel } from '../components/TripMaterialsPanel';
 import { MobileMoreMenu } from '../components/mobile/MobileMoreMenu';
 import { PresenceStack } from '../components/PresenceStack';
@@ -302,6 +304,8 @@ export default function PlannerPage() {
   const [dockCollapsed, setDockCollapsed] = useState(false);
   const [pickingOriginFromMap, setPickingOriginFromMap] = useState(false);
   const [pickingPinFromMap, setPickingPinFromMap] = useState(false);
+  /** 롱프레스로 지도 핀업에 들어간 지점(뷰포트 픽셀) — 있으면 말풍선이 그 자리를, 없으면(데스크톱 버튼) 가운데 안내를 보여준다 */
+  const [pinPickPoint, setPinPickPoint] = useState<LongPressPoint | null>(null);
   const [pendingManualPin, setPendingManualPin] = useState<PendingManualPin | null>(null);
   const [refining, setRefining] = useState(false);
   // 최적화 3종 비교 경로 — 동선 패널이 받아와 지도에 겹쳐 그린다
@@ -1694,25 +1698,42 @@ export default function PlannerPage() {
 
   const handlePickOriginFromMap = useCallback(() => {
     setPickingPinFromMap(false);
+    setPinPickPoint(null);
     setPendingManualPin(null);
     setPickingOriginFromMap(true);
   }, []);
 
+  /** 데스크톱의 지도 핀업 버튼 — 롱프레스와 달리 누른 지점이 없어 가운데 안내로 보여준다 */
   const handleTogglePinFromMap = useCallback(() => {
     setPickingOriginFromMap(false);
     setPendingManualPin(null);
+    setPinPickPoint(null);
     setPickingPinFromMap((v) => !v);
   }, []);
 
-  /** 모바일 지도 롱프레스 — 토글이 아니라 항상 켜기(이미 픽 모드면 무시) */
-  const handleLongPressPin = useCallback(() => {
-    if (pickingOriginFromMap || pickingPinFromMap) return;
-    setPendingManualPin(null);
-    setPickingPinFromMap(true);
-  }, [pickingOriginFromMap, pickingPinFromMap]);
+  /**
+   * 모바일 지도 롱프레스 — 지도 핀업의 유일한 입구라 토글로 켜고 끈다.
+   * 출발지 픽 모드 중에는 무시(그 모드는 롱프레스가 아니라 동선 패널에서 켠다).
+   * 누른 지점을 함께 저장해 말풍선(`MapPinPickHint`)이 그 자리를 가리키게 한다.
+   */
+  const handleLongPressPin = useCallback(
+    (point: LongPressPoint) => {
+      if (pickingOriginFromMap) return;
+      if (pickingPinFromMap) {
+        setPickingPinFromMap(false);
+        setPinPickPoint(null);
+        return;
+      }
+      setPendingManualPin(null);
+      setPickingPinFromMap(true);
+      setPinPickPoint(point);
+    },
+    [pickingOriginFromMap, pickingPinFromMap]
+  );
 
   const handlePinLocationPicked = useCallback((lat: number, lng: number, address: string) => {
     setPickingPinFromMap(false);
+    setPinPickPoint(null);
     setPendingManualPin({
       lat,
       lng,
@@ -2619,24 +2640,6 @@ export default function PlannerPage() {
                 >
                   <Icon name="layers" size={17} />
                 </button>
-                {/*
-                  지도에서 핀 찍기 — 모바일에는 이 기능의 입구가 롱프레스밖에 없었다.
-                  데스크톱의 `overlay-map-tools`는 `desktop-only-overlay`라 폰에서 숨는데,
-                  대체 입구를 만들어 두지 않아 아는 사람만 쓰는 기능이 돼 있었다(§10-4).
-                  검색이 지도를 덮고 있을 때(full)는 누를 대상이 없으므로 감춘다.
-                */}
-                {mobileSheetLevel !== 'full' && (
-                  <button
-                    type="button"
-                    className={`mobile-tool-btn ${pickingPinFromMap ? 'active' : ''}`}
-                    onClick={handleTogglePinFromMap}
-                    aria-pressed={pickingPinFromMap}
-                    title={tp('trip.pinFromMap')}
-                    aria-label={tp('trip.pinFromMap')}
-                  >
-                    <Icon name="pinPlus" size={17} />
-                  </button>
-                )}
               </div>
             </div>
           </div>
@@ -2960,12 +2963,15 @@ export default function PlannerPage() {
         </div>
       )}
 
-      {pickingPinFromMap && (
-        <div className="picking-toast">
-          <Icon name="pinPlus" />
-          {tp('trip.pickingPin')}
-        </div>
-      )}
+      {pickingPinFromMap &&
+        (pinPickPoint ? (
+          <MapPinPickHint point={pinPickPoint} label={tp('trip.pickingPin')} />
+        ) : (
+          <div className="picking-toast">
+            <Icon name="pinPlus" />
+            {tp('trip.pickingPin')}
+          </div>
+        ))}
 
       <ManualPinModal
         open={!!pendingManualPin}

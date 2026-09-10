@@ -5141,6 +5141,54 @@ button {
   pointer-events: none;
 }
 
+/*
+ * 롱프레스로 지도 핀업에 들어갔을 때 누른 지점을 가리키는 말풍선.
+ * `.picking-toast`(가운데 고정, 데스크톱 버튼용)와 달리 좌표에 고정되므로
+ * `position:fixed` + body 포털(`MapContextMenu`와 같은 방식) — 상단 툴바 같은
+ * 조상의 쌓임 맥락에 걸리지 않게 한다.
+ */
+.map-pin-pick-hint {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  background: var(--color-primary);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  max-width: min(280px, calc(100vw - 24px));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-float-lg);
+  z-index: 13500;
+  pointer-events: none;
+}
+
+.map-pin-pick-hint.below {
+  transform: translate(-50%, 0%);
+}
+
+.map-pin-pick-hint::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - var(--map-pin-pick-tail-shift, 0px));
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+}
+
+.map-pin-pick-hint.above::after {
+  top: 100%;
+  border-top-color: var(--color-primary);
+}
+
+.map-pin-pick-hint.below::after {
+  bottom: 100%;
+  border-bottom-color: var(--color-primary);
+}
+
 /* =============================================
    반응형 — 태블릿 (901px 이하 ~ 769px) + 모바일 (768px 이하)
    ============================================= */
@@ -5271,9 +5319,16 @@ button {
     max-width: 100%;
   }
 
-  .pinup-groups {
-    max-height: min(140px, 18vh);
-  }
+  /*
+   * 예전엔 이 지도 위 플로팅독(`.overlay-map-header`/`.overlay-bottom-left`,
+   * 지금은 렌더되는 곳이 없는 죽은 클래스)의 핀 목록 높이를 눌러 뒀는데,
+   * 스코프가 없어서 `.mobile-planner-sheet` 안의 실제 핀 목록(`.pinup-bar-panel
+   * .pinup-groups`)까지 140px로 눌렸다 — 시트 안에서 핀이 몇 개만 있어도
+   * 내부에 별도 스크롤이 생기고, "동선 만들기" 버튼이 그 140px 바로 뒤에
+   * 고정돼 핀이 늘어도 안 밀려나고 그 아래는 빈 공간만 남았다.
+   * 시트는 자체 스크롤(`.mobile-sheet-content`)이 있으니 여기서 다시 가둘
+   * 필요가 없다 — 지웠다.
+   */
 
   /* --- 검색 확장 (목업 2) --- */
   .wayknit-root.search-expanded .overlay-left {
@@ -10734,6 +10789,15 @@ button {
 .pinup-bar-panel .pinup-groups {
   flex: 1 1 auto;
   min-height: 0;
+  /*
+   * 기본 `.pinup-groups`는 작은 드롭다운형 목록(200px)을 전제로 자체 스크롤을
+   * 갖는다 — `overflow:visible`은 이미 그 클립을 지웠지만 `max-height`는
+   * `overflow`와 별개 속성이라 여기서도 다시 지워야 한다. 패널(데스크톱
+   * 사이드패널·모바일 시트)에서는 `.pinup-panel-scroll` 하나가 스크롤을
+   * 맡아야 한다 — 둘 다 각자 스크롤을 가지면 목록이 작은 상자 안에 갇히고
+   * "동선 만들기" 버튼이 핀이 늘어도 그 상자 바로 뒤에 고정돼 버린다.
+   */
+  max-height: none;
   overflow: visible;
   padding: 12px 16px;
   display: flex;
@@ -12271,17 +12335,20 @@ button {
  * 내려오지 않는 위치다.
  */
 /*
- * 접이식 필터 요약 — 하단 시트의 검색 탭에서만 쓴다(SearchPanel collapsibleTools).
- * 범위·반경·하위필터를 한 줄로 요약하고, 펼치기는 버튼 뒤로 보낸다.
+ * 통합 요약줄 — 하단 시트의 검색 탭에서만 쓴다(SearchPanel collapsibleTools).
+ * 범위·반경·하위조건·결과수를 한 줄로 합치고, 정렬은 아이콘 토글로, 범위·반경·
+ * 내 위치·축제행사 같은 나머지 옵션은 "필터" 버튼 뒤 다이얼로그로 보낸다 —
+ * 예전엔 이 줄+메타줄+정렬줄 셋이 따로 있어 결과가 화면 2/3 아래로 밀렸었다.
  */
-.search-tools-summary {
+.search-summary-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
 }
 
-.search-tools-summary-text {
+.search-summary-text {
+  flex: 1;
+  min-width: 0;
   font-size: 12px;
   font-weight: 600;
   color: var(--color-text-secondary);
@@ -12290,26 +12357,78 @@ button {
   white-space: nowrap;
 }
 
-.search-tools-toggle {
+.search-summary-sort {
   flex-shrink: 0;
+  display: flex;
+  gap: 3px;
+}
+
+.search-summary-sort-btn {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
+  justify-content: center;
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-pill);
   background: var(--color-surface);
-  color: var(--color-text-primary);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
+  color: var(--color-text-secondary);
 }
 
-.search-tools-toggle.active {
+.search-summary-sort-btn.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: #fff;
+}
+
+.search-filter-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.search-filter-badge {
+  background: var(--color-accent);
+  color: #78350f;
+  border-radius: 99px;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-filter-apply {
+  width: 100%;
+  margin-top: 8px;
+  border: none;
+  background: var(--color-accent);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-pill);
+  padding: 12px 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* 필터 다이얼로그 안에서는 부모 gap이 없어, 쌓인 칩 줄 사이에 직접 여백을 준다 */
+.app-sheet-body .search-pill-tools,
+.app-sheet-body .search-subfilters {
+  margin-bottom: 14px;
 }
 
 /* 시트 안에서는 패널이 시트 높이를 그대로 채우고, 결과만 스크롤한다 */
@@ -12517,6 +12636,34 @@ button {
   border: none;
   box-shadow: none;
   background: transparent;
+}
+
+/*
+ * 데스크톱 사이드패널(`.planner-side-body > .pinup-bar-panel`)은 패널이 꽉 찬
+ * 높이를 가져서 내부 목록만 스크롤되고 "동선 만들기" 버튼은 늘 패널 맨
+ * 아래 보인다. 모바일 시트에선 이 높이 체인이 `.mobile-itinerary-view`에서
+ * 끊겨 있었다 — 목록이 짧으면 버튼 뒤에 빈 공간이, 길면 버튼까지 스크롤해야
+ * 닿을 수 있었다. 여기서 다시 이어서 데스크톱과 같은 동작을 준다: 짧은
+ * 목록은 그 아래 버튼이 바로 붙고, 목록이 시트보다 길어지는 순간부터 목록만
+ * 내부 스크롤되며 버튼은 시트 하단에 고정된다.
+ */
+.mobile-itinerary-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.mobile-itinerary-view > .pinup-bar.pinup-bar-panel,
+.mobile-itinerary-view > .route-panel.route-panel-embedded {
+  /*
+   * flex-grow는 일부러 0(기본값)으로 둔다 — 목록이 짧을 때 억지로 시트
+   * 높이만큼 늘리면 늘어난 빈칸이 목록과 버튼 사이에 생긴다(정확히 이전
+   * 버그와 같은 모양). shrink만 켜 두면 목록이 짧을 땐 내용만큼만 차지해
+   * 버튼이 바로 붙고, 시트보다 길어질 때만 이 높이(100%)에 눌려 내부
+   * 스크롤로 전환된다.
+   */
+  min-height: 0;
 }
 
 /*

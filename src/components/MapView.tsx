@@ -10,7 +10,7 @@ import {
 } from '../lib/mapMarkers';
 import { GoogleMapView } from './GoogleMapView';
 import type { MapProvider } from '../lib/mapProvider';
-import { useLongPress } from '../hooks/useLongPress';
+import { useLongPress, type LongPressPoint } from '../hooks/useLongPress';
 import { mapCentersNear, searchResultFitPadding, shouldAnimateMapCenter, validMapPoints, type MapLatLng } from '../lib/mapCenterMotion';
 import i18n from '../lib/i18n';
 import { COMPARE_LINE_WEIGHT } from '../lib/routeCompare';
@@ -41,8 +41,8 @@ interface Props {
   pickingPinFromMap?: boolean;
   onOriginPicked?: (lat: number, lng: number, address: string) => void;
   onPinLocationPicked?: (lat: number, lng: number, address: string) => void;
-  /** 모바일 지도 롱프레스 — 좌표 없이 "핀 찍기 모드 진입" 신호만 전달 */
-  onMapLongPress?: () => void;
+  /** 모바일 지도 롱프레스 — 누른 지점(뷰포트 픽셀)을 함께 전달해 말풍선이 그 자리를 가리키게 한다 */
+  onMapLongPress?: (point: LongPressPoint) => void;
   draftPinLocation?: { lat: number; lng: number } | null;
   onSelectPlace?: (place: Place) => void;
   onPinnedMarkerClick?: (place: Place) => void;
@@ -870,7 +870,7 @@ function KakaoMapView({
     }
   }, [generatedRoute, fitRouteBounds]);
 
-  const longPress = useLongPress(() => onMapLongPress?.());
+  const longPress = useLongPress((point) => onMapLongPress?.(point));
 
   return (
     <div
