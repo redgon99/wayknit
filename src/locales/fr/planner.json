@@ -410,7 +410,8 @@
       "history": "Palais, musées et patrimoine",
       "nightlife": "Cuisine du soir, cafés et vues urbaines",
       "family": "Sites et repas adaptés aux enfants"
-    }
+    },
+    "editLead": "Utilisé pour mettre en avant les résultats de recherche, pondérer votre itinéraire et étiqueter votre voyage sur la place lors du partage."
   },
   "foodRestrictions": {
     "label": "Préférences alimentaires",
@@ -801,5 +802,10 @@
     "doneHint": "Un administrateur va l’examiner.",
     "duplicate": "Vous avez déjà signalé ce contenu.",
     "failed": "Impossible d’envoyer le signalement. Réessayez plus tard."
+  },
+  "account": {
+    "guestLead": "Connectez-vous pour continuer à planifier sur d'autres appareils et sauvegarder dans le cloud.",
+    "viewPlans": "Voir les forfaits",
+    "backToHome": "Retour à l'accueil"
   }
 }

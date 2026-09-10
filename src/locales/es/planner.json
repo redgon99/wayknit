@@ -410,7 +410,8 @@
       "history": "Palacios, museos y patrimonio",
       "nightlife": "Comida nocturna, cafés y vistas de la ciudad",
       "family": "Visitas y comidas para niños"
-    }
+    },
+    "editLead": "Se usa para resaltar resultados de búsqueda, priorizar tu ruta y etiquetar tu viaje en la plaza al compartirlo."
   },
   "foodRestrictions": {
     "label": "Preferencias alimentarias",
@@ -801,5 +802,10 @@
     "doneHint": "Un administrador la revisará.",
     "duplicate": "Ya has denunciado este contenido.",
     "failed": "No se pudo enviar la denuncia. Inténtalo de nuevo."
+  },
+  "account": {
+    "guestLead": "Inicia sesión para seguir planificando en otros dispositivos y guardar en la nube.",
+    "viewPlans": "Ver planes",
+    "backToHome": "Volver al inicio"
   }
 }

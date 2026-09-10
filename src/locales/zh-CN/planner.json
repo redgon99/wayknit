@@ -596,5 +596,34 @@
     "doneHint": "管理员核实后会进行处理。",
     "duplicate": "你已举报过该内容。",
     "failed": "举报提交失败，请稍后再试。"
+  },
+  "themes": {
+    "label": "兴趣主题",
+    "kfood": "K-food",
+    "kpop": "K-pop",
+    "shopping": "购物",
+    "nature": "自然",
+    "history": "历史·宫殿",
+    "nightlife": "夜景·夜生活",
+    "family": "亲子",
+    "backToPlan": "返回规划器",
+    "boardTitle": "主题看板",
+    "boardLead": "选择主题，按兴趣开始规划行程。",
+    "startPlanning": "开始规划",
+    "desc": {
+      "kfood": "市场、美食、街头小吃、咖啡馆",
+      "kpop": "快闪店、文化、购物",
+      "shopping": "超市、美妆、本地小店",
+      "nature": "公园、步道、观景",
+      "history": "宫殿、博物馆、古迹",
+      "nightlife": "宵夜、咖啡馆、夜景",
+      "family": "适合带娃的地方"
+    },
+    "editLead": "会用于突出搜索结果、影响路线排序，并在分享到广场时作为标签展示。"
+  },
+  "account": {
+    "guestLead": "登录后可在多个设备上继续规划，并安全保存到云端。",
+    "viewPlans": "查看套餐",
+    "backToHome": "返回首页"
   }
 }

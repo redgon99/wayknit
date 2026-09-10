@@ -16,10 +16,19 @@ interface Props {
   onOpenCollaborators?: () => void;
   /** 협업자에게는 "관리"가 아니라 함께 편집 중인 사람을 보는 입구다(§14). */
   collabEntryLabel?: 'manage' | 'shared';
+  /** 관심 테마 편집 — §26-7. 데스크톱 더보기 메뉴와 같은 항목이다. */
+  onOpenPreferences?: () => void;
   /** 요금제 배지 — 데스크톱에선 계정 탭이 따로 있었지만, 하단내비가 4칸으로
    *  줄면서(지도·자료·시나리오·메뉴) 계정도 이 메뉴 안으로 들어온다. */
   plan: PlanId;
-  onOpenUpgrade: () => void;
+  /**
+   * "계정" 항목이 여는 것. 예전엔 이 자리가 그대로 UpgradeModal을 열어서
+   * 로그인 여부와 무관하게 늘 요금제 안내만 떴다(2026-09-10 사용자 지적) —
+   * 실제 계정 정보·로그아웃·로그인 진입로가 모바일 어디에도 없었다.
+   * 이제 `MobileAccountSheet`를 여는 콜백이고, 업그레이드는 그 시트 안의
+   * 버튼 하나가 됐다.
+   */
+  onOpenAccount: () => void;
 }
 
 export function MobileMoreMenu({
@@ -28,8 +37,9 @@ export function MobileMoreMenu({
   onOpenTableView,
   onOpenCollaborators,
   collabEntryLabel = 'manage',
+  onOpenPreferences,
   plan,
-  onOpenUpgrade,
+  onOpenAccount,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: ts } = useTranslation('share');
@@ -91,6 +101,7 @@ export function MobileMoreMenu({
               ts(collabEntryLabel === 'shared' ? 'collab.entryShared' : 'collab.entry'),
               onOpenCollaborators
             )}
+          {onOpenPreferences && item(t('themes.label'), onOpenPreferences)}
           {onOpenTableView && item(t('view.table'), onOpenTableView)}
           {plazaNavVisible && item(t('plazaNav'), () => navigate('/plaza'))}
           {item(t('nav.setup'), () => navigate('/setup'))}
@@ -98,7 +109,7 @@ export function MobileMoreMenu({
           <div className="planner-more-sep" aria-hidden />
           {item(
             t('chrome.tabAccount'),
-            onOpenUpgrade,
+            onOpenAccount,
             <span className="planner-more-item-account">
               {t('chrome.tabAccount')}
               <span className={`mobile-tabbar-plan-badge plan-${plan}`}>{tb(`plan.${plan}`)}</span>

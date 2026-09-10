@@ -410,7 +410,8 @@
       "history": "Paläste, Museen und Kulturerbe",
       "nightlife": "Abendessen, Cafés und Stadtblicke",
       "family": "Kinderfreundliche Sehenswürdigkeiten und Mahlzeiten"
-    }
+    },
+    "editLead": "Wird verwendet, um Suchergebnisse hervorzuheben, deine Route zu gewichten und deine Reise beim Teilen auf dem Marktplatz zu kennzeichnen."
   },
   "foodRestrictions": {
     "label": "Essenspräferenzen",
@@ -801,5 +802,10 @@
     "doneHint": "Ein Administrator prüft sie.",
     "duplicate": "Du hast diesen Inhalt bereits gemeldet.",
     "failed": "Meldung konnte nicht gesendet werden. Bitte später erneut versuchen."
+  },
+  "account": {
+    "guestLead": "Melde dich an, um auf anderen Geräten weiterzuplanen und in der Cloud zu speichern.",
+    "viewPlans": "Tarife ansehen",
+    "backToHome": "Zur Startseite"
   }
 }

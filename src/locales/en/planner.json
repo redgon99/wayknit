@@ -410,7 +410,8 @@
       "history": "Palaces, museums, and heritage",
       "nightlife": "Evening food, cafes, and city views",
       "family": "Kid-friendly sights and meals"
-    }
+    },
+    "editLead": "Used to highlight search results, weight your route order, and tag your trip in the plaza when shared."
   },
   "foodRestrictions": {
     "label": "Food preferences",
@@ -801,5 +802,10 @@
     "doneHint": "An administrator will review it.",
     "duplicate": "You have already reported this.",
     "failed": "Could not send the report. Please try again."
+  },
+  "account": {
+    "guestLead": "Sign in to keep planning across devices and save your trips to the cloud.",
+    "viewPlans": "View plans",
+    "backToHome": "Back to home"
   }
 }

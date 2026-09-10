@@ -596,5 +596,34 @@
     "doneHint": "管理員確認後會進行處理。",
     "duplicate": "你已檢舉過此內容。",
     "failed": "檢舉送出失敗，請稍後再試。"
+  },
+  "themes": {
+    "label": "興趣主題",
+    "kfood": "K-food",
+    "kpop": "K-pop",
+    "shopping": "購物",
+    "nature": "自然",
+    "history": "歷史·宮殿",
+    "nightlife": "夜景·夜生活",
+    "family": "親子",
+    "backToPlan": "返回規劃器",
+    "boardTitle": "主題看板",
+    "boardLead": "選擇主題，依興趣開始規劃行程。",
+    "startPlanning": "開始規劃",
+    "desc": {
+      "kfood": "市場、美食、街頭小吃、咖啡館",
+      "kpop": "快閃店、文化、購物",
+      "shopping": "超市、美妝、在地小店",
+      "nature": "公園、步道、觀景",
+      "history": "宮殿、博物館、古蹟",
+      "nightlife": "宵夜、咖啡館、夜景",
+      "family": "適合帶小孩的地方"
+    },
+    "editLead": "會用於突顯搜尋結果、影響路線排序，並在分享到廣場時作為標籤顯示。"
+  },
+  "account": {
+    "guestLead": "登入後可在多個裝置上繼續規劃，並安全保存到雲端。",
+    "viewPlans": "查看方案",
+    "backToHome": "返回首頁"
   }
 }

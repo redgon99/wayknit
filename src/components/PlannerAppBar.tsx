@@ -38,6 +38,8 @@ interface Props {
   onManageCollaborators?: () => void;
   /** 협업자에게는 "관리"가 아니라 함께 편집 중인 사람을 보는 입구다. */
   collabEntryLabel?: 'manage' | 'shared';
+  /** 관심 테마 편집 — §26-7. 핀 탭 위에 얹혀 있던 걸 탭 무관 더보기 메뉴로 옮겼다. */
+  onOpenPreferences?: () => void;
   presentationMode: boolean;
   onTogglePresentation: () => void;
   tableViewMode?: boolean;
@@ -68,6 +70,7 @@ export function PlannerAppBar({
   onDeleteTrip,
   onShare,
   onManageCollaborators,
+  onOpenPreferences,
   collabEntryLabel = 'manage',
   presentationMode,
   onTogglePresentation,
@@ -268,6 +271,7 @@ export function PlannerAppBar({
                 setHelpAirportFocus(false);
                 setSheet('plaza');
               })}
+            {onOpenPreferences && moreItem(t('themes.label'), onOpenPreferences)}
             {moreItem(t('nav.setup'), () => {
               setHelpAirportFocus(false);
               setSheet('setup');

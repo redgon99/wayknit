@@ -81,6 +81,9 @@ import { logTripActivity } from '../lib/tripActivity';
 import type { ShareTripModalSubmit } from '../components/ShareTripModal';
 import { ShareTripModal } from '../components/ShareTripModal';
 import { CollaboratorsModal } from '../components/CollaboratorsModal';
+import { MobileDaySelectMenu } from '../components/mobile/MobileDaySelectMenu';
+import { MobileAccountSheet } from '../components/mobile/MobileAccountSheet';
+import { PwaInstallButton } from '../components/PwaInstallButton';
 import { InviteBanner } from '../components/InviteBanner';
 import { PlannerAppBar } from '../components/PlannerAppBar';
 import { TripSelectMenu } from '../components/TripSelectMenu';
@@ -247,6 +250,14 @@ export default function PlannerPage() {
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [collabModalOpen, setCollabModalOpen] = useState(false);
+  // §26-7 — 관심 테마 편집. 예전엔 핀 탭 위에 상시 칩으로 얹혀 있어 핀 목록
+  // 필터처럼 보였다. 검색·동선·공유마당 셋 다에 쓰이는 탭 무관 설정이라
+  // 더보기 메뉴 뒤 시트로 옮겼다.
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  // 모바일 "계정" 항목이 예전엔 로그인 여부와 무관하게 UpgradeModal만 열었다
+  // (2026-09-10 사용자 지적) — 실제 계정 정보·로그아웃·로그인 진입로가
+  // 모바일 어디에도 없었다. MobileAccountSheet가 그 세 갈래(미설정/로그인/게스트)를 맡는다.
+  const [accountOpen, setAccountOpen] = useState(false);
   /*
    * 공유받은 여행 알림은 모바일에서 잠깐만 보인다.
    *
@@ -2354,6 +2365,7 @@ export default function PlannerPage() {
               isTripOwner || trip.collaboratorRole ? () => setCollabModalOpen(true) : undefined
             }
             collabEntryLabel={isTripOwner ? undefined : 'shared'}
+            onOpenPreferences={() => setPreferencesOpen(true)}
             presenceViewers={presenceViewers}
             presentationMode={presentationMode}
             onTogglePresentation={handleTogglePresentation}
@@ -2411,13 +2423,6 @@ export default function PlannerPage() {
             }
             pinsSlot={
               <>
-                <div className="trip-preferences-bar planner-prefs-inline">
-                  <ThemePreferenceChips
-                    selected={trip.preferences ?? []}
-                    onChange={handlePreferencesChange}
-                    compact
-                  />
-                </div>
                 <PinupBar
                   variant="panel"
                   hideHeader
@@ -2584,65 +2589,73 @@ export default function PlannerPage() {
 
       {useMobileChrome && (
         <>
+          {/*
+            예전엔 여행 칩(제목+전환) 행과 일차+도구 행이 세로로 나뉘어 있었다.
+            한 줄로 합쳤다 — 제목 텍스트는 뺐다. 시트 헤더가 바로 아래에서
+            같은 제목을 이미 보여주고 있어(mobile-sheet-head-title) 한 화면에
+            두 번 나오는 중복이었다. 전환 버튼(chevron)만 남기고 다른 도구
+            버튼들과 같은 36px 아이콘 버튼 한 뭉치로 묶는다.
+          */}
           <div className="mobile-planner-top">
-            <div className="mobile-planner-search-row">
-              <div className="mobile-planner-trip-chip">
-                <span className="mobile-planner-trip-title">{trip.title}</span>
-                <TripSelectMenu
-                  summaries={tripSummaries}
-                  currentTripId={trip.id}
-                  onSelect={handleSelectTrip}
-                  onNewTrip={handleNewTrip}
-                  onDeleteTrip={() => void handleDeleteTrip()}
-                  compact
-                />
-              </div>
-              {/*
-                혼자 편집할 때는 PresenceStack이 null을 돌려주므로 이 자리가
-                비어 있다 — 좁은 폰 화면에서 여행 칩을 상시로 밀어내지 않는다.
-                데스크톱보다 하나 적게(3명) 보여주고 나머지는 +N으로 접는다.
-              */}
-              <PresenceStack viewers={presenceViewers} max={3} />
+            <div className="mobile-planner-trip-trigger">
+              <TripSelectMenu
+                summaries={tripSummaries}
+                currentTripId={trip.id}
+                onSelect={handleSelectTrip}
+                onNewTrip={handleNewTrip}
+                onDeleteTrip={() => void handleDeleteTrip()}
+                compact
+              />
             </div>
-            <div className="mobile-planner-days-row">
-              <div className="mobile-planner-days">
-                {Array.from({ length: trip.totalDays }, (_, i) => i + 1).map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    className={`mobile-planner-day ${d === currentDay ? 'active' : ''}`}
-                    onClick={() => selectDay(d)}
-                  >
-                    {tp('day.tab', { n: d })}
-                    {(countsByDay[d] ?? 0) > 0 ? ` · ${countsByDay[d]}` : ''}
-                  </button>
-                ))}
-                <button type="button" className="mobile-planner-day" onClick={addDay}>
-                  {tp('chrome.addDayShort')}
-                </button>
-              </div>
-              <div className="mobile-planner-tools">
-                <button
-                  type="button"
-                  className="mobile-tool-btn"
-                  onClick={openMobileSearchTab}
-                  title={tp('search.ariaLabel')}
-                  aria-label={tp('search.ariaLabel')}
-                >
-                  <Icon name="search" size={17} />
-                </button>
-                <button
-                  type="button"
-                  className={`mobile-tool-btn ${mapType === 'satellite' ? 'active' : ''}`}
-                  onClick={() => setMapType((prev) => (prev === 'satellite' ? 'roadmap' : 'satellite'))}
-                  title={tp(mapType === 'satellite' ? 'view.mapTypeRoadmap' : 'view.mapTypeSatellite')}
-                  aria-label={tp(mapType === 'satellite' ? 'view.mapTypeRoadmap' : 'view.mapTypeSatellite')}
-                >
-                  <Icon name="layers" size={17} />
-                </button>
-              </div>
+            {/*
+              일차가 늘수록 필(pill)이 한 줄을 다 먹던 걸 버튼 하나로 접었다
+              (사용자 요청, 2026-09-10). 생긴 공간엔 §27에서 뺐던 여행 제목을
+              일부만이라도 다시 보여준다 — 배지가 아니라 truncate되는 텍스트라
+              공간이 없으면 자동으로 줄어든다.
+            */}
+            <span className="mobile-planner-trip-title">{trip.title}</span>
+            <MobileDaySelectMenu
+              totalDays={trip.totalDays}
+              currentDay={currentDay}
+              countsByDay={countsByDay}
+              onSelectDay={selectDay}
+              onAddDay={addDay}
+            />
+            {/*
+              혼자 편집할 때는 PresenceStack이 null을 돌려주므로 이 자리가
+              비어 있다 — 좁은 폰 화면을 상시로 잡아먹지 않는다.
+            */}
+            <PresenceStack viewers={presenceViewers} max={3} />
+            <div className="mobile-planner-tools">
+              <button
+                type="button"
+                className="mobile-tool-btn"
+                onClick={openMobileSearchTab}
+                title={tp('search.ariaLabel')}
+                aria-label={tp('search.ariaLabel')}
+              >
+                <Icon name="search" size={17} />
+              </button>
+              <button
+                type="button"
+                className={`mobile-tool-btn ${mapType === 'satellite' ? 'active' : ''}`}
+                onClick={() => setMapType((prev) => (prev === 'satellite' ? 'roadmap' : 'satellite'))}
+                title={tp(mapType === 'satellite' ? 'view.mapTypeRoadmap' : 'view.mapTypeSatellite')}
+                aria-label={tp(mapType === 'satellite' ? 'view.mapTypeRoadmap' : 'view.mapTypeSatellite')}
+              >
+                <Icon name="layers" size={17} />
+              </button>
             </div>
           </div>
+
+          {/*
+            PWA 설치 플로팅 아이콘. 상단바 바로 아래 우측 — 시트가 'full'이어도
+            지도 상단 18%는 항상 남으므로(.mobile-planner-sheet.sheet-full) 시트
+            레벨과 무관하게 계속 보인다. 2026-09-10까지 컴포넌트 자체는 완성돼
+            있었지만 어디에도 렌더된 적이 없었다(고아 컴포넌트) — 사용자가
+            "확실하게 표시되게" 요청해 여기 처음 연결한다.
+          */}
+          <PwaInstallButton className="mobile-pwa-install-fab" showDismiss />
 
           {/*
             지도를 옮긴 뒤에만 나타난다. 모바일에는 우클릭이 없어 검색 중심을
@@ -2922,8 +2935,9 @@ export default function PlannerPage() {
                 isTripOwner || trip.collaboratorRole ? () => setCollabModalOpen(true) : undefined
               }
               collabEntryLabel={isTripOwner ? undefined : 'shared'}
+              onOpenPreferences={() => setPreferencesOpen(true)}
               plan={plan}
-              onOpenUpgrade={() => setUpgradeOpen(true)}
+              onOpenAccount={() => setAccountOpen(true)}
             />
           </div>
         </>
@@ -3060,6 +3074,24 @@ export default function PlannerPage() {
           onClose={() => setCollabModalOpen(false)}
         />
       )}
+
+      <AppSheetModal
+        open={preferencesOpen}
+        title={tp('themes.label')}
+        subtitle={tp('themes.editLead')}
+        onClose={() => setPreferencesOpen(false)}
+      >
+        <ThemePreferenceChips
+          selected={trip.preferences ?? []}
+          onChange={handlePreferencesChange}
+        />
+      </AppSheetModal>
+
+      <MobileAccountSheet
+        open={accountOpen}
+        onClose={() => setAccountOpen(false)}
+        onOpenUpgrade={() => setUpgradeOpen(true)}
+      />
 
       <Toast message={toast} />
     </div>
