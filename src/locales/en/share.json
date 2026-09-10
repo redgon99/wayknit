@@ -54,7 +54,39 @@
     "importedToast": "Imported 「{{title}}」 into your trips",
     "importFailed": "Import failed. Please try again.",
     "localeZhCN": "Simplified Chinese",
-    "localeZhTW": "Traditional Chinese"
+    "localeZhTW": "Traditional Chinese",
+    "filters": "Filters",
+    "filterSummaryEmpty": "No filters · {{count}} total",
+    "filterSummaryActive": "{{count}} filters applied · {{results}} results",
+    "filterEmpty": "No trips match your filters.",
+    "dayFilterLabel": "Trip length",
+    "day": {
+      "all": "Any",
+      "1": "1 day",
+      "2": "2 days",
+      "3": "3 days",
+      "4plus": "4+ days"
+    },
+    "regionFilterLabel": "Region",
+    "region": {
+      "seoul": "Seoul",
+      "busan": "Busan",
+      "daegu": "Daegu",
+      "incheon": "Incheon",
+      "gwangju": "Gwangju",
+      "daejeon": "Daejeon",
+      "ulsan": "Ulsan",
+      "sejong": "Sejong",
+      "gyeonggi": "Gyeonggi",
+      "gangwon": "Gangwon",
+      "chungbuk": "North Chungcheong",
+      "chungnam": "South Chungcheong",
+      "jeonbuk": "North Jeolla",
+      "jeonnam": "South Jeolla",
+      "gyeongbuk": "North Gyeongsang",
+      "gyeongnam": "South Gyeongsang",
+      "jeju": "Jeju"
+    }
   },
   "modal": {
     "shareTitle": "Share trip",

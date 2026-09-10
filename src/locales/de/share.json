@@ -54,7 +54,39 @@
     "importedToast": "「{{title}}」 in Ihre Reisen importiert",
     "importFailed": "Import fehlgeschlagen. Bitte erneut versuchen.",
     "localeZhCN": "Vereinfachtes Chinesisch",
-    "localeZhTW": "Traditionelles Chinesisch"
+    "localeZhTW": "Traditionelles Chinesisch",
+    "filters": "Filter",
+    "filterSummaryEmpty": "Keine Filter · {{count}} insgesamt",
+    "filterSummaryActive": "{{count}} Filter aktiv · {{results}} Ergebnisse",
+    "filterEmpty": "Keine Reise passt zu Ihren Filtern.",
+    "dayFilterLabel": "Reisedauer",
+    "day": {
+      "all": "Alle",
+      "1": "1 Tag",
+      "2": "2 Tage",
+      "3": "3 Tage",
+      "4plus": "4+ Tage"
+    },
+    "regionFilterLabel": "Region",
+    "region": {
+      "seoul": "Seoul",
+      "busan": "Busan",
+      "daegu": "Daegu",
+      "incheon": "Incheon",
+      "gwangju": "Gwangju",
+      "daejeon": "Daejeon",
+      "ulsan": "Ulsan",
+      "sejong": "Sejong",
+      "gyeonggi": "Gyeonggi",
+      "gangwon": "Gangwon",
+      "chungbuk": "Nord-Chungcheong",
+      "chungnam": "Süd-Chungcheong",
+      "jeonbuk": "Nord-Jeolla",
+      "jeonnam": "Süd-Jeolla",
+      "gyeongbuk": "Nord-Gyeongsang",
+      "gyeongnam": "Süd-Gyeongsang",
+      "jeju": "Jeju"
+    }
   },
   "modal": {
     "shareTitle": "Reise teilen",

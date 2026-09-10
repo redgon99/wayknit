@@ -54,7 +54,39 @@
     "importedToast": "「{{title}}」 импортирован в ваши поездки",
     "importFailed": "Импорт не удался. Попробуйте снова.",
     "localeZhCN": "Упрощённый китайский",
-    "localeZhTW": "Традиционный китайский"
+    "localeZhTW": "Традиционный китайский",
+    "filters": "Фильтры",
+    "filterSummaryEmpty": "Без фильтров · всего {{count}}",
+    "filterSummaryActive": "Фильтров: {{count}} · результатов: {{results}}",
+    "filterEmpty": "Нет поездок по заданным фильтрам.",
+    "dayFilterLabel": "Длительность поездки",
+    "day": {
+      "all": "Любая",
+      "1": "1 день",
+      "2": "2 дня",
+      "3": "3 дня",
+      "4plus": "4+ дней"
+    },
+    "regionFilterLabel": "Регион",
+    "region": {
+      "seoul": "Сеул",
+      "busan": "Пусан",
+      "daegu": "Тэгу",
+      "incheon": "Инчхон",
+      "gwangju": "Кванджу",
+      "daejeon": "Тэджон",
+      "ulsan": "Ульсан",
+      "sejong": "Седжон",
+      "gyeonggi": "Кёнгидо",
+      "gangwon": "Канвондо",
+      "chungbuk": "Чхунчхон-Пукто",
+      "chungnam": "Чхунчхон-Намдо",
+      "jeonbuk": "Чолла-Пукто",
+      "jeonnam": "Чолла-Намдо",
+      "gyeongbuk": "Кёнсан-Пукто",
+      "gyeongnam": "Кёнсан-Намдо",
+      "jeju": "Чеджу"
+    }
   },
   "modal": {
     "shareTitle": "Поделиться поездкой",

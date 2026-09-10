@@ -88,7 +88,8 @@ export type IconName =
   | 'facilityPayment'
   | 'facilityWifi'
   | 'facilitySmoking'
-  | 'facilityInfo';
+  | 'facilityInfo'
+  | 'filter';
 
 export interface IconPath {
   d: string;
@@ -532,6 +533,14 @@ export const WAYKNIT_ICONS: Record<IconName, IconPath[]> = {
     { d: 'M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0' },
     { d: 'M12 16v-4' },
     { d: 'M12 8h.01' },
+  ],
+  filter: [
+    { d: 'M4 6h16' },
+    { d: 'M6 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0' },
+    { d: 'M4 12h16' },
+    { d: 'M12 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0' },
+    { d: 'M4 18h16' },
+    { d: 'M8 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0' },
   ],
 };
 

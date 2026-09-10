@@ -54,7 +54,39 @@
     "importedToast": "「{{title}}」を旅行に取り込みました",
     "importFailed": "取り込みに失敗しました。もう一度お試しください。",
     "localeZhCN": "中国語（簡体）",
-    "localeZhTW": "中国語（繁体）"
+    "localeZhTW": "中国語（繁体）",
+    "filters": "フィルター",
+    "filterSummaryEmpty": "条件なし · 全{{count}}件",
+    "filterSummaryActive": "条件{{count}}件 · {{results}}件",
+    "filterEmpty": "条件に合う旅行がありません。",
+    "dayFilterLabel": "旅行日数",
+    "day": {
+      "all": "すべて",
+      "1": "1日",
+      "2": "2日",
+      "3": "3日",
+      "4plus": "4日以上"
+    },
+    "regionFilterLabel": "地域",
+    "region": {
+      "seoul": "ソウル",
+      "busan": "釜山",
+      "daegu": "大邱",
+      "incheon": "仁川",
+      "gwangju": "光州",
+      "daejeon": "大田",
+      "ulsan": "蔚山",
+      "sejong": "世宗",
+      "gyeonggi": "京畿道",
+      "gangwon": "江原道",
+      "chungbuk": "忠清北道",
+      "chungnam": "忠清南道",
+      "jeonbuk": "全羅北道",
+      "jeonnam": "全羅南道",
+      "gyeongbuk": "慶尚北道",
+      "gyeongnam": "慶尚南道",
+      "jeju": "済州"
+    }
   },
   "modal": {
     "shareTitle": "旅行を共有",

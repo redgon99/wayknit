@@ -54,7 +54,39 @@
     "importedToast": "「{{title}}」을(를) 내 여행에 끌어왔습니다",
     "importFailed": "끌어오기에 실패했습니다. 다시 시도해 주세요.",
     "localeZhCN": "简体中文",
-    "localeZhTW": "繁體中文"
+    "localeZhTW": "繁體中文",
+    "filters": "필터",
+    "filterSummaryEmpty": "선택한 조건 없음 · 전체 {{count}}개",
+    "filterSummaryActive": "조건 {{count}}개 적용 · {{results}}개",
+    "filterEmpty": "조건에 맞는 여행이 없습니다.",
+    "dayFilterLabel": "여행 일수",
+    "day": {
+      "all": "전체",
+      "1": "1일",
+      "2": "2일",
+      "3": "3일",
+      "4plus": "4일+"
+    },
+    "regionFilterLabel": "지역",
+    "region": {
+      "seoul": "서울",
+      "busan": "부산",
+      "daegu": "대구",
+      "incheon": "인천",
+      "gwangju": "광주",
+      "daejeon": "대전",
+      "ulsan": "울산",
+      "sejong": "세종",
+      "gyeonggi": "경기",
+      "gangwon": "강원",
+      "chungbuk": "충북",
+      "chungnam": "충남",
+      "jeonbuk": "전북",
+      "jeonnam": "전남",
+      "gyeongbuk": "경북",
+      "gyeongnam": "경남",
+      "jeju": "제주"
+    }
   },
   "modal": {
     "shareTitle": "여행 공유",

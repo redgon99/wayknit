@@ -54,7 +54,39 @@
     "importedToast": "已將「{{title}}」導入你的行程",
     "importFailed": "導入失敗，請重試。",
     "localeZhCN": "簡體中文",
-    "localeZhTW": "繁體中文"
+    "localeZhTW": "繁體中文",
+    "filters": "篩選",
+    "filterSummaryEmpty": "未設條件 · 共{{count}}個",
+    "filterSummaryActive": "已選{{count}}個條件 · {{results}}個結果",
+    "filterEmpty": "沒有符合條件的行程。",
+    "dayFilterLabel": "行程天數",
+    "day": {
+      "all": "不限",
+      "1": "1天",
+      "2": "2天",
+      "3": "3天",
+      "4plus": "4天以上"
+    },
+    "regionFilterLabel": "地區",
+    "region": {
+      "seoul": "首爾",
+      "busan": "釜山",
+      "daegu": "大邱",
+      "incheon": "仁川",
+      "gwangju": "光州",
+      "daejeon": "大田",
+      "ulsan": "蔚山",
+      "sejong": "世宗",
+      "gyeonggi": "京畿道",
+      "gangwon": "江原道",
+      "chungbuk": "忠清北道",
+      "chungnam": "忠清南道",
+      "jeonbuk": "全羅北道",
+      "jeonnam": "全羅南道",
+      "gyeongbuk": "慶尚北道",
+      "gyeongnam": "慶尚南道",
+      "jeju": "濟州島"
+    }
   },
   "modal": {
     "shareTitle": "分享行程",

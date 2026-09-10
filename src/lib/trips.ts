@@ -11,6 +11,7 @@ import { normalizeTrip, DEFAULT_ROUTE_OPTIONS } from './tripRouteOptions';
 import { computeTripCenter } from './tripGeo';
 import i18n from './i18n';
 import { normalizeLocale } from './locale';
+import { regionCodesFromPins } from './koreaRegions';
 
 export interface Trip {
   id: string;
@@ -75,6 +76,10 @@ export interface PlazaListing {
   pinSummary: string;
   pinnedByDay: Record<number, PinnedPlace[]>;
   locale?: string | null;
+  /** 관심 테마 (필터용) — payload.preferences 그대로, 별도 컬럼 아님 */
+  themes: TripTheme[];
+  /** 지역 필터용 — 별도 컬럼 없음, 핀 주소에서 파생(koreaRegions.ts) */
+  regions: string[];
 }
 
 export interface TripSummary {
@@ -142,6 +147,7 @@ function rowToTrip(data: {
     routeOptionsByDay?: Record<number, RouteOptions>;
     generatedRouteByDay?: Trip['generatedRouteByDay'];
     materials?: TripMaterial[];
+    preferences?: TripTheme[];
   };
   return normalizeTrip({
     id: data.id,
@@ -154,6 +160,7 @@ function rowToTrip(data: {
     routeOptions: payload?.routeOptions,
     generatedRouteByDay: payload?.generatedRouteByDay ?? {},
     materials: payload?.materials ?? [],
+    preferences: payload?.preferences,
     createdAt: new Date(data.created_at).getTime(),
     updatedAt: new Date(data.updated_at).getTime(),
     ownerId: data.owner_id ?? undefined,
@@ -208,7 +215,10 @@ function rowToPlazaListing(data: {
   plaza_listed_at?: string | null;
   plaza_locale?: string | null;
 }): PlazaListing {
-  const payload = data.payload as { pinnedByDay?: Record<number, PinnedPlace[]> };
+  const payload = data.payload as {
+    pinnedByDay?: Record<number, PinnedPlace[]>;
+    preferences?: TripTheme[];
+  };
   const pinnedByDay = payload?.pinnedByDay ?? { 1: [] };
   const center =
     data.plaza_center_lat != null && data.plaza_center_lng != null
@@ -227,6 +237,8 @@ function rowToPlazaListing(data: {
     totalDays: data.total_days,
     pinSummary: buildPlazaPinSummary(pinnedByDay, data.total_days),
     pinnedByDay,
+    themes: payload?.preferences ?? [],
+    regions: regionCodesFromPins(pinnedByDay),
     locale: data.plaza_locale ?? 'ko',
   };
 }
@@ -1209,7 +1221,15 @@ async function writeRemote(trip: Trip): Promise<void> {
   //
   // 부수 효과: 자동저장이 700ms마다 다시 쓰던 덩어리가 사라졌다(실측 최대 151kB).
   // 이제 저장은 바뀐 일차·자료·핀의 행만 건드린다.
-  const payload = {};
+  //
+  // 예외 하나: preferences(관심 테마)는 자기 행이 없어 여기 남겨뒀다. 이 필드가
+  // 원격에 전혀 저장되지 않아(payload가 늘 {}였음) 로그인 사용자는 새로고침마다
+  // 테마 선택이 조용히 초기화되던 버그가 있었다 — 공유마당 테마 필터를 실데이터로
+  // 만들려고 payload를 들여다보다가 발견했다.
+  const payload =
+    normalized.preferences && normalized.preferences.length > 0
+      ? { preferences: normalized.preferences }
+      : {};
   // 협업자는 upsert를 쓸 수 없다.
   //
   // `.upsert()`는 INSERT ... ON CONFLICT DO UPDATE 다. 행이 이미 있어서
@@ -1510,6 +1530,7 @@ async function listPlazaRemote(localeFilter?: string | null): Promise<PlazaListi
       ...l,
       pinnedByDay,
       pinSummary: buildPlazaPinSummary(pinnedByDay, l.totalDays),
+      regions: regionCodesFromPins(pinnedByDay),
     };
   });
 }
@@ -1536,6 +1557,8 @@ function listPlazaLocal(): PlazaListing[] {
         pinSummary: buildPlazaPinSummary(t.pinnedByDay, t.totalDays),
         pinnedByDay: t.pinnedByDay,
         locale: t.plazaLocale ?? 'ko',
+        themes: t.preferences ?? [],
+        regions: regionCodesFromPins(t.pinnedByDay),
       };
     });
 }
