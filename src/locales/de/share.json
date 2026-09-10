@@ -99,7 +99,7 @@
     "displayName": "Anzeigename (optional)",
     "displayPlaceholder": "Wird anonym angezeigt",
     "email": "E-Mail",
-    "emailWarn": "Die E-Mail erscheint auf der Pinnwand. Bitte vor dem Listen prüfen.",
+    "emailWarn": "Deine E-Mail wird nie auf der Marktplatz-Pinnwand angezeigt — sie dient nur dazu, dich zu diesem Eintrag zu erreichen.",
     "helpTitle": "Was ist der Teilen-Platz?",
     "helpBody": "Eine öffentliche Pinnwand für Reisepläne. Optionaler Name, E-Mail, Titel und Orte werden gelistet.",
     "help1": "Andere Reisepläne auf der Pinnwand ansehen.",

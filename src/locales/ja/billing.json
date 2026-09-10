@@ -9,7 +9,9 @@
     "subtitle": "無制限クラウド · 多言語エクスポート · 実ルート",
     "cta": "Plusにアップグレード",
     "manage": "サブスクリプション管理",
-    "currentPlan": "現在のプラン: {{plan}}"
+    "currentPlan": "現在のプラン: {{plan}}",
+    "price": "月額 ₩{{amount}}",
+    "priceNote": "毎月自動決済され、いつでも解約できます。"
   },
   "limits": {
     "tripCount": "Freeプランは旅行{{max}}件までです。",

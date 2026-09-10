@@ -162,7 +162,8 @@
     "markRequired": "Marquer comme incontournable",
     "unmarkRequired": "Retirer l’incontournable",
     "requiredBadge": "Lieu incontournable",
-    "addedBy": "Ajouté par {{who}}"
+    "addedBy": "Ajouté par {{who}}",
+    "toolbarMore": "Outils"
   },
   "route": {
     "fixedArrivalAt": "Arrivée fixée à {{time}}",

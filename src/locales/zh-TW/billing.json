@@ -9,7 +9,9 @@
     "subtitle": "無限雲存儲 · 多語言導出 · 實際路線",
     "cta": "升級到 Plus",
     "manage": "管理訂閱",
-    "currentPlan": "當前方案：{{plan}}"
+    "currentPlan": "當前方案：{{plan}}",
+    "price": "每月 ₩{{amount}}",
+    "priceNote": "每月自動扣款，可隨時取消。"
   },
   "limits": {
     "tripCount": "Free 方案最多保存 {{max}} 個行程。",

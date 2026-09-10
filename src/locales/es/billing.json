@@ -9,7 +9,9 @@
     "subtitle": "Nube ilimitada · exportación multilingüe · rutas reales",
     "cta": "Pasar a Plus",
     "manage": "Gestionar suscripción",
-    "currentPlan": "Plan actual: {{plan}}"
+    "currentPlan": "Plan actual: {{plan}}",
+    "price": "₩{{amount}} / mes",
+    "priceNote": "Se cobra automáticamente cada mes. Cancela cuando quieras."
   },
   "limits": {
     "tripCount": "El plan gratuito permite hasta {{max}} viajes.",

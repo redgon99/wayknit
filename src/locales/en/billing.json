@@ -9,7 +9,9 @@
     "subtitle": "Unlimited cloud · multilingual export · real routes",
     "cta": "Upgrade to Plus",
     "manage": "Manage subscription",
-    "currentPlan": "Current plan: {{plan}}"
+    "currentPlan": "Current plan: {{plan}}",
+    "price": "₩{{amount}} / month",
+    "priceNote": "Billed monthly. Cancel anytime."
   },
   "limits": {
     "tripCount": "Free plan allows up to {{max}} trips.",

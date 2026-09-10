@@ -99,7 +99,7 @@
     "displayName": "Display name (optional)",
     "displayPlaceholder": "Shown as anonymous",
     "email": "Email",
-    "emailWarn": "Your email will appear on the plaza board. Check it before listing.",
+    "emailWarn": "Your email is never shown on the plaza board — it’s only used to reach you about this listing.",
     "helpTitle": "What is the share plaza?",
     "helpBody": "A public board for sharing itineraries. Listing posts your optional name, email, trip title, and places.",
     "help1": "Browse other travelers’ itineraries on the board.",

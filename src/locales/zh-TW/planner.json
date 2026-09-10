@@ -148,7 +148,8 @@
     "routeTitleAll": "根據所有標記地點創建路線",
     "routeTitleSelected": "根據所選{{count}}處創建路線",
     "pinCount": "{{count}} 個標記",
-    "addedBy": "由 {{who}} 新增"
+    "addedBy": "由 {{who}} 新增",
+    "toolbarMore": "工具"
   },
   "route": {
     "fixedArrivalAt": "抵達時間固定為 {{time}}",

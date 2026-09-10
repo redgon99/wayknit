@@ -99,7 +99,7 @@
     "displayName": "Nombre (opcional)",
     "displayPlaceholder": "Se mostrará como anónimo",
     "email": "Correo",
-    "emailWarn": "El correo se verá en el tablón. Revísalo antes de publicar.",
+    "emailWarn": "Tu correo nunca se muestra en el tablón de la plaza; solo se usa para contactarte sobre esta publicación.",
     "helpTitle": "¿Qué es la plaza?",
     "helpBody": "Un tablón público para compartir itinerarios. Se publican nombre (opcional), correo, título y lugares.",
     "help1": "Explora itinerarios de otros viajeros.",

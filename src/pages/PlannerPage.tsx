@@ -2723,6 +2723,12 @@ export default function PlannerPage() {
                     : tp('chrome.sheetPinsSummary', { count: pinned.length, n: currentDay })}
               </span>
             </div>
+            {/*
+              예전엔 검색/일정 2탭 + 일정 안에 목록/동선 2단 토글, 이렇게
+              2단으로 나뉘어 있었다. 사용자 요청으로 한 줄 3탭(검색/목록보기/
+              동선짜기)으로 합쳤다 — 안쪽 토글 한 줄만큼 시트 높이가
+              그대로 남는다(F02와 같은 방향의 공간 확보).
+            */}
             <div className="mobile-sheet-tabs">
               <button
                 type="button"
@@ -2733,10 +2739,20 @@ export default function PlannerPage() {
               </button>
               <button
                 type="button"
-                className={`mobile-sheet-tab ${mobileSheetTab !== 'search' ? 'active' : ''}`}
-                onClick={() => setMobileSheetTab((prev) => (prev === 'search' ? 'pins' : prev))}
+                className={`mobile-sheet-tab ${mobileSheetTab === 'pins' ? 'active' : ''}`}
+                onClick={() => setMobileSheetTab('pins')}
               >
-                {tp('chrome.tabItinerary', { count: pinned.length })}
+                {tp('chrome.viewList')}
+              </button>
+              <button
+                type="button"
+                className={`mobile-sheet-tab ${mobileSheetTab === 'route' ? 'active' : ''}`}
+                onClick={() => {
+                  setMobileSheetTab('route');
+                  setRouteOptionsOpen(true);
+                }}
+              >
+                {tp('chrome.viewRoute')}
               </button>
             </div>
             <div className="mobile-sheet-content">
@@ -2783,102 +2799,82 @@ export default function PlannerPage() {
                   onCategorySubFiltersChange={setCategorySubFilters}
                   preferences={trip.preferences}
                 />
+              ) : mobileSheetTab === 'pins' ? (
+                <div className="mobile-itinerary-view">
+                  {generatedRoute && (
+                    <div className="mobile-route-summary-card">
+                      <Icon name="route" size={18} />
+                      <span className="mobile-route-summary-text">
+                        {tp('chrome.routeSummary', {
+                          km: generatedRoute.totalDistanceKm,
+                          min: generatedRoute.totalTravelMinutes,
+                        })}
+                      </span>
+                      <button
+                        type="button"
+                        className="mobile-route-replan-btn"
+                        onClick={handleOpenRouteOptions}
+                      >
+                        {tp('chrome.replanCta')}
+                      </button>
+                    </div>
+                  )}
+                  <PinupBar
+                    variant="panel"
+                    hideHeader
+                    compactToolbar
+                    pinAuthors={canSeePinAuthors ? pinAuthors : undefined}
+                    currentUserEmail={user?.email ?? null}
+                    pinned={pinned}
+                    tripTitle={trip.title}
+                    currentDay={currentDay}
+                    totalDays={trip.totalDays}
+                    pinnedByDay={trip.pinnedByDay}
+                    generatedRouteByDay={trip.generatedRouteByDay}
+                    onExportNotify={showToast}
+                    onUpgradeRequest={() => setUpgradeOpen(true)}
+                    onImportPins={handleImportPins}
+                    mapCategoryFilter={mapPinCategoryFilter}
+                    onToggleMapCategoryFilter={handleToggleMapCategoryFilter}
+                    onRemove={handleRemovePin}
+                    onReorder={handleReorderPinned}
+                    onSelectPin={(p) => {
+                      handleSelectPlace(p);
+                      setMobileSheetLevel('peek');
+                    }}
+                    selectedPinIds={selectedPinIds}
+                    onTogglePinSelection={handleTogglePinSelection}
+                    onClearAll={handleClearAllPins}
+                    onOpenRouteOptions={handleOpenRouteOptions}
+                    routeOptionsOpen={routeOptionsOpen}
+                    mustVisitOnly={mustVisitOnly}
+                    onToggleMustVisitOnly={() => setMustVisitOnly((v) => !v)}
+                    onToggleRequired={handleToggleRequired}
+                    onShowTaxiCard={(p) => setTaxiCardPlace(p)}
+                  />
+                </div>
               ) : (
                 <div className="mobile-itinerary-view">
-                  <div className="mobile-view-toggle" role="group" aria-label={tp('chrome.viewToggleAria')}>
-                    <button
-                      type="button"
-                      className={`mobile-view-toggle-btn ${mobileSheetTab === 'pins' ? 'active' : ''}`}
-                      onClick={() => setMobileSheetTab('pins')}
-                    >
-                      {tp('chrome.viewList')}
-                    </button>
-                    <button
-                      type="button"
-                      className={`mobile-view-toggle-btn ${mobileSheetTab === 'route' ? 'active' : ''}`}
-                      onClick={() => {
-                        setMobileSheetTab('route');
-                        setRouteOptionsOpen(true);
-                      }}
-                    >
-                      {tp('chrome.viewRoute')}
-                    </button>
-                  </div>
-                  {mobileSheetTab === 'pins' ? (
-                    <>
-                      {generatedRoute && (
-                        <div className="mobile-route-summary-card">
-                          <Icon name="route" size={18} />
-                          <span className="mobile-route-summary-text">
-                            {tp('chrome.routeSummary', {
-                              km: generatedRoute.totalDistanceKm,
-                              min: generatedRoute.totalTravelMinutes,
-                            })}
-                          </span>
-                          <button
-                            type="button"
-                            className="mobile-route-replan-btn"
-                            onClick={handleOpenRouteOptions}
-                          >
-                            {tp('chrome.replanCta')}
-                          </button>
-                        </div>
-                      )}
-                      <PinupBar
-                        variant="panel"
-                        hideHeader
-                        pinAuthors={canSeePinAuthors ? pinAuthors : undefined}
-                        currentUserEmail={user?.email ?? null}
-                        pinned={pinned}
-                        tripTitle={trip.title}
-                        currentDay={currentDay}
-                        totalDays={trip.totalDays}
-                        pinnedByDay={trip.pinnedByDay}
-                        generatedRouteByDay={trip.generatedRouteByDay}
-                        onExportNotify={showToast}
-                        onUpgradeRequest={() => setUpgradeOpen(true)}
-                        onImportPins={handleImportPins}
-                        mapCategoryFilter={mapPinCategoryFilter}
-                        onToggleMapCategoryFilter={handleToggleMapCategoryFilter}
-                        onRemove={handleRemovePin}
-                        onReorder={handleReorderPinned}
-                        onSelectPin={(p) => {
-                          handleSelectPlace(p);
-                          setMobileSheetLevel('peek');
-                        }}
-                        selectedPinIds={selectedPinIds}
-                        onTogglePinSelection={handleTogglePinSelection}
-                        onClearAll={handleClearAllPins}
-                        onOpenRouteOptions={handleOpenRouteOptions}
-                        routeOptionsOpen={routeOptionsOpen}
-                        mustVisitOnly={mustVisitOnly}
-                        onToggleMustVisitOnly={() => setMustVisitOnly((v) => !v)}
-                        onToggleRequired={handleToggleRequired}
-                        onShowTaxiCard={(p) => setTaxiCardPlace(p)}
-                      />
-                    </>
-                  ) : (
-                    <RouteOptionsPanel
-                      embedded
-                      open
-                      onCompareRoutesChange={setCompareRoutes}
-                      pinned={routePins}
-                      currentDay={currentDay}
-                      totalDays={trip.totalDays}
-                      options={routeOptions}
-                      hasExistingRoute={!!generatedRoute}
-                      onChange={setRouteOptions}
-                      onUpdateStayMinutes={handleUpdateStayMinutes}
-                      onUpdateFixedArrival={handleUpdateFixedArrival}
-                      onUpdateItemKind={handleUpdateItemKind}
-                      onUpdateNote={handleUpdateNote}
-                      onReorderPins={handleReorderRoutePins}
-                      onClose={() => setMobileSheetLevel('peek')}
-                      onGenerate={() => void handleGenerate()}
-                      onPickOriginFromMap={handlePickOriginFromMap}
-                      pickingOriginFromMap={pickingOriginFromMap}
-                    />
-                  )}
+                  <RouteOptionsPanel
+                    embedded
+                    open
+                    onCompareRoutesChange={setCompareRoutes}
+                    pinned={routePins}
+                    currentDay={currentDay}
+                    totalDays={trip.totalDays}
+                    options={routeOptions}
+                    hasExistingRoute={!!generatedRoute}
+                    onChange={setRouteOptions}
+                    onUpdateStayMinutes={handleUpdateStayMinutes}
+                    onUpdateFixedArrival={handleUpdateFixedArrival}
+                    onUpdateItemKind={handleUpdateItemKind}
+                    onUpdateNote={handleUpdateNote}
+                    onReorderPins={handleReorderRoutePins}
+                    onClose={() => setMobileSheetLevel('peek')}
+                    onGenerate={() => void handleGenerate()}
+                    onPickOriginFromMap={handlePickOriginFromMap}
+                    pickingOriginFromMap={pickingOriginFromMap}
+                  />
                 </div>
               )}
             </div>

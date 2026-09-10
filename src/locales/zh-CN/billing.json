@@ -9,7 +9,9 @@
     "subtitle": "无限云存储 · 多语言导出 · 实际路线",
     "cta": "升级到 Plus",
     "manage": "管理订阅",
-    "currentPlan": "当前方案：{{plan}}"
+    "currentPlan": "当前方案：{{plan}}",
+    "price": "每月 ₩{{amount}}",
+    "priceNote": "按月自动扣费，可随时取消。"
   },
   "limits": {
     "tripCount": "Free 方案最多保存 {{max}} 个行程。",

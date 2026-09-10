@@ -148,7 +148,8 @@
     "routeTitleAll": "根据所有标记地点创建路线",
     "routeTitleSelected": "根据所选{{count}}处创建路线",
     "pinCount": "{{count}} 个标记",
-    "addedBy": "由 {{who}} 添加"
+    "addedBy": "由 {{who}} 添加",
+    "toolbarMore": "工具"
   },
   "route": {
     "fixedArrivalAt": "到达时间固定为 {{time}}",

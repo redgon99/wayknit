@@ -305,12 +305,14 @@ export function SharePlazaPanel() {
               return (
                 <article key={entry.id} id={`plaza-row-${entry.id}`} className="plaza-board-row">
                   <div className="plaza-board-meta">
+                    {/* F04(모바일 감사 보고서) — 작성자 이메일 원문을 비로그인
+                        방문자에게도 그대로 보여주고 있었다. 클릭도 안 되는
+                        평문이라 얻는 기능은 없이 스팸 수집 위험만 있어 아예
+                        없앴다(트립 데이터 자체가 안 실려 오도록 PLAZA_LIST_SELECT
+                        에서도 뺐다). 작성자 표시는 별명 하나로 충분하다. */}
                     <span className="plaza-board-author">
                       {entry.displayName?.trim() || t('plaza.anonymous')}
                     </span>
-                    {entry.contactEmail && (
-                      <span className="plaza-board-email">{entry.contactEmail}</span>
-                    )}
                     <time
                       className="plaza-board-date"
                       dateTime={new Date(entry.listedAt).toISOString()}

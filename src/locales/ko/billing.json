@@ -9,7 +9,9 @@
     "subtitle": "클라우드 무제한 · 다국어 일정보내기 · 실경로 동선",
     "cta": "Plus 업그레이드",
     "manage": "구독 관리",
-    "currentPlan": "현재 플랜: {{plan}}"
+    "currentPlan": "현재 플랜: {{plan}}",
+    "price": "월 {{amount}}원",
+    "priceNote": "매달 자동 결제되며, 언제든 해지할 수 있어요."
   },
   "limits": {
     "tripCount": "Free 플랜은 여행 {{max}}개까지 저장할 수 있습니다.",

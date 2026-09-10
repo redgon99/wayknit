@@ -1,4 +1,4 @@
-import { landingAnchor, walkEnabled, type LandingMenuNode } from '../lib/landingMenu';
+import { landingAnchor, nodeHasContent, walkEnabled, type LandingMenuNode } from '../lib/landingMenu';
 import { youtubeEmbedUrl } from '../lib/landingPromo';
 
 const FALLBACK_IMAGES = [
@@ -22,7 +22,7 @@ export function collectNoticeTexts(tree: LandingMenuNode[]): string[] {
 
 export function landingNavItems(tree: LandingMenuNode[], skipId?: string): LandingMenuNode[] {
   return walkEnabled(tree)
-    .filter((n) => n.type !== 'notice' && n.id !== skipId)
+    .filter((n) => n.type !== 'notice' && n.id !== skipId && nodeHasContent(n))
     .map((n) => ({ ...n, children: landingNavItems(n.children, skipId) }));
 }
 
@@ -88,6 +88,7 @@ function CmsNode({
   if (node.type === 'notice') return null;
 
   if (node.type === 'copy') {
+    if (!nodeHasContent(node)) return <>{kids}</>;
     return (
       <>
         <section className="landing-section" id={landingAnchor(node.id)}>
@@ -145,6 +146,7 @@ function CmsNode({
     );
   }
   if (node.type === 'text') {
+    if (!nodeHasContent(node)) return <>{kids}</>;
     return (
       <>
         <section className="landing-section" id={landingAnchor(node.id)}>
@@ -157,6 +159,12 @@ function CmsNode({
       </>
     );
   }
+  // group 등 나머지 타입 — group 자체는 콘텐츠가 없고 자식으로만 존재한다.
+  // kids.length는 "활성화된 자식 수"일 뿐 "실제로 뭔가 그려지는 자식 수"가
+  // 아니다(빈 자식도 각자 자기 카드를 건너뛰고 빈 프래그먼트를 반환할 뿐
+  // 배열엔 그대로 남는다) — 그래서 얕은 길이 대신 nodeHasContent로 자손까지
+  // 재귀 확인한다. 콘텐츠가 하나도 없으면 제목만 남은 빈 섹션이 되므로 건너뛴다.
+  if (!nodeHasContent(node)) return null;
   return (
     <section className="landing-section" id={landingAnchor(node.id)}>
       <div className="landing-section-header">

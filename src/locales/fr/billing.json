@@ -9,7 +9,9 @@
     "subtitle": "Cloud illimité · export multilingue · itinéraires réels",
     "cta": "Passer à Plus",
     "manage": "Gérer l’abonnement",
-    "currentPlan": "Offre actuelle : {{plan}}"
+    "currentPlan": "Offre actuelle : {{plan}}",
+    "price": "₩{{amount}} / mois",
+    "priceNote": "Facturé automatiquement chaque mois. Annulez à tout moment."
   },
   "limits": {
     "tripCount": "L’offre gratuite permet jusqu’à {{max}} voyages.",

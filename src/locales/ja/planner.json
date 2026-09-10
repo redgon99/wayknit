@@ -148,7 +148,8 @@
     "routeTitleAll": "ピンしたすべての場所でルート作成",
     "routeTitleSelected": "選択した{{count}}件でルート作成",
     "pinCount": "ピン {{count}}",
-    "addedBy": "{{who}} さんが追加"
+    "addedBy": "{{who}} さんが追加",
+    "toolbarMore": "ツール"
   },
   "route": {
     "fixedArrivalAt": "到着時刻を {{time}} に固定",

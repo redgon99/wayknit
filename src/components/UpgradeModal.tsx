@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import type { PlanId } from '../lib/subscription';
-import { isPlusOrTeam } from '../lib/subscription';
+import { isPlusOrTeam, PLUS_MONTHLY_PRICE_KRW } from '../lib/subscription';
 import { isPortOneConfigured } from '../lib/portone';
 import { startPlusSubscription, cancelPlusSubscription } from '../lib/billing';
 
@@ -18,7 +18,7 @@ interface Props {
 type FlowState = 'idle' | 'processing' | 'error';
 
 export function UpgradeModal({ open, onClose, plan, userId, onPlanChanged }: Props) {
-  const { t } = useTranslation('billing');
+  const { t, i18n } = useTranslation('billing');
   const [flow, setFlow] = useState<FlowState>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -73,6 +73,23 @@ export function UpgradeModal({ open, onClose, plan, userId, onPlanChanged }: Pro
         <h2 id="upgrade-title">{t('upgrade.title')}</h2>
         <p className="upgrade-subtitle">{t('upgrade.subtitle')}</p>
         <p className="upgrade-current">{t('upgrade.currentPlan', { plan: t(`plan.${plan}`) })}</p>
+        {/*
+          F07(모바일 감사 보고서, 2026-09-10) — 기능 목록과 결제 버튼만
+          있고 가격·결제 주기 안내가 없어, 사용자가 비용을 모른 채
+          "Plus 업그레이드"를 눌러야 했다. 실제 결제 금액
+          (PLUS_MONTHLY_PRICE_KRW, lib/billing.ts가 PortOne에 그대로
+          넘기는 값)을 그대로 보여준다 — 화면 문구와 실제 청구액이
+          따로 노는 걸 막기 위해 새 상수를 만들지 않고 결제에 쓰는
+          값을 그대로 재사용했다.
+        */}
+        <p className="upgrade-price">
+          <span className="upgrade-price-amount">
+            {t('upgrade.price', {
+              amount: new Intl.NumberFormat(i18n.language).format(PLUS_MONTHLY_PRICE_KRW),
+            })}
+          </span>
+          <span className="upgrade-price-note">{t('upgrade.priceNote')}</span>
+        </p>
         <ul className="upgrade-features">
           <li>{t('features.unlimitedTrips')}</li>
           <li>{t('features.cloudSync')}</li>

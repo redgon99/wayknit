@@ -69,7 +69,6 @@ export interface PlazaListing {
   slug: string;
   title: string;
   displayName: string | null;
-  contactEmail: string | null;
   center: { lat: number; lng: number } | null;
   listedAt: number;
   totalDays: number;
@@ -181,8 +180,13 @@ function rowToTrip(data: {
 const TRIP_SELECT =
   'id, slug, title, total_days, current_day, payload, created_at, updated_at, owner_id, is_public, listed_in_plaza, plaza_display_name, plaza_contact_email, plaza_center_lat, plaza_center_lng, plaza_listed_at, plaza_locale';
 
+// F04(모바일 감사 보고서, 2026-09-10) — plaza_contact_email을 일부러 뺐다.
+// 화면(SharePlazaPanel)에서만 안 보여주는 걸로는 부족하다 — anon도 이 SELECT를
+// 그대로 PostgREST에 보낼 수 있어서, 이메일을 계속 요청하면 원문이 그대로
+// JSON 응답에 실려 나간다. 여기서 아예 안 물어보는 게 유일하게 확실한 방법.
+// 소유자 본인의 조회(TRIP_SELECT)는 자기 글 관리용이라 그대로 둔다.
 const PLAZA_LIST_SELECT =
-  'id, slug, title, total_days, payload, listed_in_plaza, plaza_display_name, plaza_contact_email, plaza_center_lat, plaza_center_lng, plaza_listed_at, plaza_locale';
+  'id, slug, title, total_days, payload, listed_in_plaza, plaza_display_name, plaza_center_lat, plaza_center_lng, plaza_listed_at, plaza_locale';
 
 export function buildPlazaPinSummary(
   pinnedByDay: Record<number, PinnedPlace[]>,
@@ -209,7 +213,6 @@ function rowToPlazaListing(data: {
   total_days: number;
   payload: unknown;
   plaza_display_name?: string | null;
-  plaza_contact_email?: string | null;
   plaza_center_lat?: number | null;
   plaza_center_lng?: number | null;
   plaza_listed_at?: string | null;
@@ -229,7 +232,6 @@ function rowToPlazaListing(data: {
     slug: data.slug,
     title: data.title,
     displayName: data.plaza_display_name ?? null,
-    contactEmail: data.plaza_contact_email ?? null,
     center,
     listedAt: data.plaza_listed_at
       ? new Date(data.plaza_listed_at).getTime()
@@ -1550,7 +1552,6 @@ function listPlazaLocal(): PlazaListing[] {
         slug: t.slug,
         title: t.title,
         displayName: t.plazaDisplayName ?? null,
-        contactEmail: t.plazaContactEmail ?? null,
         center,
         listedAt: t.plazaListedAt ?? t.updatedAt,
         totalDays: t.totalDays,

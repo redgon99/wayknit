@@ -99,7 +99,7 @@
     "displayName": "Nom affiché (facultatif)",
     "displayPlaceholder": "Affiché comme anonyme",
     "email": "E-mail",
-    "emailWarn": "L’e-mail apparaîtra sur le tableau. Vérifiez-le avant publication.",
+    "emailWarn": "Votre e-mail n’apparaît jamais sur le tableau de la place — il sert uniquement à vous contacter au sujet de cette annonce.",
     "helpTitle": "Qu’est-ce que la place ?",
     "helpBody": "Un tableau public pour partager des itinéraires. Nom (facultatif), e-mail, titre et lieux y sont publiés.",
     "help1": "Parcourez les itinéraires d’autres voyageurs.",

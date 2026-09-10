@@ -9,7 +9,9 @@
     "subtitle": "Unbegrenzte Cloud · mehrsprachiger Export · echte Routen",
     "cta": "Auf Plus upgraden",
     "manage": "Abo verwalten",
-    "currentPlan": "Aktueller Plan: {{plan}}"
+    "currentPlan": "Aktueller Plan: {{plan}}",
+    "price": "₩{{amount}} / Monat",
+    "priceNote": "Monatlich automatisch abgebucht. Jederzeit kündbar."
   },
   "limits": {
     "tripCount": "Der Gratisplan erlaubt bis zu {{max}} Reisen.",

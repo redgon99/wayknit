@@ -5877,6 +5877,26 @@ button {
   margin: 0 0 12px;
 }
 
+/* F07(모바일 감사 보고서) — 결제 버튼 누르기 전에 가격이 눈에 띄게 보여야 한다.
+   요금제 화면에서 가장 눈에 띄는 요소가 돼야 하므로 기능 목록보다 크게 잡는다. */
+.upgrade-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.upgrade-price-amount {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.upgrade-price-note {
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+}
+
 .upgrade-features {
   margin: 0 0 16px;
   padding-left: 18px;
@@ -10910,6 +10930,22 @@ button {
   background: #fff;
 }
 
+/*
+ * F03(모바일 감사 보고서, 2026-09-10) — 이름 잘림·짧은 이름("드름산")이
+ * "드름/산"으로 꺾여 보이던 문제. 기본 .chip-name엔 flex 폭 배정이 없어서
+ * .chip-body(flex row) 안에서 기본 min-width(auto = 글자 전체 폭)를 지켜
+ * 줄바꿈이 일어났다. flex:1로 남는 폭을 장소명에 먼저 주고, min-width:0으로
+ * 줄여도 되게 한 뒤 진짜 CSS 말줄임표로 자른다 — 이제 실제 픽셀 폭 기준
+ * 이라 짧은 이름은 그대로, 긴 이름만 자연스럽게 끝에 …가 붙는다.
+ */
+.pinup-bar-panel .chip-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .pinup-panel-footer {
   margin-top: auto;
   flex-shrink: 0;
@@ -12501,9 +12537,27 @@ button {
   margin-bottom: 14px;
 }
 
-/* 시트 안에서는 패널이 시트 높이를 그대로 채우고, 결과만 스크롤한다 */
+/*
+ * F01(모바일 감사 보고서, 2026-09-10) — sheet-half 상태에서 검색 결과가
+ * 15개 잡혀 있어도 카드가 0px로 접혀 하나도 안 보이던 버그.
+ *
+ * 1차 시도(height:100%+display:flex 체인 복구)로는 부족했다 — 사용자가
+ * 실기기로 재확인해서 드러났다. 진짜 원인은 flex 계산 자체다.
+ * `.search-panel > :not(.result-card) { flex-shrink: 0; }`(726줄) 때문에
+ * 검색어·"전국 N개 결과"·카테고리 칩 같은 고정 행들이 전혀 안 줄어든다.
+ * sheet-half는 이 고정 행들만으로 이미 공간을 다 쓰는 높이라, flex:1인
+ * .search-result-list가 "남는 공간"을 계산하면 정확히 0이 나온다 — 이건
+ * 버그가 아니라 flex가 정직하게 "남는 공간 없음"을 계산한 결과였다.
+ *
+ * 그래서 "안에서 남는 공간을 계산"하는 방식 자체를 버렸다. height:100%로
+ * 시트 높이에 억지로 맞추지 않고 자연스러운 콘텐츠 높이로 두고, 스크롤은
+ * 부모(.mobile-sheet-content, 이미 overflow:auto)가 통째로 맡는다 — 같은
+ * 시트 안 "일정" 탭(PinupBar)도 이미 이 방식이다. 검색만 유독 안에서
+ * 따로 높이를 맞추려다 이 문제가 생겼다.
+ */
 .mobile-sheet-content .search-panel {
-  height: 100%;
+  height: auto;
+  overflow: visible;
 }
 
 .mobile-search-area-btn {
@@ -15583,4 +15637,36 @@ button {
   background: var(--color-surface);
   color: var(--color-text-secondary);
   box-shadow: var(--shadow-sm);
+}
+
+/* ── PinupBar 툴바 압축 (F02, 2026-09-10) ────────────────────────────
+   모바일 sheet-half 기본 높이에서 가져오기/보내기/필수만/전체해제 한 줄이
+   핀 목록 공간을 먹어 첫 카드조차 다 안 보였다. 아이콘 하나 뒤 시트로 접어
+   그 줄의 높이를 없앤다. .trip-hub-action(TripSelectMenu가 쓰던 것과 같은
+   "시트 안 액션 목록" 패턴)을 재사용해 새 스타일을 최소화했다. */
+.pinup-panel-toolbar-compact {
+  justify-content: flex-end;
+}
+
+.pinup-toolbar-trigger {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+
+.pinup-toolbar-sheet-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pinup-toolbar-sheet-items .pin-transfer-actions {
+  display: flex;
+  gap: 6px;
 }

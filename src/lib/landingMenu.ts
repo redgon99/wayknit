@@ -1,4 +1,5 @@
 import type { LandingPromoImage, LandingVideoKind } from './landingPromo';
+import { youtubeEmbedUrl } from './landingPromo';
 
 export type LandingNodeType = 'group' | 'notice' | 'copy' | 'video' | 'images' | 'text';
 
@@ -258,4 +259,41 @@ export function walkEnabled(tree: LandingMenuNode[]): LandingMenuNode[] {
 
 export function landingAnchor(id: string): string {
   return `landing-${id}`;
+}
+
+/**
+ * F05(모바일 감사 보고서, 2026-09-10) — 관리자가 섹션을 만들어만 두고 내용을
+ * 안 채우면 제목이 유형 기본값("본문"/"홍보문구")인 빈 구간이 그대로
+ * 퍼블릭 화면·내비 메뉴에 나갔다. `LandingCms.tsx`의 `video` 타입엔 이미
+ * "내용 없으면 자기 섹션은 안 그리고 자식만 그린다"는 가드가 있었는데
+ * copy/text/기본 타입엔 빠져 있었다 — 그 가드를 판정하는 공용 함수.
+ *
+ * `images`는 일부러 뺐다 — 비어 있어도 폴백 이미지를 보여주게 설계돼 있어
+ * (`FALLBACK_IMAGES`) 실제로 "빈 섹션"이 되는 일이 없다.
+ */
+export function nodeHasContent(n: LandingMenuNode): boolean {
+  switch (n.type) {
+    case 'notice':
+      return n.noticeText.trim().length > 0;
+    case 'copy':
+      return !!(
+        n.heroTitle.trim() ||
+        n.heroSubtitle.trim() ||
+        n.heroEyebrow.trim() ||
+        n.heroNote.trim()
+      );
+    case 'video':
+      return !!(
+        (n.videoKind === 'youtube' && youtubeEmbedUrl(n.youtubeUrl)) ||
+        (n.videoKind === 'file' && n.videoUrl)
+      );
+    case 'images':
+      return true;
+    case 'text':
+      return n.body.trim().length > 0;
+    case 'group':
+      return n.children.some((c) => c.enabled && nodeHasContent(c));
+    default:
+      return n.body.trim().length > 0;
+  }
 }

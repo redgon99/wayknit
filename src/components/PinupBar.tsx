@@ -1,4 +1,5 @@
 import { Icon } from './Icon';
+import { AppSheetModal } from './AppSheetModal';
 import { ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -20,7 +21,7 @@ import {
 } from '@dnd-kit/sortable';
 import type { GeneratedRoute, PinnedPlace, SimpleCategory } from '../types';
 import { getCategoryMeta, DEFAULT_CODE_BY_SIMPLE_CATEGORY } from '../lib/categories';
-import { groupPinnedByCategory, movePinnedPlace, truncatePinTitle } from '../lib/pinGroups';
+import { groupPinnedByCategory, movePinnedPlace } from '../lib/pinGroups';
 import { SortableItem } from './Sortable';
 import { PinExportMenu } from './PinExportMenu';
 import { PinImportMenu } from './PinImportMenu';
@@ -57,6 +58,14 @@ interface Props {
   variant?: 'default' | 'compact' | 'panel';
   hideTransferMenus?: boolean;
   hideHeader?: boolean;
+  /**
+   * 가져오기·보내기·필수만·전체해제를 한 줄 툴바 대신 아이콘 하나 뒤
+   * 시트로 접는다 — F02(모바일 감사 보고서). 모바일 일정 탭의 sheet-half
+   * 기본 높이에서 이 툴바 한 줄이 핀 목록 공간을 갉아먹어 첫 카드조차
+   * 다 안 보였다. 데스크톱 사이드패널은 공간이 넉넉해 그대로 둔다 —
+   * 모바일 호출부에서만 켠다.
+   */
+  compactToolbar?: boolean;
   /**
    * 핀 작성자 이메일 맵 (`pinAuthorKey(day, placeId)` → email).
    * 혼자 쓰는 여행에서는 전부 "나"라서 표시할 이유가 없다 — 협업 중일 때만 넘긴다.
@@ -113,6 +122,7 @@ export function PinupBar({
   variant = 'default',
   hideTransferMenus = false,
   hideHeader = false,
+  compactToolbar = false,
   pinAuthors,
   currentUserEmail,
 }: Props) {
@@ -123,6 +133,7 @@ export function PinupBar({
   const compact = variant === 'compact';
   const panel = variant === 'panel';
   const [dragActive, setDragActive] = useState(false);
+  const [toolbarSheetOpen, setToolbarSheetOpen] = useState(false);
   const ids = pinned.map((p) => p.id);
   const selectionCount = selectedPinIds.size;
   const routeTargetCount = selectionCount > 0 ? selectionCount : pinned.length;
@@ -314,7 +325,17 @@ export function PinupBar({
                             }}
                             onDoubleClick={() => onSelectPin?.(p)}
                           >
-                            <span className="chip-name">{truncatePinTitle(p.name)}</span>
+                            {/*
+                              F03(모바일 감사 보고서) — truncatePinTitle()이
+                              실제 남은 폭과 무관하게 무조건 4글자로 잘랐다
+                              ("흥부왕족…"). PinupBar는 지금 panel variant로만
+                              쓰여 카드가 항상 꽉 찬 너비(width:100%)인데도
+                              그랬다. 전체 이름을 그대로 넣고 CSS 말줄임표
+                              (.pinup-bar-panel .chip-name)에 맡긴다 — 실제
+                              픽셀 폭 기준으로 잘리니 짧은 이름은 그대로,
+                              긴 이름만 자연스럽게 …로 끝난다.
+                            */}
+                            <span className="chip-name">{p.name}</span>
                             {p.required && (
                               <span className="chip-required-badge" title={t('pinup.requiredBadge')}>
                                 <Icon name="lock" size={11} />
@@ -431,29 +452,72 @@ export function PinupBar({
 
       {panel ? (
         <>
-          {(transferMenus ||
-            (onClearAll && pinned.length > 0) ||
-            (onToggleMustVisitOnly && pinned.some((p) => p.required))) && (
-            <div className="pinup-panel-toolbar">
-              {transferMenus}
-              <div className="pinup-panel-toolbar-spacer" />
-              {onToggleMustVisitOnly && pinned.some((p) => p.required) && (
-                <button
-                  type="button"
-                  className={`pinup-must-visit-btn ${mustVisitOnly ? 'active' : ''}`}
-                  onClick={onToggleMustVisitOnly}
-                  aria-pressed={mustVisitOnly}
-                >
-                  <Icon name="flag" /> {t('pinup.mustVisitOnly')}
-                </button>
-              )}
-              {onClearAll && pinned.length > 0 && (
-                <button type="button" className="pinup-clear-btn" onClick={onClearAll}>
-                  {t('pinup.clearAll')}
-                </button>
-              )}
-            </div>
-          )}
+          {(() => {
+            const hasToolbar =
+              transferMenus ||
+              (onClearAll && pinned.length > 0) ||
+              (onToggleMustVisitOnly && pinned.some((p) => p.required));
+            if (!hasToolbar) return null;
+
+            const trailingActions = (
+              <>
+                {onToggleMustVisitOnly && pinned.some((p) => p.required) && (
+                  <button
+                    type="button"
+                    className={`pinup-must-visit-btn ${mustVisitOnly ? 'active' : ''}`}
+                    onClick={onToggleMustVisitOnly}
+                    aria-pressed={mustVisitOnly}
+                  >
+                    <Icon name="flag" /> {t('pinup.mustVisitOnly')}
+                  </button>
+                )}
+                {onClearAll && pinned.length > 0 && (
+                  <button type="button" className="pinup-clear-btn" onClick={onClearAll}>
+                    {t('pinup.clearAll')}
+                  </button>
+                )}
+              </>
+            );
+
+            if (compactToolbar) {
+              // 한 줄 툴바 대신 아이콘 하나. 목록이 첫 화면부터 보이는 걸
+              // 우선한다 — 이 도구들은 자주 쓰는 조작이 아니다. 가로 배치용
+              // spacer는 세로로 쌓는 시트 안에서는 필요 없다.
+              return (
+                <>
+                  <div className="pinup-panel-toolbar pinup-panel-toolbar-compact">
+                    <button
+                      type="button"
+                      className="pinup-toolbar-trigger"
+                      onClick={() => setToolbarSheetOpen(true)}
+                      aria-label={t('pinup.toolbarMore')}
+                      title={t('pinup.toolbarMore')}
+                    >
+                      <Icon name="more" size={18} />
+                    </button>
+                  </div>
+                  <AppSheetModal
+                    open={toolbarSheetOpen}
+                    title={t('pinup.toolbarMore')}
+                    onClose={() => setToolbarSheetOpen(false)}
+                  >
+                    <div className="pinup-toolbar-sheet-items">
+                      {transferMenus}
+                      {trailingActions}
+                    </div>
+                  </AppSheetModal>
+                </>
+              );
+            }
+
+            return (
+              <div className="pinup-panel-toolbar">
+                {transferMenus}
+                <div className="pinup-panel-toolbar-spacer" />
+                {trailingActions}
+              </div>
+            );
+          })()}
           <div className="pinup-panel-scroll">
             <DndContext
               sensors={sensors}

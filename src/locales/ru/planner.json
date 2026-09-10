@@ -162,7 +162,8 @@
     "markRequired": "Отметить как обязательное",
     "unmarkRequired": "Снять отметку «обязательно»",
     "requiredBadge": "Обязательное место",
-    "addedBy": "Добавил(а) {{who}}"
+    "addedBy": "Добавил(а) {{who}}",
+    "toolbarMore": "Инструменты"
   },
   "route": {
     "fixedArrivalAt": "Прибытие зафиксировано на {{time}}",

@@ -162,7 +162,8 @@
     "markRequired": "Marcar como imprescindible",
     "unmarkRequired": "Quitar imprescindible",
     "requiredBadge": "Lugar imprescindible",
-    "addedBy": "Añadido por {{who}}"
+    "addedBy": "Añadido por {{who}}",
+    "toolbarMore": "Herramientas"
   },
   "route": {
     "fixedArrivalAt": "Llegada fijada a las {{time}}",
