@@ -79,6 +79,8 @@ export interface PlazaListing {
   themes: TripTheme[];
   /** 지역 필터용 — 별도 컬럼 없음, 핀 주소에서 파생(koreaRegions.ts) */
   regions: string[];
+  /** payload.mock — 실서비스 초기 공유마당이 비어 보이지 않게 심어둔 예시 데이터(§27-15, F15) */
+  isMock: boolean;
 }
 
 export interface TripSummary {
@@ -89,6 +91,8 @@ export interface TripSummary {
   totalDays: number;
   /** 내가 소유자가 아니라 협업자로 접근 중일 때만 채워짐 */
   collaboratorRole?: CollaboratorRole;
+  /** 여행 선택 목록에서 동명 여행을 구분하기 위한 것(F18, §27-19) */
+  pinCount?: number;
 }
 
 const LS_STORE = 'wayknit:trips-store:v2';
@@ -221,6 +225,7 @@ function rowToPlazaListing(data: {
   const payload = data.payload as {
     pinnedByDay?: Record<number, PinnedPlace[]>;
     preferences?: TripTheme[];
+    mock?: boolean;
   };
   const pinnedByDay = payload?.pinnedByDay ?? { 1: [] };
   const center =
@@ -242,6 +247,7 @@ function rowToPlazaListing(data: {
     themes: payload?.preferences ?? [],
     regions: regionCodesFromPins(pinnedByDay),
     locale: data.plaza_locale ?? 'ko',
+    isMock: payload?.mock === true,
   };
 }
 
@@ -318,6 +324,19 @@ function collaboratorIdsOf(roles: Map<string, CollaboratorRole>): string[] {
   return [...roles.keys()];
 }
 
+/** 여행 선택 목록의 동명 여행 구분용(F18) — 핀 데이터 전체가 아니라 trip_id만 받아 세기만 한다 */
+async function countPinsForTrips(tripIds: string[]): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  const sb = getSupabase();
+  if (!sb || tripIds.length === 0) return counts;
+  const { data, error } = await sb.from('trip_pins').select('trip_id').in('trip_id', tripIds);
+  if (error || !data) return counts;
+  for (const row of data as Array<{ trip_id: string }>) {
+    counts.set(row.trip_id, (counts.get(row.trip_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
 async function listRemote(userId: string): Promise<TripSummary[]> {
   const sb = getSupabase();
   if (!sb) return [];
@@ -332,6 +351,7 @@ async function listRemote(userId: string): Promise<TripSummary[]> {
 
   const { data, error } = await scoped.order('updated_at', { ascending: false });
   if (error || !data) return [];
+  const pinCounts = await countPinsForTrips(data.map((row) => row.id));
   return data.map((row) => ({
     id: row.id,
     slug: row.slug,
@@ -339,6 +359,7 @@ async function listRemote(userId: string): Promise<TripSummary[]> {
     totalDays: row.total_days,
     updatedAt: new Date(row.updated_at).getTime(),
     collaboratorRole: roles.get(row.id),
+    pinCount: pinCounts.get(row.id) ?? 0,
   }));
 }
 
@@ -1560,6 +1581,7 @@ function listPlazaLocal(): PlazaListing[] {
         locale: t.plazaLocale ?? 'ko',
         themes: t.preferences ?? [],
         regions: regionCodesFromPins(t.pinnedByDay),
+        isMock: false,
       };
     });
 }
@@ -1670,6 +1692,7 @@ function listLocal(userId?: string | null): TripSummary[] {
       title: t.title,
       totalDays: t.totalDays,
       updatedAt: t.updatedAt,
+      pinCount: Object.values(t.pinnedByDay).reduce((sum, pins) => sum + pins.length, 0),
     }));
 }
 

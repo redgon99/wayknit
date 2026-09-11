@@ -28,7 +28,7 @@
     "placeholder": "Поиск мест",
     "placeholderWithYoutube": "Название места или ссылка YouTube",
     "placeholderWithLink": "Место · YouTube · веб · ссылка соцсети",
-    "placeholderDesign": "Место, YouTube или ссылка на блог",
+    "placeholderDesign": "Поиск мест",
     "pasteExtracted": "Из вставленного текста извлечено мест: {{count}}. Нажмите поиск.",
     "metaNearby": "Рядом с центром карты · 지도 주변 {{km}} km · {{count}} результатов",
     "metaNationwide": "По всей стране · 전국 · {{count}} результатов",
@@ -46,7 +46,7 @@
     "radiusAria": "Радиус поиска",
     "hintNationwideKakao": "По всей стране · релевантность (Kakao API)",
     "hintNationwideGoogle": "По всей стране · релевантность (Google Places)",
-    "emptyHint": "Ищите места по ключевому слову или категории.",
+    "emptyHint": "Ищите места по ключевому слову или категории, либо вставьте ссылку на YouTube или блог.",
     "noResults": "Ничего не найдено.",
     "loading": "Поиск…",
     "enriching": "Загрузка оценок…",
@@ -76,7 +76,8 @@
     "filters": "Фильтры",
     "subFilterCount": "Условий: {{count}}",
     "resultsCountShort": "Результатов: {{count}}",
-    "filterApply": "Показать {{count}}"
+    "filterApply": "Показать {{count}}",
+    "reviewsSuffix": "{{count}} отзывов"
   },
   "trip": {
     "newTrip": "Новая поездка",
@@ -134,7 +135,9 @@
     "countPlaces": "{{count}} мест",
     "filterAll": "Все",
     "filterAria": "Фильтр по дням",
-    "empty": "Маршрута пока нет. Закрепите места или постройте маршрут."
+    "empty": "Маршрута пока нет. Закрепите места или постройте маршрут.",
+    "dayLabel": "День {{day}}",
+    "shareAria": "Поделиться таблицей"
   },
   "pinup": {
     "reservedAt": "Бронь на {{time}}",
@@ -770,7 +773,8 @@
     "shareCopied": "Ссылка скопирована (сохранено как публичное)",
     "shareCopiedPlaza": "Ссылка скопирована (публично · на площади)",
     "copiedDepart": "Скопирован старт дня {{day}}",
-    "pickOriginHint": "Нажмите на карту, чтобы выбрать старт"
+    "pickOriginHint": "Нажмите на карту, чтобы выбрать старт",
+    "tableViewLinkCopied": "Ссылка на таблицу скопирована"
   },
   "confirm": {
     "newTrip": "Сохранить 「{{title}}」 и начать новую поездку?\nПины и маршрут перейдут в новую поездку.",
@@ -812,5 +816,53 @@
     "guestLead": "Войдите, чтобы продолжать планировать на других устройствах и сохранять в облаке.",
     "viewPlans": "Тарифы",
     "backToHome": "На главную"
+  },
+  "materials": {
+    "panelTitle": "Материалы поездки",
+    "countSuffix": "{{count}}",
+    "viewList": "Показать списком",
+    "viewGrid": "Показать крупными значками",
+    "closePanel": "Закрыть панель",
+    "uploading": "Загрузка…",
+    "addPhotoFile": "Фото/файл",
+    "writeNote": "Написать заметку",
+    "notePlaceholder": "Введите заметку",
+    "saveShortcutHint": "Можно также сохранить через ⌘/Ctrl + Enter",
+    "dropHint": "Перетащите сюда фото или документы или нажмите",
+    "dropHintNeedLogin": "Войдите, чтобы перетаскивать фото или файлы",
+    "dropHintNeedSupabase": "Настройте облако, чтобы добавлять фото или файлы",
+    "kindFilterAria": "Фильтр по типу",
+    "kindAll": "Все",
+    "kindImage": "Фото",
+    "kindNote": "Заметки",
+    "kindFile": "Файлы",
+    "dayFilterLabel": "День",
+    "allDays": "Все дни",
+    "placeFilterLabel": "Место",
+    "place": "Место",
+    "allPlaces": "Все места",
+    "emptyNoMaterials": "Перетащите файл выше или сохраните текстовую заметку.",
+    "emptyFiltered": "Нет материалов, соответствующих фильтру.",
+    "tapToViewAll": "Нажмите, чтобы посмотреть все фото",
+    "viewPhotosAria": "Посмотреть {{count}} фото",
+    "uploadedBy": "Загрузил(а) {{email}}",
+    "noDay": "Без дня",
+    "noPlace": "Без места",
+    "settingsAria": "Настройки материала",
+    "titleAria": "Заголовок",
+    "bodyAria": "Содержимое",
+    "download": "Скачать",
+    "pinOptionLabel": "День {{day}} · {{name}}",
+    "uploadNeedsLogin": "Войдите в облачный аккаунт, чтобы загружать фото или файлы.",
+    "uploadNeedsSupabase": "Для загрузки фото или файлов нужна настройка Supabase.",
+    "filesAdded": "Добавлено файлов: {{count}}.",
+    "albumGroupedSuffix": " (сгруппировано {{count}} фото в один альбом)",
+    "uploadFailed": "Не удалось загрузить.",
+    "noteEmpty": "Введите текст для сохранения.",
+    "noteDefaultTitle": "Заметка",
+    "textSaved": "Текст сохранён.",
+    "deleteStorageFailed": "Не удалось удалить файл из хранилища. Удалено только из списка.",
+    "deleted": "Материал удалён.",
+    "deletedMany": "Удалено материалов: {{count}}."
   }
 }

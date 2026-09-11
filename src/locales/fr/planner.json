@@ -28,7 +28,7 @@
     "placeholder": "Rechercher des lieux",
     "placeholderWithYoutube": "Nom du lieu ou lien YouTube",
     "placeholderWithLink": "Lieu · YouTube · web · lien réseaux",
-    "placeholderDesign": "Lieu, YouTube ou lien de blog",
+    "placeholderDesign": "Rechercher un lieu",
     "pasteExtracted": "{{count}} lieux extraits du collage. Lancez la recherche.",
     "metaNearby": "Près du centre de la carte · 지도 주변 {{km}} km · {{count}} résultats",
     "metaNationwide": "Tout le pays · 전국 · {{count}} résultats",
@@ -46,7 +46,7 @@
     "radiusAria": "Rayon de recherche",
     "hintNationwideKakao": "Tout le pays · pertinence (Kakao API)",
     "hintNationwideGoogle": "Tout le pays · pertinence (Google Places)",
-    "emptyHint": "Trouvez des lieux par mot-clé ou catégorie.",
+    "emptyHint": "Trouvez des lieux par mot-clé ou catégorie, ou collez un lien YouTube ou blog.",
     "noResults": "Aucun résultat.",
     "loading": "Recherche…",
     "enriching": "Chargement des notes…",
@@ -76,7 +76,8 @@
     "filters": "Filtres",
     "subFilterCount": "{{count}} critères",
     "resultsCountShort": "{{count}} résultats",
-    "filterApply": "Voir {{count}} résultats"
+    "filterApply": "Voir {{count}} résultats",
+    "reviewsSuffix": "{{count}} avis"
   },
   "trip": {
     "newTrip": "Nouveau voyage",
@@ -134,7 +135,9 @@
     "countPlaces": "{{count}} lieux",
     "filterAll": "Tout",
     "filterAria": "Filtrer par jour",
-    "empty": "Pas encore d’itinéraire. Épinglez des lieux ou générez un parcours."
+    "empty": "Pas encore d’itinéraire. Épinglez des lieux ou générez un parcours.",
+    "dayLabel": "Jour {{day}}",
+    "shareAria": "Partager ce tableau"
   },
   "pinup": {
     "reservedAt": "Réservé à {{time}}",
@@ -770,7 +773,8 @@
     "shareCopied": "Lien copié (enregistré en public)",
     "shareCopiedPlaza": "Lien copié (public · publié sur la place)",
     "copiedDepart": "Départ du jour {{day}} copié",
-    "pickOriginHint": "Touchez la carte pour définir le départ"
+    "pickOriginHint": "Touchez la carte pour définir le départ",
+    "tableViewLinkCopied": "Lien du tableau copié"
   },
   "confirm": {
     "newTrip": "Enregistrer 「{{title}}」 et commencer un nouveau voyage ?\nÉpingles et itinéraire passeront au nouveau voyage.",
@@ -812,5 +816,53 @@
     "guestLead": "Connectez-vous pour continuer à planifier sur d'autres appareils et sauvegarder dans le cloud.",
     "viewPlans": "Voir les forfaits",
     "backToHome": "Retour à l'accueil"
+  },
+  "materials": {
+    "panelTitle": "Documents du voyage",
+    "countSuffix": "{{count}}",
+    "viewList": "Afficher en liste",
+    "viewGrid": "Afficher en grandes icônes",
+    "closePanel": "Fermer le panneau",
+    "uploading": "Envoi en cours…",
+    "addPhotoFile": "Photo/fichier",
+    "writeNote": "Écrire une note",
+    "notePlaceholder": "Saisissez une note",
+    "saveShortcutHint": "Vous pouvez aussi enregistrer avec ⌘/Ctrl + Entrée",
+    "dropHint": "Glissez des photos ou documents ici, ou cliquez",
+    "dropHintNeedLogin": "Connectez-vous pour glisser des photos ou fichiers",
+    "dropHintNeedSupabase": "Configurez le cloud pour ajouter des photos ou fichiers",
+    "kindFilterAria": "Filtre par type",
+    "kindAll": "Tous",
+    "kindImage": "Photos",
+    "kindNote": "Notes",
+    "kindFile": "Fichiers",
+    "dayFilterLabel": "Jour",
+    "allDays": "Tous les jours",
+    "placeFilterLabel": "Lieu",
+    "place": "Lieu",
+    "allPlaces": "Tous les lieux",
+    "emptyNoMaterials": "Glissez un fichier ci-dessus ou enregistrez une note de texte.",
+    "emptyFiltered": "Aucun document ne correspond à ce filtre.",
+    "tapToViewAll": "Toucher pour voir toutes les photos",
+    "viewPhotosAria": "Voir {{count}} photos",
+    "uploadedBy": "Ajouté par {{email}}",
+    "noDay": "Aucun jour",
+    "noPlace": "Aucun lieu",
+    "settingsAria": "Paramètres du document",
+    "titleAria": "Titre",
+    "bodyAria": "Contenu",
+    "download": "Télécharger",
+    "pinOptionLabel": "Jour {{day}} · {{name}}",
+    "uploadNeedsLogin": "Connectez-vous à votre compte cloud pour envoyer des photos ou fichiers.",
+    "uploadNeedsSupabase": "L'envoi de photos ou fichiers nécessite la configuration de Supabase.",
+    "filesAdded": "{{count}} fichiers ajoutés.",
+    "albumGroupedSuffix": " ({{count}} photos regroupées dans un album)",
+    "uploadFailed": "Échec de l'envoi.",
+    "noteEmpty": "Saisissez du contenu à enregistrer.",
+    "noteDefaultTitle": "Note",
+    "textSaved": "Texte enregistré.",
+    "deleteStorageFailed": "Échec de la suppression du fichier stocké. Retiré de la liste uniquement.",
+    "deleted": "Document supprimé.",
+    "deletedMany": "{{count}} documents supprimés."
   }
 }

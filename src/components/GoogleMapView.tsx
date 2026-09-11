@@ -41,6 +41,8 @@ interface Props {
   selectedOptimizeBy?: string;
   /** 좌측 패널이 지도를 가릴 때, 대상이 남은 영역 한가운데 오도록 미는 픽셀 */
   centerOffsetX?: number;
+  /** 모바일 상단바·하단시트가 지도를 가릴 때 미는 픽셀(위로 밀면 음수) */
+  centerOffsetY?: number;
   nearbySearchCenter?: { lat: number; lng: number } | null;
   pickingOriginFromMap?: boolean;
   pickingPinFromMap?: boolean;
@@ -89,6 +91,7 @@ export function GoogleMapView({
 
 
   centerOffsetX = 0,
+  centerOffsetY = 0,
   nearbySearchCenter = null,
   pickingOriginFromMap = false,
   pickingPinFromMap = false,
@@ -222,7 +225,7 @@ export function GoogleMapView({
      * panBy는 쓰지 않는다 — 상대 이동인 데다 애니메이션이라 setCenter와 겹치면
      * 이동량이 누적된다. 대신 월드 좌표에서 offset(픽셀)을 현재 축척으로 나눠
      * 빼는 방식으로 중심을 구한다. 동기 계산이라 여러 번 실행해도 결과가 같다. */
-    if (centerOffsetX) {
+    if (centerOffsetX || centerOffsetY) {
       const projection = mapRef.current.getProjection();
       /* 지도의 현재 줌(getZoom)을 쓰면 안 된다. 이 효과는 줌 효과보다 먼저
        * 실행되므로 확대 전 축척이 잡히고, 그 축척으로 픽셀을 환산하면 수백 km
@@ -233,7 +236,10 @@ export function GoogleMapView({
         const pt = projection.fromLatLngToPoint(
           new window.google.maps.LatLng(target.lat, target.lng),
         );
-        const shifted = new window.google.maps.Point(pt.x - centerOffsetX / scale, pt.y);
+        const shifted = new window.google.maps.Point(
+          pt.x - centerOffsetX / scale,
+          pt.y - centerOffsetY / scale
+        );
         mapRef.current.setCenter(projection.fromPointToLatLng(shifted));
       } else {
         mapRef.current.setCenter(target);
@@ -246,7 +252,7 @@ export function GoogleMapView({
     } else if (!mapCentersNear(current, target)) {
       mapRef.current.setCenter(target);
     }
-  }, [center.lat, center.lng, fitSearchBounds, centerOffsetX, level]);
+  }, [center.lat, center.lng, fitSearchBounds, centerOffsetX, centerOffsetY, level]);
 
   useEffect(() => {
     if (!mapRef.current || fitSearchBounds) return;

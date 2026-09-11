@@ -28,7 +28,8 @@
     "kakao": "Kakao Map",
     "google": "Google Maps",
     "switchedKakao": "Переключено на Kakao Map",
-    "switchedGoogle": "Переключено на Google Maps"
+    "switchedGoogle": "Переключено на Google Maps",
+    "groupAria": "Выбор картографического сервиса"
   },
   "auth": {
     "localMode": "Локальное сохранение",

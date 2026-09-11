@@ -1,5 +1,6 @@
 import { Icon } from './Icon';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { PinnedPlace, TripMaterial, TripMaterialKind } from '../types';
 import {
   createMaterialId,
@@ -18,6 +19,7 @@ import {
   buildMaterialDisplayItems,
   type MaterialDisplayItem,
 } from '../lib/materialAlbums';
+import i18n from '../lib/i18n';
 
 type KindFilter = 'all' | TripMaterialKind;
 type ViewMode = 'grid' | 'list';
@@ -88,6 +90,8 @@ export function TripMaterialsPanel({
   materialAuthors,
   currentUserEmail,
 }: Props) {
+  const { t } = useTranslation('planner');
+  const { t: tc } = useTranslation('common');
   const [kindFilter, setKindFilter] = useState<KindFilter>('all');
   const [dayFilter, setDayFilter] = useState<number | null>(null);
   const [placeFilter, setPlaceFilter] = useState<string | null>(null);
@@ -105,11 +109,11 @@ export function TripMaterialsPanel({
     const out: PinOption[] = [];
     for (let d = 1; d <= totalDays; d++) {
       for (const p of pinnedByDay[d] ?? []) {
-        out.push({ id: p.id, label: `${d}일 · ${p.name}`, day: d });
+        out.push({ id: p.id, label: t('materials.pinOptionLabel', { day: d, name: p.name }), day: d });
       }
     }
     return out;
-  }, [pinnedByDay, totalDays]);
+  }, [pinnedByDay, totalDays, t]);
 
   const filtered = useMemo(() => {
     return sortMaterials(materials).filter((m) => {
@@ -186,12 +190,12 @@ export function TripMaterialsPanel({
   const requireAuthForUpload = useCallback((): boolean => {
     if (userId) return true;
     if (authConfigured) {
-      onNotify('사진·파일은 클라우드 로그인 후 업로드할 수 있습니다.');
+      onNotify(t('materials.uploadNeedsLogin'));
     } else {
-      onNotify('사진·파일 업로드는 Supabase 설정이 필요합니다.');
+      onNotify(t('materials.uploadNeedsSupabase'));
     }
     return false;
-  }, [userId, authConfigured, onNotify]);
+  }, [userId, authConfigured, onNotify, t]);
 
   const handleUploadFiles = useCallback(
     async (files: FileList | File[] | null) => {
@@ -238,23 +242,23 @@ export function TripMaterialsPanel({
           onChange(sortMaterials(next));
           const albumMsg =
             batchAlbumId && imageAdded > 0
-              ? ` (사진 ${imageAdded}장을 한 묶음으로 표시)`
+              ? t('materials.albumGroupedSuffix', { count: imageAdded })
               : '';
-          onNotify(`${added}개 파일을 추가했습니다.${albumMsg}`);
+          onNotify(`${t('materials.filesAdded', { count: added })}${albumMsg}`);
         }
       } catch (e) {
-        onNotify((e as Error).message || '업로드에 실패했습니다.');
+        onNotify((e as Error).message || t('materials.uploadFailed'));
       } finally {
         setUploading(false);
       }
     },
-    [materials, onChange, tripId, userId, currentDay, requireAuthForUpload, onNotify]
+    [materials, onChange, tripId, userId, currentDay, requireAuthForUpload, onNotify, t]
   );
 
   const handleSaveText = useCallback(() => {
     const body = draftText.trim();
     if (!body) {
-      onNotify('저장할 내용을 입력해 주세요.');
+      onNotify(t('materials.noteEmpty'));
       return;
     }
     const firstLine = body.split('\n').find((l) => l.trim())?.trim() ?? '';
@@ -262,7 +266,7 @@ export function TripMaterialsPanel({
     const item: TripMaterial = {
       id: createMaterialId(),
       kind: 'text',
-      title: firstLine.slice(0, 48) || '메모',
+      title: firstLine.slice(0, 48) || t('materials.noteDefaultTitle'),
       body,
       day: currentDay,
       createdAt: now,
@@ -270,8 +274,8 @@ export function TripMaterialsPanel({
     };
     onChange(sortMaterials([item, ...materials]));
     setDraftText('');
-    onNotify('텍스트를 저장했습니다.');
-  }, [draftText, materials, onChange, currentDay, onNotify]);
+    onNotify(t('materials.textSaved'));
+  }, [draftText, materials, onChange, currentDay, onNotify, t]);
 
   const handleDelete = useCallback(
     async (item: TripMaterial) => {
@@ -279,7 +283,7 @@ export function TripMaterialsPanel({
         try {
           await removeMaterialFile(item.storagePath);
         } catch {
-          onNotify('저장소 파일 삭제에 실패했습니다. 목록만 제거합니다.');
+          onNotify(t('materials.deleteStorageFailed'));
         }
       }
       onChange(materials.filter((m) => m.id !== item.id));
@@ -289,9 +293,9 @@ export function TripMaterialsPanel({
         return next;
       });
       if (gallery?.ids.includes(item.id)) setGallery(null);
-      onNotify('자료를 삭제했습니다.');
+      onNotify(t('materials.deleted'));
     },
-    [materials, onChange, userId, gallery, onNotify]
+    [materials, onChange, userId, gallery, onNotify, t]
   );
 
   const handleDeleteMany = useCallback(
@@ -314,9 +318,9 @@ export function TripMaterialsPanel({
         return next;
       });
       if (gallery?.ids.some((id) => ids.has(id))) setGallery(null);
-      onNotify(`${items.length}개 자료를 삭제했습니다.`);
+      onNotify(t('materials.deletedMany', { count: items.length }));
     },
-    [materials, onChange, userId, gallery, onNotify]
+    [materials, onChange, userId, gallery, onNotify, t]
   );
 
   const patchAlbum = useCallback(
@@ -403,16 +407,16 @@ export function TripMaterialsPanel({
   if (!open) return null;
 
   const uploadHint = userId
-    ? '사진·문서 파일을 끌어다 놓거나 클릭하세요'
+    ? t('materials.dropHint')
     : authConfigured
-      ? '로그인 후 사진·파일을 끌어다 놓을 수 있습니다'
-      : '클라우드 설정 후 사진·파일을 추가할 수 있습니다';
+      ? t('materials.dropHintNeedLogin')
+      : t('materials.dropHintNeedSupabase');
 
   return (
     <>
       <aside
         className="materials-panel open"
-        aria-label="여행 자료"
+        aria-label={t('materials.panelTitle')}
         /* 드롭 영역이 패널 전체다 — 전용 드롭존 상자를 없앤 자리를 대신한다.
            끄는 동안에만 오버레이가 떠서, 평소에는 목록이 그 공간을 쓴다. */
         onDragEnter={onDropZoneDragEnter}
@@ -422,9 +426,9 @@ export function TripMaterialsPanel({
       >
         <header className="materials-head">
           <div className="materials-head-text">
-            <div className="materials-head-title">여행 자료</div>
+            <div className="materials-head-title">{t('materials.panelTitle')}</div>
             <div className="materials-head-sub">
-              {tripTitle} · {materials.length}개
+              {tripTitle} · {t('materials.countSuffix', { count: materials.length })}
             </div>
           </div>
           <div className="materials-head-actions">
@@ -432,8 +436,8 @@ export function TripMaterialsPanel({
               type="button"
               className="materials-head-btn"
               onClick={() => setViewModePersist(viewMode === 'grid' ? 'list' : 'grid')}
-              aria-label={viewMode === 'grid' ? '목록으로 보기' : '큰 아이콘으로 보기'}
-              title={viewMode === 'grid' ? '목록으로 보기' : '큰 아이콘으로 보기'}
+              aria-label={viewMode === 'grid' ? t('materials.viewList') : t('materials.viewGrid')}
+              title={viewMode === 'grid' ? t('materials.viewList') : t('materials.viewGrid')}
             >
               <Icon name={viewMode === 'grid' ? 'layoutList' : 'layoutGrid'} size={17} />
             </button>
@@ -447,7 +451,7 @@ export function TripMaterialsPanel({
               type="button"
               className="materials-head-btn"
               onClick={onClose}
-              aria-label="패널 닫기"
+              aria-label={t('materials.closePanel')}
             >
               <Icon name="close" size={17} />
             </button>
@@ -465,7 +469,7 @@ export function TripMaterialsPanel({
             }}
           >
             {uploading ? <Icon name="loader" size={15} spin /> : <Icon name="upload" size={15} />}
-            {uploading ? '올리는 중…' : '사진·파일'}
+            {uploading ? t('materials.uploading') : t('materials.addPhotoFile')}
           </button>
           <button
             type="button"
@@ -474,7 +478,7 @@ export function TripMaterialsPanel({
             aria-expanded={composingNote}
           >
             <Icon name="pencil" size={15} />
-            메모 쓰기
+            {t('materials.writeNote')}
           </button>
         </div>
         <input
@@ -496,7 +500,7 @@ export function TripMaterialsPanel({
               value={draftText}
               autoFocus
               onChange={(e) => setDraftText(e.target.value)}
-              placeholder="메모를 적고 저장하세요 (⌘/Ctrl + Enter)"
+              placeholder={t('materials.notePlaceholder')}
               rows={3}
               onKeyDown={(e) => {
                 if (e.key === 'Escape') {
@@ -519,18 +523,19 @@ export function TripMaterialsPanel({
                   setComposingNote(false);
                 }}
               >
-                취소
+                {tc('cancel')}
               </button>
               <button
                 type="button"
                 className="materials-note-save"
                 disabled={!draftText.trim()}
+                title={t('materials.saveShortcutHint')}
                 onClick={() => {
                   handleSaveText();
                   setComposingNote(false);
                 }}
               >
-                저장
+                {tc('save')}
               </button>
             </div>
           </div>
@@ -546,13 +551,13 @@ export function TripMaterialsPanel({
         {/* 칩 8개가 두 줄로 접히던 자리 — 세그먼트 하나와 메뉴 둘로 줄였다.
             일차는 여행 길이만큼 늘어나므로 칩으로 두면 언제든 다시 넘친다. */}
         <div className="materials-filterbar">
-          <div className="materials-seg" role="group" aria-label="종류 필터">
+          <div className="materials-seg" role="group" aria-label={t('materials.kindFilterAria')}>
             {(
               [
-                ['all', '전체'],
-                ['image', '사진'],
-                ['text', '메모'],
-                ['file', '파일'],
+                ['all', t('materials.kindAll')],
+                ['image', t('materials.kindImage')],
+                ['text', t('materials.kindNote')],
+                ['file', t('materials.kindFile')],
               ] as const
             ).map(([k, label]) => (
               <button
@@ -569,13 +574,13 @@ export function TripMaterialsPanel({
 
           <div className="materials-filter-menus">
             <FilterMenu
-              label="일차"
-              activeLabel={dayFilter != null ? `${dayFilter}일차` : null}
+              label={t('materials.dayFilterLabel')}
+              activeLabel={dayFilter != null ? t('table.dayLabel', { day: dayFilter }) : null}
               options={[
-                { value: '', label: '모든 일차' },
+                { value: '', label: t('materials.allDays') },
                 ...Array.from({ length: totalDays }, (_, i) => ({
                   value: String(i + 1),
-                  label: `${i + 1}일차`,
+                  label: t('table.dayLabel', { day: i + 1 }),
                 })),
               ]}
               value={dayFilter != null ? String(dayFilter) : ''}
@@ -583,15 +588,15 @@ export function TripMaterialsPanel({
             />
             {pinOptions.length > 0 && (
               <FilterMenu
-                label="장소"
+                label={t('materials.placeFilterLabel')}
                 activeLabel={
                   placeFilter
                     ? (pinOptions.find((p) => p.id === placeFilter)?.label.split(' · ').pop() ??
-                      '장소')
+                      t('materials.place'))
                     : null
                 }
                 options={[
-                  { value: '', label: '모든 장소' },
+                  { value: '', label: t('materials.allPlaces') },
                   ...pinOptions.map((p) => ({ value: p.id, label: p.label })),
                 ]}
                 value={placeFilter ?? ''}
@@ -605,8 +610,8 @@ export function TripMaterialsPanel({
           {displayItems.length === 0 ? (
             <p className="materials-empty">
               {materials.length === 0
-                ? '위에서 파일을 끌어오거나 텍스트를 저장해 보세요.'
-                : '필터에 맞는 자료가 없습니다.'}
+                ? t('materials.emptyNoMaterials')
+                : t('materials.emptyFiltered')}
             </p>
           ) : viewMode === 'grid' ? (
             <div className="materials-grid materials-grid--large" role="list">
@@ -747,6 +752,7 @@ function DisplayGridItem({
 
 function DisplayListItem(props: DisplayItemProps) {
   const { item, signedUrls, totalDays, pinOptions, onPatch, onPatchAlbum, onPlaceLink, onPlaceLinkAlbum, onDelete, onDeleteAlbum, onOpenGallery, authorOf } = props;
+  const { t } = useTranslation('planner');
 
   if (item.type === 'album') {
     const rep = item.materials[0]!;
@@ -767,7 +773,7 @@ function DisplayListItem(props: DisplayItemProps) {
           <div className="materials-list-body">
             <div className="materials-list-title-static">{albumDisplayTitle(item.materials)}</div>
             <div className="materials-card-meta">
-              {materialMetaLabel(rep)} · 탭하여 사진 모두 보기
+              {materialMetaLabel(rep)} · {t('materials.tapToViewAll')}
             </div>
           </div>
           {authorOf(rep) && <MaterialAuthorBadge email={authorOf(rep)!} />}
@@ -813,6 +819,7 @@ function ImageAlbumStack({
   variant: 'grid' | 'list';
   onOpen: () => void;
 }) {
+  const { t } = useTranslation('planner');
   const layers = materials.slice(0, 3);
   const stackLayers = [...layers].reverse();
 
@@ -821,7 +828,7 @@ function ImageAlbumStack({
       type="button"
       className={`materials-album-stack materials-album-stack--${variant}`}
       onClick={onOpen}
-      aria-label={`${materials.length}장 사진 보기`}
+      aria-label={t('materials.viewPhotosAria', { count: materials.length })}
     >
       <span className="materials-album-stack-inner">
         {stackLayers.map((m, i) => (
@@ -926,12 +933,14 @@ function FilterMenu({
  * 색·이니셜 규칙은 핀 작성자 배지·presence 아바타와 같다.
  */
 function MaterialAuthorBadge({ email }: { email: string }) {
+  const { t } = useTranslation('planner');
+  const label = t('materials.uploadedBy', { email });
   return (
     <span
       className="material-author-badge"
       style={{ background: presenceColor(email) }}
-      title={`${email} 님이 올림`}
-      aria-label={`${email} 님이 올림`}
+      title={label}
+      aria-label={label}
     >
       {presenceInitial(email)}
     </span>
@@ -939,8 +948,10 @@ function MaterialAuthorBadge({ email }: { email: string }) {
 }
 
 function materialMetaLabel(material: TripMaterial): string {
-  const day = material.day ? `${material.day}일차` : '일차 없음';
-  return `${day} · ${material.pinnedPlaceName ?? '장소 없음'}`;
+  const day = material.day
+    ? i18n.t('table.dayLabel', { ns: 'planner', day: material.day })
+    : i18n.t('materials.noDay', { ns: 'planner' });
+  return `${day} · ${material.pinnedPlaceName ?? i18n.t('materials.noPlace', { ns: 'planner' })}`;
 }
 
 /**
@@ -964,6 +975,8 @@ function MaterialMetaMenu({
   onPlaceLink: (placeId: string) => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation('planner');
+  const { t: tc } = useTranslation('common');
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -988,7 +1001,7 @@ function MaterialMetaMenu({
       <button
         type="button"
         className="materials-card-menu-btn"
-        aria-label="자료 설정"
+        aria-label={t('materials.settingsAria')}
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={(e) => {
@@ -1001,28 +1014,28 @@ function MaterialMetaMenu({
       {open && (
         <div className="materials-card-menu-pop" onClick={(e) => e.stopPropagation()}>
           <label className="materials-card-menu-field">
-            <span>일차</span>
+            <span>{t('materials.dayFilterLabel')}</span>
             <select
               value={material.day ?? ''}
               onChange={(e) =>
                 onPatch({ day: e.target.value ? Number(e.target.value) : undefined })
               }
             >
-              <option value="">일차 없음</option>
+              <option value="">{t('materials.noDay')}</option>
               {Array.from({ length: totalDays }, (_, i) => i + 1).map((d) => (
                 <option key={d} value={d}>
-                  {d}일차
+                  {t('table.dayLabel', { day: d })}
                 </option>
               ))}
             </select>
           </label>
           <label className="materials-card-menu-field">
-            <span>장소</span>
+            <span>{t('materials.placeFilterLabel')}</span>
             <select
               value={material.pinnedPlaceId ?? ''}
               onChange={(e) => onPlaceLink(e.target.value)}
             >
-              <option value="">장소 없음</option>
+              <option value="">{t('materials.noPlace')}</option>
               {pinOptions.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.label}
@@ -1039,7 +1052,7 @@ function MaterialMetaMenu({
             }}
           >
             <Icon name="trash" size={14} />
-            삭제
+            {tc('delete')}
           </button>
         </div>
       )}
@@ -1068,6 +1081,7 @@ function MaterialGridCard({
   onDelete: () => void;
   onImageOpen: () => void;
 }) {
+  const { t } = useTranslation('planner');
   const overlay = (
     <>
       {authorEmail && <MaterialAuthorBadge email={authorEmail} />}
@@ -1090,14 +1104,14 @@ function MaterialGridCard({
           className="materials-text-title"
           value={material.title}
           onChange={(e) => onPatch({ title: e.target.value })}
-          aria-label="제목"
+          aria-label={t('materials.titleAria')}
         />
         <textarea
           className="materials-text-body materials-text-body--compact"
           value={material.body ?? ''}
           rows={3}
           onChange={(e) => onPatch({ body: e.target.value })}
-          aria-label="내용"
+          aria-label={t('materials.bodyAria')}
         />
         <div className="materials-card-meta">{materialMetaLabel(material)}</div>
       </article>
@@ -1154,7 +1168,7 @@ function MaterialGridCard({
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
             >
-              받기
+              {t('materials.download')}
             </a>
           </>
         )}
@@ -1184,6 +1198,7 @@ function MaterialListRow({
   onDelete: () => void;
   onImageOpen: () => void;
 }) {
+  const { t } = useTranslation('planner');
   const kindIcon =
     material.kind === 'image' ? 'photo' : material.kind === 'file' ? 'file' : 'note';
 
@@ -1209,14 +1224,14 @@ function MaterialListRow({
                 className="materials-list-title"
                 value={material.title}
                 onChange={(e) => onPatch({ title: e.target.value })}
-                aria-label="제목"
+                aria-label={t('materials.titleAria')}
               />
               <textarea
                 className="materials-text-body materials-text-body--compact"
                 value={material.body ?? ''}
                 rows={2}
                 onChange={(e) => onPatch({ body: e.target.value })}
-                aria-label="내용"
+                aria-label={t('materials.bodyAria')}
               />
             </>
           ) : (
@@ -1237,7 +1252,7 @@ function MaterialListRow({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  받기
+                  {t('materials.download')}
                 </a>
               </>
             )}

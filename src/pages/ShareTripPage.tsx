@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/Icon';
 import { useSeoMeta } from '../hooks/useSeoMeta';
@@ -12,6 +12,7 @@ import { getRouteOptionsForDay } from '../lib/tripRouteOptions';
 import { MapView } from '../components/MapView';
 import { DayTabs } from '../components/DayTabs';
 import { RouteSummary } from '../components/RouteSummary';
+import { ItineraryTableView } from '../components/ItineraryTableView';
 import { ShareOnboardingCoach } from '../components/ShareOnboardingCoach';
 import { PresenceStack } from '../components/PresenceStack';
 import { ReportButton } from '../components/ReportButton';
@@ -30,6 +31,9 @@ export default function ShareTripPage() {
   const planPath = plannerPath(locale);
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  /** 표로보기 공유 아이콘("?view=table")으로 들어온 링크는 표 모달이 그대로 열린 채 시작한다. */
+  const tableViewOpen = searchParams.get('view') === 'table';
   const { user } = useAuth();
   const [kakaoReady, setKakaoReady] = useState(false);
   const [googleReady, setGoogleReady] = useState(false);
@@ -237,6 +241,12 @@ export default function ShareTripPage() {
           <ShareOnboardingCoach onComplete={() => setShareOnboardingOpen(false)} />
         </div>
       )}
+
+      <ItineraryTableView
+        open={tableViewOpen}
+        trip={trip}
+        onClose={() => setSearchParams({}, { replace: true })}
+      />
     </div>
   );
 }

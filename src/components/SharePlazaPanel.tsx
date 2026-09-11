@@ -313,6 +313,9 @@ export function SharePlazaPanel() {
                     <span className="plaza-board-author">
                       {entry.displayName?.trim() || t('plaza.anonymous')}
                     </span>
+                    {entry.isMock && (
+                      <span className="plaza-mock-badge">{t('plaza.demoBadge')}</span>
+                    )}
                     <time
                       className="plaza-board-date"
                       dateTime={new Date(entry.listedAt).toISOString()}

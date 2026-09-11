@@ -86,7 +86,8 @@
       "gyeongbuk": "慶尚北道",
       "gyeongnam": "慶尚南道",
       "jeju": "済州"
-    }
+    },
+    "demoBadge": "サンプル"
   },
   "modal": {
     "shareTitle": "旅行を共有",

@@ -28,7 +28,7 @@
     "placeholder": "Buscar lugares",
     "placeholderWithYoutube": "Nombre del lugar o enlace de YouTube",
     "placeholderWithLink": "Lugar · YouTube · web · enlace de redes",
-    "placeholderDesign": "Lugar, YouTube o enlace de blog",
+    "placeholderDesign": "Buscar lugares",
     "pasteExtracted": "Se extrajeron {{count}} lugares del texto. Pulsa buscar.",
     "metaNearby": "Cerca del centro del mapa · 지도 주변 {{km}} km · {{count}} resultados",
     "metaNationwide": "Todo el país · 전국 · {{count}} resultados",
@@ -46,7 +46,7 @@
     "radiusAria": "Radio de búsqueda",
     "hintNationwideKakao": "Todo el país · relevancia (Kakao API)",
     "hintNationwideGoogle": "Todo el país · relevancia (Google Places)",
-    "emptyHint": "Busca lugares por palabra o categoría.",
+    "emptyHint": "Busca lugares por palabra o categoría, o pega un enlace de YouTube o blog.",
     "noResults": "No hay resultados.",
     "loading": "Buscando…",
     "enriching": "Cargando valoraciones…",
@@ -76,7 +76,8 @@
     "filters": "Filtros",
     "subFilterCount": "{{count}} criterios",
     "resultsCountShort": "{{count}} resultados",
-    "filterApply": "Ver {{count}} resultados"
+    "filterApply": "Ver {{count}} resultados",
+    "reviewsSuffix": "{{count}} reseñas"
   },
   "trip": {
     "newTrip": "Nuevo viaje",
@@ -134,7 +135,9 @@
     "countPlaces": "{{count}} lugares",
     "filterAll": "Todo",
     "filterAria": "Filtrar por día",
-    "empty": "Aún no hay itinerario. Fija lugares o genera una ruta."
+    "empty": "Aún no hay itinerario. Fija lugares o genera una ruta.",
+    "dayLabel": "Día {{day}}",
+    "shareAria": "Compartir esta tabla"
   },
   "pinup": {
     "reservedAt": "Reservado a las {{time}}",
@@ -770,7 +773,8 @@
     "shareCopied": "Enlace copiado (guardado como público)",
     "shareCopiedPlaza": "Enlace copiado (público · publicado en la plaza)",
     "copiedDepart": "Copiada la salida del día {{day}}",
-    "pickOriginHint": "Toca el mapa para marcar el inicio"
+    "pickOriginHint": "Toca el mapa para marcar el inicio",
+    "tableViewLinkCopied": "Enlace de la tabla copiado"
   },
   "confirm": {
     "newTrip": "¿Guardar 「{{title}}」 y empezar un viaje nuevo?\nLos pines y la ruta de esta pantalla pasarán al nuevo viaje.",
@@ -812,5 +816,53 @@
     "guestLead": "Inicia sesión para seguir planificando en otros dispositivos y guardar en la nube.",
     "viewPlans": "Ver planes",
     "backToHome": "Volver al inicio"
+  },
+  "materials": {
+    "panelTitle": "Materiales del viaje",
+    "countSuffix": "{{count}}",
+    "viewList": "Ver como lista",
+    "viewGrid": "Ver con iconos grandes",
+    "closePanel": "Cerrar panel",
+    "uploading": "Subiendo…",
+    "addPhotoFile": "Foto/archivo",
+    "writeNote": "Escribir nota",
+    "notePlaceholder": "Escribe una nota",
+    "saveShortcutHint": "También puedes guardar con ⌘/Ctrl + Enter",
+    "dropHint": "Arrastra fotos o documentos aquí, o haz clic",
+    "dropHintNeedLogin": "Inicia sesión para arrastrar fotos o archivos",
+    "dropHintNeedSupabase": "Configura la nube para añadir fotos o archivos",
+    "kindFilterAria": "Filtro por tipo",
+    "kindAll": "Todos",
+    "kindImage": "Fotos",
+    "kindNote": "Notas",
+    "kindFile": "Archivos",
+    "dayFilterLabel": "Día",
+    "allDays": "Todos los días",
+    "placeFilterLabel": "Lugar",
+    "place": "Lugar",
+    "allPlaces": "Todos los lugares",
+    "emptyNoMaterials": "Arrastra un archivo arriba o guarda una nota de texto.",
+    "emptyFiltered": "Ningún material coincide con este filtro.",
+    "tapToViewAll": "Toca para ver todas las fotos",
+    "viewPhotosAria": "Ver {{count}} fotos",
+    "uploadedBy": "Subido por {{email}}",
+    "noDay": "Sin día",
+    "noPlace": "Sin lugar",
+    "settingsAria": "Ajustes del material",
+    "titleAria": "Título",
+    "bodyAria": "Contenido",
+    "download": "Descargar",
+    "pinOptionLabel": "Día {{day}} · {{name}}",
+    "uploadNeedsLogin": "Inicia sesión en tu cuenta en la nube para subir fotos o archivos.",
+    "uploadNeedsSupabase": "Subir fotos o archivos requiere configurar Supabase.",
+    "filesAdded": "Se añadieron {{count}} archivos.",
+    "albumGroupedSuffix": " (se agruparon {{count}} fotos en un álbum)",
+    "uploadFailed": "Error al subir.",
+    "noteEmpty": "Escribe algo para guardar.",
+    "noteDefaultTitle": "Nota",
+    "textSaved": "Texto guardado.",
+    "deleteStorageFailed": "No se pudo eliminar el archivo almacenado. Se quitará solo de la lista.",
+    "deleted": "Material eliminado.",
+    "deletedMany": "Se eliminaron {{count}} materiales."
   }
 }

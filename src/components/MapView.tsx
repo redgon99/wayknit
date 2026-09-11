@@ -36,6 +36,8 @@ interface Props {
   selectedOptimizeBy?: string;
   /** 좌측 패널이 지도를 가릴 때, 대상이 남은 영역 한가운데 오도록 미는 픽셀 */
   centerOffsetX?: number;
+  /** 모바일 상단바·하단시트가 지도를 가릴 때 미는 픽셀(위로 밀면 음수) */
+  centerOffsetY?: number;
   nearbySearchCenter?: { lat: number; lng: number } | null;
   pickingOriginFromMap?: boolean;
   pickingPinFromMap?: boolean;
@@ -94,6 +96,7 @@ export function MapView({
         compareRoutes={rest.compareRoutes}
         selectedOptimizeBy={rest.selectedOptimizeBy}
         centerOffsetX={rest.centerOffsetX}
+        centerOffsetY={rest.centerOffsetY}
         nearbySearchCenter={rest.nearbySearchCenter}
         pickingOriginFromMap={rest.pickingOriginFromMap}
         pickingPinFromMap={rest.pickingPinFromMap}
@@ -145,6 +148,7 @@ function KakaoMapView({
 
 
   centerOffsetX = 0,
+  centerOffsetY = 0,
   nearbySearchCenter = null,
   pickingOriginFromMap = false,
   pickingPinFromMap = false,
@@ -296,12 +300,12 @@ function KakaoMapView({
      * 이동량이 누적된다(실제로 4배까지 밀려 화면 밖으로 나갔다). 대신 대상을
      * 중앙에 놓은 뒤 투영으로 "offset만큼 왼쪽 지점"의 좌표를 구해 그것을
      * 중심으로 삼는다. 동기 계산이라 몇 번을 실행해도 결과가 같다. */
-    if (centerOffsetX) {
+    if (centerOffsetX || centerOffsetY) {
       mapRef.current.setCenter(latlng);
       const projection = mapRef.current.getProjection();
       if (projection) {
         const c = projection.containerPointFromCoords(latlng);
-        const shifted = new window.kakao.maps.Point(c.x - centerOffsetX, c.y);
+        const shifted = new window.kakao.maps.Point(c.x - centerOffsetX, c.y - centerOffsetY);
         mapRef.current.setCenter(projection.coordsFromContainerPoint(shifted));
       }
       return;
@@ -312,7 +316,7 @@ function KakaoMapView({
     } else if (!mapCentersNear(current, target)) {
       mapRef.current.setCenter(latlng);
     }
-  }, [center.lat, center.lng, fitSearchBounds, centerOffsetX, level]);
+  }, [center.lat, center.lng, fitSearchBounds, centerOffsetX, centerOffsetY, level]);
 
   useEffect(() => {
     if (!mapRef.current || fitSearchBounds) return;

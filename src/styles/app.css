@@ -359,6 +359,13 @@ button {
   font-weight: 600;
 }
 
+.trip-select-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .trip-select-option-label {
   min-width: 0;
   overflow: hidden;
@@ -370,6 +377,15 @@ button {
   font-weight: 500;
   color: var(--color-text-secondary);
   margin-left: 4px;
+}
+
+.trip-select-option-meta {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .trip-select-option-check {
@@ -816,10 +832,8 @@ button {
 .map-provider-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
+  gap: 5px;
+  padding: 4px 8px 4px 4px;
   border: none;
   border-radius: 6px;
   background: transparent;
@@ -849,6 +863,19 @@ button {
 .map-brand-icon {
   display: block;
   flex-shrink: 0;
+}
+
+/* F14(모바일 감사) — 아이콘만으로는 어느 지도 서비스가 선택된 상태인지
+   알 수 없었다. 이름을 항상 보여준다. */
+.map-provider-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.map-provider-btn.active .map-provider-label {
+  color: var(--color-text-primary);
 }
 
 .result-card {
@@ -1291,12 +1318,37 @@ button {
   text-align: center;
   font-size: 12px;
   color: var(--color-text-tertiary);
-  padding: 10px 16px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pinup-empty-message {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+/* 빈 일정의 주 실행 버튼 — F13(모바일 감사). "읽어오기"만 있던 자리에
+   가장 흔한 첫 동작(검색)을 눈에 띄게 둔다. */
+.pinup-empty-search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: #fff;
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .pinup-header {
@@ -1744,7 +1796,10 @@ button {
 .photos-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  /* 표로보기(12000)·여행공유(12000) 모달 안 행을 눌러서 여는 경로가 있어
+     그보다 위여야 한다. 시트 계층(app-sheet-backdrop 13000)보다는 아래로 둔다 —
+     상세보기 위에 시트가 열리는 흐름은 있어도 그 반대는 없다. */
+  z-index: 12500;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
@@ -7299,12 +7354,17 @@ button {
 
 .collab-invite-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin: 10px 0 4px;
 }
 
+/* F17(모바일 감사) — 이메일·권한·초대를 한 줄에 욱여넣어 좁은 화면에서
+   이메일 입력 폭이 몇 글자밖에 안 됐다. 이메일은 항상 자기 줄을 차지하게
+   강제하고(flex-wrap과 조합하는 줄바꿈 트릭, §3-6과 같은 방식), 권한·초대
+   버튼만 그다음 줄에서 나눠 쓴다. */
 .collab-invite-email {
-  flex: 1;
+  flex: 1 1 100%;
   min-width: 0;
   padding: 9px 10px;
   border-radius: var(--radius-md);
@@ -7313,6 +7373,8 @@ button {
 }
 
 .collab-invite-role {
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 9px 8px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-strong);
@@ -7618,6 +7680,22 @@ button {
 .plaza-board-author {
   font-weight: 600;
   color: var(--color-text-primary);
+}
+
+/* F15(모바일 감사) — 운영 초기 빈 화면을 막으려고 심어둔 예시 글과 실제
+   사용자 글이 구분 없이 섞여 있었다. payload.mock 플래그를 읽어 표시만
+   한다(지우지 않음 — 계속 채워둘 목적으로 넣은 데이터로 보여서). */
+.plaza-mock-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .plaza-board-trip-title {
@@ -11622,7 +11700,15 @@ button {
   color: #64748b;
 }
 
-.itinerary-table-modal-close {
+.itinerary-table-modal-header-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.itinerary-table-modal-close,
+.itinerary-table-modal-share {
   flex-shrink: 0;
   width: 36px;
   height: 36px;
@@ -11636,7 +11722,8 @@ button {
   cursor: pointer;
 }
 
-.itinerary-table-modal-close:hover {
+.itinerary-table-modal-close:hover,
+.itinerary-table-modal-share:hover {
   background: #e2e8f0;
 }
 
@@ -12199,6 +12286,26 @@ button {
 
 .itinerary-table tbody tr:nth-child(even) {
   background: #f1f5f9;
+}
+
+/* F16(모바일 감사) — 일차를 매 행 반복하던 열을 없애고 그룹 제목으로 뺐다.
+   일차별로 tbody를 나눠서 넣는다(§27-16). */
+.itinerary-table-day-group {
+  cursor: default;
+}
+
+.itinerary-table-day-group th {
+  background: var(--color-bg-secondary, #f1f5f9);
+  color: var(--color-text-primary, #0f172a);
+  font-weight: 700;
+  font-size: 12.5px;
+  text-align: left;
+  padding: 7px 14px;
+  border: 1px solid #cbd5e1;
+}
+
+.itinerary-table-day-group:hover {
+  background: none;
 }
 
 .itinerary-table tbody tr {

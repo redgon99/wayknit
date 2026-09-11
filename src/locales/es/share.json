@@ -86,7 +86,8 @@
       "gyeongbuk": "Gyeongsang del Norte",
       "gyeongnam": "Gyeongsang del Sur",
       "jeju": "Jeju"
-    }
+    },
+    "demoBadge": "Ejemplo"
   },
   "modal": {
     "shareTitle": "Compartir viaje",

@@ -86,7 +86,8 @@
       "gyeongbuk": "庆尚北道",
       "gyeongnam": "庆尚南道",
       "jeju": "济州岛"
-    }
+    },
+    "demoBadge": "示例"
   },
   "modal": {
     "shareTitle": "分享行程",

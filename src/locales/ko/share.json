@@ -86,7 +86,8 @@
       "gyeongbuk": "경북",
       "gyeongnam": "경남",
       "jeju": "제주"
-    }
+    },
+    "demoBadge": "예시"
   },
   "modal": {
     "shareTitle": "여행 공유",

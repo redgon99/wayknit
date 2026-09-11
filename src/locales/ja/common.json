@@ -28,7 +28,8 @@
     "kakao": "カカオマップ",
     "google": "Google マップ",
     "switchedKakao": "カカオマップに切り替えました",
-    "switchedGoogle": "Google マップに切り替えました"
+    "switchedGoogle": "Google マップに切り替えました",
+    "groupAria": "地図アプリを選択"
   },
   "auth": {
     "localMode": "ローカル保存モード",

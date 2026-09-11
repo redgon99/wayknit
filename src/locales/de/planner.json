@@ -28,7 +28,7 @@
     "placeholder": "Orte suchen",
     "placeholderWithYoutube": "Ortsname oder YouTube-Link",
     "placeholderWithLink": "Ort · YouTube · Web · Social-Media-Link",
-    "placeholderDesign": "Ort, YouTube oder Blog-Link",
+    "placeholderDesign": "Ort suchen",
     "pasteExtracted": "{{count}} Orte aus der Zwischenablage erkannt. Bitte suchen.",
     "metaNearby": "In der Nähe des Kartenmittelpunkts · 지도 주변 {{km}} km · {{count}} Ergebnisse",
     "metaNationwide": "Landesweit · 전국 · {{count}} Ergebnisse",
@@ -46,7 +46,7 @@
     "radiusAria": "Suchradius",
     "hintNationwideKakao": "Landesweit · Relevanz (Kakao API)",
     "hintNationwideGoogle": "Landesweit · Relevanz (Google Places)",
-    "emptyHint": "Finden Sie Orte per Stichwort oder Kategorie.",
+    "emptyHint": "Finden Sie Orte per Stichwort oder Kategorie – oder fügen Sie einen YouTube- oder Blog-Link ein.",
     "noResults": "Keine Ergebnisse gefunden.",
     "loading": "Suche läuft…",
     "enriching": "Bewertungen werden geladen…",
@@ -76,7 +76,8 @@
     "filters": "Filter",
     "subFilterCount": "{{count}} Kriterien",
     "resultsCountShort": "{{count}} Ergebnisse",
-    "filterApply": "{{count}} Ergebnisse anzeigen"
+    "filterApply": "{{count}} Ergebnisse anzeigen",
+    "reviewsSuffix": "{{count}} Bewertungen"
   },
   "trip": {
     "newTrip": "Neue Reise",
@@ -134,7 +135,9 @@
     "countPlaces": "{{count}} Orte",
     "filterAll": "Alle",
     "filterAria": "Nach Tag filtern",
-    "empty": "Noch kein Reiseplan. Pinnen Sie Orte oder erstellen Sie eine Route."
+    "empty": "Noch kein Reiseplan. Pinnen Sie Orte oder erstellen Sie eine Route.",
+    "dayLabel": "Tag {{day}}",
+    "shareAria": "Diese Tabelle teilen"
   },
   "pinup": {
     "reservedAt": "Reserviert für {{time}}",
@@ -770,7 +773,8 @@
     "shareCopied": "Link kopiert (öffentlich gespeichert)",
     "shareCopiedPlaza": "Link kopiert (öffentlich · auf dem Platz)",
     "copiedDepart": "Abfahrt von Tag {{day}} kopiert",
-    "pickOriginHint": "Tippen Sie auf die Karte für den Start"
+    "pickOriginHint": "Tippen Sie auf die Karte für den Start",
+    "tableViewLinkCopied": "Tabellenlink kopiert"
   },
   "confirm": {
     "newTrip": "「{{title}}」 speichern und neue Reise starten?\nPins und Route wechseln zur neuen Reise.",
@@ -812,5 +816,53 @@
     "guestLead": "Melde dich an, um auf anderen Geräten weiterzuplanen und in der Cloud zu speichern.",
     "viewPlans": "Tarife ansehen",
     "backToHome": "Zur Startseite"
+  },
+  "materials": {
+    "panelTitle": "Reiseunterlagen",
+    "countSuffix": "{{count}}",
+    "viewList": "Als Liste anzeigen",
+    "viewGrid": "Als große Symbole anzeigen",
+    "closePanel": "Panel schließen",
+    "uploading": "Wird hochgeladen…",
+    "addPhotoFile": "Foto/Datei",
+    "writeNote": "Notiz schreiben",
+    "notePlaceholder": "Notiz eingeben",
+    "saveShortcutHint": "Sie können auch mit ⌘/Strg + Eingabe speichern",
+    "dropHint": "Fotos oder Dokumente hierher ziehen oder klicken",
+    "dropHintNeedLogin": "Melden Sie sich an, um Fotos oder Dateien per Drag & Drop hinzuzufügen",
+    "dropHintNeedSupabase": "Richten Sie die Cloud ein, um Fotos oder Dateien hinzuzufügen",
+    "kindFilterAria": "Typfilter",
+    "kindAll": "Alle",
+    "kindImage": "Fotos",
+    "kindNote": "Notizen",
+    "kindFile": "Dateien",
+    "dayFilterLabel": "Tag",
+    "allDays": "Alle Tage",
+    "placeFilterLabel": "Ort",
+    "place": "Ort",
+    "allPlaces": "Alle Orte",
+    "emptyNoMaterials": "Ziehen Sie oben eine Datei hinein oder speichern Sie eine Textnotiz.",
+    "emptyFiltered": "Keine Unterlagen entsprechen diesem Filter.",
+    "tapToViewAll": "Tippen, um alle Fotos anzusehen",
+    "viewPhotosAria": "{{count}} Fotos ansehen",
+    "uploadedBy": "Hochgeladen von {{email}}",
+    "noDay": "Kein Tag",
+    "noPlace": "Kein Ort",
+    "settingsAria": "Einstellungen der Unterlage",
+    "titleAria": "Titel",
+    "bodyAria": "Inhalt",
+    "download": "Herunterladen",
+    "pinOptionLabel": "Tag {{day}} · {{name}}",
+    "uploadNeedsLogin": "Melden Sie sich in Ihrem Cloud-Konto an, um Fotos oder Dateien hochzuladen.",
+    "uploadNeedsSupabase": "Zum Hochladen von Fotos oder Dateien ist eine Supabase-Einrichtung erforderlich.",
+    "filesAdded": "{{count}} Dateien hinzugefügt.",
+    "albumGroupedSuffix": " ({{count}} Fotos zu einem Album zusammengefasst)",
+    "uploadFailed": "Upload fehlgeschlagen.",
+    "noteEmpty": "Bitte geben Sie etwas zum Speichern ein.",
+    "noteDefaultTitle": "Notiz",
+    "textSaved": "Text gespeichert.",
+    "deleteStorageFailed": "Die gespeicherte Datei konnte nicht gelöscht werden. Wird nur aus der Liste entfernt.",
+    "deleted": "Unterlage gelöscht.",
+    "deletedMany": "{{count}} Unterlagen gelöscht."
   }
 }

@@ -73,6 +73,12 @@ interface Props {
   pinAuthors?: Record<string, string | null>;
   /** 내 이메일. 내가 넣은 핀에는 배지를 달지 않는다. */
   currentUserEmail?: string | null;
+  /**
+   * 빈 일정 화면의 주 실행 버튼 — 검색 탭(모바일 시트/데스크톱 패널)으로 이동.
+   * F13(모바일 감사 보고서): "읽어오기" 버튼만 있고 검색 안내는 문장이라
+   * 첫 장소를 담는 가장 흔한 경로(검색)에 실행 버튼이 없었다.
+   */
+  onGoToSearch?: () => void;
 }
 
 function DroppableGroupChips({
@@ -125,6 +131,7 @@ export function PinupBar({
   compactToolbar = false,
   pinAuthors,
   currentUserEmail,
+  onGoToSearch,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: tc } = useTranslation('common');
@@ -214,8 +221,16 @@ export function PinupBar({
       <div
         className={`pinup-bar empty ${panel ? 'pinup-bar-panel' : ''} ${presentationMode ? 'presentation-active' : ''}`}
       >
-        <Icon name="pin" />
-        <span>{t('trip.emptyPins')}</span>
+        <div className="pinup-empty-message">
+          <Icon name="pin" />
+          <span>{t('trip.emptyPins')}</span>
+        </div>
+        {onGoToSearch && (
+          <button type="button" className="pinup-empty-search-btn" onClick={onGoToSearch}>
+            <Icon name="search" size={15} />
+            {t('search.ariaLabel')}
+          </button>
+        )}
         {transferMenus}
       </div>
     );

@@ -249,6 +249,13 @@ export default function PlannerPage() {
   const [savePending, setSavePending] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  /**
+   * 표로보기 공유 아이콘에서 공유를 시작했을 때만 세운다 — 아직 비공개 여행이면
+   * 기존 공유 모달(ShareTripModal)로 우회시키되, 그 결과로 만들어지는 링크에
+   * "?view=table"을 붙여야 하는지 여기 기억해 둔다. 일반 "공유" 버튼에서 들어오면
+   * 계속 빈 문자열이라 기존 동작(지도 링크)은 그대로다.
+   */
+  const [shareLinkSuffix, setShareLinkSuffix] = useState('');
   const [collabModalOpen, setCollabModalOpen] = useState(false);
   // §26-7 — 관심 테마 편집. 예전엔 핀 탭 위에 상시 칩으로 얹혀 있어 핀 목록
   // 필터처럼 보였다. 검색·동선·공유마당 셋 다에 쓰이는 탭 무관 설정이라
@@ -1287,6 +1294,27 @@ export default function PlannerPage() {
     return Math.max(0, visibleCenter - window.innerWidth / 2);
   }, []);
 
+  /**
+   * 모바일에서 검색 결과 칩·핀 마커를 선택하면 지도 중심을 그 좌표로 옮기는데,
+   * 화면 전체를 기준으로 중앙에 놓다 보니 하단 시트(그리고 상단바)에 가려진
+   * 영역까지 포함해 계산돼 실제로 "보이는" 지도 영역에서는 중앙이 아니라
+   * 시트 위쪽 가장자리 근처에 표시됐다. occludedCenterShiftPx(데스크톱, 좌우)와
+   * 같은 원리를 세로 축에 적용한다 — CSS 퍼센트/상수를 다시 계산하는 대신
+   * 실제 렌더된 상단바·시트 요소의 위치를 그대로 잰다(시트 레벨이 peek/half/full
+   * 로 바뀌어도 항상 맞는다).
+   */
+  const mobileOccludedCenterShiftPy = useCallback(() => {
+    if (typeof window === 'undefined') return 0;
+    if (!document.querySelector('.wayknit-root.mobile-layout')) return 0;
+    const topBar = document.querySelector('.mobile-planner-top');
+    const sheet = document.querySelector('.mobile-planner-sheet');
+    const topOccluded = topBar ? topBar.getBoundingClientRect().bottom : 0;
+    const sheetTop = sheet ? sheet.getBoundingClientRect().top : window.innerHeight;
+    const bottomOccluded = Math.max(0, window.innerHeight - sheetTop);
+    const visibleCenter = (topOccluded + (window.innerHeight - bottomOccluded)) / 2;
+    return visibleCenter - window.innerHeight / 2;
+  }, []);
+
   const handleOpenPlacePhotos = useCallback((place: Place) => {
     setPhotosTarget(place);
     /* 상세를 지도 옆에 띄우므로(가리지 않으므로) 그 장소를 지도에서도 바로
@@ -2109,7 +2137,8 @@ export default function PlannerPage() {
       setShareSaving(false);
       trackEvent('trip_share_created', { listInPlaza: opts.listInPlaza });
 
-      const url = `${window.location.origin}/trip/${trip.slug}`;
+      const url = `${window.location.origin}/trip/${trip.slug}${shareLinkSuffix}`;
+      setShareLinkSuffix('');
       const copied = () => {
         showToast(opts.listInPlaza ? tp('toast.shareCopiedPlaza') : tp('toast.shareCopied'));
       };
@@ -2121,8 +2150,32 @@ export default function PlannerPage() {
         navigator.clipboard?.writeText(url).then(copied);
       }
     },
-    [trip, user, showToast]
+    [trip, user, showToast, shareLinkSuffix]
   );
+
+  /**
+   * 표로보기 모달의 공유 아이콘. 이미 공개 여행이면 그 자리에서 바로
+   * "?view=table" 링크를 만들어 복사하고, 아직 비공개면 기존 공유 모달
+   * (ShareTripModal)을 그대로 띄운다 — 표시이름·공유마당 등록 여부를 다시
+   * 묻는 절차를 중복으로 만들지 않기 위해서다. 모달 확인 후 handleShareConfirm이
+   * shareLinkSuffix를 읽어 붙인다.
+   */
+  const handleShareFromTable = useCallback(() => {
+    if (trip.isPublic) {
+      const url = `${window.location.origin}/trip/${trip.slug}?view=table`;
+      const copied = () => showToast(tp('toast.tableViewLinkCopied'));
+      if (navigator.share) {
+        navigator.share({ title: trip.title, url }).catch(() => {
+          navigator.clipboard?.writeText(url).then(copied);
+        });
+      } else {
+        navigator.clipboard?.writeText(url).then(copied);
+      }
+      return;
+    }
+    setShareLinkSuffix('?view=table');
+    openShareModal();
+  }, [trip, showToast, openShareModal]);
 
   const countsByDay = useMemo(() => {
     const counts: Record<number, number> = {};
@@ -2283,6 +2336,7 @@ export default function PlannerPage() {
           level={mapLevel}
           levelTick={mapLevelTick}
           centerOffsetX={photosTarget ? occludedCenterShiftPx() : 0}
+          centerOffsetY={infoWindowPlace ? mobileOccludedCenterShiftPy() : 0}
           mapType={mapType}
           searchResults={displayResults}
           pinned={mapPins}
@@ -2451,6 +2505,7 @@ export default function PlannerPage() {
                   onToggleMustVisitOnly={() => setMustVisitOnly((v) => !v)}
                   onToggleRequired={handleToggleRequired}
                   onShowTaxiCard={(p) => setTaxiCardPlace(p)}
+                  onGoToSearch={() => openPlannerTab('search')}
                 />
               </>
             }
@@ -2585,6 +2640,7 @@ export default function PlannerPage() {
         onSelectPlaceId={setSelectedPlaceId}
         onOpenPlacePhotos={handleOpenPlacePhotos}
         onClose={handleCloseTableView}
+        onShare={handleShareFromTable}
       />
 
       {useMobileChrome && (
@@ -2864,6 +2920,7 @@ export default function PlannerPage() {
                     onToggleMustVisitOnly={() => setMustVisitOnly((v) => !v)}
                     onToggleRequired={handleToggleRequired}
                     onShowTaxiCard={(p) => setTaxiCardPlace(p)}
+                    onGoToSearch={openMobileSearchTab}
                   />
                 </div>
               ) : (
@@ -3067,7 +3124,11 @@ export default function PlannerPage() {
         userEmail={user?.email ?? null}
         authConfigured={authConfigured}
         saving={shareSaving}
-        onClose={() => !shareSaving && setShareModalOpen(false)}
+        onClose={() => {
+          if (shareSaving) return;
+          setShareModalOpen(false);
+          setShareLinkSuffix('');
+        }}
         onConfirm={handleShareConfirm}
       />
 

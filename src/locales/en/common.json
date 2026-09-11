@@ -28,7 +28,8 @@
     "kakao": "Kakao Map",
     "google": "Google Maps",
     "switchedKakao": "Switched to Kakao Map",
-    "switchedGoogle": "Switched to Google Maps"
+    "switchedGoogle": "Switched to Google Maps",
+    "groupAria": "Choose map provider"
   },
   "auth": {
     "localMode": "Local save mode",

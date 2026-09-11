@@ -827,7 +827,7 @@ export function SearchPanel({
                       <span className="search-result-rating">
                         ★ {place.rating.toFixed(1)}
                         {place.reviewCount != null
-                          ? ` · ${formatNumber(place.reviewCount, appLocale)} reviews`
+                          ? ` · ${t('search.reviewsSuffix', { count: formatNumber(place.reviewCount, appLocale) })}`
                           : ''}
                       </span>
                     )}

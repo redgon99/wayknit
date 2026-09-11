@@ -1,6 +1,7 @@
 import type { GeneratedRoute, PinnedPlace } from '../types';
 import type { Trip } from './trips';
 import { districtFromAddress } from './districtFromAddress';
+import i18n from './i18n';
 
 export interface ItineraryTableRow {
   key: string;
@@ -17,7 +18,7 @@ export interface ItineraryTableRow {
 export type ItineraryTableDayFilter = number | null;
 
 function dayLabelFor(day: number): string {
-  return `Day ${day} · ${day}일차`;
+  return i18n.t('table.dayLabel', { ns: 'planner', day });
 }
 
 function formatTimeRange(arriveAt?: string, leaveAt?: string, note?: string): string {
@@ -33,13 +34,14 @@ function formatTimeRange(arriveAt?: string, leaveAt?: string, note?: string): st
 }
 
 function formatPinTime(pin: PinnedPlace): string {
+  const minutesUnit = i18n.t('route.minutes', { ns: 'planner' });
   if (pin.note?.trim()) {
     const stay =
-      pin.stayMinutes != null && pin.stayMinutes > 0 ? `${pin.stayMinutes}min` : '—';
+      pin.stayMinutes != null && pin.stayMinutes > 0 ? `${pin.stayMinutes}${minutesUnit}` : '—';
     return `${stay} (${pin.note.trim()})`;
   }
   if (pin.stayMinutes != null && pin.stayMinutes > 0) {
-    return `${pin.stayMinutes}min`;
+    return `${pin.stayMinutes}${minutesUnit}`;
   }
   return '—';
 }

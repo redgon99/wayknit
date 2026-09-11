@@ -28,7 +28,8 @@
     "kakao": "Kakao地图",
     "google": "Google地图",
     "switchedKakao": "已切换到Kakao地图",
-    "switchedGoogle": "已切换到Google地图"
+    "switchedGoogle": "已切换到Google地图",
+    "groupAria": "选择地图应用"
   },
   "auth": {
     "localMode": "本地保存模式",

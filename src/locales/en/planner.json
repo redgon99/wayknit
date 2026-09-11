@@ -28,7 +28,7 @@
     "placeholder": "Search places",
     "placeholderWithYoutube": "Place name or YouTube link",
     "placeholderWithLink": "Place · YouTube · web · SNS link",
-    "placeholderDesign": "Place, YouTube, or blog link",
+    "placeholderDesign": "Search places",
     "pasteExtracted": "Extracted {{count}} places from paste. Press search.",
     "metaNearby": "Near map center · 지도 주변 {{km}} km · {{count}} results",
     "metaNationwide": "Nationwide · 전국 · {{count}} results",
@@ -46,7 +46,7 @@
     "radiusAria": "Search radius",
     "hintNationwideKakao": "Nationwide · relevance (Kakao API)",
     "hintNationwideGoogle": "Nationwide · relevance (Google Places)",
-    "emptyHint": "Find places by keyword or category.",
+    "emptyHint": "Find places by keyword or category — or paste a YouTube or blog link.",
     "noResults": "No results found.",
     "loading": "Searching…",
     "enriching": "Loading ratings…",
@@ -76,7 +76,8 @@
     "filters": "Filters",
     "subFilterCount": "{{count}} filters",
     "resultsCountShort": "{{count}} results",
-    "filterApply": "Show {{count}} results"
+    "filterApply": "Show {{count}} results",
+    "reviewsSuffix": "{{count}} reviews"
   },
   "trip": {
     "newTrip": "New trip",
@@ -134,7 +135,9 @@
     "countPlaces": "{{count}} places",
     "filterAll": "All",
     "filterAria": "Filter by day",
-    "empty": "No itinerary yet. Pin places or generate a route."
+    "empty": "No itinerary yet. Pin places or generate a route.",
+    "dayLabel": "Day {{day}}",
+    "shareAria": "Share this table"
   },
   "pinup": {
     "reservedAt": "Reserved for {{time}}",
@@ -770,7 +773,8 @@
     "shareCopied": "Share link copied (saved as public)",
     "shareCopiedPlaza": "Share link copied (saved as public · listed on plaza)",
     "copiedDepart": "Copied day {{day}} departure settings",
-    "pickOriginHint": "Tap the map to set the start point"
+    "pickOriginHint": "Tap the map to set the start point",
+    "tableViewLinkCopied": "Table view link copied"
   },
   "confirm": {
     "newTrip": "Save 「{{title}}」 and start a new trip?\nPins and route on this screen will switch to the new trip.",
@@ -812,5 +816,53 @@
     "guestLead": "Sign in to keep planning across devices and save your trips to the cloud.",
     "viewPlans": "View plans",
     "backToHome": "Back to home"
+  },
+  "materials": {
+    "panelTitle": "Trip materials",
+    "countSuffix": "{{count}}",
+    "viewList": "View as list",
+    "viewGrid": "View as large icons",
+    "closePanel": "Close panel",
+    "uploading": "Uploading…",
+    "addPhotoFile": "Photo/file",
+    "writeNote": "Write note",
+    "notePlaceholder": "Enter a note",
+    "saveShortcutHint": "You can also save with ⌘/Ctrl + Enter",
+    "dropHint": "Drag photos or documents here, or click",
+    "dropHintNeedLogin": "Sign in to drag and drop photos or files",
+    "dropHintNeedSupabase": "Set up the cloud to add photos or files",
+    "kindFilterAria": "Type filter",
+    "kindAll": "All",
+    "kindImage": "Photos",
+    "kindNote": "Notes",
+    "kindFile": "Files",
+    "dayFilterLabel": "Day",
+    "allDays": "All days",
+    "placeFilterLabel": "Place",
+    "place": "Place",
+    "allPlaces": "All places",
+    "emptyNoMaterials": "Drag a file above or save a text note.",
+    "emptyFiltered": "No materials match this filter.",
+    "tapToViewAll": "Tap to view all photos",
+    "viewPhotosAria": "View {{count}} photos",
+    "uploadedBy": "Uploaded by {{email}}",
+    "noDay": "No day",
+    "noPlace": "No place",
+    "settingsAria": "Material settings",
+    "titleAria": "Title",
+    "bodyAria": "Content",
+    "download": "Download",
+    "pinOptionLabel": "Day {{day}} · {{name}}",
+    "uploadNeedsLogin": "Sign in to your cloud account to upload photos or files.",
+    "uploadNeedsSupabase": "Uploading photos or files requires Supabase setup.",
+    "filesAdded": "Added {{count}} files.",
+    "albumGroupedSuffix": " (grouped {{count}} photos into one album)",
+    "uploadFailed": "Upload failed.",
+    "noteEmpty": "Please enter something to save.",
+    "noteDefaultTitle": "Note",
+    "textSaved": "Text saved.",
+    "deleteStorageFailed": "Failed to delete the stored file. Removing it from the list only.",
+    "deleted": "Material deleted.",
+    "deletedMany": "Deleted {{count}} materials."
   }
 }
