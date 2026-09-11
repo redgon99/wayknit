@@ -3,6 +3,28 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type { ClientRequest } from 'http';
+import fs from 'node:fs';
+import path from 'node:path';
+
+/**
+ * Tailscale HTTPS 인증서(있으면) — `tailscale cert <이 기기의 MagicDNS 이름>`으로
+ * 발급해 .certs/에 둔다(gitignore됨, 재발급 가능). 있으면 https로, 없으면 그냥 http로
+ * 뜬다 — 인증서가 없는 다른 머신에서도 npm run dev가 그대로 동작해야 하므로.
+ * GPS·PWA 설치처럼 보안 컨텍스트가 필요한 기능은 http로는 절대 테스트할 수 없다(§6-8/§9-4/§27-3).
+ */
+function loadTailscaleCert(): { cert: Buffer; key: Buffer } | undefined {
+  const certDir = path.resolve(process.cwd(), '.certs');
+  if (!fs.existsSync(certDir)) return undefined;
+  const crtFile = fs.readdirSync(certDir).find((f) => f.endsWith('.crt'));
+  if (!crtFile) return undefined;
+  const keyFile = crtFile.replace(/\.crt$/, '.key');
+  const keyPath = path.join(certDir, keyFile);
+  if (!fs.existsSync(keyPath)) return undefined;
+  return {
+    cert: fs.readFileSync(path.join(certDir, crtFile)),
+    key: fs.readFileSync(keyPath),
+  };
+}
 
 function kakaoProxyHeaders(proxyReq: ClientRequest, _req: IncomingMessage) {
   proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
@@ -458,6 +480,7 @@ export default defineConfig(({ mode }) => {
   server: {
     port: 5173,
     host: true,
+    https: loadTailscaleCert(),
     proxy: {
       '/api/kakao-place': {
         target: 'https://place-api.map.kakao.com/places',

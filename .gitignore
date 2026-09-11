@@ -51,3 +51,9 @@ lerna-debug.log*
 
 # 디자인 캔버스 산출물 — .design/ 의 원본에서 언제든 다시 만든다(2.5MB 에디터 포함)
 trip-materials-redesign.html
+
+# 로컬 개발서버용 Tailscale HTTPS 인증서/개인키 — `tailscale cert`로 언제든 재발급
+.certs/
+
+# 로그인 시 작업 스케줄러가 띄우는 개발서버 로그
+dev-server.log
