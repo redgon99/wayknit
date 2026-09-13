@@ -91,6 +91,11 @@
   },
   "modal": {
     "shareTitle": "分享行程",
+    "chooseTitle": "想怎么分享？",
+    "chooseLinkTitle": "以链接查看",
+    "chooseLinkDesc": "创建一个任何人都能查看的链接，无法编辑。",
+    "chooseCollabTitle": "共同编辑",
+    "chooseCollabDesc": "通过邮箱邀请他人一起编辑此行程。",
     "publishPlaza": "发布到分享广场",
     "tripName": "行程名称",
     "hint": "将生成公开链接，持有链接的人可以查看行程。",

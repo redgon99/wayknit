@@ -110,7 +110,7 @@ import { useTripPresence } from '../hooks/useTripPresence';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { createManualPlace } from '../lib/manualPlace';
 import type { PinImportResult } from '../lib/importPins';
-import type { SaveStatus } from '../components/SaveStatusBadge';
+import { SaveStatusBadge, type SaveStatus } from '../components/SaveStatusBadge';
 import { OnboardingCoach } from '../components/OnboardingCoach';
 import { ThemePreferenceChips } from '../components/ThemePreferenceChips';
 import { TaxiDriverCardModal } from '../components/TaxiDriverCardModal';
@@ -257,6 +257,14 @@ export default function PlannerPage() {
    */
   const [shareLinkSuffix, setShareLinkSuffix] = useState('');
   const [collabModalOpen, setCollabModalOpen] = useState(false);
+  /**
+   * U11(모바일 UX 리포트 2026-09-13) — "공유"와 "협업자 관리"가 각자
+   * 별도 아이콘/메뉴 항목이라, 친구에게 "보기만" 보내려는 사람과 함께
+   * 편집하려는 사람이 어디로 가야 할지 스스로 구분해야 했다. "공유" 진입을
+   * 이 선택 시트로 한 단계 앞세워 "링크로 보기 / 함께 편집"을 먼저
+   * 고르게 한다 — 기존 "협업자" 아이콘/메뉴는 빠른 경로로 그대로 둔다.
+   */
+  const [shareChooserOpen, setShareChooserOpen] = useState(false);
   // §26-7 — 관심 테마 편집. 예전엔 핀 탭 위에 상시 칩으로 얹혀 있어 핀 목록
   // 필터처럼 보였다. 검색·동선·공유마당 셋 다에 쓰이는 탭 무관 설정이라
   // 더보기 메뉴 뒤 시트로 옮겼다.
@@ -315,8 +323,11 @@ export default function PlannerPage() {
   // 경로 옵션 패널
   const [routeOptionsOpen, setRouteOptionsOpen] = useState(false);
   const [materialsPanelOpen, setMaterialsPanelOpen] = useState(false);
+  // U14(모바일 UX 리포트 2026-09-13) — 핀 카드에서 특정 장소의 자료로 바로 필터링해서 연다.
+  const [materialsPlaceFilter, setMaterialsPlaceFilter] = useState<string | null>(null);
   const [presentationMode, setPresentationMode] = useState(false);
   const [tableViewMode, setTableViewMode] = useState(false);
+  const [tableViewInitialDay, setTableViewInitialDay] = useState<number | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
   const [panelTab, setPanelTab] = useState<PlannerPanelTab>('search');
   const [dockCollapsed, setDockCollapsed] = useState(false);
@@ -1574,8 +1585,29 @@ export default function PlannerPage() {
 
   const handleOpenMaterialsPanel = useCallback(() => {
     setRouteOptionsOpen(false);
+    setMaterialsPlaceFilter(null);
     setMaterialsPanelOpen(true);
   }, []);
+
+  /**
+   * U14(모바일 UX 리포트 2026-09-13) — "장소 카드에서 연결 자료를 바로
+   * 연다"는 요청. 핀 카드에 자료 개수 배지를 붙이고, 누르면 자료 패널을
+   * 그 장소로 필터링해서 연다.
+   */
+  const handleOpenPlaceMaterials = useCallback((placeId: string) => {
+    setRouteOptionsOpen(false);
+    setMaterialsPlaceFilter(placeId);
+    setMaterialsPanelOpen(true);
+  }, []);
+
+  const materialCountByPlace = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const m of trip.materials ?? []) {
+      if (!m.pinnedPlaceId) continue;
+      counts[m.pinnedPlaceId] = (counts[m.pinnedPlaceId] ?? 0) + 1;
+    }
+    return counts;
+  }, [trip.materials]);
 
   // ============== 경로 옵션 ==============
   function setRouteOptions(next: RouteOptions) {
@@ -1728,11 +1760,33 @@ export default function PlannerPage() {
   }, []);
 
   const handleToggleTableView = useCallback(() => {
+    setTableViewInitialDay(null);
     setTableViewMode((prev) => !prev);
   }, []);
 
   const handleCloseTableView = useCallback(() => {
     setTableViewMode(false);
+    setTableViewInitialDay(null);
+  }, []);
+
+  /**
+   * U05(모바일 UX 리포트 2026-09-13) — 모바일 "동선짜기" 탭이 항상
+   * RouteOptionsPanel(출발시각·이동수단·최적화 설정 폼)부터 보여줘서,
+   * 이미 만든 일정의 시간표를 보려는 재방문 사용자가 메뉴 → 표로보기를
+   * 따로 찾아야 했다. 오늘 동선이 이미 있으면 설정 폼 대신 이 일차로
+   * 필터된 표로보기를 먼저 연다 — 설정은 표 헤더의 편집 아이콘
+   * (onEditRoute)으로 명시적으로 들어가야 열리게 분리한다.
+   */
+  const handleOpenRouteTable = useCallback(() => {
+    setTableViewInitialDay(currentDay);
+    setTableViewMode(true);
+  }, [currentDay]);
+
+  const handleEditRouteFromTable = useCallback(() => {
+    setTableViewMode(false);
+    setTableViewInitialDay(null);
+    setMobileSheetTab('route');
+    setRouteOptionsOpen(true);
   }, []);
 
   const handlePickOriginFromMap = useCallback(() => {
@@ -2414,7 +2468,7 @@ export default function PlannerPage() {
             onOpenMaterials={handleOpenMaterialsPanel}
             onNewTrip={handleNewTrip}
             onDeleteTrip={() => void handleDeleteTrip()}
-            onShare={openShareModal}
+            onShare={() => setShareChooserOpen(true)}
             onManageCollaborators={
               isTripOwner || trip.collaboratorRole ? () => setCollabModalOpen(true) : undefined
             }
@@ -2506,6 +2560,8 @@ export default function PlannerPage() {
                   onToggleRequired={handleToggleRequired}
                   onShowTaxiCard={(p) => setTaxiCardPlace(p)}
                   onGoToSearch={() => openPlannerTab('search')}
+                  materialCountByPlace={materialCountByPlace}
+                  onOpenPlaceMaterials={handleOpenPlaceMaterials}
                 />
               </>
             }
@@ -2519,6 +2575,7 @@ export default function PlannerPage() {
                 totalDays={trip.totalDays}
                 options={routeOptions}
                 hasExistingRoute={!!generatedRoute}
+                existingRoute={generatedRoute}
                 onChange={setRouteOptions}
                 onUpdateStayMinutes={handleUpdateStayMinutes}
                 onUpdateFixedArrival={handleUpdateFixedArrival}
@@ -2546,6 +2603,7 @@ export default function PlannerPage() {
                     showToast(tp('scenario.applied', { count: result.importedCount }));
                   }}
                   onSelectPlace={handleSelectPlace}
+                  onGoToSearch={() => setPanelTab('search')}
                 />
               ) : undefined
             }
@@ -2641,6 +2699,8 @@ export default function PlannerPage() {
         onOpenPlacePhotos={handleOpenPlacePhotos}
         onClose={handleCloseTableView}
         onShare={handleShareFromTable}
+        initialDayFilter={tableViewInitialDay}
+        onEditRoute={tableViewInitialDay != null ? handleEditRouteFromTable : undefined}
       />
 
       {useMobileChrome && (
@@ -2682,6 +2742,22 @@ export default function PlannerPage() {
               비어 있다 — 좁은 폰 화면을 상시로 잡아먹지 않는다.
             */}
             <PresenceStack viewers={presenceViewers} max={3} />
+            {/*
+              U06(모바일 UX 리포트 2026-09-13) — saveStatus는 이미 계산돼
+              있었지만 데스크톱 PlannerAppBar에만 전달되고 모바일 상단에는
+              저장 상태를 보여줄 곳이 없었다. 이 줄은 이미 빠듯해(U02) 텍스트
+              라벨을 넣을 폭이 없으므로 compact(아이콘만)로 붙이고, 탭하면
+              토스트로 전체 문구+마지막 저장 시각을 보여준다.
+            */}
+            <div className="mobile-save-status">
+              <SaveStatusBadge
+                status={saveStatus}
+                lastSavedAt={lastSavedAt ?? trip.updatedAt}
+                compact
+                onGuestClick={() => navigate('/login')}
+                onTap={(msg) => showToast(msg)}
+              />
+            </div>
             <div className="mobile-planner-tools">
               <button
                 type="button"
@@ -2817,8 +2893,12 @@ export default function PlannerPage() {
                 type="button"
                 className={`mobile-sheet-tab ${mobileSheetTab === 'route' ? 'active' : ''}`}
                 onClick={() => {
-                  setMobileSheetTab('route');
-                  setRouteOptionsOpen(true);
+                  if (generatedRoute) {
+                    handleOpenRouteTable();
+                  } else {
+                    setMobileSheetTab('route');
+                    setRouteOptionsOpen(true);
+                  }
                 }}
               >
                 {tp('chrome.viewRoute')}
@@ -2921,6 +3001,9 @@ export default function PlannerPage() {
                     onToggleRequired={handleToggleRequired}
                     onShowTaxiCard={(p) => setTaxiCardPlace(p)}
                     onGoToSearch={openMobileSearchTab}
+                    hideRouteCta={!!generatedRoute}
+                    materialCountByPlace={materialCountByPlace}
+                    onOpenPlaceMaterials={handleOpenPlaceMaterials}
                   />
                 </div>
               ) : (
@@ -2934,6 +3017,7 @@ export default function PlannerPage() {
                     totalDays={trip.totalDays}
                     options={routeOptions}
                     hasExistingRoute={!!generatedRoute}
+                    existingRoute={generatedRoute}
                     onChange={setRouteOptions}
                     onUpdateStayMinutes={handleUpdateStayMinutes}
                     onUpdateFixedArrival={handleUpdateFixedArrival}
@@ -2994,7 +3078,7 @@ export default function PlannerPage() {
               </button>
             )}
             <MobileMoreMenu
-              onShare={openShareModal}
+              onShare={() => setShareChooserOpen(true)}
               plazaNavVisible={plazaNavVisible}
               onOpenTableView={handleToggleTableView}
               onOpenCollaborators={
@@ -3034,6 +3118,7 @@ export default function PlannerPage() {
            보이면 안 된다(§14-2). presenceEnabled 를 쓰면 안 되는 이유도 같다. */
         materialAuthors={canSeePinAuthors ? materialAuthors : undefined}
         currentUserEmail={user?.email ?? null}
+        initialPlaceFilter={materialsPlaceFilter}
       />
 
       {pickingOriginFromMap && (
@@ -3106,6 +3191,10 @@ export default function PlannerPage() {
             handleSelectPlace(place);
             setScenarioOpen(false);
           }}
+          onGoToSearch={() => {
+            setScenarioOpen(false);
+            openMobileSearchTab();
+          }}
         />
       </AppSheetModal>
 
@@ -3117,6 +3206,55 @@ export default function PlannerPage() {
           onOpenRoute={handleOpenRouteOptions}
         />
       )}
+
+      {/*
+        U11(모바일 UX 리포트 2026-09-13) — "공유" 진입을 바로 ShareTripModal
+        (공개 링크+공유마당 등록)로 보내지 않고, 이 선택 시트를 한 단계
+        앞세운다. 링크로 보기(보기 전용 공개 링크)와 함께 편집(협업자
+        초대)의 차이를 실행 전에 알려준다.
+      */}
+      <AppSheetModal
+        open={shareChooserOpen}
+        title={ts('modal.chooseTitle')}
+        onClose={() => setShareChooserOpen(false)}
+      >
+        <div className="share-choose-list">
+          <button
+            type="button"
+            className="share-choose-option"
+            onClick={() => {
+              setShareChooserOpen(false);
+              openShareModal();
+            }}
+          >
+            <span className="share-choose-icon">
+              <Icon name="globe" size={18} />
+            </span>
+            <span className="share-choose-text">
+              <strong>{ts('modal.chooseLinkTitle')}</strong>
+              <span>{ts('modal.chooseLinkDesc')}</span>
+            </span>
+          </button>
+          {(isTripOwner || trip.collaboratorRole) && (
+            <button
+              type="button"
+              className="share-choose-option"
+              onClick={() => {
+                setShareChooserOpen(false);
+                setCollabModalOpen(true);
+              }}
+            >
+              <span className="share-choose-icon">
+                <Icon name="facilityGroup" size={18} />
+              </span>
+              <span className="share-choose-text">
+                <strong>{ts('modal.chooseCollabTitle')}</strong>
+                <span>{ts('modal.chooseCollabDesc')}</span>
+              </span>
+            </button>
+          )}
+        </div>
+      </AppSheetModal>
 
       <ShareTripModal
         open={shareModalOpen}

@@ -21,6 +21,16 @@ interface Props {
   onClose: () => void;
   /** 있으면 헤더에 공유 아이콘을 보여준다 — 공유 링크로 열었을 때(읽기 전용)는 안 넘긴다. */
   onShare?: () => void;
+  /**
+   * U05(모바일 UX 리포트 2026-09-13) — "동선짜기" 탭이 항상 옵션 설정
+   * 화면을 먼저 보여줘 이미 만든 일정의 시간표를 보려면 메뉴 → 표로보기를
+   * 따로 알아야 했다. 이 모달을 그 탭에서 직접 열 때는 지금 보던 일차로
+   * 필터를 미리 맞춰서 연다 — "표로보기(메뉴)"는 항상 전체(null)로 열리는
+   * 기존 동작을 그대로 유지한다.
+   */
+  initialDayFilter?: number | null;
+  /** 있으면 헤더에 "일정 수정" 아이콘을 보여준다 — 동선짜기 탭에서 열렸을 때만 켠다. */
+  onEditRoute?: () => void;
 }
 
 export function ItineraryTableView({
@@ -31,6 +41,8 @@ export function ItineraryTableView({
   onOpenPlacePhotos,
   onClose,
   onShare,
+  initialDayFilter,
+  onEditRoute,
 }: Props) {
   const { t } = useTranslation('planner');
   const [dayFilter, setDayFilter] = useState<ItineraryTableDayFilter>(null);
@@ -69,8 +81,8 @@ export function ItineraryTableView({
   }, [trip.pinnedByDay]);
 
   useEffect(() => {
-    if (open) setDayFilter(null);
-  }, [open, trip.id]);
+    if (open) setDayFilter(initialDayFilter ?? null);
+  }, [open, trip.id, initialDayFilter]);
 
   useEffect(() => {
     if (!open) return;
@@ -110,6 +122,17 @@ export function ItineraryTableView({
             <p className="itinerary-table-modal-sub">{subtitle}</p>
           </div>
           <div className="itinerary-table-modal-header-actions">
+            {onEditRoute && (
+              <button
+                type="button"
+                className="itinerary-table-modal-edit"
+                onClick={onEditRoute}
+                aria-label={t('route.openOptions')}
+                title={t('route.openOptions')}
+              >
+                <Icon name="pencil" size={17} />
+              </button>
+            )}
             {onShare && (
               <button
                 type="button"
@@ -206,7 +229,20 @@ export function ItineraryTableView({
                           }
                         }}
                       >
-                        <td>{row.time}</td>
+                        <td>
+                          {row.time}
+                          {/*
+                            U10(모바일 UX 리포트 2026-09-13) — "—"가 단순
+                            데이터 누락(오류처럼 보임)인지 "이 장소가 아직
+                            생성된 동선에 없음"인지 구분이 안 됐다. scheduled로
+                            판별해 후자일 때만 이름표를 붙인다.
+                          */}
+                          {!row.scheduled && (
+                            <span className="itinerary-table-unscheduled-badge">
+                              {t('table.unscheduled')}
+                            </span>
+                          )}
+                        </td>
                         <td>
                           <div className="itinerary-table-place">
                             {place && onOpenPlacePhotos && (
@@ -219,6 +255,18 @@ export function ItineraryTableView({
                             <span className="itinerary-table-place-name">
                               {row.placeName}
                             </span>
+                            {/*
+                              필수 방문은 지금까지 행 전체를 빨간 글씨로
+                              칠하는 것으로만 표시했다 — 색만 보면 오류·휴무처럼
+                              읽힐 수 있어(U10) 글자 배지를 더한다. 빨간 글씨
+                              스타일(.is-required)은 그대로 둬 색으로도 빠르게
+                              훑을 수 있게 하되, 배지가 실제 의미를 전달한다.
+                            */}
+                            {row.required && (
+                              <span className="itinerary-table-required-badge">
+                                {t('table.required')}
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td>{row.district || '—'}</td>

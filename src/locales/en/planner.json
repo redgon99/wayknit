@@ -137,7 +137,9 @@
     "filterAria": "Filter by day",
     "empty": "No itinerary yet. Pin places or generate a route.",
     "dayLabel": "Day {{day}}",
-    "shareAria": "Share this table"
+    "shareAria": "Share this table",
+    "required": "Required",
+    "unscheduled": "Not in route"
   },
   "pinup": {
     "reservedAt": "Reserved for {{time}}",
@@ -166,7 +168,10 @@
     "unmarkRequired": "Remove must visit",
     "requiredBadge": "Must-visit place",
     "addedBy": "Added by {{who}}",
-    "toolbarMore": "Tools"
+    "toolbarMore": "Tools",
+    "sortVisit": "Visit order",
+    "sortCategory": "By type",
+    "placeMaterials": "View {{count}} linked materials"
   },
   "route": {
     "fixedArrivalAt": "Arrival fixed at {{time}}",
@@ -236,6 +241,8 @@
       "aiSuggestError": "Couldn't get AI suggestions. Using category defaults instead — adjust below or try again.",
       "stayMinutesAria": "{{name}} stay (min)",
       "preview": "Preview",
+      "previewAfterChange": "Estimate after change",
+      "current": "Current: {{km}} km · {{minutes}} min",
       "previewStats": "{{km}} km · {{minutes}} min travel · {{stayMinutes}} min stay · ends {{time}}",
       "build": "Build route",
       "rebuild": "Rebuild route",
@@ -660,7 +667,11 @@
   "scenario": {
     "menuLabel": "Create Theme Trip",
     "title": "Theme Trip Scenario",
-    "subtitle": "Pick a travel theme and AI will build a day-by-day trip scenario from real place data.",
+    "subtitle": "Pick a travel theme to choose from ready-made day-by-day trip scenarios.",
+    "courseCount": "{{count}} courses",
+    "courseCountZero": "Coming soon",
+    "tryOtherTheme": "Other themes have courses ready",
+    "goToSearch": "Search places",
     "themeLabel": "Travel theme",
     "theme": {
       "meditation": "Temples",

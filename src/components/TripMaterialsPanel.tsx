@@ -12,6 +12,7 @@ import {
   validateMaterialFile,
 } from '../lib/tripMaterialsStorage';
 import { MaterialsExportMenu } from './MaterialsExportMenu';
+import { AppSheetModal } from './AppSheetModal';
 import { presenceColor, presenceInitial } from '../lib/tripPresence';
 import { MaterialsPhotoGallery } from './MaterialsPhotoGallery';
 import {
@@ -52,6 +53,13 @@ interface Props {
   materialAuthors?: Record<string, string | null>;
   /** 내가 올린 것에는 배지를 달지 않으려고 비교한다. */
   currentUserEmail?: string | null;
+  /**
+   * U14(모바일 UX 리포트 2026-09-13) — 핀 카드의 "자료" 배지에서 열었을
+   * 때 그 장소로 바로 필터링한다. 넘기지 않으면(일반 "자료" 탭 진입)
+   * 대신 오늘(currentDay)로 기본 필터링한다 — "여행자는 보통 오늘 자료를
+   * 찾는다"는 관찰에 맞춘 기본값.
+   */
+  initialPlaceFilter?: string | null;
 }
 
 function sortMaterials(list: TripMaterial[]): TripMaterial[] {
@@ -89,6 +97,7 @@ export function TripMaterialsPanel({
   onNotify,
   materialAuthors,
   currentUserEmail,
+  initialPlaceFilter,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: tc } = useTranslation('common');
@@ -96,6 +105,24 @@ export function TripMaterialsPanel({
   const [dayFilter, setDayFilter] = useState<number | null>(null);
   const [placeFilter, setPlaceFilter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => readViewMode());
+
+  /*
+   * U14(모바일 UX 리포트 2026-09-13) — 열 때마다 필터를 다시 잡는다.
+   * 장소 배지로 열렸으면(initialPlaceFilter) 그 장소 기준으로만 보여주고
+   * (일차로 또 좁히면 계획이 바뀐 자료를 놓칠 수 있어 day는 전체로 둔다),
+   * 일반 진입이면 "오늘" 자료를 기본으로 보여준다.
+   */
+  useEffect(() => {
+    if (!open) return;
+    if (initialPlaceFilter) {
+      setPlaceFilter(initialPlaceFilter);
+      setDayFilter(null);
+    } else {
+      setPlaceFilter(null);
+      setDayFilter(currentDay);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialPlaceFilter]);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -978,41 +1005,40 @@ function MaterialMetaMenu({
   const { t } = useTranslation('planner');
   const { t: tc } = useTranslation('common');
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('mousedown', onDoc);
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDoc);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
+  /*
+   * 부수 버그(2026-09-14, U14 확인 중 사용자 발견) — 이 메뉴는 원래
+   * 카드 모서리에 작은 팝오버(position:absolute)로 떴다. 자료 패널
+   * (.materials-panel)이 슬라이드 애니메이션 때문에 transform +
+   * overflow:hidden을 걸어 둔 컨테이너라, 좁은 2열 그리드 카드나
+   * (position:static이 되어 포지셔닝 기준 자체가 엉뚱한 조상으로
+   * 튀던) 목록보기 행에서 팝오버가 패널 밖으로 잘리거나 아예 안
+   * 보이는 위치에 렌더링됐다("목록보기에서 …이 실행이 안 됨"으로
+   * 보고됨). 카드마다 다른 좁은 폭에 맞춰 매번 위치를 계산하는 대신,
+   * 이미 검증된 패턴(§27-6 PinupBar 더보기 시트)대로 AppSheetModal로
+   * 바꿔 위치 계산 자체를 없앴다.
+   */
   return (
-    <div className="materials-card-menu" ref={ref}>
+    <div className="materials-card-menu">
       <button
         type="button"
         className="materials-card-menu-btn"
         aria-label={t('materials.settingsAria')}
         aria-expanded={open}
-        aria-haspopup="menu"
+        aria-haspopup="dialog"
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((v) => !v);
+          setOpen(true);
         }}
       >
         <Icon name="more" size={15} />
       </button>
-      {open && (
-        <div className="materials-card-menu-pop" onClick={(e) => e.stopPropagation()}>
+      <AppSheetModal
+        open={open}
+        title={material.fileName ?? material.title ?? t('materials.settingsAria')}
+        onClose={() => setOpen(false)}
+      >
+        <div className="materials-card-menu-sheet">
           <label className="materials-card-menu-field">
             <span>{t('materials.dayFilterLabel')}</span>
             <select
@@ -1055,7 +1081,7 @@ function MaterialMetaMenu({
             {tc('delete')}
           </button>
         </div>
-      )}
+      </AppSheetModal>
     </div>
   );
 }

@@ -91,6 +91,11 @@
   },
   "modal": {
     "shareTitle": "Share trip",
+    "chooseTitle": "How would you like to share?",
+    "chooseLinkTitle": "View link",
+    "chooseLinkDesc": "Create a link anyone can view. No editing.",
+    "chooseCollabTitle": "Edit together",
+    "chooseCollabDesc": "Invite people by email to edit this trip together.",
     "publishPlaza": "List on share plaza",
     "tripName": "Trip name",
     "hint": "A public link will be created. Anyone with the link can view the itinerary.",

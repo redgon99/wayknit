@@ -91,6 +91,11 @@
   },
   "modal": {
     "shareTitle": "分享行程",
+    "chooseTitle": "想怎麼分享？",
+    "chooseLinkTitle": "以連結查看",
+    "chooseLinkDesc": "建立一個任何人都能查看的連結，無法編輯。",
+    "chooseCollabTitle": "共同編輯",
+    "chooseCollabDesc": "透過電子郵件邀請他人一起編輯此行程。",
     "publishPlaza": "發佈到分享廣場",
     "tripName": "行程名稱",
     "hint": "將生成公開鏈接，持有鏈接的人可以查看行程。",

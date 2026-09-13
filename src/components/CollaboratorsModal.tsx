@@ -229,36 +229,46 @@ export function CollaboratorsModal({
                 <ul className="collab-list">
                   {collaborators.map((c) => (
                     <li key={c.userId} className="collab-list-item">
-                      <span className="collab-list-email">
-                        {c.email ?? c.userId}
+                      {/*
+                        U12(모바일 UX 리포트 2026-09-13) — 이메일과 권한
+                        선택기가 한 줄에서 flex:1을 나눠 가져 "user2@mail..."
+                        처럼 식별 정보가 심하게 줄었다. 식별 줄과 조작 줄을
+                        분리해 이메일에 줄 전체를 준다.
+                      */}
+                      <div className="collab-row-identity">
+                        <span className="collab-list-email">
+                          {c.email ?? c.userId}
+                        </span>
                         {c.userId === currentUserId && (
                           <span className="collab-me-badge">{t('collab.meBadge')}</span>
                         )}
-                      </span>
-                      {isOwner ? (
-                        <>
-                          <select
-                            value={c.role}
-                            onChange={(e) => handleRoleChange(c.userId, e.target.value as CollaboratorRole)}
-                            className="collab-invite-role"
-                          >
-                            <option value="editor">{t('collab.roleEditor')}</option>
-                            <option value="viewer">{t('collab.roleViewer')}</option>
-                          </select>
-                          <button
-                            type="button"
-                            className="collab-remove-btn"
-                            onClick={() => handleRemove(c.userId)}
-                            aria-label={t('collab.remove')}
-                          >
-                            <Icon name="trash" size={15} />
-                          </button>
-                        </>
-                      ) : (
-                        <span className="collab-role-badge">
-                          {c.role === 'editor' ? t('collab.roleEditor') : t('collab.roleViewer')}
-                        </span>
-                      )}
+                      </div>
+                      <div className="collab-row-actions">
+                        {isOwner ? (
+                          <>
+                            <select
+                              value={c.role}
+                              onChange={(e) => handleRoleChange(c.userId, e.target.value as CollaboratorRole)}
+                              className="collab-invite-role collab-row-role"
+                            >
+                              <option value="editor">{t('collab.roleEditor')}</option>
+                              <option value="viewer">{t('collab.roleViewer')}</option>
+                            </select>
+                            <button
+                              type="button"
+                              className="collab-remove-btn"
+                              onClick={() => handleRemove(c.userId)}
+                              aria-label={t('collab.remove')}
+                            >
+                              <Icon name="trash" size={15} />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="collab-role-badge">
+                            {c.role === 'editor' ? t('collab.roleEditor') : t('collab.roleViewer')}
+                          </span>
+                        )}
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -270,25 +280,29 @@ export function CollaboratorsModal({
                   <ul className="collab-list">
                     {invites.map((i) => (
                       <li key={i.id} className="collab-list-item collab-list-item--pending">
-                        <span className="collab-list-email">{i.email}</span>
-                        <span className="collab-role-badge">
-                          {i.role === 'editor' ? t('collab.roleEditor') : t('collab.roleViewer')}
-                        </span>
-                        <button
-                          type="button"
-                          className="collab-copy-link-btn"
-                          onClick={() => void handleCopyLink(i.id, i.email)}
-                        >
-                          {copiedId === i.id ? t('collab.linkCopied') : t('collab.copyLink')}
-                        </button>
-                        <button
-                          type="button"
-                          className="collab-remove-btn"
-                          onClick={() => handleCancelInvite(i.id)}
-                          aria-label={t('collab.cancelInvite')}
-                        >
-                          <Icon name="trash" size={15} />
-                        </button>
+                        <div className="collab-row-identity">
+                          <span className="collab-list-email">{i.email}</span>
+                        </div>
+                        <div className="collab-row-actions">
+                          <span className="collab-role-badge">
+                            {i.role === 'editor' ? t('collab.roleEditor') : t('collab.roleViewer')}
+                          </span>
+                          <button
+                            type="button"
+                            className="collab-copy-link-btn"
+                            onClick={() => void handleCopyLink(i.id, i.email)}
+                          >
+                            {copiedId === i.id ? t('collab.linkCopied') : t('collab.copyLink')}
+                          </button>
+                          <button
+                            type="button"
+                            className="collab-remove-btn"
+                            onClick={() => handleCancelInvite(i.id)}
+                            aria-label={t('collab.cancelInvite')}
+                          >
+                            <Icon name="trash" size={15} />
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>

@@ -91,6 +91,11 @@
   },
   "modal": {
     "shareTitle": "旅行を共有",
+    "chooseTitle": "どうやって共有しますか？",
+    "chooseLinkTitle": "リンクで見せる",
+    "chooseLinkDesc": "誰でも閲覧できるリンクを作成します。編集はできません。",
+    "chooseCollabTitle": "一緒に編集",
+    "chooseCollabDesc": "メールで招待して、一緒に旅程を編集します。",
     "publishPlaza": "共有広場に登録",
     "tripName": "旅行名",
     "hint": "公開リンクが作られます。リンクを持つ人は日程を見られます。",

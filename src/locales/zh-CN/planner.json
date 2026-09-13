@@ -130,7 +130,9 @@
     "filterAria": "按天筛选",
     "empty": "暂无行程。请先标记地点或生成路线。",
     "dayLabel": "第{{day}}天",
-    "shareAria": "分享此表"
+    "shareAria": "分享此表",
+    "required": "必去",
+    "unscheduled": "未纳入路线"
   },
   "pinup": {
     "reservedAt": "预约 {{time}}",
@@ -155,7 +157,10 @@
     "routeTitleSelected": "根据所选{{count}}处创建路线",
     "pinCount": "{{count}} 个标记",
     "addedBy": "由 {{who}} 添加",
-    "toolbarMore": "工具"
+    "toolbarMore": "工具",
+    "sortVisit": "按游览顺序",
+    "sortCategory": "按类型",
+    "placeMaterials": "查看关联资料 {{count}} 个"
   },
   "route": {
     "fixedArrivalAt": "到达时间固定为 {{time}}",
@@ -225,6 +230,8 @@
       "aiSuggestError": "未能获取AI推荐,目前使用的是分类默认值 — 可在下方手动调整,或重试。",
       "stayMinutesAria": "{{name}} 停留时间(分钟)",
       "preview": "预估",
+      "previewAfterChange": "变更后预估",
+      "current": "当前 {{km}}公里 · {{minutes}}分钟",
       "previewStats": "{{km}} km · 移动 {{minutes}} 分钟 · 停留 {{stayMinutes}} 分钟 · {{time}} 结束",
       "build": "创建路线",
       "rebuild": "重新创建路线",
@@ -457,7 +464,11 @@
   "scenario": {
     "menuLabel": "创建主题旅行",
     "title": "主题旅行方案",
-    "subtitle": "选择旅行主题后，AI 会根据真实场所数据为您生成逐日旅行方案。",
+    "subtitle": "选择旅行主题后，可以从已准备好的逐日旅行方案中挑选。",
+    "courseCount": "{{count}}个",
+    "courseCountZero": "即将上线",
+    "tryOtherTheme": "其他主题已有可选方案",
+    "goToSearch": "搜索地点",
     "themeLabel": "旅行主题",
     "theme": {
       "meditation": "冥想寺庙游",

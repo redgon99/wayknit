@@ -51,6 +51,28 @@ export function groupPinnedByCategory(
   });
 }
 
+/**
+ * U07(모바일 UX 리포트 2026-09-13) — "목록으로 보기"의 기본 정렬이
+ * 카테고리별(음식점 2·3·4, 마트 1처럼)이라 번호가 방문 순서처럼 보이지만
+ * 아니었다. 방문순서 모드를 새로 추가하면서, 이 모드에서 드래그로 순서를
+ * 바꿀 때 `movePinnedPlace`(카테고리 경계에 놓으면 카테고리까지 바뀌는
+ * 로직)를 그대로 쓰면 방문순서만 바꾸려던 조작이 조용히 분류까지
+ * 바꿔버린다. 그래서 순서만 바꾸는 전용 함수를 따로 둔다.
+ */
+export function reorderPinnedPlaces(
+  pinned: PinnedPlace[],
+  activeId: string,
+  overId: string,
+): PinnedPlace[] {
+  const ids = pinned.map((p) => p.id);
+  const oldIdx = ids.indexOf(activeId);
+  const newIdx = ids.indexOf(overId);
+  if (oldIdx === -1 || newIdx === -1) return pinned;
+  const newIds = arrayMove(ids, oldIdx, newIdx);
+  const pinnedMap = new Map(pinned.map((p) => [p.id, p]));
+  return newIds.map((id, i) => ({ ...pinnedMap.get(id)!, order: i + 1 }));
+}
+
 /** 핀 칩 제목: 5자 이상이면 4자 + … */
 export function truncatePinTitle(name: string): string {
   if (name.length >= 5) return `${name.slice(0, 4)}…`;

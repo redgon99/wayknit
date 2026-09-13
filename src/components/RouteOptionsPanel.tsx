@@ -2,6 +2,7 @@ import { Icon } from './Icon';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type {
+  GeneratedRoute,
   PinnedPlace,
   RouteOptions,
   RouteStop,
@@ -40,6 +41,12 @@ interface Props {
   onCopyFromPreviousDay?: () => void;
   pickingOriginFromMap?: boolean;
   hasExistingRoute?: boolean;
+  /**
+   * U04(모바일 UX 리포트 2026-09-13) — 하단 "예상" 수치가 저장된 동선과
+   * 뭐가 다른지 라벨만으로는 안 보였다. hasExistingRoute일 때 이 값과
+   * 나란히 보여줘 "저장된 값 → 바뀌면 이렇게 됨"을 명시한다.
+   */
+  existingRoute?: GeneratedRoute | null;
   onUpdateStayMinutes?: (placeId: string, minutes: number) => void;
   /** 도착 시각 고정 — null이면 해제 */
   onUpdateFixedArrival?: (placeId: string, time: string | null) => void;
@@ -76,6 +83,7 @@ export function RouteOptionsPanel({
   onCopyFromPreviousDay,
   pickingOriginFromMap = false,
   hasExistingRoute = false,
+  existingRoute = null,
   onUpdateStayMinutes,
   onUpdateFixedArrival,
   onUpdateItemKind,
@@ -662,25 +670,43 @@ export function RouteOptionsPanel({
 
       <footer className="route-panel-footer">
         {preview && (
-          <div className="preview-stats route-preview-line">
-            <span className="stat-label">{t('route.options.preview')}</span>
-            <span className="stat-value">
-              {t('route.options.previewStats', {
-                km: preview.totalDistanceKm,
-                minutes: preview.totalTravelMinutes,
-                stayMinutes: preview.totalStayMinutes,
-                time: preview.finishAt,
-              })}
-              {/* 무료도로는 0원이 당연하므로 나머지 두 기준에서만 통행료를 적는다 */}
-              {options.optimizeBy !== 'no-toll' && selectedComparison?.tollFare != null && (
-                <>
-                  {' · '}
-                  {t('route.options.compareToll', {
-                    fare: selectedComparison.tollFare.toLocaleString('ko-KR'),
-                  })}
-                </>
-              )}
-            </span>
+          <div className="route-preview-block">
+            {/*
+              U04(모바일 UX 리포트 2026-09-13) — "예상" 한 단어로는 이 값이
+              저장된 동선과 다르다는 게 안 보였다. 이미 저장된 동선이 있으면
+              그 값을 별도 줄로 먼저 보여주고 아래 라벨도 "변경 시 예상"으로
+              바꿔 두 값이 비교 대상임을 명시한다.
+            */}
+            {hasExistingRoute && existingRoute && (
+              <div className="route-preview-current-line">
+                {t('route.options.current', {
+                  km: existingRoute.totalDistanceKm,
+                  minutes: existingRoute.totalTravelMinutes,
+                })}
+              </div>
+            )}
+            <div className="route-preview-line">
+              <span className="stat-label">
+                {t(hasExistingRoute ? 'route.options.previewAfterChange' : 'route.options.preview')}
+              </span>
+              <span className="stat-value">
+                {t('route.options.previewStats', {
+                  km: preview.totalDistanceKm,
+                  minutes: preview.totalTravelMinutes,
+                  stayMinutes: preview.totalStayMinutes,
+                  time: preview.finishAt,
+                })}
+                {/* 무료도로는 0원이 당연하므로 나머지 두 기준에서만 통행료를 적는다 */}
+                {options.optimizeBy !== 'no-toll' && selectedComparison?.tollFare != null && (
+                  <>
+                    {' · '}
+                    {t('route.options.compareToll', {
+                      fare: selectedComparison.tollFare.toLocaleString('ko-KR'),
+                    })}
+                  </>
+                )}
+              </span>
+            </div>
           </div>
         )}
         <button

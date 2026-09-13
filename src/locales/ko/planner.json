@@ -137,7 +137,9 @@
     "filterAll": "전체",
     "filterAria": "일차 필터",
     "empty": "표시할 일정이 없습니다. 장소를 핀업하거나 동선을 만들어 주세요.",
-    "shareAria": "이 표 공유하기"
+    "shareAria": "이 표 공유하기",
+    "required": "필수",
+    "unscheduled": "동선 미반영"
   },
   "pinup": {
     "reservedAt": "예약 {{time}}",
@@ -166,7 +168,10 @@
     "unmarkRequired": "필수 방문 해제",
     "requiredBadge": "필수 방문 장소",
     "addedBy": "{{who}} 님이 추가",
-    "toolbarMore": "도구"
+    "toolbarMore": "도구",
+    "sortVisit": "방문순서",
+    "sortCategory": "종류별",
+    "placeMaterials": "연결 자료 {{count}}개 보기"
   },
   "route": {
     "fixedArrivalAt": "도착 시각 고정 {{time}}",
@@ -236,6 +241,8 @@
       "aiSuggestError": "AI 추천을 불러오지 못했어요. 카테고리 기본값을 쓰고 있어요 — 아래에서 직접 조정하거나 다시 시도해 보세요.",
       "stayMinutesAria": "{{name}} 체류시간(분)",
       "preview": "예상",
+      "previewAfterChange": "변경 시 예상",
+      "current": "현재 {{km}}km · {{minutes}}분",
       "previewStats": "{{km}} km · 이동 {{minutes}}분 · 체류 {{stayMinutes}}분 · {{time}} 끝",
       "build": "동선 만들기",
       "rebuild": "동선 다시 만들기",
@@ -660,7 +667,11 @@
   "scenario": {
     "menuLabel": "테마 여행 만들기",
     "title": "테마 여행 시나리오",
-    "subtitle": "여행 테마를 고르면 AI가 실제 장소 데이터를 기반으로 일자별 여행 시나리오를 만들어드립니다.",
+    "subtitle": "여행 테마를 고르면 미리 준비된 일자별 여행 시나리오 중에서 골라 담을 수 있어요.",
+    "courseCount": "{{count}}개",
+    "courseCountZero": "준비 중",
+    "tryOtherTheme": "다른 테마엔 준비된 코스가 있어요",
+    "goToSearch": "장소 검색하기",
     "themeLabel": "여행 테마",
     "theme": {
       "meditation": "명상관광",

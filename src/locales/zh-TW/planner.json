@@ -130,7 +130,9 @@
     "filterAria": "按天篩選",
     "empty": "暫無行程。請先標記地點或生成路線。",
     "dayLabel": "第{{day}}天",
-    "shareAria": "分享此表"
+    "shareAria": "分享此表",
+    "required": "必去",
+    "unscheduled": "未納入路線"
   },
   "pinup": {
     "reservedAt": "預約 {{time}}",
@@ -155,7 +157,10 @@
     "routeTitleSelected": "根據所選{{count}}處創建路線",
     "pinCount": "{{count}} 個標記",
     "addedBy": "由 {{who}} 新增",
-    "toolbarMore": "工具"
+    "toolbarMore": "工具",
+    "sortVisit": "依遊覽順序",
+    "sortCategory": "依類型",
+    "placeMaterials": "查看關聯資料 {{count}} 個"
   },
   "route": {
     "fixedArrivalAt": "抵達時間固定為 {{time}}",
@@ -225,6 +230,8 @@
       "aiSuggestError": "未能取得AI推薦,目前使用的是分類預設值 — 可在下方手動調整,或重試。",
       "stayMinutesAria": "{{name}} 停留時間(分鐘)",
       "preview": "預估",
+      "previewAfterChange": "變更後預估",
+      "current": "目前 {{km}}公里 · {{minutes}}分鐘",
       "previewStats": "{{km}} km · 移動 {{minutes}} 分鐘 · 停留 {{stayMinutes}} 分鐘 · {{time}} 結束",
       "build": "創建路線",
       "rebuild": "重新創建路線",
@@ -457,7 +464,11 @@
   "scenario": {
     "menuLabel": "創建主題旅行",
     "title": "主題旅行方案",
-    "subtitle": "選擇旅行主題後，AI 會根據真實場所數據為您生成逐日旅行方案。",
+    "subtitle": "選擇旅行主題後，可以從已準備好的逐日旅行方案中挑選。",
+    "courseCount": "{{count}}個",
+    "courseCountZero": "即將上線",
+    "tryOtherTheme": "其他主題已有可選方案",
+    "goToSearch": "搜尋地點",
     "themeLabel": "旅行主題",
     "theme": {
       "meditation": "冥想寺廟遊",

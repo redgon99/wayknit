@@ -137,7 +137,9 @@
     "filterAria": "Filtrar por día",
     "empty": "Aún no hay itinerario. Fija lugares o genera una ruta.",
     "dayLabel": "Día {{day}}",
-    "shareAria": "Compartir esta tabla"
+    "shareAria": "Compartir esta tabla",
+    "required": "Obligatorio",
+    "unscheduled": "Sin ruta asignada"
   },
   "pinup": {
     "reservedAt": "Reservado a las {{time}}",
@@ -166,7 +168,10 @@
     "unmarkRequired": "Quitar imprescindible",
     "requiredBadge": "Lugar imprescindible",
     "addedBy": "Añadido por {{who}}",
-    "toolbarMore": "Herramientas"
+    "toolbarMore": "Herramientas",
+    "sortVisit": "Orden de visita",
+    "sortCategory": "Por tipo",
+    "placeMaterials": "Ver {{count}} archivos vinculados"
   },
   "route": {
     "fixedArrivalAt": "Llegada fijada a las {{time}}",
@@ -236,6 +241,8 @@
       "aiSuggestError": "No se pudieron obtener sugerencias de la IA. Usando valores predeterminados por categoría — ajusta abajo o vuelve a intentarlo.",
       "stayMinutesAria": "{{name}} estancia (min)",
       "preview": "Vista previa",
+      "previewAfterChange": "Estimación tras el cambio",
+      "current": "Actual: {{km}} km · {{minutes}} min",
       "previewStats": "{{km}} km · {{minutes}} min de trayecto · {{stayMinutes}} min de estancia · termina {{time}}",
       "build": "Crear ruta",
       "rebuild": "Recrear ruta",
@@ -660,7 +667,11 @@
   "scenario": {
     "menuLabel": "Crear viaje temático",
     "title": "Escenario de viaje temático",
-    "subtitle": "Elige un tema y la IA creará un itinerario día a día con datos reales de lugares.",
+    "subtitle": "Elige un tema para escoger entre itinerarios día a día ya preparados.",
+    "courseCount": "{{count}} rutas",
+    "courseCountZero": "Próximamente",
+    "tryOtherTheme": "Otros temas tienen rutas listas",
+    "goToSearch": "Buscar lugares",
     "themeLabel": "Tema de viaje",
     "theme": {
       "meditation": "Templos",

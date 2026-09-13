@@ -91,6 +91,11 @@
   },
   "modal": {
     "shareTitle": "Reise teilen",
+    "chooseTitle": "Wie möchtest du teilen?",
+    "chooseLinkTitle": "Als Link ansehen",
+    "chooseLinkDesc": "Erstellt einen Link, den jeder ansehen kann. Kein Bearbeiten.",
+    "chooseCollabTitle": "Gemeinsam bearbeiten",
+    "chooseCollabDesc": "Per E-Mail einladen, um die Reise gemeinsam zu bearbeiten.",
     "publishPlaza": "Auf dem Platz veröffentlichen",
     "tripName": "Reisename",
     "hint": "Es wird ein öffentlicher Link erzeugt. Wer ihn hat, kann den Plan sehen.",

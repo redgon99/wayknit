@@ -137,7 +137,9 @@
     "filterAria": "Filtrer par jour",
     "empty": "Pas encore d’itinéraire. Épinglez des lieux ou générez un parcours.",
     "dayLabel": "Jour {{day}}",
-    "shareAria": "Partager ce tableau"
+    "shareAria": "Partager ce tableau",
+    "required": "Incontournable",
+    "unscheduled": "Hors itinéraire"
   },
   "pinup": {
     "reservedAt": "Réservé à {{time}}",
@@ -166,7 +168,10 @@
     "unmarkRequired": "Retirer l’incontournable",
     "requiredBadge": "Lieu incontournable",
     "addedBy": "Ajouté par {{who}}",
-    "toolbarMore": "Outils"
+    "toolbarMore": "Outils",
+    "sortVisit": "Ordre de visite",
+    "sortCategory": "Par type",
+    "placeMaterials": "Voir {{count}} documents liés"
   },
   "route": {
     "fixedArrivalAt": "Arrivée fixée à {{time}}",
@@ -236,6 +241,8 @@
       "aiSuggestError": "Impossible d’obtenir les suggestions de l’IA. Valeurs par catégorie utilisées — ajustez ci-dessous ou réessayez.",
       "stayMinutesAria": "Durée à {{name}} (min)",
       "preview": "Aperçu",
+      "previewAfterChange": "Estimation après modification",
+      "current": "Actuel : {{km}} km · {{minutes}} min",
       "previewStats": "{{km}} km · {{minutes}} min de trajet · {{stayMinutes}} min sur place · fin {{time}}",
       "build": "Créer l’itinéraire",
       "rebuild": "Recréer l’itinéraire",
@@ -660,7 +667,11 @@
   "scenario": {
     "menuLabel": "Créer un voyage thématique",
     "title": "Scénario de voyage thématique",
-    "subtitle": "Choisissez un thème : l’IA construira un scénario jour par jour à partir de lieux réels.",
+    "subtitle": "Choisissez un thème pour sélectionner parmi des scénarios jour par jour déjà prêts.",
+    "courseCount": "{{count}} parcours",
+    "courseCountZero": "Bientôt disponible",
+    "tryOtherTheme": "D’autres thèmes ont des parcours prêts",
+    "goToSearch": "Rechercher des lieux",
     "themeLabel": "Thème de voyage",
     "theme": {
       "meditation": "Temples",

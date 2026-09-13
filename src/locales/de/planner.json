@@ -137,7 +137,9 @@
     "filterAria": "Nach Tag filtern",
     "empty": "Noch kein Reiseplan. Pinnen Sie Orte oder erstellen Sie eine Route.",
     "dayLabel": "Tag {{day}}",
-    "shareAria": "Diese Tabelle teilen"
+    "shareAria": "Diese Tabelle teilen",
+    "required": "Pflicht",
+    "unscheduled": "Nicht in Route"
   },
   "pinup": {
     "reservedAt": "Reserviert für {{time}}",
@@ -166,7 +168,10 @@
     "unmarkRequired": "Pflichtbesuch entfernen",
     "requiredBadge": "Pflichtbesuch-Ort",
     "addedBy": "Von {{who}} hinzugefügt",
-    "toolbarMore": "Werkzeuge"
+    "toolbarMore": "Werkzeuge",
+    "sortVisit": "Besuchsreihenfolge",
+    "sortCategory": "Nach Art",
+    "placeMaterials": "{{count}} verknüpfte Dateien ansehen"
   },
   "route": {
     "fixedArrivalAt": "Ankunft auf {{time}} festgelegt",
@@ -236,6 +241,8 @@
       "aiSuggestError": "KI-Vorschläge konnten nicht geladen werden. Es werden Kategorie-Standardwerte verwendet — unten anpassen oder erneut versuchen.",
       "stayMinutesAria": "Aufenthalt {{name}} (Min.)",
       "preview": "Vorschau",
+      "previewAfterChange": "Schätzung nach Änderung",
+      "current": "Aktuell: {{km}} km · {{minutes}} Min.",
       "previewStats": "{{km}} km · {{minutes}} Min. Fahrt · {{stayMinutes}} Min. Aufenthalt · Ende {{time}}",
       "build": "Route erstellen",
       "rebuild": "Route neu erstellen",
@@ -660,7 +667,11 @@
   "scenario": {
     "menuLabel": "Themenreise erstellen",
     "title": "Themenreise-Szenario",
-    "subtitle": "Wählen Sie ein Reisethema — die KI erstellt daraus ein tagesweises Reiseszenario mit echten Ortsdaten.",
+    "subtitle": "Wählen Sie ein Reisethema, um aus vorbereiteten tagesweisen Reiseszenarien zu wählen.",
+    "courseCount": "{{count}} Routen",
+    "courseCountZero": "Demnächst",
+    "tryOtherTheme": "Andere Themen haben fertige Routen",
+    "goToSearch": "Orte suchen",
     "themeLabel": "Reisethema",
     "theme": {
       "meditation": "Tempel",

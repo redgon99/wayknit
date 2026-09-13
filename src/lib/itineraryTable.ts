@@ -12,6 +12,13 @@ export interface ItineraryTableRow {
   district: string;
   placeId: string;
   required: boolean;
+  /**
+   * U10(모바일 UX 리포트 2026-09-13) — 이 핀이 현재 생성된 동선(route.stops)에
+   * 포함돼 있는지. false면 시간 칸의 "—"가 "시각 데이터 없음"이 아니라
+   * "동선에 아직 반영 안 됨"이라는 뜻이다 — 화면에서 이 둘을 구분해 보여줘야
+   * 사용자가 대시를 오류로 오해하지 않는다.
+   */
+  scheduled: boolean;
 }
 
 /** null = 전체 */
@@ -49,7 +56,8 @@ function formatPinTime(pin: PinnedPlace): string {
 function rowFromPin(
   pin: PinnedPlace,
   time: string,
-  day: number
+  day: number,
+  scheduled: boolean
 ): ItineraryTableRow {
   return {
     key: `${day}-${pin.id}-${pin.order}`,
@@ -60,6 +68,7 @@ function rowFromPin(
     district: districtFromAddress(pin.address, pin.roadAddress),
     placeId: pin.id,
     required: Boolean(pin.required),
+    scheduled,
   };
 }
 
@@ -101,7 +110,7 @@ function rowsForDay(
     const time = stop
       ? formatTimeRange(stop.arriveAt, stop.leaveAt, pin.note ?? stop.note)
       : formatPinTime(pin);
-    return rowFromPin(pin, time, day);
+    return rowFromPin(pin, time, day, Boolean(stop));
   });
 }
 

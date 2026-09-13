@@ -130,7 +130,9 @@
     "filterAria": "日別フィルター",
     "empty": "表示する日程がありません。場所をピンするか動線を作成してください。",
     "dayLabel": "{{day}}日目",
-    "shareAria": "この表を共有"
+    "shareAria": "この表を共有",
+    "required": "必須",
+    "unscheduled": "動線未反映"
   },
   "pinup": {
     "reservedAt": "予約 {{time}}",
@@ -155,7 +157,10 @@
     "routeTitleSelected": "選択した{{count}}件でルート作成",
     "pinCount": "ピン {{count}}",
     "addedBy": "{{who}} さんが追加",
-    "toolbarMore": "ツール"
+    "toolbarMore": "ツール",
+    "sortVisit": "訪問順",
+    "sortCategory": "種類別",
+    "placeMaterials": "連携資料{{count}}件を見る"
   },
   "route": {
     "fixedArrivalAt": "到着時刻を {{time}} に固定",
@@ -225,6 +230,8 @@
       "aiSuggestError": "AIの提案を取得できませんでした。カテゴリの既定値を使用中です — 下で直接調整するか、もう一度お試しください。",
       "stayMinutesAria": "{{name}} 滞在時間(分)",
       "preview": "予想",
+      "previewAfterChange": "変更後の予想",
+      "current": "現在 {{km}}km・{{minutes}}分",
       "previewStats": "{{km}} km · 移動 {{minutes}}分 · 滞在 {{stayMinutes}}分 · {{time}} 終了",
       "build": "ルート作成",
       "rebuild": "ルート作り直し",
@@ -457,7 +464,11 @@
   "scenario": {
     "menuLabel": "テーマ旅行を作る",
     "title": "テーマ旅行シナリオ",
-    "subtitle": "テーマを選ぶと、AIが実際の場所データをもとに日程別の旅行シナリオを作成します。",
+    "subtitle": "テーマを選ぶと、あらかじめ用意された日程別の旅行シナリオから選べます。",
+    "courseCount": "{{count}}件",
+    "courseCountZero": "準備中",
+    "tryOtherTheme": "他のテーマには用意されたコースがあります",
+    "goToSearch": "場所を検索",
     "themeLabel": "旅行テーマ",
     "theme": {
       "meditation": "瞑想・寺院",

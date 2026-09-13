@@ -102,6 +102,27 @@ export async function listPublishedScenarios(
   return out;
 }
 
+/**
+ * U13(모바일 UX 리포트 2026-09-13) — 테마를 눌러야만 시나리오가 있는지
+ * 알 수 있었다("걷기여행 → 없음"). 테마 카드에 개수를 미리 보여주려고
+ * theme 컬럼만 가볍게 조회해 전체 테마의 개수를 한 번에 센다.
+ */
+export async function listPublishedScenarioCounts(): Promise<Partial<Record<ScenarioTheme, number>>> {
+  const sb = getSupabase();
+  if (!sb) return {};
+  const { data, error } = await sb
+    .from('scenario_catalog')
+    .select('theme')
+    .eq('status', 'published');
+  if (error || !data) return {};
+  const counts: Partial<Record<ScenarioTheme, number>> = {};
+  for (const row of data as { theme: string }[]) {
+    const theme = row.theme as ScenarioTheme;
+    counts[theme] = (counts[theme] ?? 0) + 1;
+  }
+  return counts;
+}
+
 // ---- 관리자 전용 ----
 
 export async function listAdminScenarioCatalog(filter: {

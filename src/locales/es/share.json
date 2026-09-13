@@ -91,6 +91,11 @@
   },
   "modal": {
     "shareTitle": "Compartir viaje",
+    "chooseTitle": "¿Cómo quieres compartir?",
+    "chooseLinkTitle": "Ver con enlace",
+    "chooseLinkDesc": "Crea un enlace que cualquiera puede ver. Sin edición.",
+    "chooseCollabTitle": "Editar juntos",
+    "chooseCollabDesc": "Invita por correo para editar el viaje juntos.",
     "publishPlaza": "Publicar en la plaza",
     "tripName": "Nombre del viaje",
     "hint": "Se creará un enlace público. Quien lo tenga podrá ver el itinerario.",

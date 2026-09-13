@@ -21,7 +21,7 @@ import {
 } from '@dnd-kit/sortable';
 import type { GeneratedRoute, PinnedPlace, SimpleCategory } from '../types';
 import { getCategoryMeta, DEFAULT_CODE_BY_SIMPLE_CATEGORY } from '../lib/categories';
-import { groupPinnedByCategory, movePinnedPlace } from '../lib/pinGroups';
+import { groupPinnedByCategory, movePinnedPlace, reorderPinnedPlaces } from '../lib/pinGroups';
 import { SortableItem } from './Sortable';
 import { PinExportMenu } from './PinExportMenu';
 import { PinImportMenu } from './PinImportMenu';
@@ -79,6 +79,21 @@ interface Props {
    * 첫 장소를 담는 가장 흔한 경로(검색)에 실행 버튼이 없었다.
    */
   onGoToSearch?: () => void;
+  /**
+   * U02(모바일 UX 리포트 2026-09-13) — 이미 오늘 동선이 만들어져 있으면
+   * 호출부(모바일 시트)가 "오늘 동선" 요약 카드에 같은 동작("다시 짜기")을
+   * 이미 보여준다. 이 하단 고정 CTA까지 남겨두면 같은 버튼이 화면에
+   * 두 번(카드 안 "다시 짜기" + 패널 하단 "동선 만들기") 떠서 반보기의
+   * 목록 공간만 축낸다 — 그럴 때 호출부가 이 prop으로 꺼 준다.
+   */
+  hideRouteCta?: boolean;
+  /**
+   * U14(모바일 UX 리포트 2026-09-13) — "장소 카드에서 연결 자료를 바로
+   * 연다"는 요청. 장소별 연결 자료 개수가 있으면 카드에 배지를 붙이고,
+   * 누르면 onOpenPlaceMaterials로 그 장소의 자료를 바로 연다.
+   */
+  materialCountByPlace?: Record<string, number>;
+  onOpenPlaceMaterials?: (placeId: string) => void;
 }
 
 function DroppableGroupChips({
@@ -132,6 +147,9 @@ export function PinupBar({
   pinAuthors,
   currentUserEmail,
   onGoToSearch,
+  hideRouteCta = false,
+  materialCountByPlace,
+  onOpenPlaceMaterials,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: tc } = useTranslation('common');
@@ -141,6 +159,8 @@ export function PinupBar({
   const panel = variant === 'panel';
   const [dragActive, setDragActive] = useState(false);
   const [toolbarSheetOpen, setToolbarSheetOpen] = useState(false);
+  // U07(모바일 UX 리포트 2026-09-13) — 방문순서를 기본값으로.
+  const [sortMode, setSortMode] = useState<'visit' | 'category'>('visit');
   const ids = pinned.map((p) => p.id);
   const selectionCount = selectedPinIds.size;
   const routeTargetCount = selectionCount > 0 ? selectionCount : pinned.length;
@@ -190,7 +210,12 @@ export function PinupBar({
     setDragActive(false);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const next = movePinnedPlace(pinned, String(active.id), String(over.id));
+    // 방문순서 모드는 그룹 드롭존이 없으니 순서만 바꾼다 — movePinnedPlace를
+    // 쓰면 넘어간 자리의 이웃 카테고리로 조용히 재분류돼 버린다(U07).
+    const next =
+      sortMode === 'visit'
+        ? reorderPinnedPlaces(pinned, String(active.id), String(over.id))
+        : movePinnedPlace(pinned, String(active.id), String(over.id));
     onReorder(next);
   }
 
@@ -236,6 +261,171 @@ export function PinupBar({
     );
   }
 
+  function renderChip(p: PinnedPlace) {
+    const meta = getCategoryMeta(p.categoryCode);
+    const borderColor = meta.bgColor;
+    const isSelected = selectedPinIds.has(p.id);
+    // 남이 넣은 핀만 표시한다. 내 것까지 달면 전부 배지가 붙어
+    // "누가 넣었나"라는 정보가 오히려 안 보인다.
+    const authorEmail = pinAuthors?.[pinAuthorKey(p.day, p.id)] ?? null;
+    const showAuthor = !!authorEmail && authorEmail !== (currentUserEmail ?? '');
+    return (
+      <SortableItem key={p.id} id={p.id}>
+        {({ listeners, setActivatorNodeRef, isDragging }) => (
+          <div
+            className={`pin-chip ${isDragging ? 'dragging' : ''} ${isSelected ? 'is-selected' : ''}`}
+            style={{
+              borderColor,
+              boxShadow: isSelected
+                ? `0 0 0 2px var(--color-primary), 0 0 0 3px ${borderColor}55`
+                : `0 0 0 1px ${borderColor}40`,
+            }}
+            title={p.name}
+          >
+            {/*
+              U01(모바일 UX 리포트 2026-09-13) — 순번·작성자·깃발·이름·
+              잠금·별점·택시·삭제가 한 줄에서 경쟁해 이름이 "육…"·"어…"처럼
+              한두 글자로 잘렸다. 이름을 최우선으로 두는 줄(chip-row-main)과
+              나머지 메타 정보(chip-row-meta)를 담는 줄로 나눈다. 잠금 배지
+              (구 chip-required-badge)는 깃발 토글(chip-required)과 같은
+              상태를 중복 표시했을 뿐이라 없앴다 — 필수 표시는 깃발 하나로.
+            */}
+            <div className="chip-row-main">
+              <span
+                ref={setActivatorNodeRef}
+                {...listeners}
+                className="chip-order chip-drag"
+                style={{
+                  background: `${borderColor}22`,
+                  color: meta.iconColor,
+                }}
+                title={t('pinup.dragOrder')}
+              >
+                {p.order}
+              </span>
+              <button
+                type="button"
+                className="chip-body"
+                aria-pressed={isSelected}
+                onClick={() => {
+                  onTogglePinSelection?.(p.id);
+                  onSelectPin?.(p);
+                }}
+                onDoubleClick={() => onSelectPin?.(p)}
+              >
+                <span className="chip-name">{p.name}</span>
+              </button>
+              {onToggleRequired && (
+                <button
+                  type="button"
+                  className={`chip-required ${p.required ? 'active' : ''}`}
+                  onClick={() => onToggleRequired(p.id)}
+                  title={p.required ? t('pinup.unmarkRequired') : t('pinup.markRequired')}
+                  aria-pressed={!!p.required}
+                >
+                  <Icon name="flag" />
+                </button>
+              )}
+            </div>
+            <div className="chip-row-meta">
+              <div className="chip-meta-left">
+                {showAuthor && (
+                  <span
+                    className="chip-author"
+                    style={{ background: presenceColor(authorEmail) }}
+                    title={t('pinup.addedBy', {
+                      who: authorEmail,
+                      defaultValue: '{{who}} 님이 추가',
+                    })}
+                    aria-label={t('pinup.addedBy', {
+                      who: authorEmail,
+                      defaultValue: '{{who}} 님이 추가',
+                    })}
+                  >
+                    {presenceInitial(authorEmail)}
+                  </span>
+                )}
+                {p.fixedArrival && (
+                  <span
+                    className={`chip-fixed-arrival ${p.itemKind === 'reserved' ? 'reserved' : ''}`}
+                    title={
+                      p.itemKind === 'reserved'
+                        ? t('pinup.reservedAt', { time: p.fixedArrival })
+                        : t('pinup.fixedArrivalAt', { time: p.fixedArrival })
+                    }
+                  >
+                    <Icon
+                      name={p.itemKind === 'reserved' ? 'facilityReservation' : 'clock'}
+                    />
+                    {p.fixedArrival}
+                  </span>
+                )}
+                {p.rating !== undefined && (
+                  <span className="chip-rating">
+                    <Icon name="star" />
+                    {p.rating.toFixed(1)}
+                  </span>
+                )}
+                {/*
+                  U14(모바일 UX 리포트 2026-09-13) — 자료 화면 자체엔 필터가
+                  있었지만 "이 장소에 연결된 자료"로 바로 가는 길이 없었다.
+                  개수가 있을 때만 배지를 보여준다.
+                */}
+                {onOpenPlaceMaterials && !!materialCountByPlace?.[p.id] && (
+                  <button
+                    type="button"
+                    className="chip-materials"
+                    onClick={() => onOpenPlaceMaterials(p.id)}
+                    title={t('pinup.placeMaterials', { count: materialCountByPlace[p.id] })}
+                  >
+                    <Icon name="folder" size={11} />
+                    {materialCountByPlace[p.id]}
+                  </button>
+                )}
+              </div>
+              <div className="chip-meta-right">
+                {onShowTaxiCard && (
+                  <button
+                    type="button"
+                    className="chip-taxi"
+                    onClick={() => onShowTaxiCard(p)}
+                    title={t('taxi.showCard')}
+                    aria-label={t('taxi.showCard')}
+                  >
+                    <Icon name="transportCar" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="chip-delete"
+                  onClick={() => onRemove(p.id)}
+                  aria-label={t('pinup.removePin', { name: p.name })}
+                >
+                  <Icon name="close" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </SortableItem>
+    );
+  }
+
+  /*
+   * U07(모바일 UX 리포트 2026-09-13) — 카테고리별 묶음이 기본이라 화면
+   * 번호(순번 배지)가 방문 순서처럼 보이지만 실제로는 아니었다("음식점
+   * 2·3·4, 마트 1"). 방문순서(정렬만, 그룹 없음)를 기본으로 바꾸고,
+   * 기존 카테고리별 묶음은 명시적으로 전환하는 보기 옵션으로 남긴다.
+   * 카테고리가 하나뿐이면 두 모드가 똑같아 보여 전환 UI 자체를 숨긴다.
+   */
+  const hasMultipleCategories = groups.length > 1;
+
+  const flatContent = (
+    <div className="pinup-groups pinup-flat-list">
+      {[...visiblePinned].sort((a, b) => a.order - b.order).map((p) => renderChip(p))}
+    </div>
+  );
+
   const groupsContent = (
     <div className="pinup-groups">
       {groups.map((group) => {
@@ -269,139 +459,7 @@ export function PinupBar({
                 <span className="group-count">{group.items.length}</span>
               </div>
               <DroppableGroupChips category={group.category}>
-                {group.items.map((p) => {
-                  const meta = getCategoryMeta(p.categoryCode);
-                  const borderColor = meta.bgColor;
-                  const isSelected = selectedPinIds.has(p.id);
-                  // 남이 넣은 핀만 표시한다. 내 것까지 달면 전부 배지가 붙어
-                  // "누가 넣었나"라는 정보가 오히려 안 보인다.
-                  const authorEmail = pinAuthors?.[pinAuthorKey(p.day, p.id)] ?? null;
-                  const showAuthor =
-                    !!authorEmail && authorEmail !== (currentUserEmail ?? '');
-                  return (
-                    <SortableItem key={p.id} id={p.id}>
-                      {({ listeners, setActivatorNodeRef, isDragging }) => (
-                        <div
-                          className={`pin-chip ${isDragging ? 'dragging' : ''} ${isSelected ? 'is-selected' : ''}`}
-                          style={{
-                            borderColor,
-                            boxShadow: isSelected
-                              ? `0 0 0 2px var(--color-primary), 0 0 0 3px ${borderColor}55`
-                              : `0 0 0 1px ${borderColor}40`,
-                          }}
-                          title={p.name}
-                        >
-                          <span
-                            ref={setActivatorNodeRef}
-                            {...listeners}
-                            className="chip-order chip-drag"
-                            style={{
-                              background: `${borderColor}22`,
-                              color: meta.iconColor,
-                            }}
-                            title={t('pinup.dragOrder')}
-                          >
-                            {p.order}
-                          </span>
-                          {showAuthor && (
-                            <span
-                              className="chip-author"
-                              style={{ background: presenceColor(authorEmail) }}
-                              title={t('pinup.addedBy', {
-                                who: authorEmail,
-                                defaultValue: '{{who}} 님이 추가',
-                              })}
-                              aria-label={t('pinup.addedBy', {
-                                who: authorEmail,
-                                defaultValue: '{{who}} 님이 추가',
-                              })}
-                            >
-                              {presenceInitial(authorEmail)}
-                            </span>
-                          )}
-                          {onToggleRequired && (
-                            <button
-                              type="button"
-                              className={`chip-required ${p.required ? 'active' : ''}`}
-                              onClick={() => onToggleRequired(p.id)}
-                              title={p.required ? t('pinup.unmarkRequired') : t('pinup.markRequired')}
-                              aria-pressed={!!p.required}
-                            >
-                              <Icon name="flag" />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className="chip-body"
-                            aria-pressed={isSelected}
-                            onClick={() => {
-                              onTogglePinSelection?.(p.id);
-                              onSelectPin?.(p);
-                            }}
-                            onDoubleClick={() => onSelectPin?.(p)}
-                          >
-                            {/*
-                              F03(모바일 감사 보고서) — truncatePinTitle()이
-                              실제 남은 폭과 무관하게 무조건 4글자로 잘랐다
-                              ("흥부왕족…"). PinupBar는 지금 panel variant로만
-                              쓰여 카드가 항상 꽉 찬 너비(width:100%)인데도
-                              그랬다. 전체 이름을 그대로 넣고 CSS 말줄임표
-                              (.pinup-bar-panel .chip-name)에 맡긴다 — 실제
-                              픽셀 폭 기준으로 잘리니 짧은 이름은 그대로,
-                              긴 이름만 자연스럽게 …로 끝난다.
-                            */}
-                            <span className="chip-name">{p.name}</span>
-                            {p.required && (
-                              <span className="chip-required-badge" title={t('pinup.requiredBadge')}>
-                                <Icon name="lock" size={11} />
-                              </span>
-                            )}
-                            {p.fixedArrival && (
-                              <span
-                                className={`chip-fixed-arrival ${p.itemKind === 'reserved' ? 'reserved' : ''}`}
-                                title={
-                                  p.itemKind === 'reserved'
-                                    ? t('pinup.reservedAt', { time: p.fixedArrival })
-                                    : t('pinup.fixedArrivalAt', { time: p.fixedArrival })
-                                }
-                              >
-                                <Icon
-                                  name={p.itemKind === 'reserved' ? 'facilityReservation' : 'clock'}
-                                />
-                                {p.fixedArrival}
-                              </span>
-                            )}
-                            {p.rating !== undefined && (
-                              <span className="chip-rating">
-                                <Icon name="star" />
-                                {p.rating.toFixed(1)}
-                              </span>
-                            )}
-                          </button>
-                          {onShowTaxiCard && (
-                            <button
-                              type="button"
-                              className="chip-taxi"
-                              onClick={() => onShowTaxiCard(p)}
-                              title={t('taxi.showCard')}
-                              aria-label={t('taxi.showCard')}
-                            >
-                              <Icon name="transportCar" />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className="chip-delete"
-                            onClick={() => onRemove(p.id)}
-                            aria-label={t('pinup.removePin', { name: p.name })}
-                          >
-                            <Icon name="close" />
-                          </button>
-                        </div>
-                      )}
-                    </SortableItem>
-                  );
-                })}
+                {group.items.map((p) => renderChip(p))}
               </DroppableGroupChips>
             </div>
           </section>
@@ -534,6 +592,24 @@ export function PinupBar({
             );
           })()}
           <div className="pinup-panel-scroll">
+            {hasMultipleCategories && (
+              <div className="mobile-view-toggle pinup-sort-toggle">
+                <button
+                  type="button"
+                  className={`mobile-view-toggle-btn ${sortMode === 'visit' ? 'active' : ''}`}
+                  onClick={() => setSortMode('visit')}
+                >
+                  {t('pinup.sortVisit')}
+                </button>
+                <button
+                  type="button"
+                  className={`mobile-view-toggle-btn ${sortMode === 'category' ? 'active' : ''}`}
+                  onClick={() => setSortMode('category')}
+                >
+                  {t('pinup.sortCategory')}
+                </button>
+              </div>
+            )}
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -542,22 +618,24 @@ export function PinupBar({
               onDragCancel={handleDragCancel}
             >
               <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-                {groupsContent}
+                {sortMode === 'visit' ? flatContent : groupsContent}
               </SortableContext>
             </DndContext>
           </div>
-          <div className="pinup-panel-footer">
-            <button
-              type="button"
-              className={`route-cta panel-route-cta ${routeOptionsOpen ? 'active' : ''}`}
-              onClick={onOpenRouteOptions}
-              disabled={routeTargetCount < 2}
-            >
-              {selectionCount > 0
-                ? t('pinup.routeCtaCount', { count: selectionCount })
-                : t('pinup.routeCta')}
-            </button>
-          </div>
+          {!hideRouteCta && (
+            <div className="pinup-panel-footer">
+              <button
+                type="button"
+                className={`route-cta panel-route-cta ${routeOptionsOpen ? 'active' : ''}`}
+                onClick={onOpenRouteOptions}
+                disabled={routeTargetCount < 2}
+              >
+                {selectionCount > 0
+                  ? t('pinup.routeCtaCount', { count: selectionCount })
+                  : t('pinup.routeCta')}
+              </button>
+            </div>
+          )}
         </>
       ) : (
         <DndContext
