@@ -144,7 +144,7 @@
       "route_generate": "{{actor}} a généré un itinéraire",
       "day_add": "{{actor}} a ajouté un jour",
       "day_remove": "{{actor}} a supprimé un jour",
-      "trip_rename": "{{actor}} a renommé le voyage",
+      "trip_rename": "{{actor}} a renommé le voyage en « {{target}} »",
       "dayBadge": "Jour {{day}}",
       "system": "Système",
       "refresh": "Actualiser"

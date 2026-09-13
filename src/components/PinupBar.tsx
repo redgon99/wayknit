@@ -553,7 +553,9 @@ export function PinupBar({
               onClick={onOpenRouteOptions}
               disabled={routeTargetCount < 2}
             >
-              Set up route · 동선 만들기 →
+              {selectionCount > 0
+                ? t('pinup.routeCtaCount', { count: selectionCount })
+                : t('pinup.routeCta')}
             </button>
           </div>
         </>

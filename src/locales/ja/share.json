@@ -144,7 +144,7 @@
       "route_generate": "{{actor}}がルートを作成",
       "day_add": "{{actor}}が日程を追加",
       "day_remove": "{{actor}}が日程を削除",
-      "trip_rename": "{{actor}}が旅行名を変更",
+      "trip_rename": "{{actor}}が旅行名を「{{target}}」に変更",
       "dayBadge": "{{day}}日目",
       "system": "システム",
       "refresh": "更新"

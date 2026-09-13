@@ -80,7 +80,11 @@ function trailBrandOf(name: string): string | null {
 
 function formatMonth(month: string | undefined): string | null {
   if (!month || month.length !== 6) return null;
-  return `${month.slice(0, 4)}.${month.slice(4, 6)}`;
+  const year = month.slice(0, 4);
+  const mm = month.slice(4, 6);
+  // TourAPI는 촬영월을 모르면 "00"을 채워 보낸다("YYYY00") — F19(모바일 감사).
+  // "2012.00"처럼 없는 정보를 있는 척 보여주지 않고 연도만 표시한다.
+  return mm === '00' ? year : `${year}.${mm}`;
 }
 
 function formatHours(totalMinutes: number): string {

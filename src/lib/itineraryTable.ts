@@ -81,8 +81,10 @@ function rowsForDay(
 
   if (route?.stops?.length) {
     for (const stop of route.stops) {
-      const pin = pinById.get(stop.id) ?? stop;
-      if (seen.has(pin.id)) continue;
+      // stop.id가 현재 핀에 없으면(삭제됨) 옛 stop을 되살리지 않는다 — U03(모바일 UX 리포트
+      // 2026-09-13). 되살리면 표가 "현재 일정"이 아니라 "핀+과거 동선"이 섞인 목록이 된다.
+      const pin = pinById.get(stop.id);
+      if (!pin || seen.has(pin.id)) continue;
       ordered.push(pin);
       seen.add(pin.id);
     }

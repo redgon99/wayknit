@@ -144,7 +144,7 @@
       "route_generate": "{{actor}} построил(а) маршрут",
       "day_add": "{{actor}} добавил(а) день",
       "day_remove": "{{actor}} удалил(а) день",
-      "trip_rename": "{{actor}} переименовал(а) поездку",
+      "trip_rename": "{{actor}} переименовал(а) поездку в «{{target}}»",
       "dayBadge": "День {{day}}",
       "system": "Система",
       "refresh": "Обновить"

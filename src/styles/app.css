@@ -5945,6 +5945,9 @@ button {
   font-size: 20px;
   font-weight: 800;
   color: var(--color-text-primary);
+  /* U17(모바일 UX 리포트 2026-09-13) — "월 4,900원"에서 숫자·한글 경계의
+     줄바꿈 허용 때문에 "원"만 다음 줄로 떨어졌다. 가격 한 덩어리는 붙여 둔다. */
+  white-space: nowrap;
 }
 
 .upgrade-price-note {

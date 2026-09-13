@@ -144,7 +144,7 @@
       "route_generate": "{{actor}} · 동선 생성",
       "day_add": "{{actor}} · 일차 추가",
       "day_remove": "{{actor}} · 일차 삭제",
-      "trip_rename": "{{actor}} · 여행 이름 변경",
+      "trip_rename": "{{actor}} · 여행 이름을 “{{target}}”(으)로 변경",
       "dayBadge": "{{day}}일차",
       "system": "시스템",
       "refresh": "새로고침"

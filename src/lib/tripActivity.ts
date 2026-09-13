@@ -93,11 +93,14 @@ function collapse(rows: ActivityRow[]): TripActivityEntry[] {
       count: 1,
     };
     const prev = out[out.length - 1];
-    // 재정렬만 묶는다. 추가·삭제는 어떤 장소였는지가 정보라서 묶으면 안 된다.
+    // 재정렬·이름변경만 묶는다. 추가·삭제는 어떤 장소였는지가 정보라서 묶으면 안 된다.
+    // 이름변경은 입력을 멈출 때마다(1.5초) 한 건씩 남아 타이핑 중 여러 번 쉬면
+    // "이름 변경"이 연달아 여러 건 찍힌다 — F21(모바일 감사). prev(최신)가 대표로
+    // 남고 target(최종 이름)도 최신 값을 유지한다.
     if (
       prev &&
-      entry.action === 'pin_reorder' &&
-      prev.action === 'pin_reorder' &&
+      (entry.action === 'pin_reorder' || entry.action === 'trip_rename') &&
+      prev.action === entry.action &&
       prev.actorId === entry.actorId &&
       Math.abs(prev.createdAt - entry.createdAt) <= GROUP_WINDOW_MS
     ) {
