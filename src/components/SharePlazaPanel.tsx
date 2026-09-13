@@ -13,7 +13,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { loadKakaoSdk } from '../lib/kakao';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { KOREA_REGIONS } from '../lib/koreaRegions';
+import { KOREA_REGIONS, type KoreaRegion } from '../lib/koreaRegions';
 import type { TripTheme } from '../types';
 import {
   cloneTripFromShare,
@@ -302,6 +302,24 @@ export function SharePlazaPanel() {
             filteredEntries.map((entry) => {
               const pulled = importedIds.has(entry.id);
               const isPulling = pullingId === entry.id;
+              /*
+                U16(모바일 UX 리포트 2026-09-13) — 카드에 작성자·날짜·
+                제목·전체 요약 문장(pinSummary, "1일차: 장소1, 장소2,
+                장소3 외 55곳 · 2일차: …")만 있어서, 며칠짜리인지 얼마나
+                빡빡한지(장소 수) 한눈에 판단하기 어려웠다. 이미 갖고
+                있는 데이터(totalDays·pinnedByDay·regions)로 구조화된
+                요약 칩 3종을 문장 요약 위에 얹는다 — 문장 요약 자체는
+                실제 장소 이름까지 보여줘 유용하니 그대로 둔다.
+              */
+              const totalPlaceCount = Object.values(entry.pinnedByDay).reduce(
+                (sum, list) => sum + (list?.length ?? 0),
+                0
+              );
+              const regionLabels = entry.regions
+                .map((code) => KOREA_REGIONS.find((r) => r.code === code))
+                .filter((r): r is KoreaRegion => !!r)
+                .slice(0, 2);
+              const extraRegionCount = entry.regions.length - regionLabels.length;
               return (
                 <article key={entry.id} id={`plaza-row-${entry.id}`} className="plaza-board-row">
                   <div className="plaza-board-meta">
@@ -332,6 +350,23 @@ export function SharePlazaPanel() {
                     </time>
                   </div>
                   <h2 className="plaza-board-trip-title">{entry.title}</h2>
+                  <div className="plaza-board-stats">
+                    <span className="plaza-stat-chip">
+                      <Icon name="calendar" size={12} />
+                      {t('plaza.statDays', { count: entry.totalDays })}
+                    </span>
+                    <span className="plaza-stat-chip">
+                      <Icon name="mapPin" size={12} />
+                      {t('plaza.statPlaces', { count: totalPlaceCount })}
+                    </span>
+                    {regionLabels.length > 0 && (
+                      <span className="plaza-stat-chip">
+                        <Icon name="navigate" size={12} />
+                        {regionLabels.map((r) => t(r.labelKey)).join(', ')}
+                        {extraRegionCount > 0 && ` +${extraRegionCount}`}
+                      </span>
+                    )}
+                  </div>
                   <p className="plaza-board-summary">{entry.pinSummary}</p>
                   <div className="plaza-board-actions">
                     <Link to={`/trip/${entry.slug}`} className="plaza-board-link">

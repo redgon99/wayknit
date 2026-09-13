@@ -28,8 +28,8 @@
     "title": "Teilen-Platz",
     "board": "Pinnwand",
     "map": "Karte",
-    "import": "Importieren",
-    "imported": "Importiert",
+    "import": "In meine Reisen kopieren",
+    "imported": "Kopiert",
     "loginRequired": "Melden Sie sich an, um diese Reise zu importieren.",
     "filterLocale": "Sprache",
     "localeAll": "Alle",
@@ -46,12 +46,12 @@
     "empty": "Noch keine Reisen auf dem Platz.",
     "anonymous": "Anonym",
     "viewDetail": "Details",
-    "alreadyImported": "Bereits in Ihren Reisen",
-    "importing": "Import…",
+    "alreadyImported": "Bereits in Ihre Reisen kopiert",
+    "importing": "Kopieren…",
     "mapAria": "Landesweite Karte",
     "mapLoading": "Karte wird geladen…",
     "mapEmpty": "Keine geteilten Reisen mit Kartenposition.",
-    "importedToast": "「{{title}}」 in Ihre Reisen importiert",
+    "importedToast": "「{{title}}」 in Ihre Reisen kopiert",
     "importFailed": "Import fehlgeschlagen. Bitte erneut versuchen.",
     "localeZhCN": "Vereinfachtes Chinesisch",
     "localeZhTW": "Traditionelles Chinesisch",
@@ -87,7 +87,9 @@
       "gyeongnam": "Süd-Gyeongsang",
       "jeju": "Jeju"
     },
-    "demoBadge": "Beispiel"
+    "demoBadge": "Beispiel",
+    "statDays": "{{count}} Tage",
+    "statPlaces": "{{count}} Orte"
   },
   "modal": {
     "shareTitle": "Reise teilen",

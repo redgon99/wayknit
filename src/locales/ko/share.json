@@ -28,8 +28,8 @@
     "title": "공유마당",
     "board": "게시판",
     "map": "지도",
-    "import": "끌어오기",
-    "imported": "끌어옴",
+    "import": "내 여행으로 복사",
+    "imported": "복사됨",
     "loginRequired": "로그인 후 끌어올 수 있습니다.",
     "filterLocale": "언어",
     "localeAll": "전체",
@@ -46,12 +46,12 @@
     "empty": "아직 공유마당에 등록된 여행이 없습니다.",
     "anonymous": "익명",
     "viewDetail": "상세 보기",
-    "alreadyImported": "이미 내 여행에 추가함",
-    "importing": "끌어오는 중…",
+    "alreadyImported": "이미 내 여행으로 복사함",
+    "importing": "복사하는 중…",
     "mapAria": "전국 지도",
     "mapLoading": "지도를 불러오는 중…",
     "mapEmpty": "지도에 표시할 위치 정보가 있는 공유 여행이 없습니다.",
-    "importedToast": "「{{title}}」을(를) 내 여행에 끌어왔습니다",
+    "importedToast": "「{{title}}」을(를) 내 여행으로 복사했습니다",
     "importFailed": "끌어오기에 실패했습니다. 다시 시도해 주세요.",
     "localeZhCN": "简体中文",
     "localeZhTW": "繁體中文",
@@ -87,7 +87,9 @@
       "gyeongnam": "경남",
       "jeju": "제주"
     },
-    "demoBadge": "예시"
+    "demoBadge": "예시",
+    "statDays": "{{count}}일",
+    "statPlaces": "{{count}}곳"
   },
   "modal": {
     "shareTitle": "여행 공유",

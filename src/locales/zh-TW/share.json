@@ -28,8 +28,8 @@
     "title": "分享廣場",
     "board": "列表",
     "map": "地圖",
-    "import": "導入",
-    "imported": "已導入",
+    "import": "複製到我的行程",
+    "imported": "已複製",
     "loginRequired": "登錄後可導入。",
     "filterLocale": "語言",
     "localeAll": "全部",
@@ -46,12 +46,12 @@
     "empty": "廣場上還沒有行程。",
     "anonymous": "匿名",
     "viewDetail": "查看詳情",
-    "alreadyImported": "已加入你的行程",
-    "importing": "導入中…",
+    "alreadyImported": "已複製到你的行程",
+    "importing": "複製中…",
     "mapAria": "全國地圖",
     "mapLoading": "正在加載地圖…",
     "mapEmpty": "沒有帶地圖位置的分享行程。",
-    "importedToast": "已將「{{title}}」導入你的行程",
+    "importedToast": "已將「{{title}}」複製到你的行程",
     "importFailed": "導入失敗，請重試。",
     "localeZhCN": "簡體中文",
     "localeZhTW": "繁體中文",
@@ -87,7 +87,9 @@
       "gyeongnam": "慶尚南道",
       "jeju": "濟州島"
     },
-    "demoBadge": "示例"
+    "demoBadge": "示例",
+    "statDays": "{{count}}天",
+    "statPlaces": "{{count}}個地點"
   },
   "modal": {
     "shareTitle": "分享行程",

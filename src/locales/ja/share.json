@@ -28,8 +28,8 @@
     "title": "共有広場",
     "board": "掲示板",
     "map": "地図",
-    "import": "取り込む",
-    "imported": "取り込み済み",
+    "import": "自分の旅行にコピー",
+    "imported": "コピー済み",
     "loginRequired": "ログイン後に取り込めます。",
     "filterLocale": "言語",
     "localeAll": "すべて",
@@ -46,12 +46,12 @@
     "empty": "広場に登録された旅行はまだありません。",
     "anonymous": "匿名",
     "viewDetail": "詳細を見る",
-    "alreadyImported": "すでに旅行に追加済み",
-    "importing": "取り込み中…",
+    "alreadyImported": "すでに旅行にコピー済み",
+    "importing": "コピー中…",
     "mapAria": "全国地図",
     "mapLoading": "地図を読み込み中…",
     "mapEmpty": "地図に出せる位置情報のある共有旅行がありません。",
-    "importedToast": "「{{title}}」を旅行に取り込みました",
+    "importedToast": "「{{title}}」を旅行にコピーしました",
     "importFailed": "取り込みに失敗しました。もう一度お試しください。",
     "localeZhCN": "中国語（簡体）",
     "localeZhTW": "中国語（繁体）",
@@ -87,7 +87,9 @@
       "gyeongnam": "慶尚南道",
       "jeju": "済州"
     },
-    "demoBadge": "サンプル"
+    "demoBadge": "サンプル",
+    "statDays": "{{count}}日間",
+    "statPlaces": "{{count}}か所"
   },
   "modal": {
     "shareTitle": "旅行を共有",

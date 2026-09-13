@@ -28,8 +28,8 @@
     "title": "Plaza de compartir",
     "board": "Tablón",
     "map": "Mapa",
-    "import": "Importar",
-    "imported": "Importado",
+    "import": "Copiar a mis viajes",
+    "imported": "Copiado",
     "loginRequired": "Inicia sesión para importar este viaje.",
     "filterLocale": "Idioma",
     "localeAll": "Todos",
@@ -46,12 +46,12 @@
     "empty": "Aún no hay viajes en la plaza.",
     "anonymous": "Anónimo",
     "viewDetail": "Ver detalles",
-    "alreadyImported": "Ya está en tus viajes",
-    "importing": "Importando…",
+    "alreadyImported": "Ya copiado a tus viajes",
+    "importing": "Copiando…",
     "mapAria": "Mapa nacional",
     "mapLoading": "Cargando mapa…",
     "mapEmpty": "No hay viajes compartidos con ubicación en el mapa.",
-    "importedToast": "Se importó 「{{title}}」 a tus viajes",
+    "importedToast": "Se copió 「{{title}}」 a tus viajes",
     "importFailed": "Falló la importación. Inténtalo de nuevo.",
     "localeZhCN": "Chino simplificado",
     "localeZhTW": "Chino tradicional",
@@ -87,7 +87,9 @@
       "gyeongnam": "Gyeongsang del Sur",
       "jeju": "Jeju"
     },
-    "demoBadge": "Ejemplo"
+    "demoBadge": "Ejemplo",
+    "statDays": "{{count}} días",
+    "statPlaces": "{{count}} lugares"
   },
   "modal": {
     "shareTitle": "Compartir viaje",

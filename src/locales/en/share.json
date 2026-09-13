@@ -28,8 +28,8 @@
     "title": "Share plaza",
     "board": "Board",
     "map": "Map",
-    "import": "Import",
-    "imported": "Imported",
+    "import": "Copy to my trips",
+    "imported": "Copied",
     "loginRequired": "Sign in to import this trip.",
     "filterLocale": "Language",
     "localeAll": "All",
@@ -46,12 +46,12 @@
     "empty": "No trips listed on the plaza yet.",
     "anonymous": "Anonymous",
     "viewDetail": "View details",
-    "alreadyImported": "Already added to your trips",
-    "importing": "Importing…",
+    "alreadyImported": "Already copied to your trips",
+    "importing": "Copying…",
     "mapAria": "Nationwide map",
     "mapLoading": "Loading map…",
     "mapEmpty": "No shared trips have a map location to show.",
-    "importedToast": "Imported 「{{title}}」 into your trips",
+    "importedToast": "Copied 「{{title}}」 to your trips",
     "importFailed": "Import failed. Please try again.",
     "localeZhCN": "Simplified Chinese",
     "localeZhTW": "Traditional Chinese",
@@ -87,7 +87,9 @@
       "gyeongnam": "South Gyeongsang",
       "jeju": "Jeju"
     },
-    "demoBadge": "Sample"
+    "demoBadge": "Sample",
+    "statDays": "{{count}} days",
+    "statPlaces": "{{count}} places"
   },
   "modal": {
     "shareTitle": "Share trip",

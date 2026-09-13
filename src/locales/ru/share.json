@@ -28,8 +28,8 @@
     "title": "Площадь обмена",
     "board": "Доска",
     "map": "Карта",
-    "import": "Импорт",
-    "imported": "Импортировано",
+    "import": "Скопировать в мои поездки",
+    "imported": "Скопировано",
     "loginRequired": "Войдите, чтобы импортировать эту поездку.",
     "filterLocale": "Язык",
     "localeAll": "Все",
@@ -46,12 +46,12 @@
     "empty": "На площади пока нет поездок.",
     "anonymous": "Аноним",
     "viewDetail": "Подробнее",
-    "alreadyImported": "Уже в ваших поездках",
-    "importing": "Импорт…",
+    "alreadyImported": "Уже скопировано в ваши поездки",
+    "importing": "Копирование…",
     "mapAria": "Карта страны",
     "mapLoading": "Загрузка карты…",
     "mapEmpty": "Нет общих поездок с точкой на карте.",
-    "importedToast": "「{{title}}」 импортирован в ваши поездки",
+    "importedToast": "「{{title}}」 скопирован в ваши поездки",
     "importFailed": "Импорт не удался. Попробуйте снова.",
     "localeZhCN": "Упрощённый китайский",
     "localeZhTW": "Традиционный китайский",
@@ -87,7 +87,9 @@
       "gyeongnam": "Кёнсан-Намдо",
       "jeju": "Чеджу"
     },
-    "demoBadge": "Пример"
+    "demoBadge": "Пример",
+    "statDays": "{{count}} дн.",
+    "statPlaces": "{{count}} мест"
   },
   "modal": {
     "shareTitle": "Поделиться поездкой",
