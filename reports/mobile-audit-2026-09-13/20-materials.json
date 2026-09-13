@@ -1,0 +1,1532 @@
+﻿[
+    {
+        "n":  "최소화",
+        "t":  "Button",
+        "v":  null,
+        "x":  3395,
+        "y":  -1335,
+        "w":  57,
+        "h":  49,
+        "enabled":  true
+    },
+    {
+        "n":  "최대화",
+        "t":  "Button",
+        "v":  null,
+        "x":  3451,
+        "y":  -1335,
+        "w":  58,
+        "h":  49,
+        "enabled":  true
+    },
+    {
+        "n":  "닫기",
+        "t":  "Button",
+        "v":  null,
+        "x":  3509,
+        "y":  -1335,
+        "w":  59,
+        "h":  49,
+        "enabled":  true
+    },
+    {
+        "n":  "뒤로",
+        "t":  "Button",
+        "v":  null,
+        "x":  2279,
+        "y":  -1279,
+        "w":  44,
+        "h":  43,
+        "enabled":  true
+    },
+    {
+        "n":  "앞으로",
+        "t":  "Button",
+        "v":  null,
+        "x":  2324,
+        "y":  -1279,
+        "w":  44,
+        "h":  43,
+        "enabled":  false
+    },
+    {
+        "n":  "새로고침",
+        "t":  "Button",
+        "v":  null,
+        "x":  2369,
+        "y":  -1279,
+        "w":  44,
+        "h":  43,
+        "enabled":  true
+    },
+    {
+        "n":  "사이트 정보 보기",
+        "t":  "Button",
+        "v":  null,
+        "x":  2429,
+        "y":  -1273,
+        "w":  31,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "주소창 및 검색창",
+        "t":  "Edit",
+        "v":  "gwf-dev.tail6b0ae.ts.net:5173/plan",
+        "x":  2469,
+        "y":  -1273,
+        "w":  825,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "이 사이트는 위치에 액세스할 수 있습니다.",
+        "t":  "Button",
+        "v":  null,
+        "x":  3303,
+        "y":  -1273,
+        "w":  31,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "현재 탭을 북마크에 추가",
+        "t":  "Button",
+        "v":  null,
+        "x":  3343,
+        "y":  -1273,
+        "w":  31,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "나",
+        "t":  "Button",
+        "v":  null,
+        "x":  3399,
+        "y":  -1279,
+        "w":  44,
+        "h":  43,
+        "enabled":  true
+    },
+    {
+        "n":  "조치 필요",
+        "t":  "Button",
+        "v":  null,
+        "x":  3448,
+        "y":  -1279,
+        "w":  111,
+        "h":  43,
+        "enabled":  true
+    },
+    {
+        "n":  "DevTools",
+        "t":  "Document",
+        "v":  null,
+        "x":  2271,
+        "y":  -1228,
+        "w":  1295,
+        "h":  1132,
+        "enabled":  true
+    },
+    {
+        "n":  "Dimensions:",
+        "t":  "Text",
+        "v":  null,
+        "x":  2277,
+        "y":  -1222,
+        "w":  83,
+        "h":  21,
+        "enabled":  true
+    },
+    {
+        "n":  "Device type",
+        "t":  "ComboBox",
+        "v":  "Responsive",
+        "x":  2359,
+        "y":  -1225,
+        "w":  80,
+        "h":  26,
+        "enabled":  true
+    },
+    {
+        "n":  "Width",
+        "t":  "Spinner",
+        "v":  "390",
+        "x":  2440,
+        "y":  -1223,
+        "w":  53,
+        "h":  23,
+        "enabled":  true
+    },
+    {
+        "n":  "×",
+        "t":  "Text",
+        "v":  null,
+        "x":  2496,
+        "y":  -1226,
+        "w":  15,
+        "h":  28,
+        "enabled":  true
+    },
+    {
+        "n":  "Height (leave empty for full)",
+        "t":  "Spinner",
+        "v":  "844",
+        "x":  2514,
+        "y":  -1223,
+        "w":  53,
+        "h":  23,
+        "enabled":  true
+    },
+    {
+        "n":  "Zoom",
+        "t":  "ComboBox",
+        "v":  null,
+        "x":  2569,
+        "y":  -1225,
+        "w":  90,
+        "h":  26,
+        "enabled":  true
+    },
+    {
+        "n":  "Throttling",
+        "t":  "ComboBox",
+        "v":  null,
+        "x":  2658,
+        "y":  -1225,
+        "w":  100,
+        "h":  26,
+        "enabled":  true
+    },
+    {
+        "n":  "Rotate",
+        "t":  "Button",
+        "v":  null,
+        "x":  2870,
+        "y":  -1228,
+        "w":  33,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "More options",
+        "t":  "Button",
+        "v":  null,
+        "x":  2916,
+        "y":  -1228,
+        "w":  33,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "DevTools is now available in Korean",
+        "t":  "Text",
+        "v":  null,
+        "x":  3016,
+        "y":  -1217,
+        "w":  265,
+        "h":  22,
+        "enabled":  true
+    },
+    {
+        "n":  "Don’t show again",
+        "t":  "Button",
+        "v":  null,
+        "x":  3016,
+        "y":  -1186,
+        "w":  153,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "Always match Chrome’s language",
+        "t":  "Button",
+        "v":  null,
+        "x":  3178,
+        "y":  -1186,
+        "w":  260,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "Switch DevTools to Korean",
+        "t":  "Button",
+        "v":  null,
+        "x":  3016,
+        "y":  -1146,
+        "w":  212,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "Close",
+        "t":  "Button",
+        "v":  null,
+        "x":  3521,
+        "y":  -1216,
+        "w":  25,
+        "h":  26,
+        "enabled":  true
+    },
+    {
+        "n":  "Select an element in the page to inspect it - Ctrl + Shift + C",
+        "t":  "Button",
+        "v":  null,
+        "x":  2960,
+        "y":  -1106,
+        "w":  33,
+        "h":  34,
+        "enabled":  true
+    },
+    {
+        "n":  "Toggle device toolbar - Ctrl + Shift + M",
+        "t":  "Button",
+        "v":  null,
+        "x":  2995,
+        "y":  -1106,
+        "w":  33,
+        "h":  34,
+        "enabled":  true
+    },
+    {
+        "n":  "Elements",
+        "t":  "TabItem",
+        "v":  null,
+        "x":  3037,
+        "y":  -1106,
+        "w":  87,
+        "h":  36,
+        "enabled":  true
+    },
+    {
+        "n":  "Console",
+        "t":  "TabItem",
+        "v":  null,
+        "x":  3123,
+        "y":  -1106,
+        "w":  81,
+        "h":  36,
+        "enabled":  true
+    },
+    {
+        "n":  "More tabs",
+        "t":  "Button",
+        "v":  null,
+        "x":  3203,
+        "y":  -1106,
+        "w":  26,
+        "h":  34,
+        "enabled":  true
+    },
+    {
+        "n":  "Open Console to view 5 errors, 3 warnings",
+        "t":  "Button",
+        "v":  null,
+        "x":  3298,
+        "y":  -1102,
+        "w":  68,
+        "h":  24,
+        "enabled":  true
+    },
+    {
+        "n":  "Open Issues to view 29 issues: 29 possible improvements",
+        "t":  "Button",
+        "v":  null,
+        "x":  3369,
+        "y":  -1101,
+        "w":  39,
+        "h":  24,
+        "enabled":  true
+    },
+    {
+        "n":  " AI assistance",
+        "t":  "Button",
+        "v":  null,
+        "x":  3428,
+        "y":  -1102,
+        "w":  26,
+        "h":  26,
+        "enabled":  true
+    },
+    {
+        "n":  "Settings - F1 - Shift + ?",
+        "t":  "Button",
+        "v":  null,
+        "x":  3457,
+        "y":  -1106,
+        "w":  33,
+        "h":  34,
+        "enabled":  true
+    },
+    {
+        "n":  "Customize and control DevTools",
+        "t":  "Button",
+        "v":  null,
+        "x":  3491,
+        "y":  -1106,
+        "w":  35,
+        "h":  34,
+        "enabled":  true
+    },
+    {
+        "n":  "Customize and control DevTools",
+        "t":  "Button",
+        "v":  null,
+        "x":  3492,
+        "y":  -1106,
+        "w":  33,
+        "h":  34,
+        "enabled":  true
+    },
+    {
+        "n":  "Close",
+        "t":  "Button",
+        "v":  null,
+        "x":  3526,
+        "y":  -1106,
+        "w":  33,
+        "h":  34,
+        "enabled":  true
+    },
+    {
+        "n":  "Expand",
+        "t":  "Button",
+        "v":  null,
+        "x":  3043,
+        "y":  -1020,
+        "w":  18,
+        "h":  13,
+        "enabled":  true
+    },
+    {
+        "n":  "Expand",
+        "t":  "Button",
+        "v":  null,
+        "x":  3130,
+        "y":  -977,
+        "w":  18,
+        "h":  13,
+        "enabled":  true
+    },
+    {
+        "n":  "/​src/​main.tsx",
+        "t":  "Hyperlink",
+        "v":  null,
+        "x":  3219,
+        "y":  -958,
+        "w":  105,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "html",
+        "t":  "ListItem",
+        "v":  null,
+        "x":  2956,
+        "y":  -531,
+        "w":  49,
+        "h":  29,
+        "enabled":  true
+    },
+    {
+        "n":  "html",
+        "t":  "Hyperlink",
+        "v":  null,
+        "x":  2965,
+        "y":  -527,
+        "w":  31,
+        "h":  20,
+        "enabled":  true
+    },
+    {
+        "n":  "body",
+        "t":  "ListItem",
+        "v":  null,
+        "x":  3004,
+        "y":  -531,
+        "w":  53,
+        "h":  29,
+        "enabled":  true
+    },
+    {
+        "n":  "body",
+        "t":  "Hyperlink",
+        "v":  null,
+        "x":  3013,
+        "y":  -527,
+        "w":  35,
+        "h":  20,
+        "enabled":  true
+    },
+    {
+        "n":  "Styles",
+        "t":  "TabItem",
+        "v":  null,
+        "x":  2956,
+        "y":  -502,
+        "w":  64,
+        "h":  36,
+        "enabled":  true
+    },
+    {
+        "n":  "Computed",
+        "t":  "TabItem",
+        "v":  null,
+        "x":  3020,
+        "y":  -502,
+        "w":  98,
+        "h":  36,
+        "enabled":  true
+    },
+    {
+        "n":  "Layout",
+        "t":  "TabItem",
+        "v":  null,
+        "x":  3117,
+        "y":  -502,
+        "w":  72,
+        "h":  36,
+        "enabled":  true
+    },
+    {
+        "n":  "Event Listeners",
+        "t":  "TabItem",
+        "v":  null,
+        "x":  3188,
+        "y":  -502,
+        "w":  127,
+        "h":  36,
+        "enabled":  true
+    },
+    {
+        "n":  "DOM breakpoints",
+        "t":  "TabItem",
+        "v":  null,
+        "x":  3315,
+        "y":  -502,
+        "w":  147,
+        "h":  36,
+        "enabled":  true
+    },
+    {
+        "n":  "More tabs",
+        "t":  "Button",
+        "v":  null,
+        "x":  3461,
+        "y":  -502,
+        "w":  26,
+        "h":  34,
+        "enabled":  true
+    },
+    {
+        "n":  "Filter",
+        "t":  "Edit",
+        "v":  "Filter",
+        "x":  2997,
+        "y":  -462,
+        "w":  339,
+        "h":  21,
+        "enabled":  true
+    },
+    {
+        "n":  "Filter",
+        "t":  "Text",
+        "v":  null,
+        "x":  2997,
+        "y":  -462,
+        "w":  34,
+        "h":  21,
+        "enabled":  true
+    },
+    {
+        "n":  "Use regular expression",
+        "t":  "Button",
+        "v":  null,
+        "x":  3335,
+        "y":  -464,
+        "w":  26,
+        "h":  26,
+        "enabled":  true
+    },
+    {
+        "n":  "Toggle Element State",
+        "t":  "Button",
+        "v":  null,
+        "x":  3368,
+        "y":  -468,
+        "w":  33,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "Element Classes",
+        "t":  "Button",
+        "v":  null,
+        "x":  3403,
+        "y":  -468,
+        "w":  33,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "New Style Rule",
+        "t":  "Button",
+        "v":  null,
+        "x":  3438,
+        "y":  -468,
+        "w":  33,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "Toggle common rendering emulations",
+        "t":  "Button",
+        "v":  null,
+        "x":  3473,
+        "y":  -468,
+        "w":  33,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "Show Computed Styles sidebar",
+        "t":  "Button",
+        "v":  null,
+        "x":  3507,
+        "y":  -468,
+        "w":  33,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "element.style, css selector",
+        "t":  "ListItem",
+        "v":  null,
+        "x":  2956,
+        "y":  -434,
+        "w":  591,
+        "h":  46,
+        "enabled":  true
+    },
+    {
+        "n":  "element.style",
+        "t":  "Text",
+        "v":  null,
+        "x":  2961,
+        "y":  -431,
+        "w":  105,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  " {",
+        "t":  "Text",
+        "v":  null,
+        "x":  3065,
+        "y":  -431,
+        "w":  17,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "}",
+        "t":  "Text",
+        "v":  null,
+        "x":  2961,
+        "y":  -411,
+        "w":  9,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "body, #root, html, css selector",
+        "t":  "ListItem",
+        "v":  null,
+        "x":  2956,
+        "y":  -389,
+        "w":  591,
+        "h":  151,
+        "enabled":  true
+    },
+    {
+        "n":  "\u003cstyle\u003e",
+        "t":  "Button",
+        "v":  null,
+        "x":  3486,
+        "y":  -384,
+        "w":  56,
+        "h":  18,
+        "enabled":  true
+    },
+    {
+        "n":  "body",
+        "t":  "Text",
+        "v":  null,
+        "x":  2961,
+        "y":  -385,
+        "w":  33,
+        "h":  15,
+        "enabled":  true
+    },
+    {
+        "n":  ", ",
+        "t":  "Text",
+        "v":  null,
+        "x":  2993,
+        "y":  -385,
+        "w":  17,
+        "h":  15,
+        "enabled":  true
+    },
+    {
+        "n":  "#root",
+        "t":  "Text",
+        "v":  null,
+        "x":  3009,
+        "y":  -385,
+        "w":  41,
+        "h":  15,
+        "enabled":  true
+    },
+    {
+        "n":  ", ",
+        "t":  "Text",
+        "v":  null,
+        "x":  3049,
+        "y":  -385,
+        "w":  17,
+        "h":  15,
+        "enabled":  true
+    },
+    {
+        "n":  "html",
+        "t":  "Text",
+        "v":  null,
+        "x":  3065,
+        "y":  -385,
+        "w":  33,
+        "h":  15,
+        "enabled":  true
+    },
+    {
+        "n":  " {",
+        "t":  "Text",
+        "v":  null,
+        "x":  3097,
+        "y":  -385,
+        "w":  17,
+        "h":  15,
+        "enabled":  true
+    },
+    {
+        "n":  "--font-sans",
+        "t":  "Hyperlink",
+        "v":  null,
+        "x":  3121,
+        "y":  -314,
+        "w":  89,
+        "h":  18,
+        "enabled":  true
+    },
+    {
+        "n":  "--color-text-primary",
+        "t":  "Hyperlink",
+        "v":  null,
+        "x":  3092,
+        "y":  -296,
+        "w":  160,
+        "h":  17,
+        "enabled":  true
+    },
+    {
+        "n":  "}",
+        "t":  "Text",
+        "v":  null,
+        "x":  2961,
+        "y":  -260,
+        "w":  9,
+        "h":  15,
+        "enabled":  true
+    },
+    {
+        "n":  "*, css selector",
+        "t":  "ListItem",
+        "v":  null,
+        "x":  2956,
+        "y":  -238,
+        "w":  591,
+        "h":  63,
+        "enabled":  true
+    },
+    {
+        "n":  "\u003cstyle\u003e",
+        "t":  "Button",
+        "v":  null,
+        "x":  3486,
+        "y":  -233,
+        "w":  56,
+        "h":  17,
+        "enabled":  true
+    },
+    {
+        "n":  "*",
+        "t":  "Text",
+        "v":  null,
+        "x":  2961,
+        "y":  -235,
+        "w":  9,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  " {",
+        "t":  "Text",
+        "v":  null,
+        "x":  2969,
+        "y":  -235,
+        "w":  17,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "}",
+        "t":  "Text",
+        "v":  null,
+        "x":  2961,
+        "y":  -197,
+        "w":  9,
+        "h":  15,
+        "enabled":  true
+    },
+    {
+        "n":  "body, css selector",
+        "t":  "ListItem",
+        "v":  null,
+        "x":  2956,
+        "y":  -175,
+        "w":  591,
+        "h":  81,
+        "enabled":  true
+    },
+    {
+        "n":  "user agent stylesheet",
+        "t":  "Text",
+        "v":  null,
+        "x":  3374,
+        "y":  -169,
+        "w":  168,
+        "h":  15,
+        "enabled":  true
+    },
+    {
+        "n":  "body",
+        "t":  "Text",
+        "v":  null,
+        "x":  2961,
+        "y":  -172,
+        "w":  33,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  " {",
+        "t":  "Text",
+        "v":  null,
+        "x":  2993,
+        "y":  -172,
+        "w":  17,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "}",
+        "t":  "Text",
+        "v":  null,
+        "x":  2961,
+        "y":  -117,
+        "w":  9,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "여로담 — 가고 싶은 곳을 담으면, 여행길이 됩니다",
+        "t":  "Document",
+        "v":  null,
+        "x":  2378,
+        "y":  -1144,
+        "w":  488,
+        "h":  1055,
+        "enabled":  true
+    },
+    {
+        "n":  "1",
+        "t":  "Text",
+        "v":  null,
+        "x":  2394,
+        "y":  -135,
+        "w":  11,
+        "h":  20,
+        "enabled":  true
+    },
+    {
+        "n":  "CU 춘천세경플러스점",
+        "t":  "Text",
+        "v":  null,
+        "x":  2338,
+        "y":  -93,
+        "w":  123,
+        "h":  17,
+        "enabled":  true
+    },
+    {
+        "n":  "6",
+        "t":  "Text",
+        "v":  null,
+        "x":  2685,
+        "y":  -606,
+        "w":  10,
+        "h":  20,
+        "enabled":  true
+    },
+    {
+        "n":  "아담스테이",
+        "t":  "Text",
+        "v":  null,
+        "x":  2658,
+        "y":  -564,
+        "w":  64,
+        "h":  17,
+        "enabled":  true
+    },
+    {
+        "n":  "지도 카메라 컨트롤",
+        "t":  "Button",
+        "v":  null,
+        "x":  2803,
+        "y":  -169,
+        "w":  51,
+        "h":  50,
+        "enabled":  true
+    },
+    {
+        "n":  "Google 지도에서 이 지역 열기(새 창으로 열림)",
+        "t":  "Hyperlink",
+        "v":  null,
+        "x":  2384,
+        "y":  -122,
+        "w":  83,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "키보드 단축키",
+        "t":  "Button",
+        "v":  null,
+        "x":  2549,
+        "y":  -106,
+        "w":  73,
+        "h":  18,
+        "enabled":  true
+    },
+    {
+        "n":  "지도 데이터 ©2026 TMap Mobility",
+        "t":  "Text",
+        "v":  null,
+        "x":  2636,
+        "y":  -105,
+        "w":  185,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "약관(새 탭에서 열기)",
+        "t":  "Hyperlink",
+        "v":  null,
+        "x":  2835,
+        "y":  -105,
+        "w":  24,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "여행 설정",
+        "t":  "Button",
+        "v":  null,
+        "x":  2395,
+        "y":  -1126,
+        "w":  51,
+        "h":  51,
+        "enabled":  true
+    },
+    {
+        "n":  "춘천여행가자 우리",
+        "t":  "Text",
+        "v":  null,
+        "x":  2455,
+        "y":  -1109,
+        "w":  128,
+        "h":  20,
+        "enabled":  true
+    },
+    {
+        "n":  "3일차 · 7",
+        "t":  "Button",
+        "v":  null,
+        "x":  2619,
+        "y":  -1127,
+        "w":  112,
+        "h":  53,
+        "enabled":  true
+    },
+    {
+        "n":  "장소 검색",
+        "t":  "Button",
+        "v":  null,
+        "x":  2741,
+        "y":  -1126,
+        "w":  50,
+        "h":  51,
+        "enabled":  true
+    },
+    {
+        "n":  "위성지도 보기",
+        "t":  "Button",
+        "v":  null,
+        "x":  2798,
+        "y":  -1126,
+        "w":  51,
+        "h":  51,
+        "enabled":  true
+    },
+    {
+        "n":  "지도",
+        "t":  "Button",
+        "v":  null,
+        "x":  2385,
+        "y":  -160,
+        "w":  122,
+        "h":  64,
+        "enabled":  true
+    },
+    {
+        "n":  "자료",
+        "t":  "Button",
+        "v":  null,
+        "x":  2506,
+        "y":  -160,
+        "w":  121,
+        "h":  64,
+        "enabled":  true
+    },
+    {
+        "n":  "시나리오",
+        "t":  "Button",
+        "v":  null,
+        "x":  2627,
+        "y":  -160,
+        "w":  121,
+        "h":  64,
+        "enabled":  true
+    },
+    {
+        "n":  "메뉴",
+        "t":  "Button",
+        "v":  null,
+        "x":  2747,
+        "y":  -160,
+        "w":  112,
+        "h":  64,
+        "enabled":  true
+    },
+    {
+        "n":  "여행 자료",
+        "t":  "Text",
+        "v":  null,
+        "x":  2419,
+        "y":  -1039,
+        "w":  72,
+        "h":  24,
+        "enabled":  true
+    },
+    {
+        "n":  "춘천여행가자 우리",
+        "t":  "Text",
+        "v":  null,
+        "x":  2419,
+        "y":  -1008,
+        "w":  104,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  " · ",
+        "t":  "Text",
+        "v":  null,
+        "x":  2522,
+        "y":  -1008,
+        "w":  8,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "10개",
+        "t":  "Text",
+        "v":  null,
+        "x":  2529,
+        "y":  -1008,
+        "w":  29,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "목록으로 보기",
+        "t":  "Button",
+        "v":  null,
+        "x":  2702,
+        "y":  -1038,
+        "w":  38,
+        "h":  39,
+        "enabled":  true
+    },
+    {
+        "n":  "보내기",
+        "t":  "Button",
+        "v":  null,
+        "x":  2742,
+        "y":  -1038,
+        "w":  38,
+        "h":  39,
+        "enabled":  true
+    },
+    {
+        "n":  "패널 닫기",
+        "t":  "Button",
+        "v":  null,
+        "x":  2782,
+        "y":  -1038,
+        "w":  38,
+        "h":  39,
+        "enabled":  true
+    },
+    {
+        "n":  "사진·파일",
+        "t":  "Button",
+        "v":  null,
+        "x":  2419,
+        "y":  -976,
+        "w":  196,
+        "h":  48,
+        "enabled":  true
+    },
+    {
+        "n":  "메모 쓰기",
+        "t":  "Button",
+        "v":  null,
+        "x":  2624,
+        "y":  -976,
+        "w":  196,
+        "h":  48,
+        "enabled":  true
+    },
+    {
+        "n":  "전체",
+        "t":  "Button",
+        "v":  null,
+        "x":  2421,
+        "y":  -911,
+        "w":  54,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "사진",
+        "t":  "Button",
+        "v":  null,
+        "x":  2474,
+        "y":  -911,
+        "w":  54,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "메모",
+        "t":  "Button",
+        "v":  null,
+        "x":  2527,
+        "y":  -911,
+        "w":  53,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "파일",
+        "t":  "Button",
+        "v":  null,
+        "x":  2579,
+        "y":  -911,
+        "w":  54,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "일차",
+        "t":  "Button",
+        "v":  null,
+        "x":  2693,
+        "y":  -911,
+        "w":  63,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "장소",
+        "t":  "Button",
+        "v":  null,
+        "x":  2757,
+        "y":  -911,
+        "w":  63,
+        "h":  33,
+        "enabled":  true
+    },
+    {
+        "n":  "U테스트입력입니다.테스트입력입니다.3일차 · 장소 없음",
+        "t":  "ListItem",
+        "v":  null,
+        "x":  2414,
+        "y":  -845,
+        "w":  411,
+        "h":  162,
+        "enabled":  true
+    },
+    {
+        "n":  "U",
+        "t":  "Text",
+        "v":  null,
+        "x":  2436,
+        "y":  -828,
+        "w":  9,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "자료 설정",
+        "t":  "Button",
+        "v":  null,
+        "x":  2787,
+        "y":  -838,
+        "w":  31,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "제목",
+        "t":  "Edit",
+        "v":  "테스트입력입니다.",
+        "x":  2429,
+        "y":  -832,
+        "w":  381,
+        "h":  23,
+        "enabled":  true
+    },
+    {
+        "n":  "내용",
+        "t":  "Edit",
+        "v":  "테스트입력입니다.",
+        "x":  2429,
+        "y":  -805,
+        "w":  381,
+        "h":  78,
+        "enabled":  true
+    },
+    {
+        "n":  "3일차 · 장소 없음",
+        "t":  "Text",
+        "v":  null,
+        "x":  2429,
+        "y":  -715,
+        "w":  90,
+        "h":  17,
+        "enabled":  true
+    },
+    {
+        "n":  "2U사진 2장3일차 · 장소 없음",
+        "t":  "ListItem",
+        "v":  null,
+        "x":  2414,
+        "y":  -671,
+        "w":  200,
+        "h":  249,
+        "enabled":  true
+    },
+    {
+        "n":  "2장 사진 보기",
+        "t":  "Button",
+        "v":  null,
+        "x":  2414,
+        "y":  -671,
+        "w":  200,
+        "h":  151,
+        "enabled":  true
+    },
+    {
+        "n":  "U",
+        "t":  "Text",
+        "v":  null,
+        "x":  2429,
+        "y":  -659,
+        "w":  10,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "자료 설정",
+        "t":  "Button",
+        "v":  null,
+        "x":  2575,
+        "y":  -664,
+        "w":  31,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "사진 2장",
+        "t":  "Text",
+        "v":  null,
+        "x":  2414,
+        "y":  -513,
+        "w":  51,
+        "h":  19,
+        "enabled":  true
+    },
+    {
+        "n":  "3일차 · 장소 없음",
+        "t":  "Text",
+        "v":  null,
+        "x":  2414,
+        "y":  -490,
+        "w":  90,
+        "h":  17,
+        "enabled":  true
+    },
+    {
+        "n":  "U스크린샷 2026-07-27 203915.png스크린샷 2026-07-27 203915.…3일차 · 장소 없음",
+        "t":  "ListItem",
+        "v":  null,
+        "x":  2625,
+        "y":  -671,
+        "w":  200,
+        "h":  249,
+        "enabled":  true
+    },
+    {
+        "n":  "스크린샷 2026-07-27 203915.png",
+        "t":  "Button",
+        "v":  null,
+        "x":  2625,
+        "y":  -671,
+        "w":  200,
+        "h":  200,
+        "enabled":  true
+    },
+    {
+        "n":  "U",
+        "t":  "Text",
+        "v":  null,
+        "x":  2641,
+        "y":  -659,
+        "w":  9,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "자료 설정",
+        "t":  "Button",
+        "v":  null,
+        "x":  2787,
+        "y":  -664,
+        "w":  31,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "스크린샷 2026-07-27 203915.png",
+        "t":  "Text",
+        "v":  null,
+        "x":  2625,
+        "y":  -463,
+        "w":  199,
+        "h":  19,
+        "enabled":  true
+    },
+    {
+        "n":  "3일차 · 장소 없음",
+        "t":  "Text",
+        "v":  null,
+        "x":  2625,
+        "y":  -440,
+        "w":  90,
+        "h":  17,
+        "enabled":  true
+    },
+    {
+        "n":  "U스크린샷 2026-09-08 190956.png스크린샷 2026-09-08 19095…4일차 · 장소 없음",
+        "t":  "ListItem",
+        "v":  null,
+        "x":  2414,
+        "y":  -411,
+        "w":  200,
+        "h":  250,
+        "enabled":  true
+    },
+    {
+        "n":  "스크린샷 2026-09-08 190956.png",
+        "t":  "Button",
+        "v":  null,
+        "x":  2414,
+        "y":  -411,
+        "w":  200,
+        "h":  201,
+        "enabled":  true
+    },
+    {
+        "n":  "U",
+        "t":  "Text",
+        "v":  null,
+        "x":  2429,
+        "y":  -398,
+        "w":  10,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "자료 설정",
+        "t":  "Button",
+        "v":  null,
+        "x":  2575,
+        "y":  -403,
+        "w":  31,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "스크린샷 2026-09-08 190956.png",
+        "t":  "Text",
+        "v":  null,
+        "x":  2414,
+        "y":  -203,
+        "w":  194,
+        "h":  19,
+        "enabled":  true
+    },
+    {
+        "n":  "4일차 · 장소 없음",
+        "t":  "Text",
+        "v":  null,
+        "x":  2414,
+        "y":  -180,
+        "w":  90,
+        "h":  17,
+        "enabled":  true
+    },
+    {
+        "n":  "Uout-01-landing.png3일차 · 장소 없음",
+        "t":  "ListItem",
+        "v":  null,
+        "x":  2625,
+        "y":  -411,
+        "w":  200,
+        "h":  250,
+        "enabled":  true
+    },
+    {
+        "n":  "out-01-landing.png",
+        "t":  "Button",
+        "v":  null,
+        "x":  2625,
+        "y":  -411,
+        "w":  200,
+        "h":  201,
+        "enabled":  true
+    },
+    {
+        "n":  "U",
+        "t":  "Text",
+        "v":  null,
+        "x":  2641,
+        "y":  -398,
+        "w":  9,
+        "h":  16,
+        "enabled":  true
+    },
+    {
+        "n":  "자료 설정",
+        "t":  "Button",
+        "v":  null,
+        "x":  2787,
+        "y":  -403,
+        "w":  31,
+        "h":  31,
+        "enabled":  true
+    },
+    {
+        "n":  "out-01-landing.png",
+        "t":  "Text",
+        "v":  null,
+        "x":  2625,
+        "y":  -203,
+        "w":  131,
+        "h":  19,
+        "enabled":  true
+    },
+    {
+        "n":  "3일차 · 장소 없음",
+        "t":  "Text",
+        "v":  null,
+        "x":  2625,
+        "y":  -180,
+        "w":  90,
+        "h":  17,
+        "enabled":  true
+    },
+    {
+        "n":  "탭 검색",
+        "t":  "Button",
+        "v":  null,
+        "x":  2279,
+        "y":  -1329,
+        "w":  36,
+        "h":  36,
+        "enabled":  true
+    },
+    {
+        "n":  "여로담 — 가고 싶은 곳을 담으면, 여행길이 됩니다 - 메모리 사용량 - 180MB",
+        "t":  "TabItem",
+        "v":  null,
+        "x":  2306,
+        "y":  -1336,
+        "w":  321,
+        "h":  52,
+        "enabled":  true
+    },
+    {
+        "n":  "닫기",
+        "t":  "Button",
+        "v":  null,
+        "x":  2574,
+        "y":  -1329,
+        "w":  36,
+        "h":  36,
+        "enabled":  true
+    },
+    {
+        "n":  "새 탭",
+        "t":  "Button",
+        "v":  null,
+        "x":  2619,
+        "y":  -1336,
+        "w":  36,
+        "h":  52,
+        "enabled":  true
+    }
+]
