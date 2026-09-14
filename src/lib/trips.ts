@@ -12,6 +12,7 @@ import { computeTripCenter } from './tripGeo';
 import i18n from './i18n';
 import { normalizeLocale } from './locale';
 import { regionCodesFromPins } from './koreaRegions';
+import { effectiveOwnerId } from './authIdentity';
 
 export interface Trip {
   id: string;
@@ -1681,10 +1682,24 @@ function ownedBy(trip: Trip, userId?: string | null): boolean {
   return userId ? trip.ownerId === userId : !trip.ownerId;
 }
 
+/**
+ * §29-31 — 오프라인에서 새로고침하면 supabase가 만료된 토큰을 갱신하지 못해
+ * 세션을 못 돌려줄 수 있다. 그러면 userId가 null이 되고 위 `ownedBy`가
+ * "ownerId 없는 여행"만 내 것으로 보게 되어, 로컬에 멀쩡히 있는 내 여행이
+ * 전부 필터에 걸려 사라진다. 기기에 **아직 로그아웃되지 않은 세션이 남아
+ * 있을 때만** 그 세션의 주인으로 메운다 — 진짜 로그아웃(저장된 세션 없음)
+ * 상태에서는 절대 대체하지 않는다(이전 사용자 데이터가 보이면 안 된다).
+ * 판정 근거는 authIdentity.ts 주석 참고.
+ */
+function localOwnerId(userId?: string | null): string | null {
+  return effectiveOwnerId(userId);
+}
+
 function listLocal(userId?: string | null): TripSummary[] {
   const store = readStore();
+  const owner = localOwnerId(userId);
   return store.trips
-    .filter((t) => ownedBy(t, userId))
+    .filter((t) => ownedBy(t, owner))
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .map((t) => ({
       id: t.id,
@@ -1698,7 +1713,7 @@ function listLocal(userId?: string | null): TripSummary[] {
 
 function readLocal(tripId?: string, userId?: string | null): Trip | null {
   const store = readStore();
-  const pool = store.trips.filter((t) => ownedBy(t, userId));
+  const pool = store.trips.filter((t) => ownedBy(t, localOwnerId(userId)));
   if (pool.length === 0) return null;
   const id = tripId ?? store.activeId ?? pool[0]?.id;
   return pool.find((t) => t.id === id) ?? null;
