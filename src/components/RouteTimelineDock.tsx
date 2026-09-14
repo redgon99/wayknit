@@ -4,7 +4,8 @@ import { Icon } from './Icon';
 import type { GeneratedRoute, PinnedPlace } from '../types';
 import { getCategoryMeta } from '../lib/categories';
 import { useTravelModeMeta } from '../lib/i18nCategories';
-import { buildKakaoMapDirectionsUrl } from '../lib/mapLinks';
+import { buildKakaoMapDirectionsUrl, buildLegMapLinks } from '../lib/mapLinks';
+import { parseHHMM, formatHHMM } from '../lib/timeOfDay';
 
 interface Props {
   route: GeneratedRoute;
@@ -76,7 +77,62 @@ export function RouteTimelineDock({
   const stayLabel = focusStop
     ? formatStayLabel(focusStop.stayMinutes ?? 0, t)
     : '';
-  const legIntoFocus = focusIndex > 0 ? route.legs[focusIndex - 1] : null;
+  /**
+   * `route.legs[i]`가 "stops[i]로 들어오는 구간"인지 "stops[i+1]로 들어오는
+   * 구간"인지는 출발지 유무에 따라 갈린다 — `generateRoute()`(planner.ts)는
+   * 출발지가 있으면(실제로는 거의 항상 있다, resolveOriginForRoute가 좌표를
+   * 채워 넣는다) legs[i]=stops[i]로 들어오는 구간이지만, 출발지가 없으면
+   * legs[i]=stops[i+1]로 들어오는 구간이라 한 칸 밀린다. `legs.length -
+   * stops.length`가 그 차이(0 또는 -1)라 이 오프셋으로 항상 맞는 구간을
+   * 가리킨다 — 예전엔 `focusIndex - 1`로 고정해서 출발지가 있는 보통의
+   * 경우 엉뚱한(한 칸 이전) 구간의 소요시간을 보여주고 있었다(N01 작업
+   * 중 발견 — 신규 "출발 권장 시각" 기능이 이 값에 그대로 의존해서 먼저
+   * 바로잡았다).
+   */
+  const legOffset = route.legs.length - route.stops.length;
+  const legIndex = focusIndex + legOffset;
+  const legIntoFocus = legIndex >= 0 ? route.legs[legIndex] ?? null : null;
+
+  /**
+   * N01(모바일 UX 리포트 2026-09-13, 신규 제안 — 다음 장소 실행 화면).
+   * "언제 출발해야 정시에 도착하나"는 도착 예정시각에서 이 구간 이동시간을
+   * 빼면 된다. 1분 단위 갱신이면 충분해 30초마다만 다시 읽는다.
+   */
+  const [nowMinutes, setNowMinutes] = useState(() => {
+    const d = new Date();
+    return d.getHours() * 60 + d.getMinutes();
+  });
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const d = new Date();
+      setNowMinutes(d.getHours() * 60 + d.getMinutes());
+    }, 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const recommendDepartMinutes =
+    focusStop && legIntoFocus
+      ? parseHHMM(focusStop.arriveAt) - legIntoFocus.durationMinutes
+      : null;
+  const departIsPast = recommendDepartMinutes != null && recommendDepartMinutes <= nowMinutes;
+
+  /** 이 구간(이전 지점 → 다음 목적지)만의 길찾기 링크 — 전체 동선용 buildKakaoMapDirectionsUrl과 별개 */
+  const navFromPoint =
+    focusIndex > 0
+      ? route.stops[focusIndex - 1]
+      : route.origin.lat !== undefined && route.origin.lng !== undefined
+        ? { name: route.origin.label, lat: route.origin.lat, lng: route.origin.lng }
+        : null;
+  const legNavUrl =
+    focusStop && legIntoFocus && navFromPoint
+      ? buildLegMapLinks(
+          navFromPoint,
+          { name: focusStop.name, lat: focusStop.lat, lng: focusStop.lng },
+          route.options.travelMode
+        ).kakao
+      : null;
+
+  const nextStop = focusStop && focusIndex < route.stops.length - 1 ? route.stops[focusIndex + 1] : null;
 
   useEffect(() => {
     const el = chipTrackRef.current?.querySelector<HTMLElement>(
@@ -268,14 +324,46 @@ export function RouteTimelineDock({
                 {t('dock.travelFromPrev', { minutes: legIntoFocus.durationMinutes })}
               </div>
             )}
-            <button
-              type="button"
-              className="route-dock-focus-edit"
-              onClick={() => onSelectStop?.(focusStop.id)}
-            >
-              <Icon name="mapPin" size={14} />
-              {t('dock.editOnMap')}
-            </button>
+            {recommendDepartMinutes != null && (
+              <div className={`route-dock-focus-depart ${departIsPast ? 'past' : ''}`}>
+                {departIsPast
+                  ? t('dock.departNow')
+                  : t('dock.departRecommend', { time: formatHHMM(recommendDepartMinutes) })}
+              </div>
+            )}
+            <div className="route-dock-focus-actions">
+              <button
+                type="button"
+                className="route-dock-focus-edit"
+                onClick={() => onSelectStop?.(focusStop.id)}
+              >
+                <Icon name="mapPin" size={14} />
+                {t('dock.editOnMap')}
+              </button>
+              {legNavUrl && (
+                <a
+                  className="route-dock-focus-edit"
+                  href={legNavUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Icon name="route" size={14} />
+                  {t('dock.navigateHere')}
+                </a>
+              )}
+            </div>
+            {nextStop ? (
+              <button
+                type="button"
+                className="route-dock-focus-arrived"
+                onClick={() => onSelectStop?.(nextStop.id)}
+              >
+                <Icon name="check" size={15} />
+                {t('dock.arrivedGoNext')}
+              </button>
+            ) : (
+              <div className="route-dock-focus-lastbadge">{t('dock.lastStop')}</div>
+            )}
           </div>
         )}
 
@@ -288,7 +376,9 @@ export function RouteTimelineDock({
           {route.stops.map((stop, i) => {
             const meta = getCategoryMeta(stop.categoryCode, stop.category);
             const selected = i === focusIndex;
-            const leg = i > 0 ? route.legs[i - 1] : null;
+            // legIntoFocus와 같은 오프셋 보정 — 위 주석 참고.
+            const legI = i + legOffset;
+            const leg = legI >= 0 ? route.legs[legI] ?? null : null;
             return (
               <div key={stop.id} className="route-dock-chip-wrap" role="listitem">
                 {i > 0 && (

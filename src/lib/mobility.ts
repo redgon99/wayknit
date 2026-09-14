@@ -3,8 +3,28 @@ import { estimateLegDistance, estimateLegMinutes, haversineMeters } from './plan
 
 const KAKAO_REST_KEY = import.meta.env.VITE_KAKAO_REST_KEY;
 const CAR_URL = 'https://apis-navi.kakaomobility.com/v1/directions';
-const WALK_URL = 'https://apis-navi.kakaomobility.com/v1/walking/directions';
-const TRANSIT_URL = 'https://apis-navi.kakaomobility.com/v1/transit/directions';
+
+/**
+ * 실제 길찾기 API를 쓸 수 있는 이동수단은 **자동차뿐이다.**
+ *
+ * 2026-09-14 확인(N02 브라우저 검증 중 콘솔 404 18건으로 발견):
+ * - 공개 Navi API(`apis-navi.kakaomobility.com/v1/...`) 제품군은 자동차
+ *   길찾기 5종(단일/다중경유지/다중출발지/다중목적지/미래운행)뿐이다.
+ * - 예전에 여기 있던 `/v1/walking/directions`·`/v1/transit/directions`는
+ *   **존재하지 않는 경로**였다 — 어떤 좌표를 넣어도(서울시청→명동 같은
+ *   당연한 도보 구간조차) `{"code":-404,"msg":"route not found"}`가 온다.
+ *   같은 키로 자동차 엔드포인트는 200이라 키 문제도 아니다.
+ * - 진짜 도보 API는 `/affiliate/walking/v1/directions`인데 **제휴 계약이
+ *   있어야 쓸 수 있는 파트너 전용**이라 일반 REST 키로는 못 쓴다.
+ *
+ * 그래서 도보·자전거·대중교통은 호출을 아예 하지 않고 곧장 추정치를 쓴다.
+ * 결과 수치는 예전과 같다(어차피 전부 실패 후 추정으로 폴백됐다) — 대신
+ * 구간마다 실패를 기다리던 왕복(6구간 기준 18회, 재시도 대기까지 수 초)이
+ * 사라진다. 제휴 계약이 생기면 그때 위 affiliate 주소로 되살릴 것.
+ */
+function hasDirectionsApi(mode: TravelMode): boolean {
+  return mode === 'car';
+}
 
 export interface LegResult {
   distanceMeters: number;
@@ -50,8 +70,6 @@ async function tryFetchApiLeg(
 ): Promise<LegResult | null> {
   if (!KAKAO_REST_KEY) return null;
   if (mode === 'car') return fetchCarLegFromKakao(from, to, optimizeBy);
-  if (mode === 'walk' || mode === 'bike') return fetchWalkLegFromKakao(from, to);
-  if (mode === 'transit') return fetchTransitLegFromKakao(from, to);
   return null;
 }
 
@@ -64,7 +82,7 @@ export async function fetchLeg(
   mode: TravelMode,
   optimizeBy?: OptimizeBy
 ): Promise<LegResult> {
-  if (!KAKAO_REST_KEY) {
+  if (!KAKAO_REST_KEY || !hasDirectionsApi(mode)) {
     return estimateLeg(from, to, mode);
   }
 
@@ -121,59 +139,6 @@ async function fetchCarLegFromKakao(
   };
 }
 
-async function fetchWalkLegFromKakao(
-  from: { lat: number; lng: number },
-  to: { lat: number; lng: number }
-): Promise<LegResult> {
-  const params = new URLSearchParams({
-    origin: `${from.lng},${from.lat}`,
-    destination: `${to.lng},${to.lat}`,
-  });
-  const route = await fetchMobilityRoute(`${WALK_URL}?${params.toString()}`);
-  const dist = route.summary.distance as number;
-  const durSec = route.summary.duration as number;
-  return {
-    distanceMeters: dist,
-    durationMinutes: Math.max(1, Math.round(durSec / 60)),
-    polyline: extractPolylineFromRoute(route),
-    source: 'api',
-  };
-}
-
-async function fetchTransitLegFromKakao(
-  from: { lat: number; lng: number },
-  to: { lat: number; lng: number }
-): Promise<LegResult> {
-  const body = {
-    origin: { x: from.lng, y: from.lat },
-    destination: { x: to.lng, y: to.lat },
-  };
-  const resp = await fetch(TRANSIT_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `KakaoAK ${KAKAO_REST_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-  if (!resp.ok) {
-    throw new Error(`Kakao Transit ${resp.status}`);
-  }
-  const data = await resp.json();
-  const route = data?.routes?.[0] ?? data?.route;
-  if (!route?.summary) {
-    throw new Error('Invalid Transit response');
-  }
-  const dist = route.summary.distance as number;
-  const durSec = route.summary.duration as number;
-  return {
-    distanceMeters: dist,
-    durationMinutes: Math.max(1, Math.round(durSec / 60)),
-    polyline: extractPolylineFromRoute(route),
-    source: 'api',
-  };
-}
-
 async function fetchMobilityRoute(url: string): Promise<{
   summary: { distance: number; duration: number };
   sections?: Array<{ roads?: Array<{ vertexes?: number[] }> }>;
@@ -219,8 +184,8 @@ export async function fetchLegs(
   }
   const firstPass = await Promise.all(pairs.map(([a, b]) => fetchLeg(a, b, mode, optimizeBy)));
 
-  // 실패(estimate) 구간만 한 번 더 보강 시도
-  if (!KAKAO_REST_KEY) return firstPass;
+  // 실패(estimate) 구간만 한 번 더 보강 시도 — API가 없는 이동수단은 재시도도 무의미하다
+  if (!KAKAO_REST_KEY || !hasDirectionsApi(mode)) return firstPass;
 
   const retryIndices = firstPass
     .map((leg, idx) => (leg.source === 'estimate' ? idx : -1))

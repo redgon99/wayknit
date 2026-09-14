@@ -46,7 +46,12 @@ import {
 } from '../lib/subscription';
 import { UpgradeModal } from '../components/UpgradeModal';
 import { enrichPlacesWithStats } from '../lib/placeStats';
-import { generateRoute, refineRouteWithRealLegs, haversineMeters } from '../lib/planner';
+import {
+  generateRoute,
+  refineRouteWithRealLegs,
+  haversineMeters,
+  diffRoutes,
+} from '../lib/planner';
 import { trackEvent } from '../lib/analytics';
 import { isHoursProblem } from '../lib/openingHours';
 import type { LinkPlacesExtractResult } from '../lib/linkPlaces';
@@ -305,7 +310,11 @@ export default function PlannerPage() {
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const [roadviewTarget, setRoadviewTarget] = useState<Place | null>(null);
   const [photosTarget, setPhotosTarget] = useState<Place | null>(null);
+  /** N03 — 마지막 클라우드 저장이 실패했는지(오프라인 등). 저장 상태 표시를 사실대로 낮추는 데 쓴다. */
+  const [cloudSaveFailed, setCloudSaveFailed] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  /** N02(모바일 UX 리포트 2026-09-13) — "되돌리기" 같은 실행 가능한 토스트용. 없으면 평소처럼 텍스트만. */
+  const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | null>(null);
   const toastTimerRef = useRef<number | null>(null);
   // /share 에서 넘어온 링크 추출 결과 — 검색 패널이 붙여넣기 흐름처럼 이어받는다
   const [sharedExtract, setSharedExtract] = useState<LinkPlacesExtractResult | null>(null);
@@ -314,10 +323,32 @@ export default function PlannerPage() {
     setSharedExtract(consumeShareHandoff());
   }, []);
 
-  function showToast(msg: string) {
-    setToast(msg);
+  function dismissToast() {
     if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = window.setTimeout(() => setToast(null), 2800);
+    setToast(null);
+    setToastAction(null);
+  }
+
+  function showToast(msg: string, action?: { label: string; onClick: () => void }) {
+    setToast(msg);
+    // 실행 후에도 토스트가 남아 있으면 "안 눌렸나?" 싶어 또 누르게 된다 — 실행하고 바로 닫는다.
+    setToastAction(
+      action
+        ? {
+            label: action.label,
+            onClick: () => {
+              action.onClick();
+              dismissToast();
+            },
+          }
+        : null
+    );
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    // 되돌리기처럼 읽고 판단해야 하는 토스트는 더 오래 띄운다.
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null);
+      setToastAction(null);
+    }, action ? 6000 : 2800);
   }
 
   // 경로 옵션 패널
@@ -668,13 +699,23 @@ export default function PlannerPage() {
         return;
       }
       const userId = user?.id ?? null;
-      await tripsRepo.save({
-        ...trip,
-        // 협업자가 저장해도 원래 소유자를 절대 덮어쓰지 않는다 —
-        // trip에 이미 ownerId가 있으면 그대로 두고, 없을 때(새 여행)만 나로 채운다.
-        ownerId: trip.ownerId ?? userId ?? undefined,
-        updatedAt: Date.now(),
-      });
+      try {
+        await tripsRepo.save({
+          ...trip,
+          // 협업자가 저장해도 원래 소유자를 절대 덮어쓰지 않는다 —
+          // trip에 이미 ownerId가 있으면 그대로 두고, 없을 때(새 여행)만 나로 채운다.
+          ownerId: trip.ownerId ?? userId ?? undefined,
+          updatedAt: Date.now(),
+        });
+        setCloudSaveFailed(false);
+      } catch (e) {
+        /* N03 — 오프라인이면 클라우드 쓰기만 실패한다(로컬은 tripsRepo.save 안에서
+         * writeLocal이 먼저 끝났다). 예전엔 여기서 그대로 튕겨 아래 setSavePending(false)가
+         * 실행되지 않아 저장 배지가 "저장 중…"에 영영 멈춰 있었다. 흐름은 이어가되
+         * 상태만 '로컬'로 낮춘다. */
+        console.warn('클라우드 저장 실패 — 기기에는 저장됨', e);
+        setCloudSaveFailed(true);
+      }
       await refreshTripList(userId);
       setLastSavedAt(Date.now());
       setSavePending(false);
@@ -1877,6 +1918,11 @@ export default function PlannerPage() {
     if (routePins.length < 2) return;
 
     async function buildAndGenerate(resolvedOrigin: Origin) {
+      // N02(모바일 UX 리포트 2026-09-13) — 재계획 직전 상태를 남겨둔다.
+      // "되돌리기"는 이 값으로 되돌아가는 것뿐이다(핀 추가·삭제 자체를
+      // 취소하진 않는다 — 그건 핀 목록에서 따로 할 일이다. 여기서 되돌리는
+      // 건 "동선"이라는 계산 결과 하나뿐).
+      const previousRoute = generatedRoute;
       const opts = {
         ...routeOptions,
         origin: resolvedOrigin,
@@ -1911,16 +1957,40 @@ export default function PlannerPage() {
       }
 
       setRefining(true);
+      let finalRoute = base;
       try {
         const refined = await refineRouteWithRealLegs(base, fetchLegs);
         setRouteForDay(currentDay, refined);
-        if (refined.legs.some((l) => l.source === 'api')) {
-          showToast(tp('toast.routeRefined'));
-        }
+        finalRoute = refined;
       } catch (e) {
         console.warn('경로 보강 실패', e);
       } finally {
         setRefining(false);
+      }
+
+      // N02 — 재계획 전후 비교 + 되돌리기. 첫 생성(previousRoute 없음)이면
+      // 비교할 대상이 없으니 기존처럼 "실제 경로 정보 반영" 안내만 한다.
+      if (previousRoute) {
+        const diff = diffRoutes(previousRoute, finalRoute);
+        const parts: string[] = [];
+        if (diff.addedCount > 0) parts.push(tp('toast.routeDiffAdded', { count: diff.addedCount }));
+        if (diff.removedCount > 0) parts.push(tp('toast.routeDiffRemoved', { count: diff.removedCount }));
+        if (diff.travelDeltaMinutes !== 0) {
+          parts.push(
+            tp('toast.routeDiffTravel', {
+              sign: diff.travelDeltaMinutes > 0 ? '+' : '',
+              minutes: diff.travelDeltaMinutes,
+            })
+          );
+        }
+        if (parts.length > 0) {
+          showToast(parts.join(' · '), {
+            label: tp('toast.routeChangeUndo'),
+            onClick: () => setRouteForDay(currentDay, previousRoute),
+          });
+        }
+      } else if (finalRoute.legs.some((l) => l.source === 'api')) {
+        showToast(tp('toast.routeRefined'));
       }
     }
 
@@ -2262,10 +2332,12 @@ export default function PlannerPage() {
 
   const saveStatus: SaveStatus = useMemo(() => {
     if (savePending) return 'syncing';
-    if (authConfigured && user) return 'cloud';
+    // N03 — 로그인해 있어도 클라우드 쓰기가 실패했으면(오프라인 등) "저장됨"이라고
+    // 하면 거짓말이 된다. 기기에는 저장됐으므로 '로컬'로 낮춰 사실대로 보여준다.
+    if (authConfigured && user) return cloudSaveFailed ? 'local' : 'cloud';
     if (authConfigured && !user) return 'guest';
     return 'local';
-  }, [savePending, authConfigured, user]);
+  }, [savePending, authConfigured, user, cloudSaveFailed]);
 
   const isTripOwner = Boolean(user?.id) && Boolean(trip.ownerId) && trip.ownerId === user?.id;
   const isReadOnlyViewer = trip.collaboratorRole === 'viewer';
@@ -3301,7 +3373,7 @@ export default function PlannerPage() {
         onOpenUpgrade={() => setUpgradeOpen(true)}
       />
 
-      <Toast message={toast} />
+      <Toast message={toast} action={toastAction} />
     </div>
   );
 }

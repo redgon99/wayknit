@@ -301,7 +301,12 @@
     "detailTravel": "{{minutes}} min de trayecto",
     "detailStops": "{{count}} paradas",
     "pillTitle": "Día {{day}} · {{count}} paradas",
-    "pillNext": "Siguiente {{name}} · termina {{finish}}"
+    "pillNext": "Siguiente {{name}} · termina {{finish}}",
+    "departRecommend": "Sal antes de las {{time}}",
+    "departNow": "Es hora de salir",
+    "navigateHere": "Cómo llegar aquí",
+    "arrivedGoNext": "Llegada · Siguiente parada",
+    "lastStop": "Esta es la última parada de hoy"
   },
   "taxi": {
     "title": "Mostrar al taxista",
@@ -785,7 +790,11 @@
     "shareCopiedPlaza": "Enlace copiado (público · publicado en la plaza)",
     "copiedDepart": "Copiada la salida del día {{day}}",
     "pickOriginHint": "Toca el mapa para marcar el inicio",
-    "tableViewLinkCopied": "Enlace de la tabla copiado"
+    "tableViewLinkCopied": "Enlace de la tabla copiado",
+    "routeDiffAdded": "{{count}} lugar añadido",
+    "routeDiffRemoved": "{{count}} lugar eliminado",
+    "routeDiffTravel": "trayecto {{sign}}{{minutes}} min",
+    "routeChangeUndo": "Deshacer"
   },
   "confirm": {
     "newTrip": "¿Guardar 「{{title}}」 y empezar un viaje nuevo?\nLos pines y la ruta de esta pantalla pasarán al nuevo viaje.",

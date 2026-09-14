@@ -301,7 +301,12 @@
     "detailTravel": "{{minutes}} min de trajet",
     "detailStops": "{{count}} étapes",
     "pillTitle": "Jour {{day}} · {{count}} étapes",
-    "pillNext": "Suivant {{name}} · fin {{finish}}"
+    "pillNext": "Suivant {{name}} · fin {{finish}}",
+    "departRecommend": "Partir avant {{time}}",
+    "departNow": "Il est temps de partir",
+    "navigateHere": "Itinéraire jusqu'ici",
+    "arrivedGoNext": "Arrivé · Étape suivante",
+    "lastStop": "C'est la dernière étape d'aujourd'hui"
   },
   "taxi": {
     "title": "À montrer au taxi",
@@ -785,7 +790,11 @@
     "shareCopiedPlaza": "Lien copié (public · publié sur la place)",
     "copiedDepart": "Départ du jour {{day}} copié",
     "pickOriginHint": "Touchez la carte pour définir le départ",
-    "tableViewLinkCopied": "Lien du tableau copié"
+    "tableViewLinkCopied": "Lien du tableau copié",
+    "routeDiffAdded": "{{count}} lieu ajouté",
+    "routeDiffRemoved": "{{count}} lieu supprimé",
+    "routeDiffTravel": "trajet {{sign}}{{minutes}} min",
+    "routeChangeUndo": "Annuler"
   },
   "confirm": {
     "newTrip": "Enregistrer 「{{title}}」 et commencer un nouveau voyage ?\nÉpingles et itinéraire passeront au nouveau voyage.",

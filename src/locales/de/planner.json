@@ -301,7 +301,12 @@
     "detailTravel": "{{minutes}} Min. Fahrt",
     "detailStops": "{{count}} Halte",
     "pillTitle": "Tag {{day}} · {{count}} Halte",
-    "pillNext": "Weiter {{name}} · Ende {{finish}}"
+    "pillNext": "Weiter {{name}} · Ende {{finish}}",
+    "departRecommend": "Abfahrt bis {{time}}",
+    "departNow": "Zeit loszufahren",
+    "navigateHere": "Route hierher",
+    "arrivedGoNext": "Angekommen · Nächster Halt",
+    "lastStop": "Das ist der letzte Halt heute"
   },
   "taxi": {
     "title": "Dem Taxifahrer zeigen",
@@ -785,7 +790,11 @@
     "shareCopiedPlaza": "Link kopiert (öffentlich · auf dem Platz)",
     "copiedDepart": "Abfahrt von Tag {{day}} kopiert",
     "pickOriginHint": "Tippen Sie auf die Karte für den Start",
-    "tableViewLinkCopied": "Tabellenlink kopiert"
+    "tableViewLinkCopied": "Tabellenlink kopiert",
+    "routeDiffAdded": "{{count}} Ort hinzugefügt",
+    "routeDiffRemoved": "{{count}} Ort entfernt",
+    "routeDiffTravel": "Fahrt {{sign}}{{minutes}} Min.",
+    "routeChangeUndo": "Rückgängig"
   },
   "confirm": {
     "newTrip": "「{{title}}」 speichern und neue Reise starten?\nPins und Route wechseln zur neuen Reise.",

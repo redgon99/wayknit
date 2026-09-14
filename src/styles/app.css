@@ -3280,6 +3280,32 @@ button {
   animation: toast-in 0.2s ease;
 }
 
+/* N02 — 버튼이 있는 토스트만 클릭을 받는다(기본 토스트는 통과시켜야 지도 조작을 막지 않음) */
+.app-toast.with-action {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding-right: 8px;
+}
+
+.app-toast-action {
+  flex-shrink: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.app-toast-action:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;
@@ -11689,8 +11715,26 @@ button {
   color: rgba(255, 255, 255, 0.55);
 }
 
-.route-dock-focus-edit {
+/* N01(모바일 UX 리포트 2026-09-13, 신규 제안) — "출발 권장 시각" 표시.
+   past(이미 지남/지금 출발해야 함)일 때만 경고색으로 바꿔 눈에 띄게 한다. */
+.route-dock-focus-depart {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #7dd3fc;
+}
+
+.route-dock-focus-depart.past {
+  color: #fca5a5;
+}
+
+.route-dock-focus-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 4px;
+}
+
+.route-dock-focus-edit {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
@@ -11703,10 +11747,43 @@ button {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .route-dock-focus-edit:hover {
   background: rgba(255, 255, 255, 0.16);
+}
+
+/* N01 — "도착 완료" CTA. 다음 장소로 포커스를 넘기는 가장 자주 누를 버튼이라
+   자동차 이동 등 다른 accent 버튼과 같은 색으로 눈에 띄게 잡는다. */
+.route-dock-focus-arrived {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  border: none;
+  background: var(--color-accent);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-pill);
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.route-dock-focus-arrived:hover {
+  filter: brightness(0.96);
+}
+
+.route-dock-focus-lastbadge {
+  margin-top: 6px;
+  padding: 6px 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
 }
 
 .route-dock-chip-track {

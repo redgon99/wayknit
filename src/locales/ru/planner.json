@@ -301,7 +301,12 @@
     "detailTravel": "{{minutes}} мин в пути",
     "detailStops": "Остановок: {{count}}",
     "pillTitle": "День {{day}} · остановок: {{count}}",
-    "pillNext": "Далее {{name}} · окончание {{finish}}"
+    "pillNext": "Далее {{name}} · окончание {{finish}}",
+    "departRecommend": "Выехать до {{time}}",
+    "departNow": "Пора выезжать",
+    "navigateHere": "Маршрут сюда",
+    "arrivedGoNext": "Прибыл · Следующая остановка",
+    "lastStop": "Это последняя остановка сегодня"
   },
   "taxi": {
     "title": "Показать водителю такси",
@@ -785,7 +790,11 @@
     "shareCopiedPlaza": "Ссылка скопирована (публично · на площади)",
     "copiedDepart": "Скопирован старт дня {{day}}",
     "pickOriginHint": "Нажмите на карту, чтобы выбрать старт",
-    "tableViewLinkCopied": "Ссылка на таблицу скопирована"
+    "tableViewLinkCopied": "Ссылка на таблицу скопирована",
+    "routeDiffAdded": "добавлено мест: {{count}}",
+    "routeDiffRemoved": "удалено мест: {{count}}",
+    "routeDiffTravel": "в пути {{sign}}{{minutes}} мин",
+    "routeChangeUndo": "Отменить"
   },
   "confirm": {
     "newTrip": "Сохранить 「{{title}}」 и начать новую поездку?\nПины и маршрут перейдут в новую поездку.",

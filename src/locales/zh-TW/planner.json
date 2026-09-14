@@ -290,7 +290,12 @@
     "detailTravel": "移動 {{minutes}} 分鐘",
     "detailStops": "{{count}} 處",
     "pillTitle": "第{{day}}天 · {{count}} 處",
-    "pillNext": "下一個 {{name}} · {{finish}} 結束"
+    "pillNext": "下一個 {{name}} · {{finish}} 結束",
+    "departRecommend": "建議{{time}}出發",
+    "departNow": "該出發了",
+    "navigateHere": "導航到這裡",
+    "arrivedGoNext": "已抵達 · 下一站",
+    "lastStop": "這是今天的最後一站"
   },
   "place": {
     "copyName": "複製韓文名稱",
@@ -582,7 +587,11 @@
     "shareCopiedPlaza": "已複製分享鏈接（公開 · 已上廣場）",
     "copiedDepart": "已複製第 {{day}} 天的出發設置",
     "pickOriginHint": "點擊地圖設置出發地",
-    "tableViewLinkCopied": "表格連結已複製"
+    "tableViewLinkCopied": "表格連結已複製",
+    "routeDiffAdded": "新增{{count}}處",
+    "routeDiffRemoved": "刪除{{count}}處",
+    "routeDiffTravel": "行程{{sign}}{{minutes}}分鐘",
+    "routeChangeUndo": "復原"
   },
   "confirm": {
     "newTrip": "保存「{{title}}」並開始新行程？\n當前圖釘和路線將切換到新行程。",

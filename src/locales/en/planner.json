@@ -301,7 +301,12 @@
     "detailTravel": "{{minutes}} min travel",
     "detailStops": "{{count}} stops",
     "pillTitle": "Day {{day}} · {{count}} stops",
-    "pillNext": "Next {{name}} · ends {{finish}}"
+    "pillNext": "Next {{name}} · ends {{finish}}",
+    "departRecommend": "Leave by {{time}}",
+    "departNow": "Time to leave now",
+    "navigateHere": "Directions to here",
+    "arrivedGoNext": "Arrived · Next stop",
+    "lastStop": "This is today's last stop"
   },
   "taxi": {
     "title": "Show to taxi driver",
@@ -785,7 +790,11 @@
     "shareCopiedPlaza": "Share link copied (saved as public · listed on plaza)",
     "copiedDepart": "Copied day {{day}} departure settings",
     "pickOriginHint": "Tap the map to set the start point",
-    "tableViewLinkCopied": "Table view link copied"
+    "tableViewLinkCopied": "Table view link copied",
+    "routeDiffAdded": "{{count}} place added",
+    "routeDiffRemoved": "{{count}} place removed",
+    "routeDiffTravel": "travel {{sign}}{{minutes}} min",
+    "routeChangeUndo": "Undo"
   },
   "confirm": {
     "newTrip": "Save 「{{title}}」 and start a new trip?\nPins and route on this screen will switch to the new trip.",

@@ -126,6 +126,42 @@ function CopyAddressButton({ text }: { text: string }) {
   );
 }
 
+/**
+ * TourAPI가 주는 사진 URL 중 일부는 실제로 죽은 링크다(R02, 모바일 UX 리포트
+ * 2026-09-13 — 표본 48장 중 4장이 원본 서버에서 404). `<img>`에 onError가
+ * 없으면 브라우저 기본 "깨진 이미지" 아이콘이 그대로 보인다 — `.info-photo-card-noimg`
+ * (빈 그레이 박스, 썸네일 자체가 없을 때 쓰던 것과 동일)로 대체한다.
+ */
+function GalleryImg({
+  src,
+  alt,
+  className,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+  if (failed) {
+    return (
+      <div
+        className={className ? `${className} info-photo-card-noimg` : 'info-photo-card-noimg'}
+        aria-hidden
+      />
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      className={className}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 /** 반려동물 동반여행(KorPetTourService2)/무장애여행(KorWithService2) — 검색 가능한 목록 브라우징 */
 function FilteredPlaceSection({
   kind,
@@ -190,7 +226,7 @@ function FilteredPlaceSection({
         {places.map((p) => (
           <figure key={p.contentId} className="info-photo-card">
             {p.thumbnailUrl ? (
-              <img src={p.thumbnailUrl} alt={p.title} loading="lazy" />
+              <GalleryImg src={p.thumbnailUrl} alt={p.title} />
             ) : (
               <div className="info-photo-card-noimg" aria-hidden />
             )}
@@ -277,7 +313,7 @@ function PhotoLightbox({
             <Icon name="chevronRight" />
           </button>
         )}
-        <img src={photo.imageUrl} alt={photo.title} className="photo-lightbox-img" />
+        <GalleryImg src={photo.imageUrl} alt={photo.title} className="photo-lightbox-img" />
         <div className="photo-lightbox-caption">
           <strong>{photo.title}</strong>
           <span>{[photo.location, formatMonth(photo.month)].filter(Boolean).join(' · ')}</span>
@@ -556,7 +592,7 @@ export default function KoreaInfoPage() {
                     onClick={() => setLightboxIndex(i)}
                     aria-label={t('photos.viewLarge')}
                   >
-                    <img src={p.imageUrl} alt={p.title} loading="lazy" />
+                    <GalleryImg src={p.imageUrl} alt={p.title} />
                   </button>
                   <figcaption>
                     <strong>{p.title}</strong>
@@ -660,7 +696,7 @@ export default function KoreaInfoPage() {
                   }}
                 >
                   {s.imageUrl ? (
-                    <img src={s.imageUrl} alt={s.title} loading="lazy" />
+                    <GalleryImg src={s.imageUrl} alt={s.title} />
                   ) : (
                     <div className="info-photo-card-noimg" aria-hidden />
                   )}

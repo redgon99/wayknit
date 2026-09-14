@@ -290,7 +290,12 @@
     "detailTravel": "移动 {{minutes}} 分钟",
     "detailStops": "{{count}} 处",
     "pillTitle": "第{{day}}天 · {{count}} 处",
-    "pillNext": "下一个 {{name}} · {{finish}} 结束"
+    "pillNext": "下一个 {{name}} · {{finish}} 结束",
+    "departRecommend": "建议{{time}}出发",
+    "departNow": "该出发了",
+    "navigateHere": "导航到这里",
+    "arrivedGoNext": "已到达 · 下一站",
+    "lastStop": "这是今天的最后一站"
   },
   "place": {
     "copyName": "复制韩文名称",
@@ -582,7 +587,11 @@
     "shareCopiedPlaza": "已复制分享链接（公开 · 已上广场）",
     "copiedDepart": "已复制第 {{day}} 天的出发设置",
     "pickOriginHint": "点击地图设置出发地",
-    "tableViewLinkCopied": "表格链接已复制"
+    "tableViewLinkCopied": "表格链接已复制",
+    "routeDiffAdded": "新增{{count}}处",
+    "routeDiffRemoved": "删除{{count}}处",
+    "routeDiffTravel": "行程{{sign}}{{minutes}}分钟",
+    "routeChangeUndo": "撤销"
   },
   "confirm": {
     "newTrip": "保存「{{title}}」并开始新行程？\n当前图钉和路线将切换到新行程。",

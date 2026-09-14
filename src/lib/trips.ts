@@ -1753,11 +1753,56 @@ export interface TripsRepo {
   migrateLocalToUser(userId: string): Promise<number>;
 }
 
+/**
+ * 오프라인(또는 네트워크 실패) 대비 — N03(모바일 UX 리포트 2026-09-13).
+ *
+ * 원격 조회 함수들은 supabase가 돌려주는 `error`는 잘 처리하지만, 네트워크가
+ * 아예 끊기면 그 전에 `TypeError: Failed to fetch`로 **던진다.** 그러면
+ * 아래 `return readLocal(...)` 폴백까지 가지도 못하고 호출부(PlannerPage의
+ * 하이드레이션)가 통째로 중단돼, **localStorage에 여행이 멀쩡히 있는데도**
+ * 화면엔 빈 "새 여행"이 뜬다(2026-09-14 비행기모드 재현으로 확인).
+ *
+ * 원격이 어떤 이유로 실패하든 로컬 사본으로 이어가는 게 맞다 — 실패를 삼키는
+ * 게 아니라, 읽기는 로컬이라는 정상 폴백이 이미 있는데 그리로 못 가던 것을
+ * 고치는 것이다.
+ */
+const REMOTE_READ_TIMEOUT_MS = 4000;
+const TIMED_OUT = Symbol('remote-timeout');
+
+async function remoteOrNull<T>(what: string, run: () => Promise<T>): Promise<T | null> {
+  // 오프라인이 확실하면 기다릴 이유가 없다. (navigator.onLine은 "온라인"일 때는
+  // 못 믿지만 "오프라인"일 때는 믿을 만하다 — 빠른 우회로만 쓴다.)
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return null;
+
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const result = await Promise.race([
+      run(),
+      new Promise<typeof TIMED_OUT>((resolve) => {
+        timer = setTimeout(() => resolve(TIMED_OUT), REMOTE_READ_TIMEOUT_MS);
+      }),
+    ]);
+    if (result === TIMED_OUT) {
+      /* 오프라인에서 supabase 호출은 곧바로 실패하지 않고 **응답 없이 매달린다**
+       * (인증 토큰 갱신 대기에 걸린다). 그래서 예외 처리만으로는 부족하고,
+       * 제한 시간을 둬야 로컬 폴백까지 갈 수 있다. */
+      console.warn(`원격 조회 지연(${what}) — 로컬 사본으로 진행합니다`);
+      return null;
+    }
+    return result;
+  } catch (e) {
+    console.warn(`원격 조회 실패(${what}) — 로컬 사본으로 진행합니다`, e);
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export const tripsRepo: TripsRepo = {
   async list(userId) {
     if (isSupabaseConfigured && userId) {
-      const remote = await listRemote(userId);
-      if (remote.length > 0) return remote;
+      const remote = await remoteOrNull('list', () => listRemote(userId));
+      if (remote && remote.length > 0) return remote;
     }
     return listLocal(userId);
   },
@@ -1765,10 +1810,10 @@ export const tripsRepo: TripsRepo = {
   async load(userId, tripId) {
     if (isSupabaseConfigured && userId) {
       if (tripId) {
-        const byId = await readRemoteById(userId, tripId);
+        const byId = await remoteOrNull('load', () => readRemoteById(userId, tripId));
         if (byId) return byId;
       }
-      const latest = await readRemoteLatest(userId);
+      const latest = await remoteOrNull('loadLatest', () => readRemoteLatest(userId));
       if (latest) return latest;
     }
     return readLocal(tripId, userId);
@@ -1776,7 +1821,7 @@ export const tripsRepo: TripsRepo = {
 
   async loadBySlug(slug) {
     if (isSupabaseConfigured) {
-      const remote = await readBySlugRemote(slug);
+      const remote = await remoteOrNull('loadBySlug', () => readBySlugRemote(slug));
       if (remote) return remote;
     }
     return readLocalBySlug(slug);

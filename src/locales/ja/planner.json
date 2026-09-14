@@ -290,7 +290,12 @@
     "detailTravel": "移動 {{minutes}}分",
     "detailStops": "{{count}}か所",
     "pillTitle": "{{day}}日目 · {{count}}か所",
-    "pillNext": "次 {{name}} · {{finish}} 終了"
+    "pillNext": "次 {{name}} · {{finish}} 終了",
+    "departRecommend": "{{time}}に出発推奨",
+    "departNow": "そろそろ出発しましょう",
+    "navigateHere": "この区間の経路案内",
+    "arrivedGoNext": "到着完了・次の場所へ",
+    "lastStop": "本日最後の場所です"
   },
   "place": {
     "copyName": "韓国語名をコピー",
@@ -582,7 +587,11 @@
     "shareCopiedPlaza": "共有リンクをコピーしました（公開・広場に登録）",
     "copiedDepart": "{{day}}日目の出発設定をコピーしました",
     "pickOriginHint": "地図をタップして出発地を指定",
-    "tableViewLinkCopied": "表リンクをコピーしました"
+    "tableViewLinkCopied": "表リンクをコピーしました",
+    "routeDiffAdded": "{{count}}件追加",
+    "routeDiffRemoved": "{{count}}件削除",
+    "routeDiffTravel": "移動{{sign}}{{minutes}}分",
+    "routeChangeUndo": "元に戻す"
   },
   "confirm": {
     "newTrip": "「{{title}}」を保存して新しい旅行を作りますか？\n画面のピンとルートは新しい旅行に切り替わります。",

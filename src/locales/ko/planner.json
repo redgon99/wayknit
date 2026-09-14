@@ -301,7 +301,12 @@
     "detailTravel": "이동 {{minutes}}분",
     "detailStops": "{{count}}곳",
     "pillTitle": "{{day}}일차 · {{count}}곳",
-    "pillNext": "다음 {{name}} · {{finish}} 끝"
+    "pillNext": "다음 {{name}} · {{finish}} 끝",
+    "departRecommend": "{{time}} 출발 권장",
+    "departNow": "지금 출발하세요",
+    "navigateHere": "이 구간 길찾기",
+    "arrivedGoNext": "도착 완료 · 다음 장소로",
+    "lastStop": "오늘의 마지막 장소예요"
   },
   "taxi": {
     "title": "택시기사에게 보여주기",
@@ -785,7 +790,11 @@
     "shareCopiedPlaza": "공유 링크가 복사되었습니다 (공개 저장됨 · 공유마당에 등록됨)",
     "copiedDepart": "{{day}}일차 출발 설정을 복사했습니다",
     "pickOriginHint": "지도를 클릭해 출발지를 지정하세요",
-    "tableViewLinkCopied": "표로보기 링크가 복사되었습니다"
+    "tableViewLinkCopied": "표로보기 링크가 복사되었습니다",
+    "routeDiffAdded": "{{count}}곳 추가",
+    "routeDiffRemoved": "{{count}}곳 삭제",
+    "routeDiffTravel": "이동 {{sign}}{{minutes}}분",
+    "routeChangeUndo": "되돌리기"
   },
   "confirm": {
     "newTrip": "「{{title}}」을 저장한 뒤 새 여행을 만듭니다.\n현재 화면의 핀·동선은 새 여행으로 전환됩니다. 계속할까요?",

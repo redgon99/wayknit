@@ -176,6 +176,13 @@ export function RouteOptionsPanel({
 
   useEffect(() => {
     onCompareRoutesChange?.(comparisons);
+    /* R03(모바일 UX 리포트 2026-09-13) — 탭 전환 시 이 패널 자체가 언마운트된다
+     * (PlannerSidePanel의 `{tab === 'route' && routeSlot}`, 모바일도 동일 구조).
+     * 언마운트되면 이 effect가 다시 실행될 일이 없어, 부모(PlannerPage)의
+     * compareRoutes state에 마지막 비교선이 그대로 남아 지도 위에 계속 그려졌다
+     * — 검색 탭으로 돌아가 다른 장소를 선택해도 옛 비교선이 같이 떠 있던 원인.
+     * 언마운트 시 빈 배열로 되돌려 지운다. */
+    return () => onCompareRoutesChange?.([]);
   }, [comparisons, onCompareRoutesChange]);
 
   const selectedComparison = comparisons.find((c) => c.optimizeBy === options.optimizeBy) ?? null;
