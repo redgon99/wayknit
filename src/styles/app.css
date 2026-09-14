@@ -16152,6 +16152,30 @@ button {
   color: var(--color-text-secondary);
 }
 
+/* 빌드 식별자 (§29-32) — 계정 시트 맨 아래, 눈에 띄지 않되 읽을 수는 있게.
+   폰에서 "지금 열린 게 방금 배포한 빌드인가"를 확인하는 유일한 구분점이라
+   글자를 너무 흐리게 두지 않는다. */
+.mobile-account-build {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 16px 0 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.mobile-account-build code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  /* 길어도 줄바꿈되지 않게 — 한 줄로 읽히는 게 식별에 유리하다 */
+  white-space: nowrap;
+  user-select: all; /* 탭 한 번으로 전체 선택돼 복사·제보가 쉽다 */
+}
+
 /* ── PWA 설치 플로팅 아이콘 (2026-09-10) ─────────────────────────────
    기존 .pwa-install-btn/.pwa-install-btn-label 은 만들어져 있었지만 어디서도
    렌더되지 않았다(PwaInstallButton.tsx가 완전히 고아 컴포넌트였다). 예전에

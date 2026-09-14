@@ -835,7 +835,8 @@
   "account": {
     "guestLead": "Connectez-vous pour continuer à planifier sur d'autres appareils et sauvegarder dans le cloud.",
     "viewPlans": "Voir les forfaits",
-    "backToHome": "Retour à l'accueil"
+    "backToHome": "Retour à l'accueil",
+    "version": "Version"
   },
   "materials": {
     "panelTitle": "Documents du voyage",

@@ -656,7 +656,8 @@
   "account": {
     "guestLead": "登入後可在多個裝置上繼續規劃，並安全保存到雲端。",
     "viewPlans": "查看方案",
-    "backToHome": "返回首頁"
+    "backToHome": "返回首頁",
+    "version": "版本"
   },
   "materials": {
     "panelTitle": "行程資料",

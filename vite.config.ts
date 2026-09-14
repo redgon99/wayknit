@@ -5,6 +5,32 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import type { ClientRequest } from 'http';
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
+
+/**
+ * 빌드 식별자 — 모바일 기기에서 "지금 열린 앱이 방금 배포한 그 빌드인가"를
+ * 눈으로 확인할 수단이 없었다(§29-32). 계정 시트 하단에 이 값을 띄운다.
+ * 커밋 해시는 빌드 시점의 HEAD다. git이 없는 환경(예: 소스 압축본)에서도
+ * 빌드가 깨지면 안 되므로 실패는 조용히 'unknown'으로 떨어뜨린다.
+ */
+function gitShortHash(): string {
+  try {
+    return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
+  } catch {
+    return 'unknown';
+  }
+}
+
+function appVersion(): string {
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf8'));
+    return typeof pkg.version === 'string' ? pkg.version : '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}
 
 /**
  * Tailscale HTTPS 인증서(있으면) — `tailscale cert <이 기기의 MagicDNS 이름>`으로
@@ -426,6 +452,11 @@ export default defineConfig(({ mode }) => {
   const tourApiKey = env.VITE_TOUR_API_KEY ?? '';
 
   return {
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion()),
+    __APP_COMMIT__: JSON.stringify(gitShortHash()),
+    __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   plugins: [
     react(),
     tourApiDevProxyPlugin(tourApiKey),

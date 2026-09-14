@@ -656,7 +656,8 @@
   "account": {
     "guestLead": "登录后可在多个设备上继续规划，并安全保存到云端。",
     "viewPlans": "查看套餐",
-    "backToHome": "返回首页"
+    "backToHome": "返回首页",
+    "version": "版本"
   },
   "materials": {
     "panelTitle": "行程资料",

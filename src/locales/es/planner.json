@@ -835,7 +835,8 @@
   "account": {
     "guestLead": "Inicia sesión para seguir planificando en otros dispositivos y guardar en la nube.",
     "viewPlans": "Ver planes",
-    "backToHome": "Volver al inicio"
+    "backToHome": "Volver al inicio",
+    "version": "Versión"
   },
   "materials": {
     "panelTitle": "Materiales del viaje",

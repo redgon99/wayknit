@@ -835,7 +835,8 @@
   "account": {
     "guestLead": "Melde dich an, um auf anderen Geräten weiterzuplanen und in der Cloud zu speichern.",
     "viewPlans": "Tarife ansehen",
-    "backToHome": "Zur Startseite"
+    "backToHome": "Zur Startseite",
+    "version": "Version"
   },
   "materials": {
     "panelTitle": "Reiseunterlagen",

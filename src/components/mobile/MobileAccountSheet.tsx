@@ -4,6 +4,7 @@ import { Icon } from '../Icon';
 import { AppSheetModal } from '../AppSheetModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { pathWithLocale, normalizeLocale } from '../../lib/locale';
+import { buildLabel } from '../../lib/appVersion';
 import i18n from '../../lib/i18n';
 
 interface Props {
@@ -103,6 +104,12 @@ export function MobileAccountSheet({ open, onClose, onOpenUpgrade }: Props) {
           </button>
         </>
       )}
+
+      {/* 어떤 빌드가 열려 있는지 확인할 구분점 (§29-32) — 로그인 여부와 무관하게 항상 */}
+      <p className="mobile-account-build">
+        <span>{t('account.version')}</span>
+        <code>{buildLabel()}</code>
+      </p>
     </AppSheetModal>
   );
 }

@@ -835,7 +835,8 @@
   "account": {
     "guestLead": "Sign in to keep planning across devices and save your trips to the cloud.",
     "viewPlans": "View plans",
-    "backToHome": "Back to home"
+    "backToHome": "Back to home",
+    "version": "Version"
   },
   "materials": {
     "panelTitle": "Trip materials",

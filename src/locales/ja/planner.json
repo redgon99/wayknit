@@ -656,7 +656,8 @@
   "account": {
     "guestLead": "ログインすると他の端末でも続きを計画でき、クラウドに安全に保存されます。",
     "viewPlans": "プランを見る",
-    "backToHome": "ホームへ"
+    "backToHome": "ホームへ",
+    "version": "バージョン"
   },
   "materials": {
     "panelTitle": "旅行資料",
