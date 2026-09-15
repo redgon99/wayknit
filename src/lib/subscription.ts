@@ -47,15 +47,6 @@ export function canUseOfflineMaterials(plan: PlanId, isAdmin = false): boolean {
   return hasUnlimitedAccess(plan, isAdmin);
 }
 
-export function canUseCloudSync(
-  plan: PlanId,
-  isLoggedIn: boolean,
-  isAdmin = false
-): boolean {
-  if (!isLoggedIn) return false;
-  return hasUnlimitedAccess(plan, isAdmin);
-}
-
 /** Free + Google 검색 일일 캡 (관리자·Plus/Team 제외) */
 export function canRunGoogleSearch(plan: PlanId, isAdmin = false): boolean {
   if (hasUnlimitedAccess(plan, isAdmin)) return true;

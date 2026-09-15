@@ -15,17 +15,8 @@
   },
   "limits": {
     "tripCount": "Free plan allows up to {{max}} trips.",
-    "exportPlus": "Export is a Plus feature.",
-    "cloudLogin": "Sign in to use cloud save.",
     "searchCap": "Daily search limit reached. Plus raises the limit.",
     "materialCount": "Free plan allows up to {{max}} files per trip. Plus removes the limit."
-  },
-  "features": {
-    "unlimitedTrips": "Unlimited trips",
-    "cloudSync": "Cloud sync",
-    "exportI18n": "Export itinerary in your language",
-    "realRoute": "Unlimited real-road routes",
-    "unlimitedSearch": "Unlimited Google search"
   },
   "checkout": {
     "redirecting": "Opening checkout…",

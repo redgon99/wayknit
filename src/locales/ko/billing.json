@@ -15,17 +15,8 @@
   },
   "limits": {
     "tripCount": "Free 플랜은 여행 {{max}}개까지 저장할 수 있습니다.",
-    "exportPlus": "일정보내기는 Plus 전용 기능입니다.",
-    "cloudLogin": "클라우드 저장은 로그인 후 이용할 수 있습니다.",
     "searchCap": "오늘 검색 한도에 도달했습니다. Plus에서 더 많이 검색할 수 있습니다.",
     "materialCount": "Free 플랜은 여행당 자료를 {{max}}개까지 올릴 수 있습니다. Plus에서 무제한으로 올릴 수 있습니다."
-  },
-  "features": {
-    "unlimitedTrips": "무제한 여행 저장",
-    "cloudSync": "클라우드 자동 동기화",
-    "exportI18n": "선택 언어로 일정보내기",
-    "realRoute": "실경로 동선 무제한",
-    "unlimitedSearch": "Google 검색 무제한"
   },
   "checkout": {
     "processing": "결제를 진행하고 있습니다…",

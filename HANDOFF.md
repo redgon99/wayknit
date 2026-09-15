@@ -5784,6 +5784,24 @@ plan 값을 'plus'로 바꾸는 쓰기 자체가 분류기에 막혀 직접 테�
 Edge Function/집계 테이블이 필요한 더 큰 작업).
 
 
+### 30-3. ✅ 죽은 코드 정리 — canUseCloudSync·billing.json 미사용 키 (2026-09-15)
+
+§30-1에서 찾은 나머지 후보 중 위험 없는 것부터 정리.
+
+- **`canUseCloudSync()` 삭제**(`subscription.ts`) — 어디서도 호출된 적 없고,
+  실제 동작과도 모순이었다(지금 클라우드 동기화는 `trips.ts`에 plan 체크가
+  없어 Free 로그인 사용자도 무료로 됨). 방치하면 나중에 누가 실수로
+  연결해 Free 유저 동기화가 끊기는 회귀가 될 수 있었다.
+- **`billing.json`의 안 쓰는 키 7개**를 9개 로케일 전부에서 제거:
+  `features.*`(unlimitedTrips·cloudSync·exportI18n·realRoute·
+  unlimitedSearch) 5개, `limits.exportPlus`·`limits.cloudLogin`. §29-44에서
+  불릿 목록을 비교표로 바꾸며 안 쓰게 된 것들 — 코드 어디서도 참조 안 됨을
+  grep으로 재확인 후 삭제.
+
+**변경 파일:** `subscription.ts`, 9개 `billing.json`. `tsc --noEmit`·
+`npm run build` 클린. DB 변경 없음(§30-1·§30-2와 달리 코드만).
+
+
 ---
 
 ## ▶ 다음 세션 시작점 (2026-09-15 기준, 갱신)
@@ -5805,6 +5823,7 @@ Auto Mode 분류기에 막혀서). 실계정으로 4개 시나리오 전부 검�
 4. §29-47 Plus 킬러기능 2개
 5. §30-1 profiles RLS 마이그레이션 파일(DB는 이미 반영됨)
 6. §30-2 여행/자료 캡 서버 트리거 마이그레이션 파일(DB는 이미 반영됨)
+7. §30-3 죽은 코드 정리(canUseCloudSync·billing.json 미사용 키)
 
 **Auto Mode 분류기 관련 메모:** DB에 트리거·함수를 새로 만드는 것처럼
 "쓰기 범위가 큰" 마이그레이션은 MCP `apply_migration`/`execute_sql`
@@ -5812,13 +5831,13 @@ UPDATE가 세션 내 승인과 무관하게 차단된다(§30-1은 통과, §30-
 막힘 — 정확한 기준은 불명). 막히면 Supabase 대시보드 SQL Editor로
 직접 실행하는 게 가장 빠르다.
 
-**다음에 다시 요청하면 진행할 것(§30-1에서 함께 찾음, 아직 안 함):**
+**다음에 다시 요청하면 진행할 것(§30-1에서 함께 찾음):**
 - Google 검색 캡 localStorage → 서버 이관(Edge Function/집계 테이블 필요,
-  더 큰 작업)
-- 죽은 코드 정리: `canUseCloudSync()`, `billing.json`의 `features.*`
-  5개 키 + `limits.exportPlus`/`limits.cloudLogin`(9개 로케일)
+  더 큰 작업 — 아직 안 함)
 - 내보내기·자료 오프라인 저장의 서버 백스톱은 자연스러운 DB 쓰기
   지점이 없어 보류(§30-2 말미 참고)
+- 죽은 코드 정리(`canUseCloudSync()`·billing.json 미사용 키)는
+  §30-3에서 완료됨
 
 **그 다음 대기 중(더 이전부터):**
 - Tailscale 개발서버 인증서 2026-12-08 만료 — 자동 갱신 여부 미답변
