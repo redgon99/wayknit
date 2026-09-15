@@ -10,6 +10,7 @@ import { MapView } from './MapView';
 import { ReportButton } from './ReportButton';
 import { trackEvent } from '../lib/analytics';
 import { useAuth } from '../contexts/AuthContext';
+import { canCreateTrip, FREE_MAX_TRIPS } from '../lib/subscription';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { loadKakaoSdk } from '../lib/kakao';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -40,7 +41,8 @@ function matchesDayFilter(totalDays: number, filter: DayFilter): boolean {
 
 export function SharePlazaPanel() {
   const { t } = useTranslation('share');
-  const { user } = useAuth();
+  const { t: tb } = useTranslation('billing');
+  const { user, plan, isAdmin } = useAuth();
   const locale = normalizeLocale(i18n.language);
   const [sdkReady, setSdkReady] = useState(false);
   const [tab, setTab] = useState<PlazaTab>('board');
@@ -126,6 +128,20 @@ export function SharePlazaPanel() {
   const handlePull = useCallback(
     async (listing: PlazaListing) => {
       if (importedIds.has(listing.id) || pullingId) return;
+      /*
+       * "내 여행으로 복사"도 새 여행을 만드는 또 하나의 경로였는데 Free
+       * 캡(여행 3개) 체크가 없었다 — "+ 새 여행" 버튼에만 걸려 있던 캡의
+       * 구멍 중 하나(2026-09-15 사용자 제보로 발견, PlannerPage.tsx의
+       * 세션 복구 경로와 같은 종류). 복사도 결국 새 행 하나를 만드는 거라
+       * 똑같이 막아야 한다.
+       */
+      const userId = user?.id ?? null;
+      const currentCount = (await tripsRepo.list(userId)).length;
+      if (!canCreateTrip(plan, currentCount, isAdmin)) {
+        setToast(tb('limits.tripCount', { max: FREE_MAX_TRIPS }));
+        setTimeout(() => setToast(null), 3500);
+        return;
+      }
       setPullingId(listing.id);
       try {
         const full =
@@ -145,7 +161,7 @@ export function SharePlazaPanel() {
         setPullingId(null);
       }
     },
-    [importedIds, pullingId, user?.id, t]
+    [importedIds, pullingId, user?.id, t, plan, isAdmin, tb]
   );
 
   const toggleRegion = useCallback((code: string) => {

@@ -644,14 +644,40 @@ export default function PlannerPage() {
       } else {
         const fresh = makeEmptyTrip();
         setTrip(fresh);
-        try {
-          await tripsRepo.save({ ...fresh, ownerId: userId ?? undefined });
-        } catch (e) {
-          /* 클라우드 저장이 실패해도 로컬에는 이미 저장됐다(tripsRepo.save 내부 순서상
-           * writeLocal이 writeRemote보다 먼저 실행됨). 여기서 그대로 던지면 hydrated가
-           * true로 세팅되지 못해, 다음 리렌더/새로고침마다 이 분기가 다시 실행되며
-           * 매번 새로운 "새 여행"을 만들어내는 문제가 생긴다. */
-          console.warn('새 여행 클라우드 저장 실패(로컬에는 저장됨)', e);
+        /*
+         * Free 캡(여행 3개)이 "+ 새 여행" 버튼(handleNewTrip)에만 걸려 있고
+         * 여기(세션 복구 시 "저장된 여행을 못 찾음" 폴백)는 뚫려 있었다 —
+         * 2026-09-15 사용자가 "무료인데 왜 여행이 24개나 있냐" 제보로 발견.
+         *
+         * `tripsRepo.load(userId)`(tripId 없이 호출)가 null을 돌려주는 건
+         * "진짜 여행이 0개"뿐 아니라 **원격 조회가 실패·타임아웃했을 때도**
+         * 똑같이 null이다(§29-31, 오프라인 대응을 위해 일부러 그렇게 설계함).
+         * 즉 이 계정에 여행이 이미 여러 개 있어도, 이 기기의 로컬 캐시가
+         * 비어 있고 하필 그 순간 네트워크가 불안정하면 "0개"로 오판해
+         * 매번 새 여행을 만들고 클라우드에 저장해버린다 — Playwright처럼
+         * 매번 빈 브라우저 컨텍스트로 테스트하면 이 경합이 거의 확실히
+         * 걸린다(이번에 발견된 24개가 그 증거).
+         *
+         * 완벽한 해결(원격 실패와 "진짜 0개"를 구분)은 이번 범위를 넘는다.
+         * 대신 **저장 직전에 한 번 더** 방금 읽은 `tripSummaries`로 캡을
+         * 확인한다 — 이러면 "정말 0개인 신규 계정"은 평소처럼 만들어지고,
+         * "이미 여러 개 있는 계정"에서 이 폴백이 잘못 걸려도 최소한 클라우드에
+         * 새 행을 추가하진 않는다(화면엔 빈 여행이 보이지만 저장은 안 됨 —
+         * 사용자가 핀을 담으면 그때 자동저장이 같은 캡 검사를 통과 못 해
+         * 업그레이드 안내를 보게 된다).
+         */
+        if (canCreateTrip(plan, tripSummaries.length, isAdmin)) {
+          try {
+            await tripsRepo.save({ ...fresh, ownerId: userId ?? undefined });
+          } catch (e) {
+            /* 클라우드 저장이 실패해도 로컬에는 이미 저장됐다(tripsRepo.save 내부 순서상
+             * writeLocal이 writeRemote보다 먼저 실행됨). 여기서 그대로 던지면 hydrated가
+             * true로 세팅되지 못해, 다음 리렌더/새로고침마다 이 분기가 다시 실행되며
+             * 매번 새로운 "새 여행"을 만들어내는 문제가 생긴다. */
+            console.warn('새 여행 클라우드 저장 실패(로컬에는 저장됨)', e);
+          }
+        } else {
+          console.warn('Free 캡 초과로 새 여행을 클라우드에 저장하지 않음(화면엔만 표시)');
         }
         await refreshTripList(userId);
       }
