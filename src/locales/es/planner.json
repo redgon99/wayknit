@@ -914,5 +914,11 @@
     "pin": "Guardar",
     "pinned": "Guardado",
     "removeAria": "Quitar {{name}} de la lista"
+  },
+  "vote": {
+    "groupAria": "Votos del grupo",
+    "want": "Quiero ir",
+    "hold": "En espera",
+    "failed": "No se pudo guardar tu voto"
   }
 }

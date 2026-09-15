@@ -141,6 +141,13 @@ import {
   pushRecentPlace,
   removeRecentPlace,
 } from '../lib/recentExplore';
+import {
+  listTripVotes,
+  setTripVote,
+  subscribeTripVotes,
+  type PinVote,
+  type VotesByPlace,
+} from '../lib/tripVotes';
 import { isTourFestivalConfigured, searchTourFestivals } from '../lib/tourFestival';
 import { regionPrefixOf } from '../lib/koreaAreaCodes';
 import '../styles/app.css';
@@ -337,6 +344,8 @@ export default function PlannerPage() {
   /** N07 — 검색창이 빌 때 되살려 주는 탐색 흔적. 저장은 lib/recentExplore가 맡는다. */
   const [recentKeywords, setRecentKeywords] = useState<string[]>(() => readRecentKeywords());
   const [recentPlaces, setRecentPlaces] = useState<Place[]>(() => readRecentPlaces());
+  /** N06 — 동행자 투표 집계(placeId → 가고싶음/보류 user id 목록). 협업 중일 때만 채운다. */
+  const [pinVotes, setPinVotes] = useState<VotesByPlace>({});
   const [toast, setToast] = useState<string | null>(null);
   /** N02(모바일 UX 리포트 2026-09-13) — "되돌리기" 같은 실행 가능한 토스트용. 없으면 평소처럼 텍스트만. */
   const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | null>(null);
@@ -2553,6 +2562,60 @@ export default function PlannerPage() {
    */
   const canSeePinAuthors = isTripOwner || Boolean(trip.collaboratorRole);
 
+  /**
+   * N06 — 투표는 **정말 동행자가 있을 때만** 켠다. 소유자 혼자인 여행에서
+   * 나 혼자 표를 던지는 건 의미가 없고 카드만 복잡해진다. 협업자로 들어온
+   * 사람은 그 자체로 동행자가 있다는 뜻이다.
+   */
+  const votesEnabled =
+    Boolean(user?.id) && ((isTripOwner && ownerHasCollaborators) || Boolean(trip.collaboratorRole));
+
+  useEffect(() => {
+    if (!votesEnabled || !trip.id) {
+      setPinVotes({});
+      return;
+    }
+    let alive = true;
+    void listTripVotes(trip.id).then((v) => {
+      if (alive) setPinVotes(v);
+    });
+    const unsubscribe = subscribeTripVotes(trip.id, (v) => {
+      if (alive) setPinVotes(v);
+    });
+    return () => {
+      alive = false;
+      unsubscribe();
+    };
+  }, [votesEnabled, trip.id]);
+
+  /** N06 — 같은 표를 다시 누르면 거둔다(토글). 낙관적으로 먼저 그리고 서버에 쓴다. */
+  const handleVote = useCallback(
+    (placeId: string, vote: PinVote) => {
+      const uid = user?.id;
+      if (!uid || !trip.id) return;
+      const cur = pinVotes[placeId];
+      const mine: PinVote | null = cur?.want.includes(uid)
+        ? 'want'
+        : cur?.hold.includes(uid)
+          ? 'hold'
+          : null;
+      const next: PinVote | null = mine === vote ? null : vote;
+      setPinVotes((prev) => {
+        const t = { want: [...(prev[placeId]?.want ?? [])], hold: [...(prev[placeId]?.hold ?? [])] };
+        t.want = t.want.filter((u) => u !== uid);
+        t.hold = t.hold.filter((u) => u !== uid);
+        if (next) t[next].push(uid);
+        return { ...prev, [placeId]: t };
+      });
+      void setTripVote(trip.id, placeId, uid, next).catch((e) => {
+        console.warn('투표 저장 실패', e);
+        showToast(tp('vote.failed'));
+        void listTripVotes(trip.id).then(setPinVotes);
+      });
+    },
+    [user?.id, trip.id, pinVotes, tp]
+  );
+
   const useMobileChrome = isMobile && !presentationMode;
   const searchExpanded =
     !useMobileChrome &&
@@ -2779,6 +2842,9 @@ export default function PlannerPage() {
                   variant="panel"
                   hideHeader
                   pinAuthors={canSeePinAuthors ? pinAuthors : undefined}
+                  pinVotes={votesEnabled ? pinVotes : undefined}
+                  myUserId={user?.id ?? null}
+                  onVote={votesEnabled ? handleVote : undefined}
                   currentUserEmail={user?.email ?? null}
                   pinned={pinned}
                   tripTitle={trip.title}
@@ -3223,6 +3289,9 @@ export default function PlannerPage() {
                     hideHeader
                     compactToolbar
                     pinAuthors={canSeePinAuthors ? pinAuthors : undefined}
+                    pinVotes={votesEnabled ? pinVotes : undefined}
+                    myUserId={user?.id ?? null}
+                    onVote={votesEnabled ? handleVote : undefined}
                     currentUserEmail={user?.email ?? null}
                     pinned={pinned}
                     tripTitle={trip.title}

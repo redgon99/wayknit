@@ -16660,3 +16660,49 @@ button {
   background: var(--color-bg-secondary);
   color: var(--color-text-secondary);
 }
+
+/* =============================================
+   N06 — 동행자 투표 (핀 카드 메타 줄)
+   ============================================= */
+.chip-votes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chip-vote {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-solid);
+  color: var(--color-text-tertiary);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chip-vote-n {
+  font-variant-numeric: tabular-nums;
+}
+
+.chip-vote.want.active {
+  border-color: #16a34a;
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+.chip-vote.hold.active {
+  border-color: #b45309;
+  background: rgba(180, 83, 9, 0.12);
+  color: #b45309;
+}
+
+/* 모바일 시트에선 터치 목표를 조금 더 키운다 (F08 계열과 같은 판단) */
+.mobile-planner-sheet .chip-vote {
+  min-height: 34px;
+  padding: 0 10px;
+}

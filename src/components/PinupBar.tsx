@@ -28,6 +28,7 @@ import { PinImportMenu } from './PinImportMenu';
 import type { PinImportResult } from '../lib/importPins';
 import { pinAuthorKey } from '../lib/trips';
 import { presenceColor, presenceInitial } from '../lib/tripPresence';
+import type { PinVote, VotesByPlace } from '../lib/tripVotes';
 
 interface Props {
   pinned: PinnedPlace[];
@@ -94,6 +95,14 @@ interface Props {
    */
   materialCountByPlace?: Record<string, number>;
   onOpenPlaceMaterials?: (placeId: string) => void;
+  /**
+   * N06(모바일 UX 리포트 2026-09-13) — 동행자 투표. 협업 중인 여행에서만
+   * 호출부가 넘긴다(혼자 쓰는 여행에서 나 혼자 투표하는 건 의미가 없다).
+   * onVote는 토글 의미 — 같은 표를 다시 누르면 호출부가 거둔다.
+   */
+  pinVotes?: VotesByPlace;
+  myUserId?: string | null;
+  onVote?: (placeId: string, vote: PinVote) => void;
 }
 
 function DroppableGroupChips({
@@ -150,6 +159,9 @@ export function PinupBar({
   hideRouteCta = false,
   materialCountByPlace,
   onOpenPlaceMaterials,
+  pinVotes,
+  myUserId,
+  onVote,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: tc } = useTranslation('common');
@@ -382,6 +394,43 @@ export function PinupBar({
                     {materialCountByPlace[p.id]}
                   </button>
                 )}
+                {/* N06 — 동행자 투표: 가고 싶음 / 보류. 표 수는 있을 때만 숫자로. */}
+                {onVote && (() => {
+                  const tv = pinVotes?.[p.id];
+                  const wantN = tv?.want.length ?? 0;
+                  const holdN = tv?.hold.length ?? 0;
+                  const mine: PinVote | null = !myUserId
+                    ? null
+                    : tv?.want.includes(myUserId)
+                      ? 'want'
+                      : tv?.hold.includes(myUserId)
+                        ? 'hold'
+                        : null;
+                  return (
+                    <span className="chip-votes" role="group" aria-label={t('vote.groupAria')}>
+                      <button
+                        type="button"
+                        className={`chip-vote want ${mine === 'want' ? 'active' : ''}`}
+                        onClick={() => onVote(p.id, 'want')}
+                        aria-pressed={mine === 'want'}
+                        title={t('vote.want')}
+                      >
+                        <Icon name="check" size={11} />
+                        {wantN > 0 && <span className="chip-vote-n">{wantN}</span>}
+                      </button>
+                      <button
+                        type="button"
+                        className={`chip-vote hold ${mine === 'hold' ? 'active' : ''}`}
+                        onClick={() => onVote(p.id, 'hold')}
+                        aria-pressed={mine === 'hold'}
+                        title={t('vote.hold')}
+                      >
+                        <Icon name="clock" size={11} />
+                        {holdN > 0 && <span className="chip-vote-n">{holdN}</span>}
+                      </button>
+                    </span>
+                  );
+                })()}
               </div>
               <div className="chip-meta-right">
                 {onShowTaxiCard && (

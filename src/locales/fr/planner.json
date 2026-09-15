@@ -914,5 +914,11 @@
     "pin": "Épingler",
     "pinned": "Épinglé",
     "removeAria": "Retirer {{name}} de la liste"
+  },
+  "vote": {
+    "groupAria": "Votes du groupe",
+    "want": "Je veux y aller",
+    "hold": "En attente",
+    "failed": "Impossible d'enregistrer votre vote"
   }
 }

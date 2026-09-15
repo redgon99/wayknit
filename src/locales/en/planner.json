@@ -914,5 +914,11 @@
     "pin": "Pin",
     "pinned": "Pinned",
     "removeAria": "Remove {{name}} from list"
+  },
+  "vote": {
+    "groupAria": "Companion votes",
+    "want": "Want to go",
+    "hold": "Hold",
+    "failed": "Couldn't save your vote"
   }
 }

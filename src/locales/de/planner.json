@@ -914,5 +914,11 @@
     "pin": "Merken",
     "pinned": "Gemerkt",
     "removeAria": "{{name}} aus der Liste entfernen"
+  },
+  "vote": {
+    "groupAria": "Abstimmung der Mitreisenden",
+    "want": "Will hin",
+    "hold": "Zurückstellen",
+    "failed": "Stimme konnte nicht gespeichert werden"
   }
 }

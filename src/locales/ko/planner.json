@@ -914,5 +914,11 @@
     "pin": "담기",
     "pinned": "담음",
     "removeAria": "{{name}} 목록에서 제거"
+  },
+  "vote": {
+    "groupAria": "동행자 투표",
+    "want": "가고 싶음",
+    "hold": "보류",
+    "failed": "투표를 저장하지 못했습니다"
   }
 }

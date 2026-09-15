@@ -735,5 +735,11 @@
     "pin": "收藏",
     "pinned": "已收藏",
     "removeAria": "從列表移除{{name}}"
+  },
+  "vote": {
+    "groupAria": "同行者投票",
+    "want": "想去",
+    "hold": "待定",
+    "failed": "無法儲存投票"
   }
 }

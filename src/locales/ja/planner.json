@@ -735,5 +735,11 @@
     "pin": "追加",
     "pinned": "追加済み",
     "removeAria": "{{name}}を一覧から削除"
+  },
+  "vote": {
+    "groupAria": "同行者の投票",
+    "want": "行きたい",
+    "hold": "保留",
+    "failed": "投票を保存できませんでした"
   }
 }
