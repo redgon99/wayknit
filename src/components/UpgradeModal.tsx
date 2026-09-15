@@ -90,11 +90,19 @@ export function UpgradeModal({ open, onClose, plan, userId, onPlanChanged }: Pro
           </span>
           <span className="upgrade-price-note">{t('upgrade.priceNote')}</span>
         </p>
+        {/*
+          2026-09-15 — 기존 4개 중 "클라우드 자동 동기화"·"실경로 동선 무제한"은
+          실제로 코드에 게이트가 없어(canUseCloudSync는 호출부가 없는 죽은 함수,
+          실경로 계산엔 플랜 체크 자체가 없음) 무료 사용자도 이미 누리고 있었다
+          — 없는 혜택을 있다고 광고한 셈이라 뺐다. 실제로 막혀 있는 Google 검색
+          일일 캡(canRunGoogleSearch, 무료 40회)을 대신 넣었다 — 이전엔 게이트만
+          있고 판매 문구가 없었다. features.cloudSync/realRoute 키 자체는
+          관례대로 로케일 파일에 남겨둔다(안 씀).
+        */}
         <ul className="upgrade-features">
           <li>{t('features.unlimitedTrips')}</li>
-          <li>{t('features.cloudSync')}</li>
           <li>{t('features.exportI18n')}</li>
-          <li>{t('features.realRoute')}</li>
+          <li>{t('features.unlimitedSearch')}</li>
         </ul>
         {flow === 'error' && errorMessage && (
           <p className="upgrade-error">{t('checkout.failed', { message: errorMessage })}</p>

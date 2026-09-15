@@ -6,7 +6,7 @@
   },
   "upgrade": {
     "title": "Wayknit Plus",
-    "subtitle": "无限云存储 · 多语言导出 · 实际路线",
+    "subtitle": "无限行程 · 多语言导出 · 无限次Google搜索",
     "cta": "升级到 Plus",
     "manage": "管理订阅",
     "currentPlan": "当前方案：{{plan}}",
@@ -23,7 +23,8 @@
     "unlimitedTrips": "无限行程",
     "cloudSync": "云同步",
     "exportI18n": "按所选语言导出",
-    "realRoute": "无限实际路线"
+    "realRoute": "无限实际路线",
+    "unlimitedSearch": "无限次Google搜索"
   },
   "checkout": {
     "redirecting": "正在打开支付页面…",

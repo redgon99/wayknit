@@ -6,7 +6,7 @@
   },
   "upgrade": {
     "title": "Wayknit Plus",
-    "subtitle": "Nube ilimitada · exportación multilingüe · rutas reales",
+    "subtitle": "Viajes ilimitados · exportación multilingüe · búsquedas de Google ilimitadas",
     "cta": "Pasar a Plus",
     "manage": "Gestionar suscripción",
     "currentPlan": "Plan actual: {{plan}}",
@@ -23,7 +23,8 @@
     "unlimitedTrips": "Viajes ilimitados",
     "cloudSync": "Sincronización en la nube",
     "exportI18n": "Exporta el itinerario en tu idioma",
-    "realRoute": "Rutas por carretera reales ilimitadas"
+    "realRoute": "Rutas por carretera reales ilimitadas",
+    "unlimitedSearch": "Búsquedas de Google ilimitadas"
   },
   "checkout": {
     "redirecting": "Abriendo el pago…",

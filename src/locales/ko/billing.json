@@ -6,7 +6,7 @@
   },
   "upgrade": {
     "title": "여로담 Plus",
-    "subtitle": "클라우드 무제한 · 다국어 일정보내기 · 실경로 동선",
+    "subtitle": "여행 무제한 저장 · 다국어 일정보내기 · Google 검색 무제한",
     "cta": "Plus 업그레이드",
     "manage": "구독 관리",
     "currentPlan": "현재 플랜: {{plan}}",
@@ -23,7 +23,8 @@
     "unlimitedTrips": "무제한 여행 저장",
     "cloudSync": "클라우드 자동 동기화",
     "exportI18n": "선택 언어로 일정보내기",
-    "realRoute": "실경로 동선 무제한"
+    "realRoute": "실경로 동선 무제한",
+    "unlimitedSearch": "Google 검색 무제한"
   },
   "checkout": {
     "processing": "결제를 진행하고 있습니다…",

@@ -6,7 +6,7 @@
   },
   "upgrade": {
     "title": "Wayknit Plus",
-    "subtitle": "無限雲存儲 · 多語言導出 · 實際路線",
+    "subtitle": "無限行程 · 多語言導出 · 無限次Google搜尋",
     "cta": "升級到 Plus",
     "manage": "管理訂閱",
     "currentPlan": "當前方案：{{plan}}",
@@ -23,7 +23,8 @@
     "unlimitedTrips": "無限行程",
     "cloudSync": "雲同步",
     "exportI18n": "按所選語言導出",
-    "realRoute": "無限實際路線"
+    "realRoute": "無限實際路線",
+    "unlimitedSearch": "無限次Google搜尋"
   },
   "checkout": {
     "redirecting": "正在打開支付頁面…",

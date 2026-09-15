@@ -6,7 +6,7 @@
   },
   "upgrade": {
     "title": "Wayknit Plus",
-    "subtitle": "Unbegrenzte Cloud · mehrsprachiger Export · echte Routen",
+    "subtitle": "Unbegrenzte Reisen · mehrsprachiger Export · unbegrenzte Google-Suche",
     "cta": "Auf Plus upgraden",
     "manage": "Abo verwalten",
     "currentPlan": "Aktueller Plan: {{plan}}",
@@ -23,7 +23,8 @@
     "unlimitedTrips": "Unbegrenzte Reisen",
     "cloudSync": "Cloud-Sync",
     "exportI18n": "Reiseplan in Ihrer Sprache exportieren",
-    "realRoute": "Unbegrenzte echte Straßenrouten"
+    "realRoute": "Unbegrenzte echte Straßenrouten",
+    "unlimitedSearch": "Unbegrenzte Google-Suche"
   },
   "checkout": {
     "redirecting": "Zahlung wird geöffnet…",

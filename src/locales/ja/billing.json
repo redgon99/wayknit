@@ -6,7 +6,7 @@
   },
   "upgrade": {
     "title": "Wayknit Plus",
-    "subtitle": "無制限クラウド · 多言語エクスポート · 実ルート",
+    "subtitle": "無制限の旅行保存 · 多言語エクスポート · Google検索無制限",
     "cta": "Plusにアップグレード",
     "manage": "サブスクリプション管理",
     "currentPlan": "現在のプラン: {{plan}}",
@@ -23,7 +23,8 @@
     "unlimitedTrips": "無制限の旅行保存",
     "cloudSync": "クラウド同期",
     "exportI18n": "選択言語でエクスポート",
-    "realRoute": "実ルート無制限"
+    "realRoute": "実ルート無制限",
+    "unlimitedSearch": "Google検索無制限"
   },
   "checkout": {
     "redirecting": "決済ページへ移動します…",
