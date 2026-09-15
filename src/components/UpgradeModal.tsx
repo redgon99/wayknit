@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import type { PlanId } from '../lib/subscription';
-import { isPlusOrTeam, PLUS_MONTHLY_PRICE_KRW } from '../lib/subscription';
+import {
+  isPlusOrTeam,
+  PLUS_MONTHLY_PRICE_KRW,
+  FREE_MAX_TRIPS,
+  FREE_DAILY_GOOGLE_SEARCHES,
+} from '../lib/subscription';
 import { isPortOneConfigured } from '../lib/portone';
 import { startPlusSubscription, cancelPlusSubscription } from '../lib/billing';
 
@@ -91,19 +96,42 @@ export function UpgradeModal({ open, onClose, plan, userId, onPlanChanged }: Pro
           <span className="upgrade-price-note">{t('upgrade.priceNote')}</span>
         </p>
         {/*
-          2026-09-15 — 기존 4개 중 "클라우드 자동 동기화"·"실경로 동선 무제한"은
-          실제로 코드에 게이트가 없어(canUseCloudSync는 호출부가 없는 죽은 함수,
-          실경로 계산엔 플랜 체크 자체가 없음) 무료 사용자도 이미 누리고 있었다
-          — 없는 혜택을 있다고 광고한 셈이라 뺐다. 실제로 막혀 있는 Google 검색
-          일일 캡(canRunGoogleSearch, 무료 40회)을 대신 넣었다 — 이전엔 게이트만
-          있고 판매 문구가 없었다. features.cloudSync/realRoute 키 자체는
-          관례대로 로케일 파일에 남겨둔다(안 씀).
+          2026-09-15 — 불릿 목록("~됨" 나열)이던 것을 Free/Plus 비교표로.
+          사용자가 스크린샷을 보고 "무료버전과 유료버전을 비교하는 표로"
+          요청했다. 행 3개는 §29-43에서 확인한 **실제 게이트 3개**와 정확히
+          일치한다(subscription.ts) — 숫자(3개·40회)는 하드코딩하지 않고
+          FREE_MAX_TRIPS/FREE_DAILY_GOOGLE_SEARCHES를 그대로 읽어, 나중에
+          한도가 바뀌어도 이 표만 따로 안 고쳐도 된다(가격 표시와 같은 원칙,
+          위 F07 주석 참고).
         */}
-        <ul className="upgrade-features">
-          <li>{t('features.unlimitedTrips')}</li>
-          <li>{t('features.exportI18n')}</li>
-          <li>{t('features.unlimitedSearch')}</li>
-        </ul>
+        <table className="upgrade-compare">
+          <thead>
+            <tr>
+              <th scope="col">{t('compare.feature')}</th>
+              <th scope="col">{t('plan.free')}</th>
+              <th scope="col" className="upgrade-compare-plus-col">
+                {t('plan.plus')}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">{t('compare.trips')}</th>
+              <td>{t('compare.tripsFree', { n: FREE_MAX_TRIPS })}</td>
+              <td className="upgrade-compare-plus-col">{t('compare.unlimited')}</td>
+            </tr>
+            <tr>
+              <th scope="row">{t('compare.export')}</th>
+              <td>{t('compare.no')}</td>
+              <td className="upgrade-compare-plus-col">{t('compare.exportPlus')}</td>
+            </tr>
+            <tr>
+              <th scope="row">{t('compare.search')}</th>
+              <td>{t('compare.searchFree', { n: FREE_DAILY_GOOGLE_SEARCHES })}</td>
+              <td className="upgrade-compare-plus-col">{t('compare.unlimited')}</td>
+            </tr>
+          </tbody>
+        </table>
         {flow === 'error' && errorMessage && (
           <p className="upgrade-error">{t('checkout.failed', { message: errorMessage })}</p>
         )}

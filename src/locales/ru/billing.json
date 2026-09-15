@@ -29,5 +29,16 @@
   "checkout": {
     "redirecting": "Открываем оплату…",
     "notConfigured": "Оплата ещё не настроена."
+  },
+  "compare": {
+    "feature": "Функция",
+    "trips": "Сохранённые поездки",
+    "tripsFree": "{{n}}",
+    "export": "Экспорт маршрута",
+    "no": "Недоступно",
+    "exportPlus": "Да (ваш язык)",
+    "search": "Поиск Google",
+    "searchFree": "{{n}}/день",
+    "unlimited": "Без ограничений"
   }
 }

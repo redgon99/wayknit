@@ -29,5 +29,16 @@
   "checkout": {
     "redirecting": "Opening checkout…",
     "notConfigured": "Checkout is not configured yet."
+  },
+  "compare": {
+    "feature": "Feature",
+    "trips": "Saved trips",
+    "tripsFree": "{{n}}",
+    "export": "Export itinerary",
+    "no": "Not available",
+    "exportPlus": "Yes (your language)",
+    "search": "Google search",
+    "searchFree": "{{n}}/day",
+    "unlimited": "Unlimited"
   }
 }

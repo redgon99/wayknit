@@ -29,5 +29,16 @@
   "checkout": {
     "redirecting": "Ouverture du paiement…",
     "notConfigured": "Le paiement n’est pas encore configuré."
+  },
+  "compare": {
+    "feature": "Fonction",
+    "trips": "Voyages enregistrés",
+    "tripsFree": "{{n}}",
+    "export": "Exporter l'itinéraire",
+    "no": "Indisponible",
+    "exportPlus": "Oui (votre langue)",
+    "search": "Recherche Google",
+    "searchFree": "{{n}}/jour",
+    "unlimited": "Illimité"
   }
 }

@@ -6130,6 +6130,49 @@ button {
   color: var(--color-text-secondary);
 }
 
+/* Free/Plus 비교표 — §29-43·이후 불릿 목록을 대체 */
+.upgrade-compare {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 16px;
+  font-size: 12.5px;
+}
+
+.upgrade-compare th,
+.upgrade-compare td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.upgrade-compare thead th {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-tertiary);
+}
+
+.upgrade-compare th[scope='row'] {
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.upgrade-compare td {
+  color: var(--color-text-secondary);
+}
+
+/* Plus 열을 강조 — 왜 돈을 내는지 시선이 바로 그쪽으로 가야 한다 */
+.upgrade-compare-plus-col {
+  background: rgba(250, 204, 21, 0.12);
+  color: var(--color-text-primary) !important;
+  font-weight: 700;
+  border-radius: 6px 6px 0 0;
+}
+
+.upgrade-compare tbody tr:last-child .upgrade-compare-plus-col {
+  border-radius: 0 0 6px 6px;
+}
+
 .upgrade-error {
   font-size: 12px;
   color: var(--color-danger, #e5484d);

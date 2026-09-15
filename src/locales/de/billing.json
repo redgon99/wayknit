@@ -29,5 +29,16 @@
   "checkout": {
     "redirecting": "Zahlung wird geöffnet…",
     "notConfigured": "Die Zahlung ist noch nicht eingerichtet."
+  },
+  "compare": {
+    "feature": "Funktion",
+    "trips": "Gespeicherte Reisen",
+    "tripsFree": "{{n}}",
+    "export": "Route exportieren",
+    "no": "Nicht verfügbar",
+    "exportPlus": "Ja (Ihre Sprache)",
+    "search": "Google-Suche",
+    "searchFree": "{{n}}/Tag",
+    "unlimited": "Unbegrenzt"
   }
 }

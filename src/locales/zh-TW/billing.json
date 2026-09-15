@@ -29,5 +29,16 @@
   "checkout": {
     "redirecting": "正在打開支付頁面…",
     "notConfigured": "支付尚未配置。"
+  },
+  "compare": {
+    "feature": "功能",
+    "trips": "儲存行程數",
+    "tripsFree": "{{n}}個",
+    "export": "匯出行程",
+    "no": "不可用",
+    "exportPlus": "可用(所選語言)",
+    "search": "Google搜尋",
+    "searchFree": "每天{{n}}次",
+    "unlimited": "無限制"
   }
 }

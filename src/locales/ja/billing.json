@@ -29,5 +29,16 @@
   "checkout": {
     "redirecting": "決済ページへ移動します…",
     "notConfigured": "決済はまだ設定されていません。"
+  },
+  "compare": {
+    "feature": "機能",
+    "trips": "旅行の保存",
+    "tripsFree": "{{n}}件",
+    "export": "旅程のエクスポート",
+    "no": "不可",
+    "exportPlus": "可能(選択言語)",
+    "search": "Google検索",
+    "searchFree": "1日{{n}}回",
+    "unlimited": "無制限"
   }
 }
