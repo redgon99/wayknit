@@ -705,6 +705,35 @@
     "textSaved": "文字已儲存。",
     "deleteStorageFailed": "刪除儲存檔案失敗，僅從清單中移除。",
     "deleted": "資料已刪除。",
-    "deletedMany": "已刪除 {{count}} 個資料。"
+    "deletedMany": "已刪除 {{count}} 個資料。",
+    "suggestTitle": "發現訂位資訊",
+    "suggestWithTime": "連結到{{place}} · 固定抵達{{time}}",
+    "suggestLinkOnly": "連結到{{place}}",
+    "suggestBasis": "依據：{{raw}}",
+    "suggestApply": "套用",
+    "suggestDismiss": "忽略",
+    "suggestApplied": "已連結到{{place}}",
+    "suggestAppliedWithTime": "已連結到{{place}}並固定抵達{{time}}"
+  },
+  "alt": {
+    "find": "替代地點",
+    "title": "尋找替代地點",
+    "replacing": "附近同類地點，可代替{{name}}",
+    "searching": "正在搜尋附近…",
+    "empty": "附近沒有找到合適的替代地點",
+    "failed": "無法載入替代地點",
+    "noCategory": "該地點類別不明，無法推薦替代",
+    "replace": "換成這個",
+    "replaced": "已換成{{name}}"
+  },
+  "recent": {
+    "keywords": "最近搜尋",
+    "keywordsAria": "最近搜尋",
+    "places": "最近查看",
+    "placesAria": "最近查看的地點",
+    "clear": "清除",
+    "pin": "收藏",
+    "pinned": "已收藏",
+    "removeAria": "從列表移除{{name}}"
   }
 }

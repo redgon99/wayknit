@@ -60,6 +60,12 @@ interface Props {
   embedded?: boolean;
   /** 최적화 3종 비교 경로 — 지도에 겹쳐 그리도록 상위로 올린다 */
   onCompareRoutesChange?: (routes: RouteComparison[]) => void;
+  /**
+   * N05(모바일 UX 리포트 2026-09-13) — 도착 시각에 영업이 안 하는 장소의 대체
+   * 후보를 찾는다. 검색·교체는 상위(PlannerPage)가 맡고 여기선 버튼만 낸다.
+   * 안 넘기면 버튼이 사라진다(열람 전용 등).
+   */
+  onFindAlternatives?: (stop: PinnedPlace & Partial<RouteStop>) => void;
 }
 
 const OPTIMIZE_KEYS: OptimizeBy[] = ['distance', 'time', 'no-toll'];
@@ -91,6 +97,7 @@ export function RouteOptionsPanel({
   onReorderPins,
   embedded = false,
   onCompareRoutesChange,
+  onFindAlternatives,
 }: Props) {
   const { t, i18n } = useTranslation('planner');
   const travelModeMeta = useTravelModeMeta();
@@ -572,6 +579,16 @@ export function RouteOptionsPanel({
                           opens: p.hoursOpensAt ?? '',
                           closes: p.hoursClosesAt ?? '',
                         })}
+                        {/* N05 — 경고만 띄우고 끝내지 않고, 근처 같은 종류로 바꿀 길을 준다 */}
+                        {onFindAlternatives && (
+                          <button
+                            type="button"
+                            className="route-stay-alt-btn"
+                            onClick={() => onFindAlternatives(p)}
+                          >
+                            {t('alt.find')}
+                          </button>
+                        )}
                       </div>
                     )}
                     {onUpdateNote ? (

@@ -705,6 +705,35 @@
     "textSaved": "テキストを保存しました。",
     "deleteStorageFailed": "保存先のファイル削除に失敗しました。リストからのみ削除します。",
     "deleted": "資料を削除しました。",
-    "deletedMany": "{{count}}件の資料を削除しました。"
+    "deletedMany": "{{count}}件の資料を削除しました。",
+    "suggestTitle": "予約情報が見つかりました",
+    "suggestWithTime": "{{place}}に紐づけ・到着{{time}}に固定",
+    "suggestLinkOnly": "{{place}}に紐づけ",
+    "suggestBasis": "根拠: {{raw}}",
+    "suggestApply": "適用",
+    "suggestDismiss": "無視",
+    "suggestApplied": "{{place}}に紐づけました",
+    "suggestAppliedWithTime": "{{place}}に紐づけ、到着{{time}}に固定しました"
+  },
+  "alt": {
+    "find": "代替候補",
+    "title": "代替の場所を探す",
+    "replacing": "{{name}}の代わりに行ける近くの同じ種類です",
+    "searching": "近くを検索中…",
+    "empty": "近くに適した代替が見つかりませんでした",
+    "failed": "代替候補を読み込めませんでした",
+    "noCategory": "この場所は種類が不明なため候補を出せません",
+    "replace": "これに置き換え",
+    "replaced": "{{name}}に置き換えました"
+  },
+  "recent": {
+    "keywords": "最近の検索",
+    "keywordsAria": "最近の検索",
+    "places": "最近見た場所",
+    "placesAria": "最近見た場所",
+    "clear": "消去",
+    "pin": "追加",
+    "pinned": "追加済み",
+    "removeAria": "{{name}}を一覧から削除"
   }
 }

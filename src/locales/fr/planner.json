@@ -884,6 +884,35 @@
     "textSaved": "Texte enregistré.",
     "deleteStorageFailed": "Échec de la suppression du fichier stocké. Retiré de la liste uniquement.",
     "deleted": "Document supprimé.",
-    "deletedMany": "{{count}} documents supprimés."
+    "deletedMany": "{{count}} documents supprimés.",
+    "suggestTitle": "Informations de réservation détectées",
+    "suggestWithTime": "Lier à {{place}} · arrivée fixée à {{time}}",
+    "suggestLinkOnly": "Lier à {{place}}",
+    "suggestBasis": "Source : {{raw}}",
+    "suggestApply": "Appliquer",
+    "suggestDismiss": "Ignorer",
+    "suggestApplied": "Lié à {{place}}",
+    "suggestAppliedWithTime": "Lié à {{place}}, arrivée fixée à {{time}}"
+  },
+  "alt": {
+    "find": "Alternatives",
+    "title": "Trouver une alternative",
+    "replacing": "Lieux proches du même type à la place de {{name}}",
+    "searching": "Recherche à proximité…",
+    "empty": "Aucune alternative trouvée à proximité",
+    "failed": "Impossible de charger les alternatives",
+    "noCategory": "Ce lieu n'a pas de catégorie connue, impossible de proposer des alternatives",
+    "replace": "Remplacer par celui-ci",
+    "replaced": "Remplacé par {{name}}"
+  },
+  "recent": {
+    "keywords": "Recherches récentes",
+    "keywordsAria": "Recherches récentes",
+    "places": "Vus récemment",
+    "placesAria": "Lieux vus récemment",
+    "clear": "Effacer",
+    "pin": "Épingler",
+    "pinned": "Épinglé",
+    "removeAria": "Retirer {{name}} de la liste"
   }
 }

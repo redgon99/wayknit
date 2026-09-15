@@ -705,6 +705,35 @@
     "textSaved": "文字已保存。",
     "deleteStorageFailed": "删除存储文件失败，仅从列表中移除。",
     "deleted": "资料已删除。",
-    "deletedMany": "已删除 {{count}} 个资料。"
+    "deletedMany": "已删除 {{count}} 个资料。",
+    "suggestTitle": "发现预订信息",
+    "suggestWithTime": "关联到{{place}} · 固定到达{{time}}",
+    "suggestLinkOnly": "关联到{{place}}",
+    "suggestBasis": "依据：{{raw}}",
+    "suggestApply": "应用",
+    "suggestDismiss": "忽略",
+    "suggestApplied": "已关联到{{place}}",
+    "suggestAppliedWithTime": "已关联到{{place}}并固定到达{{time}}"
+  },
+  "alt": {
+    "find": "替代地点",
+    "title": "寻找替代地点",
+    "replacing": "附近同类地点，可代替{{name}}",
+    "searching": "正在搜索附近…",
+    "empty": "附近没有找到合适的替代地点",
+    "failed": "无法加载替代地点",
+    "noCategory": "该地点类别未知，无法推荐替代",
+    "replace": "换成这个",
+    "replaced": "已换成{{name}}"
+  },
+  "recent": {
+    "keywords": "最近搜索",
+    "keywordsAria": "最近搜索",
+    "places": "最近查看",
+    "placesAria": "最近查看的地点",
+    "clear": "清除",
+    "pin": "收藏",
+    "pinned": "已收藏",
+    "removeAria": "从列表移除{{name}}"
   }
 }

@@ -884,6 +884,35 @@
     "textSaved": "텍스트를 저장했습니다.",
     "deleteStorageFailed": "저장소 파일 삭제에 실패했습니다. 목록만 제거합니다.",
     "deleted": "자료를 삭제했습니다.",
-    "deletedMany": "{{count}}개 자료를 삭제했습니다."
+    "deletedMany": "{{count}}개 자료를 삭제했습니다.",
+    "suggestTitle": "예약 정보를 찾았어요",
+    "suggestWithTime": "{{place}}에 연결 · 도착 {{time}} 고정",
+    "suggestLinkOnly": "{{place}}에 연결",
+    "suggestBasis": "근거: {{raw}}",
+    "suggestApply": "적용",
+    "suggestDismiss": "무시",
+    "suggestApplied": "{{place}}에 연결했습니다",
+    "suggestAppliedWithTime": "{{place}}에 연결하고 도착 {{time}}으로 고정했습니다"
+  },
+  "alt": {
+    "find": "대체 장소",
+    "title": "대체 장소 찾기",
+    "replacing": "{{name}} 대신 갈 만한 근처 같은 종류입니다",
+    "searching": "근처를 찾는 중…",
+    "empty": "근처에서 마땅한 대체 장소를 못 찾았어요",
+    "failed": "대체 장소를 불러오지 못했습니다",
+    "noCategory": "이 장소는 종류를 알 수 없어 대체 후보를 찾기 어렵습니다",
+    "replace": "이걸로 교체",
+    "replaced": "{{name}}(으)로 교체했습니다"
+  },
+  "recent": {
+    "keywords": "최근 검색어",
+    "keywordsAria": "최근 검색어",
+    "places": "최근 본 장소",
+    "placesAria": "최근 본 장소",
+    "clear": "지우기",
+    "pin": "담기",
+    "pinned": "담음",
+    "removeAria": "{{name}} 목록에서 제거"
   }
 }

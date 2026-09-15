@@ -884,6 +884,35 @@
     "textSaved": "Texto guardado.",
     "deleteStorageFailed": "No se pudo eliminar el archivo almacenado. Se quitará solo de la lista.",
     "deleted": "Material eliminado.",
-    "deletedMany": "Se eliminaron {{count}} materiales."
+    "deletedMany": "Se eliminaron {{count}} materiales.",
+    "suggestTitle": "Datos de reserva detectados",
+    "suggestWithTime": "Vincular a {{place}} · fijar llegada a las {{time}}",
+    "suggestLinkOnly": "Vincular a {{place}}",
+    "suggestBasis": "Origen: {{raw}}",
+    "suggestApply": "Aplicar",
+    "suggestDismiss": "Descartar",
+    "suggestApplied": "Vinculado a {{place}}",
+    "suggestAppliedWithTime": "Vinculado a {{place}} con llegada fijada a las {{time}}"
+  },
+  "alt": {
+    "find": "Alternativas",
+    "title": "Buscar alternativa",
+    "replacing": "Lugares cercanos del mismo tipo en vez de {{name}}",
+    "searching": "Buscando cerca…",
+    "empty": "No se encontró una alternativa cercana",
+    "failed": "No se pudieron cargar las alternativas",
+    "noCategory": "Este lugar no tiene categoría conocida, no se pueden sugerir alternativas",
+    "replace": "Reemplazar por este",
+    "replaced": "Reemplazado por {{name}}"
+  },
+  "recent": {
+    "keywords": "Búsquedas recientes",
+    "keywordsAria": "Búsquedas recientes",
+    "places": "Vistos recientemente",
+    "placesAria": "Lugares vistos recientemente",
+    "clear": "Borrar",
+    "pin": "Guardar",
+    "pinned": "Guardado",
+    "removeAria": "Quitar {{name}} de la lista"
   }
 }

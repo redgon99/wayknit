@@ -89,6 +89,16 @@ interface Props {
   mapProvider: MapProvider;
   onMapProviderChange: (provider: MapProvider) => void;
   onSearchCandidate?: (query: string) => void;
+  /**
+   * N07(모바일 UX 리포트 2026-09-13) — 검색창이 빌 때 되살리는 탐색 흔적.
+   * 최근 검색어는 탭하면 그 말로 다시 검색, 최근 본 장소는 바로 담을 수 있다.
+   * 저장·갱신은 상위(PlannerPage)가 맡고 여기선 그리기만 한다.
+   */
+  recentKeywords?: string[];
+  onRemoveRecentKeyword?: (keyword: string) => void;
+  onClearRecentKeywords?: () => void;
+  recentPlaces?: Place[];
+  onRemoveRecentPlace?: (placeId: string) => void;
   /** 맛집(FD6) 음식 제약 — trip에 저장 */
   foodRestrictions?: FoodRestriction[];
   onFoodRestrictionsChange?: (next: FoodRestriction[]) => void;
@@ -171,6 +181,11 @@ export function SearchPanel({
   mapProvider,
   onMapProviderChange,
   onSearchCandidate,
+  recentKeywords = [],
+  onRemoveRecentKeyword,
+  onClearRecentKeywords,
+  recentPlaces = [],
+  onRemoveRecentPlace,
   foodRestrictions = [],
   onFoodRestrictionsChange,
   categorySubFilters = [],
@@ -783,7 +798,90 @@ export function SearchPanel({
       )}
 
       {!loading && results.length === 0 && !searchEmpty && !query.trim() && categoryFilter === null && (
-        <div className="search-empty-msg muted">{t('search.emptyHint')}</div>
+        <>
+          <div className="search-empty-msg muted">{t('search.emptyHint')}</div>
+
+          {/* N07 — 최근 검색어: 탭하면 그 말로 다시 검색 */}
+          {recentKeywords.length > 0 && onSearchCandidate && (
+            <section className="recent-block" aria-label={t('recent.keywordsAria')}>
+              <div className="recent-head">
+                <span>{t('recent.keywords')}</span>
+                {onClearRecentKeywords && (
+                  <button type="button" className="recent-clear" onClick={onClearRecentKeywords}>
+                    {t('recent.clear')}
+                  </button>
+                )}
+              </div>
+              <div className="recent-chips">
+                {recentKeywords.map((k) => (
+                  <span key={k} className="recent-chip">
+                    <button
+                      type="button"
+                      className="recent-chip-main"
+                      onClick={() => onSearchCandidate(k)}
+                    >
+                      <Icon name="search" size={12} /> {k}
+                    </button>
+                    {onRemoveRecentKeyword && (
+                      <button
+                        type="button"
+                        className="recent-chip-x"
+                        onClick={() => onRemoveRecentKeyword(k)}
+                        aria-label={t('recent.removeAria', { name: k })}
+                      >
+                        <Icon name="close" size={11} />
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* N07 — 최근 본 장소: 상세를 열어 봤지만 안 담은 곳. 바로 담을 수 있다 */}
+          {recentPlaces.length > 0 && (
+            <section className="recent-block" aria-label={t('recent.placesAria')}>
+              <div className="recent-head">
+                <span>{t('recent.places')}</span>
+              </div>
+              <ul className="recent-place-list">
+                {recentPlaces.map((p) => {
+                  const isPinned = pinnedIds.has(p.id);
+                  return (
+                    <li key={p.id} className="recent-place">
+                      <button
+                        type="button"
+                        className="recent-place-main"
+                        onClick={() => onOpenPlacePhotos?.(p)}
+                      >
+                        <strong>{p.name}</strong>
+                        <span>{[p.categoryLabel, p.roadAddress || p.address].filter(Boolean).join(' · ')}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`recent-place-pin ${isPinned ? 'pinned' : ''}`}
+                        onClick={() => onTogglePin(p)}
+                        aria-pressed={isPinned}
+                      >
+                        {isPinned ? t('recent.pinned') : t('recent.pin')}
+                      </button>
+                      {onRemoveRecentPlace && (
+                        <button
+                          type="button"
+                          className="recent-chip-x"
+                          onClick={() => onRemoveRecentPlace(p.id)}
+                          aria-label={t('recent.removeAria', { name: p.name })}
+                        >
+                          <Icon name="close" size={11} />
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+        </>
       )}
 
       {results.length > 0 && (

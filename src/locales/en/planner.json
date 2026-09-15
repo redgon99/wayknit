@@ -884,6 +884,35 @@
     "textSaved": "Text saved.",
     "deleteStorageFailed": "Failed to delete the stored file. Removing it from the list only.",
     "deleted": "Material deleted.",
-    "deletedMany": "Deleted {{count}} materials."
+    "deletedMany": "Deleted {{count}} materials.",
+    "suggestTitle": "Found reservation details",
+    "suggestWithTime": "Link to {{place}} · fix arrival at {{time}}",
+    "suggestLinkOnly": "Link to {{place}}",
+    "suggestBasis": "From: {{raw}}",
+    "suggestApply": "Apply",
+    "suggestDismiss": "Dismiss",
+    "suggestApplied": "Linked to {{place}}",
+    "suggestAppliedWithTime": "Linked to {{place}} and fixed arrival at {{time}}"
+  },
+  "alt": {
+    "find": "Alternatives",
+    "title": "Find an alternative",
+    "replacing": "Nearby places of the same kind instead of {{name}}",
+    "searching": "Searching nearby…",
+    "empty": "No suitable alternative found nearby",
+    "failed": "Couldn't load alternatives",
+    "noCategory": "This place has no known category, so alternatives can't be suggested",
+    "replace": "Replace with this",
+    "replaced": "Replaced with {{name}}"
+  },
+  "recent": {
+    "keywords": "Recent searches",
+    "keywordsAria": "Recent searches",
+    "places": "Recently viewed",
+    "placesAria": "Recently viewed places",
+    "clear": "Clear",
+    "pin": "Pin",
+    "pinned": "Pinned",
+    "removeAria": "Remove {{name}} from list"
   }
 }

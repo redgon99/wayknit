@@ -884,6 +884,35 @@
     "textSaved": "Text gespeichert.",
     "deleteStorageFailed": "Die gespeicherte Datei konnte nicht gelöscht werden. Wird nur aus der Liste entfernt.",
     "deleted": "Unterlage gelöscht.",
-    "deletedMany": "{{count}} Unterlagen gelöscht."
+    "deletedMany": "{{count}} Unterlagen gelöscht.",
+    "suggestTitle": "Reservierungsdaten gefunden",
+    "suggestWithTime": "Mit {{place}} verknüpfen · Ankunft {{time}} festlegen",
+    "suggestLinkOnly": "Mit {{place}} verknüpfen",
+    "suggestBasis": "Quelle: {{raw}}",
+    "suggestApply": "Übernehmen",
+    "suggestDismiss": "Verwerfen",
+    "suggestApplied": "Mit {{place}} verknüpft",
+    "suggestAppliedWithTime": "Mit {{place}} verknüpft, Ankunft {{time}} festgelegt"
+  },
+  "alt": {
+    "find": "Alternativen",
+    "title": "Alternative finden",
+    "replacing": "Orte derselben Art in der Nähe statt {{name}}",
+    "searching": "Suche in der Nähe…",
+    "empty": "Keine passende Alternative in der Nähe gefunden",
+    "failed": "Alternativen konnten nicht geladen werden",
+    "noCategory": "Dieser Ort hat keine bekannte Kategorie – keine Vorschläge möglich",
+    "replace": "Dadurch ersetzen",
+    "replaced": "Durch {{name}} ersetzt"
+  },
+  "recent": {
+    "keywords": "Letzte Suchen",
+    "keywordsAria": "Letzte Suchen",
+    "places": "Zuletzt angesehen",
+    "placesAria": "Zuletzt angesehene Orte",
+    "clear": "Löschen",
+    "pin": "Merken",
+    "pinned": "Gemerkt",
+    "removeAria": "{{name}} aus der Liste entfernen"
   }
 }

@@ -884,6 +884,35 @@
     "textSaved": "Текст сохранён.",
     "deleteStorageFailed": "Не удалось удалить файл из хранилища. Удалено только из списка.",
     "deleted": "Материал удалён.",
-    "deletedMany": "Удалено материалов: {{count}}."
+    "deletedMany": "Удалено материалов: {{count}}.",
+    "suggestTitle": "Найдены данные брони",
+    "suggestWithTime": "Привязать к {{place}} · прибытие в {{time}}",
+    "suggestLinkOnly": "Привязать к {{place}}",
+    "suggestBasis": "Источник: {{raw}}",
+    "suggestApply": "Применить",
+    "suggestDismiss": "Скрыть",
+    "suggestApplied": "Привязано к {{place}}",
+    "suggestAppliedWithTime": "Привязано к {{place}}, прибытие в {{time}}"
+  },
+  "alt": {
+    "find": "Замена",
+    "title": "Найти замену",
+    "replacing": "Похожие места рядом вместо «{{name}}»",
+    "searching": "Поиск поблизости…",
+    "empty": "Поблизости не нашлось подходящей замены",
+    "failed": "Не удалось загрузить варианты",
+    "noCategory": "У этого места нет категории — подобрать замену нельзя",
+    "replace": "Заменить на это",
+    "replaced": "Заменено на «{{name}}»"
+  },
+  "recent": {
+    "keywords": "Недавние запросы",
+    "keywordsAria": "Недавние запросы",
+    "places": "Недавно просмотренные",
+    "placesAria": "Недавно просмотренные места",
+    "clear": "Очистить",
+    "pin": "Добавить",
+    "pinned": "Добавлено",
+    "removeAria": "Убрать «{{name}}» из списка"
   }
 }

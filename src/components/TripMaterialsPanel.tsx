@@ -14,6 +14,11 @@ import {
 import { MaterialsExportMenu } from './MaterialsExportMenu';
 import { AppSheetModal } from './AppSheetModal';
 import { presenceColor, presenceInitial } from '../lib/tripPresence';
+import {
+  extractReservation,
+  type ReservationPinCandidate,
+  type ReservationSuggestion,
+} from '../lib/reservationExtract';
 import { MaterialsPhotoGallery } from './MaterialsPhotoGallery';
 import {
   albumDisplayTitle,
@@ -60,6 +65,12 @@ interface Props {
    * 찾는다"는 관찰에 맞춘 기본값.
    */
   initialPlaceFilter?: string | null;
+  /**
+   * N04(모바일 UX 리포트 2026-09-13) — 메모에서 찾은 예약 시각을 핀에 고정한다
+   * (`fixedArrival` + `itemKind:'reserved'`). 넘기지 않으면 제안 기능 자체가 꺼진다
+   * (공개 여행 열람처럼 수정 권한이 없는 화면).
+   */
+  onApplyReservation?: (placeId: string, time: string) => void;
 }
 
 function sortMaterials(list: TripMaterial[]): TripMaterial[] {
@@ -98,6 +109,7 @@ export function TripMaterialsPanel({
   materialAuthors,
   currentUserEmail,
   initialPlaceFilter,
+  onApplyReservation,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: tc } = useTranslation('common');
@@ -141,6 +153,50 @@ export function TripMaterialsPanel({
     }
     return out;
   }, [pinnedByDay, totalDays, t]);
+
+  /*
+   * N04 — 메모에서 예약 정보(시각·장소)를 찾아 "연결할까요?"로 제안한다.
+   *
+   * 대상은 **텍스트 메모만**이다. 사진 예약서는 OCR이 필요하고 파일은 이름뿐이라
+   * 근거가 약하다 — 억지로 넓히면 틀린 제안만 늘어난다.
+   */
+  const reservationPins = useMemo((): ReservationPinCandidate[] => {
+    const out: ReservationPinCandidate[] = [];
+    for (let d = 1; d <= totalDays; d++) {
+      for (const p of pinnedByDay[d] ?? []) {
+        out.push({ id: p.id, name: p.name, nameKo: p.nameKo, day: d });
+      }
+    }
+    return out;
+  }, [pinnedByDay, totalDays]);
+
+  /** 이번 세션 동안만 "무시"를 기억한다. 자료 데이터에 필드를 더하면 원격 스키마까지
+   *  건드려야 해서, 되돌리기 쉬운 화면 상태로만 둔다. */
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
+
+  const suggestions = useMemo(() => {
+    if (!onApplyReservation) return [] as Array<{ material: TripMaterial; hint: ReservationSuggestion }>;
+    const pinById = new Map(reservationPins.map((p) => [p.id, p]));
+    const pinObjById = new Map<string, PinnedPlace>();
+    for (let d = 1; d <= totalDays; d++) {
+      for (const p of pinnedByDay[d] ?? []) pinObjById.set(p.id, p);
+    }
+    const out: Array<{ material: TripMaterial; hint: ReservationSuggestion }> = [];
+    for (const m of materials) {
+      if (m.kind !== 'text') continue;
+      if (dismissedSuggestions.has(m.id)) continue;
+      const hint = extractReservation(`${m.title}\n${m.body ?? ''}`, reservationPins);
+      // 장소를 못 찾으면 적용할 대상이 없다(시각은 핀에 붙는 값이다).
+      if (!hint?.placeId || !pinById.has(hint.placeId)) continue;
+      // 이미 그 장소에 연결됐고 시각까지 반영됐으면 제안할 게 없다 —
+      // 적용 후 제안이 저절로 사라지도록 별도 상태 없이 이걸로 판단한다.
+      const needLink = m.pinnedPlaceId !== hint.placeId;
+      const needTime = !!hint.time && pinObjById.get(hint.placeId)?.fixedArrival !== hint.time;
+      if (!needLink && !needTime) continue;
+      out.push({ material: m, hint });
+    }
+    return out;
+  }, [materials, reservationPins, pinnedByDay, totalDays, dismissedSuggestions, onApplyReservation]);
 
   const filtered = useMemo(() => {
     return sortMaterials(materials).filter((m) => {
@@ -378,6 +434,26 @@ export function TripMaterialsPanel({
       });
     },
     [patchAlbum, pinOptions]
+  );
+
+  /** N04 — 제안 적용: 자료를 그 장소에 연결하고(기존 경로 재사용), 시각이 있으면 핀에 고정 */
+  const handleApplySuggestion = useCallback(
+    (materialId: string, hint: ReservationSuggestion) => {
+      if (!hint.placeId) return;
+      const pin = pinOptions.find((p) => p.id === hint.placeId);
+      patchOne(materialId, {
+        pinnedPlaceId: hint.placeId,
+        pinnedPlaceName: hint.placeName,
+        day: pin?.day ?? hint.placeDay,
+      });
+      if (hint.time) onApplyReservation?.(hint.placeId, hint.time);
+      onNotify(
+        hint.time
+          ? t('materials.suggestAppliedWithTime', { place: hint.placeName, time: hint.time })
+          : t('materials.suggestApplied', { place: hint.placeName })
+      );
+    },
+    [patchOne, pinOptions, onApplyReservation, onNotify, t]
   );
 
   const handlePlaceLink = useCallback(
@@ -634,6 +710,51 @@ export function TripMaterialsPanel({
         </div>
 
         <div className="materials-panel-body">
+          {suggestions.length > 0 && (
+            <section className="materials-suggest" aria-label={t('materials.suggestTitle')}>
+              <div className="materials-suggest-head">
+                <Icon name="sparkles" size={14} />
+                {t('materials.suggestTitle')}
+              </div>
+              {suggestions.map(({ material, hint }) => (
+                <div key={material.id} className="materials-suggest-row">
+                  <div className="materials-suggest-text">
+                    <strong>{material.title}</strong>
+                    <span>
+                      {hint.time
+                        ? t('materials.suggestWithTime', { place: hint.placeName, time: hint.time })
+                        : t('materials.suggestLinkOnly', { place: hint.placeName })}
+                    </span>
+                    {(hint.timeRaw || hint.dateRaw) && (
+                      <span className="materials-suggest-basis">
+                        {t('materials.suggestBasis', {
+                          raw: [hint.dateRaw, hint.timeRaw].filter(Boolean).join(' · '),
+                        })}
+                      </span>
+                    )}
+                  </div>
+                  <div className="materials-suggest-actions">
+                    <button
+                      type="button"
+                      className="materials-suggest-apply"
+                      onClick={() => handleApplySuggestion(material.id, hint)}
+                    >
+                      {t('materials.suggestApply')}
+                    </button>
+                    <button
+                      type="button"
+                      className="materials-suggest-dismiss"
+                      onClick={() =>
+                        setDismissedSuggestions((prev) => new Set(prev).add(material.id))
+                      }
+                    >
+                      {t('materials.suggestDismiss')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
           {displayItems.length === 0 ? (
             <p className="materials-empty">
               {materials.length === 0

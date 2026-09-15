@@ -6,6 +6,7 @@ import type {
   Place,
   PinnedPlace,
   RouteOptions,
+  RouteStop,
   GeneratedRoute,
   Origin,
   SearchScope,
@@ -59,7 +60,11 @@ import { consumeShareHandoff } from '../lib/shareTarget';
 import { isValidHHMM } from '../lib/timeOfDay';
 import { fetchLegs } from '../lib/mobility';
 import { resolveOriginForRoute } from '../lib/resolveOrigin';
-import { suggestStayMinutes, CATEGORY_MAP } from '../lib/categories';
+import {
+  suggestStayMinutes,
+  CATEGORY_MAP,
+  DEFAULT_CODE_BY_SIMPLE_CATEGORY,
+} from '../lib/categories';
 import { currentBubblePinRect, flyPinToTab } from '../lib/pinFlyAnimation';
 import { COMPARE_COLORS, type RouteComparison } from '../lib/routeCompare';
 import {
@@ -127,6 +132,15 @@ import { TRIP_THEMES } from '../lib/themes';
 import { splitSearchQueries } from '../lib/searchQueries';
 import { filterPlacesBySubFilters, type SearchSubFilterId } from '../lib/searchSubFilters';
 import { isTourApiConfigured, searchTourPlaces, searchTourPlacesNearby } from '../lib/tourApi';
+import {
+  readRecentKeywords,
+  pushRecentKeyword,
+  removeRecentKeyword,
+  clearRecentKeywords,
+  readRecentPlaces,
+  pushRecentPlace,
+  removeRecentPlace,
+} from '../lib/recentExplore';
 import { isTourFestivalConfigured, searchTourFestivals } from '../lib/tourFestival';
 import { regionPrefixOf } from '../lib/koreaAreaCodes';
 import '../styles/app.css';
@@ -312,6 +326,17 @@ export default function PlannerPage() {
   const [photosTarget, setPhotosTarget] = useState<Place | null>(null);
   /** N03 — 마지막 클라우드 저장이 실패했는지(오프라인 등). 저장 상태 표시를 사실대로 낮추는 데 쓴다. */
   const [cloudSaveFailed, setCloudSaveFailed] = useState(false);
+  /**
+   * N05(모바일 UX 리포트 2026-09-13) — 도착 시각에 문 닫는 장소의 대체 후보.
+   * `target`은 바꿀 대상 핀, `places`는 근처 같은 종류 후보다.
+   */
+  const [altTarget, setAltTarget] = useState<(PinnedPlace & Partial<RouteStop>) | null>(null);
+  const [altPlaces, setAltPlaces] = useState<Place[]>([]);
+  const [altLoading, setAltLoading] = useState(false);
+  const [altError, setAltError] = useState<string | null>(null);
+  /** N07 — 검색창이 빌 때 되살려 주는 탐색 흔적. 저장은 lib/recentExplore가 맡는다. */
+  const [recentKeywords, setRecentKeywords] = useState<string[]>(() => readRecentKeywords());
+  const [recentPlaces, setRecentPlaces] = useState<Place[]>(() => readRecentPlaces());
   const [toast, setToast] = useState<string | null>(null);
   /** N02(모바일 UX 리포트 2026-09-13) — "되돌리기" 같은 실행 가능한 토스트용. 없으면 평소처럼 텍스트만. */
   const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | null>(null);
@@ -1011,6 +1036,10 @@ export default function PlannerPage() {
           distance: Math.round(haversineMeters(searchCenter, place)),
         }));
         setResults((prev) => (append ? [...prev, ...withDistance] : withDistance));
+        // N07 — 결과가 실제로 나온 키워드만 기억한다(빈 결과·카테고리 브라우징 제외)
+        if (!append && keyword && withDistance.length > 0) {
+          setRecentKeywords(pushRecentKeyword(keyword));
+        }
         if (mapProvider === 'google') recordGoogleSearch(plan, isAdmin);
         setSearchPage(page);
         setSearchHasMore(hasMore);
@@ -1369,6 +1398,11 @@ export default function PlannerPage() {
 
   const handleOpenPlacePhotos = useCallback((place: Place) => {
     setPhotosTarget(place);
+    /* N07 — 담지 않은 장소만 "최근 본 장소"로. 담은 건 핀 목록에 이미 있다.
+     * 의존성에 핀 목록을 넣으면 핀이 바뀔 때마다 이 콜백이 새로 만들어져
+     * 지도 쪽 memo가 흔들리므로 ref로 읽는다. */
+    const pinnedNow = tripRef.current.pinnedByDay[tripRef.current.currentDay] ?? [];
+    if (!pinnedNow.some((p) => p.id === place.id)) setRecentPlaces(pushRecentPlace(place));
     /* 상세를 지도 옆에 띄우므로(가리지 않으므로) 그 장소를 지도에서도 바로
      * 짚어준다. 이미 충분히 확대돼 있으면 축척을 건드리지 않는다 — 사용자가
      * 맞춰둔 화면을 상세를 열 때마다 되돌리면 성가시다. levelTick은 같은
@@ -1732,6 +1766,139 @@ export default function PlannerPage() {
       });
     },
     [currentDay]
+  );
+
+  /**
+   * N04(모바일 UX 리포트 2026-09-13) — 자료(메모)에서 찾은 예약 시각을 핀에 고정한다.
+   *
+   * `handleUpdateFixedArrival`은 **현재 일차만** 훑는다. 자료는 다른 일차의 장소에도
+   * 연결되므로 여기서는 전체 일차를 훑는다. 예약은 시간이 움직이면 안 되는 약속이라
+   * `itemKind: 'reserved'`까지 같이 세워 동선 재계산의 하드 앵커가 되게 한다.
+   */
+  const handleApplyReservationToPin = useCallback((placeId: string, time: string) => {
+    if (!isValidHHMM(time)) return;
+    setTrip((prev) => {
+      const nextByDay: typeof prev.pinnedByDay = {};
+      let changed = false;
+      for (const [dayKey, list] of Object.entries(prev.pinnedByDay)) {
+        nextByDay[Number(dayKey)] = list.map((p) => {
+          if (p.id !== placeId) return p;
+          changed = true;
+          return { ...p, fixedArrival: time, itemKind: 'reserved' as const };
+        });
+      }
+      if (!changed) return prev;
+      return { ...prev, pinnedByDay: nextByDay, updatedAt: Date.now() };
+    });
+  }, []);
+
+  /**
+   * N05 — 도착 시각에 영업이 안 하는 장소의 **근처 같은 종류** 후보를 찾는다.
+   *
+   * 리포트는 "비·휴무·지연 시 실내/유사 장소"를 말하지만 이 앱엔 **날씨 연동이
+   * 없다** — 날씨로 트리거하려면 외부 API를 새로 붙여야 하고, 그건 별도 결정이다.
+   * 대신 **이미 판정하고 있는 영업시간 문제**(`hoursStatus`)에 붙였다. 경고만
+   * 띄우고 아무 대안도 주지 않던 자리라 효과가 가장 직접적이다.
+   */
+  const handleFindAlternatives = useCallback(
+    async (stop: PinnedPlace & Partial<RouteStop>) => {
+      setAltTarget(stop);
+      setAltPlaces([]);
+      setAltError(null);
+      setAltLoading(true);
+      try {
+        // 'OTHER'면 카테고리 검색이 안 되므로 단순 분류로 한 번 더 내려본다
+        const code =
+          stop.categoryCode && stop.categoryCode !== 'OTHER'
+            ? stop.categoryCode
+            : DEFAULT_CODE_BY_SIMPLE_CATEGORY[stop.category];
+        if (!code || code === 'OTHER') {
+          setAltError(tp('alt.noCategory'));
+          return;
+        }
+        const center = { lat: stop.lat, lng: stop.lng };
+        const result =
+          mapProvider === 'google'
+            ? await searchPlacesUnifiedWithGoogle({
+                categoryGroupCode: code,
+                center,
+                radiusMeters: 1500,
+                scope: 'nearby',
+                size: 15,
+                page: 1,
+              })
+            : await searchPlacesUnified({
+                categoryGroupCode: code,
+                center,
+                radiusMeters: 1500,
+                scope: 'nearby',
+                size: 15,
+                page: 1,
+              });
+        /*
+         * 이미 담은 장소를 후보로 다시 내밀면 안 된다. 그런데 **id만으로는 못 거른다** —
+         * 지도 제공자가 구글이면 검색 결과 id가 구글 것(`g:ChIJ…`)이라, 카카오로 담아 둔
+         * 같은 가게(`10306183`)와 값이 다르다. 실제로 "도미노피자 원주점"이 두 번 담기는
+         * 것을 검증에서 확인했다. 그래서 id·이름·좌표(약 50m) 셋 중 하나라도 겹치면 뺀다.
+         */
+        const pinned = trip.pinnedByDay[currentDay] ?? [];
+        const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+        const isAlreadyPinned = (p: Place) =>
+          pinned.some(
+            (q) =>
+              q.id === p.id ||
+              norm(q.nameKo ?? q.name) === norm(p.nameKo ?? p.name) ||
+              haversineMeters({ lat: q.lat, lng: q.lng }, { lat: p.lat, lng: p.lng }) < 50
+          );
+        const candidates = result.places
+          .filter((p) => p.id !== stop.id && !isAlreadyPinned(p))
+          .slice(0, 3);
+        setAltPlaces(candidates);
+        if (candidates.length === 0) setAltError(tp('alt.empty'));
+      } catch (e) {
+        console.warn('대체 장소 검색 실패', e);
+        setAltError(tp('alt.failed'));
+      } finally {
+        setAltLoading(false);
+      }
+    },
+    [mapProvider, trip.pinnedByDay, currentDay, tp]
+  );
+
+  /** N05 — 같은 자리(순서·체류시간·필수여부 유지)에 다른 장소를 끼워 넣는다 */
+  const handleReplacePin = useCallback(
+    (oldPlaceId: string, next: Place) => {
+      if (trip.collaboratorRole === 'viewer') {
+        showToast(ts('collab.readOnlyBanner'));
+        return;
+      }
+      setTrip((prev) => {
+        const list = prev.pinnedByDay[currentDay] ?? [];
+        const idx = list.findIndex((p) => p.id === oldPlaceId);
+        if (idx < 0) return prev;
+        const old = list[idx];
+        const replaced: PinnedPlace = {
+          ...next,
+          day: currentDay,
+          pinnedAt: Date.now(),
+          order: old.order,
+          // 같은 종류라 머무는 시간은 대체로 비슷하다 — 사용자가 맞춰 둔 값을 살린다.
+          stayMinutes: old.stayMinutes,
+          required: old.required,
+        };
+        const nextList = [...list];
+        nextList[idx] = replaced;
+        return {
+          ...prev,
+          pinnedByDay: { ...prev.pinnedByDay, [currentDay]: nextList },
+          updatedAt: Date.now(),
+        };
+      });
+      setAltTarget(null);
+      setAltPlaces([]);
+      showToast(tp('alt.replaced', { name: next.name }));
+    },
+    [currentDay, trip.collaboratorRole, ts, tp]
   );
 
   /** 상세를 열어 확인한 영업시간을 핀에 저장 — 일정 검증에 쓰인다 */
@@ -2593,6 +2760,11 @@ export default function PlannerPage() {
                 mapProvider={mapProvider}
                 onMapProviderChange={handleMapProviderChange}
                 onSearchCandidate={handleSearchCandidate}
+                recentKeywords={recentKeywords}
+                onRemoveRecentKeyword={(k) => setRecentKeywords(removeRecentKeyword(k))}
+                onClearRecentKeywords={() => setRecentKeywords(clearRecentKeywords())}
+                recentPlaces={recentPlaces}
+                onRemoveRecentPlace={(id) => setRecentPlaces(removeRecentPlace(id))}
                 initialExtract={sharedExtract}
                 foodRestrictions={trip.foodRestrictions ?? []}
                 onFoodRestrictionsChange={handleFoodRestrictionsChange}
@@ -2642,6 +2814,7 @@ export default function PlannerPage() {
                 embedded
                 open
                 onCompareRoutesChange={setCompareRoutes}
+                onFindAlternatives={isReadOnlyViewer ? undefined : handleFindAlternatives}
                 pinned={routePins}
                 currentDay={currentDay}
                 totalDays={trip.totalDays}
@@ -3013,6 +3186,11 @@ export default function PlannerPage() {
                   mapProvider={mapProvider}
                   onMapProviderChange={handleMapProviderChange}
                   onSearchCandidate={handleSearchCandidate}
+                  recentKeywords={recentKeywords}
+                  onRemoveRecentKeyword={(k) => setRecentKeywords(removeRecentKeyword(k))}
+                  onClearRecentKeywords={() => setRecentKeywords(clearRecentKeywords())}
+                  recentPlaces={recentPlaces}
+                  onRemoveRecentPlace={(id) => setRecentPlaces(removeRecentPlace(id))}
                   initialExtract={sharedExtract}
                   foodRestrictions={trip.foodRestrictions ?? []}
                   onFoodRestrictionsChange={handleFoodRestrictionsChange}
@@ -3084,6 +3262,7 @@ export default function PlannerPage() {
                     embedded
                     open
                     onCompareRoutesChange={setCompareRoutes}
+                    onFindAlternatives={isReadOnlyViewer ? undefined : handleFindAlternatives}
                     pinned={routePins}
                     currentDay={currentDay}
                     totalDays={trip.totalDays}
@@ -3191,7 +3370,57 @@ export default function PlannerPage() {
         materialAuthors={canSeePinAuthors ? materialAuthors : undefined}
         currentUserEmail={user?.email ?? null}
         initialPlaceFilter={materialsPlaceFilter}
+        /* 열람 전용(viewer)에게는 제안 자체를 띄우지 않는다 — 적용하면 핀을 고치게 된다 */
+        onApplyReservation={isReadOnlyViewer ? undefined : handleApplyReservationToPin}
       />
+
+      {/* N05 — 도착 시각에 문 닫는 장소의 대체 후보 */}
+      <AppSheetModal
+        open={!!altTarget}
+        title={tp('alt.title')}
+        onClose={() => {
+          setAltTarget(null);
+          setAltPlaces([]);
+          setAltError(null);
+        }}
+      >
+        {altTarget && (
+          <div className="alt-sheet">
+            <p className="alt-reason">
+              {tp(`route.hours.${altTarget.hoursStatus ?? 'closed'}`, {
+                opens: altTarget.hoursOpensAt ?? '',
+                closes: altTarget.hoursClosesAt ?? '',
+              })}
+            </p>
+            <p className="alt-target">{tp('alt.replacing', { name: altTarget.name })}</p>
+            {altLoading && (
+              <p className="alt-status">
+                <Icon name="loader" spin size={14} /> {tp('alt.searching')}
+              </p>
+            )}
+            {altError && <p className="alt-status alt-status-error">{altError}</p>}
+            <ul className="alt-list">
+              {altPlaces.map((p) => (
+                <li key={p.id} className="alt-item">
+                  <div className="alt-item-text">
+                    <strong>{p.name}</strong>
+                    <span>
+                      {[p.categoryLabel, p.roadAddress || p.address].filter(Boolean).join(' · ')}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="alt-item-btn"
+                    onClick={() => handleReplacePin(altTarget.id, p)}
+                  >
+                    {tp('alt.replace')}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </AppSheetModal>
 
       {pickingOriginFromMap && (
         <div className="picking-toast">
