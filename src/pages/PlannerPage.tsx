@@ -911,7 +911,7 @@ export default function PlannerPage() {
         mapProvider === 'google' ? googleReady : kakaoReady;
       if (!providerReady || !canSearch) return;
 
-      if (mapProvider === 'google' && !canRunGoogleSearch(plan, isAdmin)) {
+      if (mapProvider === 'google' && !(await canRunGoogleSearch(plan, isAdmin, user?.id))) {
         showToast(tb('limits.searchCap'));
         setUpgradeOpen(true);
         return;
@@ -958,7 +958,7 @@ export default function PlannerPage() {
               });
             }
           }
-          if (mapProvider === 'google') recordGoogleSearch(plan, isAdmin);
+          if (mapProvider === 'google') void recordGoogleSearch(plan, isAdmin, user?.id);
           if (isTourApiConfigured()) {
             const tourNearby = await searchTourPlacesNearby(searchCenter, radius);
             for (const place of tourNearby) {
@@ -1028,7 +1028,7 @@ export default function PlannerPage() {
               });
             }
           }
-          if (mapProvider === 'google') recordGoogleSearch(plan, isAdmin);
+          if (mapProvider === 'google') void recordGoogleSearch(plan, isAdmin, user?.id);
           setResults(merged);
           setSearchPage(1);
           setSearchHasMore(false);
@@ -1081,7 +1081,7 @@ export default function PlannerPage() {
         if (!append && keyword && withDistance.length > 0) {
           setRecentKeywords(pushRecentKeyword(keyword));
         }
-        if (mapProvider === 'google') recordGoogleSearch(plan, isAdmin);
+        if (mapProvider === 'google') void recordGoogleSearch(plan, isAdmin, user?.id);
         setSearchPage(page);
         setSearchHasMore(hasMore);
         if (!append) {

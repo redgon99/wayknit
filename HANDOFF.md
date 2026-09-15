@@ -5802,6 +5802,59 @@ Edge Function/집계 테이블이 필요한 더 큰 작업).
 `npm run build` 클린. DB 변경 없음(§30-1·§30-2와 달리 코드만).
 
 
+### 30-4. ✅ Google 검색 캡 — 로그인 사용자만 서버로 이관 (2026-09-15)
+
+§30-1에서 남겨둔 마지막 후보. 수익화 계획서 Tier 2에 있던 "localStorage
+→ 서버 집계" 이관을 실행했다.
+
+**먼저 범위를 분명히 함 — 이건 비용 방어가 아니다:** Google Maps SDK는
+API 키를 브라우저에 그대로 노출해 client→Google로 직접 호출한다
+(`googleMaps.ts`). 개발자도구로 키를 뽑아 우리 앱 없이 Google을 직접
+두드리면 이 서버 캡도 완전히 우회된다 — 진짜 비용 방어는 Google Cloud
+Console의 키 제한(HTTP 리퍼러+일일 쿼터)이고 이 저장소 밖의 설정이라
+여기서 손댈 수 없다(사용자가 GCP 콘솔에서 확인해야 함, 미확인 상태).
+이 작업이 실제로 막는 건 "로그인한 Free 사용자가 우리 앱의 평범한
+사용 흐름에서 하루 40회를 못 넘게" 뿐이다.
+
+**게스트는 그대로 localStorage:** 서버로 추적하려면 `auth.uid()`가
+있어야 하는데 비로그인 사용자는 계정이 없다. 로그인 사용자만 서버로
+옮기고, 게스트는 기존 localStorage 캡을 그대로 쓴다
+(`canRunGoogleSearchLocal`/`recordGoogleSearchLocal`로 이름만 내부
+함수로 분리).
+
+**서버 설계 (`google_search_usage` 테이블 + RPC 2개):**
+- `billing_customers`/`billing_events`와 같은 패턴 — 테이블에 클라이언트
+  접근 정책을 아예 안 만든다. 읽기·쓰기 전부 SECURITY DEFINER 함수로만.
+- `can_run_google_search()` — 오늘 카운트 < 40이면 true (무제한 플랜은
+  `has_unlimited_access()`로 바로 true, §30-2에서 만든 함수 재사용)
+- `record_google_search()` — `on conflict do update set count = count+1`로
+  원자적 증가
+
+**클라이언트 변경:** `canRunGoogleSearch`/`recordGoogleSearch`가 동기 →
+비동기로 바뀌어 `userId` 인자를 받는다. 로그인 상태면 RPC, 아니면(또는
+서버 조회 실패 시) 로컬 폴백. `PlannerPage.tsx`의 호출부 4곳을
+`await`/`void`로 수정. `tsc --noEmit`·`npm run build` 클린.
+
+**적용:** 이번엔 MCP `apply_migration`이 분류기에 안 막히고 바로 적용됨
+(§30-2의 트리거 신설과 달리 — 정확한 차단 기준은 여전히 불명).
+
+**검증(mock 계정 `user11@mail.com` 실세션, REST API 직접 호출):**
+| 시나리오 | 기대 | 결과 |
+|---|---|---|
+| 0회 상태에서 조회 | true | ✅ |
+| 기록 1회 | count=1 | ✅ |
+| 39→40회 기록 | 성공 | ✅ |
+| 40회 찬 상태에서 조회 | false | ✅ |
+| 사용자가 직접 테이블 UPDATE로 리셋 시도 | 막힘(no-op) | ✅ DB에서 40 그대로 확인 |
+| 사용자가 직접 테이블 SELECT 시도 | 빈 배열(읽기 정책 없음) | ✅ |
+
+테스트로 만든 행은 삭제해 정리 완료.
+
+**남은 것:** Google Cloud Console에서 API 키에 HTTP 리퍼러 제한·일일
+쿼터가 실제로 걸려 있는지는 이 세션에서 확인할 수단이 없다 — 진짜
+비용 방어를 원하면 사용자가 GCP 콘솔에서 직접 확인/설정해야 한다.
+
+
 ---
 
 ## ▶ 다음 세션 시작점 (2026-09-15 기준, 갱신)
@@ -5824,6 +5877,7 @@ Auto Mode 분류기에 막혀서). 실계정으로 4개 시나리오 전부 검�
 5. §30-1 profiles RLS 마이그레이션 파일(DB는 이미 반영됨)
 6. §30-2 여행/자료 캡 서버 트리거 마이그레이션 파일(DB는 이미 반영됨)
 7. §30-3 죽은 코드 정리(canUseCloudSync·billing.json 미사용 키)
+8. §30-4 Google 검색 캡 서버 이관 마이그레이션 파일(DB는 이미 반영됨)
 
 **Auto Mode 분류기 관련 메모:** DB에 트리거·함수를 새로 만드는 것처럼
 "쓰기 범위가 큰" 마이그레이션은 MCP `apply_migration`/`execute_sql`
@@ -5831,13 +5885,16 @@ UPDATE가 세션 내 승인과 무관하게 차단된다(§30-1은 통과, §30-
 막힘 — 정확한 기준은 불명). 막히면 Supabase 대시보드 SQL Editor로
 직접 실행하는 게 가장 빠르다.
 
-**다음에 다시 요청하면 진행할 것(§30-1에서 함께 찾음):**
-- Google 검색 캡 localStorage → 서버 이관(Edge Function/집계 테이블 필요,
-  더 큰 작업 — 아직 안 함)
+**§30-1에서 나온 4개 후보 전부 처리됨** — RLS 구멍(§30-1)·서버 백스톱
+(§30-2)·죽은 코드 정리(§30-3)·Google 검색 캡 서버 이관(§30-4).
+
+**남은 것(§30-4에서 새로 발견):**
+- Google Cloud Console에서 Maps API 키에 HTTP 리퍼러 제한·일일 쿼터가
+  실제로 걸려 있는지 미확인 — 이건 저장소 밖 설정이라 사용자가 직접
+  GCP 콘솔에서 확인해야 한다. 진짜 비용 방어는 이쪽이지, 서버 캡이
+  아니다(§30-4 본문 참고).
 - 내보내기·자료 오프라인 저장의 서버 백스톱은 자연스러운 DB 쓰기
   지점이 없어 보류(§30-2 말미 참고)
-- 죽은 코드 정리(`canUseCloudSync()`·billing.json 미사용 키)는
-  §30-3에서 완료됨
 
 **그 다음 대기 중(더 이전부터):**
 - Tailscale 개발서버 인증서 2026-12-08 만료 — 자동 갱신 여부 미답변
