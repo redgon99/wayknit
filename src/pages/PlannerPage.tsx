@@ -3479,6 +3479,9 @@ export default function PlannerPage() {
         userId={user?.id ?? null}
         authConfigured={authConfigured}
         onNotify={showToast}
+        plan={plan}
+        isAdmin={isAdmin}
+        onUpgradeRequest={() => setUpgradeOpen(true)}
         /* 핀 작성자 배지와 같은 게이트 — 공개 여행 열람자에게 협업자 이메일이
            보이면 안 된다(§14-2). presenceEnabled 를 쓰면 안 되는 이유도 같다. */
         materialAuthors={canSeePinAuthors ? materialAuthors : undefined}

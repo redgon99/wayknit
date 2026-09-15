@@ -2,6 +2,19 @@ import { Icon } from './Icon';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { PinnedPlace, TripMaterial, TripMaterialKind } from '../types';
+import type { PlanId } from '../lib/subscription';
+import {
+  canAddTripMaterial,
+  FREE_MAX_TRIP_MATERIALS,
+  canUseOfflineMaterials,
+} from '../lib/subscription';
+import {
+  isMaterialOffline,
+  saveMaterialOffline,
+  removeMaterialOffline,
+  getOfflineMaterialObjectUrl,
+  pruneOfflineMaterials,
+} from '../lib/offlineMaterials';
 import {
   createMaterialId,
   formatByteSize,
@@ -51,6 +64,10 @@ interface Props {
   userId: string | null;
   authConfigured: boolean;
   onNotify: (message: string) => void;
+  plan: PlanId;
+  isAdmin: boolean;
+  /** F07과 같은 패턴 — Free가 막힌 기능을 누르면 요금제 안내를 띄운다 */
+  onUpgradeRequest: () => void;
   /**
    * 자료 id → 올린 사람 이메일. 공유받은 자료에 작성자 배지를 달 때만 쓴다.
    * 볼 자격이 없는 화면(공개 여행 열람)에서는 넘기지 않는다 — §14-2 와 같은 판단.
@@ -106,6 +123,9 @@ export function TripMaterialsPanel({
   userId,
   authConfigured,
   onNotify,
+  plan,
+  isAdmin,
+  onUpgradeRequest,
   materialAuthors,
   currentUserEmail,
   initialPlaceFilter,
@@ -113,6 +133,7 @@ export function TripMaterialsPanel({
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: tc } = useTranslation('common');
+  const { t: tb } = useTranslation('billing');
   const [kindFilter, setKindFilter] = useState<KindFilter>('all');
   const [dayFilter, setDayFilter] = useState<number | null>(null);
   const [placeFilter, setPlaceFilter] = useState<string | null>(null);
@@ -136,6 +157,8 @@ export function TripMaterialsPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialPlaceFilter]);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [offlineIds, setOfflineIds] = useState<Set<string>>(new Set());
+  const [offlineBusy, setOfflineBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [draftText, setDraftText] = useState('');
@@ -246,16 +269,47 @@ export function TripMaterialsPanel({
 
     (async () => {
       const next: Record<string, string> = {};
+      const offline = new Set<string>();
       for (const { id, path } of paths) {
-        const url = await getMaterialSignedUrl(path);
-        if (url) next[id] = url;
+        const cached = await isMaterialOffline(id).catch(() => false);
+        if (cached) offline.add(id);
+        /*
+         * 오프라인일 땐 sb.storage.createSignedUrl()이 예외를 던질 수 있다
+         * (네트워크 자체가 없음). try/catch 없이 두면 for 루프가 그 자리에서
+         * 멈춰 그 뒤 자료들의 서명 URL까지 통째로 못 받아온다 — 오프라인
+         * 저장 기능을 붙이면서 겸사겸사 고친다.
+         */
+        let url: string | null = null;
+        try {
+          url = await getMaterialSignedUrl(path);
+        } catch {
+          url = null;
+        }
+        if (url) {
+          next[id] = url;
+        } else if (cached) {
+          const offlineUrl = await getOfflineMaterialObjectUrl(id).catch(() => null);
+          if (offlineUrl) next[id] = offlineUrl;
+        }
       }
-      if (!cancelled) setSignedUrls((prev) => ({ ...prev, ...next }));
+      if (!cancelled) {
+        setSignedUrls((prev) => ({ ...prev, ...next }));
+        setOfflineIds(offline);
+      }
     })();
 
     return () => {
       cancelled = true;
     };
+  }, [open, materials]);
+
+  /* 자료가 지워지면 그 캐시도 같이 치운다 — 안 그러면 삭제된 사진이 오프라인 캐시에 남는다 */
+  useEffect(() => {
+    if (!open) return;
+    const keepIds = new Set(
+      materials.filter((m) => m.storagePath).map((m) => m.id)
+    );
+    void pruneOfflineMaterials(keepIds);
   }, [open, materials]);
 
 
@@ -295,10 +349,20 @@ export function TripMaterialsPanel({
             ? createMaterialId()
             : undefined;
         const next = [...materials];
+        /* 텍스트 메모는 스토리지를 안 쓰니 캡 계산에서 뺀다 */
+        let fileCount = materials.filter((m) => m.storagePath).length;
+        let capBlocked = false;
         for (const file of fileArr) {
           const validation = validateMaterialFile(file);
           if (validation) {
             onNotify(validation);
+            continue;
+          }
+          if (!canAddTripMaterial(plan, fileCount, isAdmin)) {
+            if (!capBlocked) {
+              onNotify(tb('limits.materialCount', { max: FREE_MAX_TRIP_MATERIALS }));
+              capBlocked = true;
+            }
             continue;
           }
           const kind = inferMaterialKindFromFile(file);
@@ -319,6 +383,7 @@ export function TripMaterialsPanel({
             updatedAt: now,
           });
           added++;
+          fileCount++;
           if (kind === 'image') imageAdded++;
         }
         if (added > 0) {
@@ -335,8 +400,74 @@ export function TripMaterialsPanel({
         setUploading(false);
       }
     },
-    [materials, onChange, tripId, userId, currentDay, requireAuthForUpload, onNotify, t]
+    [
+      materials,
+      onChange,
+      tripId,
+      userId,
+      currentDay,
+      requireAuthForUpload,
+      onNotify,
+      t,
+      tb,
+      plan,
+      isAdmin,
+    ]
   );
+
+  const offlineCapableIds = useMemo(
+    () => materials.filter((m) => m.storagePath).map((m) => m.id),
+    [materials]
+  );
+  const allOffline =
+    offlineCapableIds.length > 0 && offlineCapableIds.every((id) => offlineIds.has(id));
+
+  /*
+   * 한 장씩이 아니라 "여행 통째로" 저장/해제한다 — 카드마다 버튼을 놓으면
+   * 컴포넌트 3단(그리드/목록 카드 → 더보기 시트)을 다 뚫어야 하고, 실제로도
+   * "이 여행 오프라인으로 보기"가 사용자가 기대하는 단위에 더 가깝다.
+   */
+  const handleToggleOfflineAll = useCallback(async () => {
+    if (!canUseOfflineMaterials(plan, isAdmin)) {
+      onUpgradeRequest();
+      return;
+    }
+    if (offlineBusy || offlineCapableIds.length === 0) return;
+    setOfflineBusy(true);
+    try {
+      if (allOffline) {
+        for (const id of offlineCapableIds) await removeMaterialOffline(id);
+        setOfflineIds(new Set());
+        onNotify(t('materials.offlineCleared'));
+      } else {
+        const nextOffline = new Set(offlineIds);
+        let failed = 0;
+        for (const m of materials) {
+          if (!m.storagePath || nextOffline.has(m.id)) continue;
+          const url = signedUrls[m.id] ?? (await getMaterialSignedUrl(m.storagePath).catch(() => null));
+          const ok = url ? await saveMaterialOffline(m.id, url) : false;
+          if (ok) nextOffline.add(m.id);
+          else failed++;
+        }
+        setOfflineIds(nextOffline);
+        onNotify(failed > 0 ? t('materials.offlineSavedPartial', { failed }) : t('materials.offlineSaved'));
+      }
+    } finally {
+      setOfflineBusy(false);
+    }
+  }, [
+    plan,
+    isAdmin,
+    onUpgradeRequest,
+    offlineBusy,
+    offlineCapableIds,
+    allOffline,
+    offlineIds,
+    materials,
+    signedUrls,
+    onNotify,
+    t,
+  ]);
 
   const handleSaveText = useCallback(() => {
     const body = draftText.trim();
@@ -544,6 +675,38 @@ export function TripMaterialsPanel({
             >
               <Icon name={viewMode === 'grid' ? 'layoutList' : 'layoutGrid'} size={17} />
             </button>
+            {offlineCapableIds.length > 0 && (
+              <button
+                type="button"
+                className={`materials-head-btn${allOffline ? ' active' : ''}`}
+                disabled={offlineBusy}
+                onClick={() => void handleToggleOfflineAll()}
+                aria-label={
+                  !canUseOfflineMaterials(plan, isAdmin)
+                    ? t('materials.offlineLocked')
+                    : allOffline
+                      ? t('materials.offlineClearAll')
+                      : t('materials.offlineSaveAll')
+                }
+                title={
+                  !canUseOfflineMaterials(plan, isAdmin)
+                    ? t('materials.offlineLocked')
+                    : allOffline
+                      ? t('materials.offlineClearAll')
+                      : t('materials.offlineSaveAll')
+                }
+              >
+                {offlineBusy ? (
+                  <Icon name="loader" size={17} spin />
+                ) : !canUseOfflineMaterials(plan, isAdmin) ? (
+                  <Icon name="lock" size={17} />
+                ) : allOffline ? (
+                  <Icon name="cloudOk" size={17} />
+                ) : (
+                  <Icon name="download" size={17} />
+                )}
+              </button>
+            )}
             <MaterialsExportMenu
               tripTitle={tripTitle}
               materials={materials}

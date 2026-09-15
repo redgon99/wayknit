@@ -7,6 +7,7 @@ import {
   PLUS_MONTHLY_PRICE_KRW,
   FREE_MAX_TRIPS,
   FREE_DAILY_GOOGLE_SEARCHES,
+  FREE_MAX_TRIP_MATERIALS,
 } from '../lib/subscription';
 import { isPortOneConfigured } from '../lib/portone';
 import { startPlusSubscription, cancelPlusSubscription } from '../lib/billing';
@@ -129,6 +130,16 @@ export function UpgradeModal({ open, onClose, plan, userId, onPlanChanged }: Pro
               <th scope="row">{t('compare.search')}</th>
               <td>{t('compare.searchFree', { n: FREE_DAILY_GOOGLE_SEARCHES })}</td>
               <td className="upgrade-compare-plus-col">{t('compare.unlimited')}</td>
+            </tr>
+            <tr>
+              <th scope="row">{t('compare.materials')}</th>
+              <td>{t('compare.materialsFree', { n: FREE_MAX_TRIP_MATERIALS })}</td>
+              <td className="upgrade-compare-plus-col">{t('compare.unlimited')}</td>
+            </tr>
+            <tr>
+              <th scope="row">{t('compare.offline')}</th>
+              <td>{t('compare.no')}</td>
+              <td className="upgrade-compare-plus-col">{t('compare.offlinePlus')}</td>
             </tr>
           </tbody>
         </table>

@@ -17,7 +17,8 @@
     "tripCount": "Free 方案最多保存 {{max}} 個行程。",
     "exportPlus": "導出為 Plus 專屬功能。",
     "cloudLogin": "請登錄後使用雲保存。",
-    "searchCap": "已達到今日搜索上限。Plus 可提高上限。"
+    "searchCap": "已達到今日搜索上限。Plus 可提高上限。",
+    "materialCount": "Free 方案每個行程最多上傳 {{max}} 個資料。Plus 無限制。"
   },
   "features": {
     "unlimitedTrips": "無限行程",
@@ -39,6 +40,10 @@
     "exportPlus": "可用(所選語言)",
     "search": "Google搜尋",
     "searchFree": "每天{{n}}次",
+    "materials": "行程資料上傳",
+    "materialsFree": "每個行程{{n}}個",
+    "offline": "資料離線保存",
+    "offlinePlus": "支援",
     "unlimited": "無限制"
   }
 }

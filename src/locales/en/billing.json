@@ -17,7 +17,8 @@
     "tripCount": "Free plan allows up to {{max}} trips.",
     "exportPlus": "Export is a Plus feature.",
     "cloudLogin": "Sign in to use cloud save.",
-    "searchCap": "Daily search limit reached. Plus raises the limit."
+    "searchCap": "Daily search limit reached. Plus raises the limit.",
+    "materialCount": "Free plan allows up to {{max}} files per trip. Plus removes the limit."
   },
   "features": {
     "unlimitedTrips": "Unlimited trips",
@@ -39,6 +40,10 @@
     "exportPlus": "Yes (your language)",
     "search": "Google search",
     "searchFree": "{{n}}/day",
+    "materials": "Trip material uploads",
+    "materialsFree": "{{n}} per trip",
+    "offline": "Offline material saving",
+    "offlinePlus": "Available",
     "unlimited": "Unlimited"
   }
 }

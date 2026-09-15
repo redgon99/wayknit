@@ -17,7 +17,8 @@
     "tripCount": "Freeプランは旅行{{max}}件までです。",
     "exportPlus": "エクスポートはPlus専用です。",
     "cloudLogin": "クラウド保存にはログインが必要です。",
-    "searchCap": "本日の検索上限に達しました。Plusで上限が上がります。"
+    "searchCap": "本日の検索上限に達しました。Plusで上限が上がります。",
+    "materialCount": "Freeプランは旅行1件につき資料{{max}}件までです。Plusでは上限がなくなります。"
   },
   "features": {
     "unlimitedTrips": "無制限の旅行保存",
@@ -39,6 +40,10 @@
     "exportPlus": "可能(選択言語)",
     "search": "Google検索",
     "searchFree": "1日{{n}}回",
+    "materials": "旅行資料のアップロード",
+    "materialsFree": "旅行ごとに{{n}}件",
+    "offline": "資料のオフライン保存",
+    "offlinePlus": "利用可能",
     "unlimited": "無制限"
   }
 }

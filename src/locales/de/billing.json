@@ -17,7 +17,8 @@
     "tripCount": "Der Gratisplan erlaubt bis zu {{max}} Reisen.",
     "exportPlus": "Export ist eine Plus-Funktion.",
     "cloudLogin": "Melden Sie sich an, um in der Cloud zu speichern.",
-    "searchCap": "Tägliches Suchlimit erreicht. Plus erhöht das Limit."
+    "searchCap": "Tägliches Suchlimit erreicht. Plus erhöht das Limit.",
+    "materialCount": "Der Gratisplan erlaubt bis zu {{max}} Dateien pro Reise. Plus hebt das Limit auf."
   },
   "features": {
     "unlimitedTrips": "Unbegrenzte Reisen",
@@ -39,6 +40,10 @@
     "exportPlus": "Ja (Ihre Sprache)",
     "search": "Google-Suche",
     "searchFree": "{{n}}/Tag",
+    "materials": "Hochgeladene Reiseunterlagen",
+    "materialsFree": "{{n}} pro Reise",
+    "offline": "Offline-Speichern von Unterlagen",
+    "offlinePlus": "Verfügbar",
     "unlimited": "Unbegrenzt"
   }
 }

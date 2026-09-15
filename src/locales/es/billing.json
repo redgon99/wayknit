@@ -17,7 +17,8 @@
     "tripCount": "El plan gratuito permite hasta {{max}} viajes.",
     "exportPlus": "La exportación es una función Plus.",
     "cloudLogin": "Inicia sesión para usar el guardado en la nube.",
-    "searchCap": "Has alcanzado el límite diario de búsquedas. Plus lo aumenta."
+    "searchCap": "Has alcanzado el límite diario de búsquedas. Plus lo aumenta.",
+    "materialCount": "El plan gratuito permite hasta {{max}} archivos por viaje. Plus elimina el límite."
   },
   "features": {
     "unlimitedTrips": "Viajes ilimitados",
@@ -39,6 +40,10 @@
     "exportPlus": "Sí (tu idioma)",
     "search": "Búsqueda de Google",
     "searchFree": "{{n}}/día",
+    "materials": "Archivos de viaje",
+    "materialsFree": "{{n}} por viaje",
+    "offline": "Guardado de archivos sin conexión",
+    "offlinePlus": "Disponible",
     "unlimited": "Ilimitado"
   }
 }

@@ -2,6 +2,8 @@ export type PlanId = 'free' | 'plus' | 'team';
 
 export const FREE_MAX_TRIPS = 3;
 export const FREE_DAILY_GOOGLE_SEARCHES = 40;
+/** Free 여행 1개당 업로드 자료(사진·파일) 개수 캡 — 텍스트 메모는 스토리지를 안 쓰므로 제외 */
+export const FREE_MAX_TRIP_MATERIALS = 20;
 /** Plus 월 구독료(원) — docs/Wayknit_수익화_실행계획_2026-08-27.md §0 */
 export const PLUS_MONTHLY_PRICE_KRW = 4900;
 
@@ -27,6 +29,21 @@ export function canCreateTrip(
 }
 
 export function canExportItinerary(plan: PlanId, isAdmin = false): boolean {
+  return hasUnlimitedAccess(plan, isAdmin);
+}
+
+/** Free는 여행당 업로드 자료 20개까지 — 협업자가 여럿이어도 저장 용량이 무한정 늘지 않게 막는다 */
+export function canAddTripMaterial(
+  plan: PlanId,
+  currentFileCount: number,
+  isAdmin = false
+): boolean {
+  if (hasUnlimitedAccess(plan, isAdmin)) return true;
+  return currentFileCount < FREE_MAX_TRIP_MATERIALS;
+}
+
+/** 자료(사진·파일) 오프라인 저장 — Plus/Team/관리자 전용 킬러기능 */
+export function canUseOfflineMaterials(plan: PlanId, isAdmin = false): boolean {
   return hasUnlimitedAccess(plan, isAdmin);
 }
 
