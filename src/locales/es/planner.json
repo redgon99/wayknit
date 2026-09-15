@@ -920,5 +920,14 @@
     "want": "Quiero ir",
     "hold": "En espera",
     "failed": "No se pudo guardar tu voto"
+  },
+  "firstGuide": {
+    "title": "Crea tu primer itinerario",
+    "dismiss": "No volver a mostrar",
+    "step1": "Guarda lugares ({{count}}/{{goal}})",
+    "step1Cta": "Buscar",
+    "step2": "Elige el transporte y crea la ruta",
+    "step2Cta": "Crear ruta",
+    "step3": "¡Listo! Revisa tu horario"
   }
 }

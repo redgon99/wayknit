@@ -16706,3 +16706,133 @@ button {
   min-height: 34px;
   padding: 0 10px;
 }
+
+/* =============================================
+   N08 — 첫 일정 완성 가이드 (OnboardingCoach 자리를 이어받는 진행형 안내)
+   ============================================= */
+/*
+ * 시트 바로 위에 붙인다 — sheet-half/full의 top%과 정확히 대칭인 bottom%을
+ * 준다(예: half는 top:46%이므로 남는 아래쪽 54% 바로 위 경계에 앉는다).
+ * position:fixed에서 %는 뷰포트 기준이라 이 대칭이 그대로 성립한다.
+ * peek는 고정 높이(92px)라 그만큼만 띄운다. 세 값 다 §13280 근처
+ * .mobile-planner-sheet.sheet-* 의 top 값과 반드시 같이 맞출 것.
+ */
+/*
+ * 상단바 드롭다운(여행 전환·일차 선택)이 열릴 때 z-index를 45로 올린다
+ * (§12902 — "필요한 순간에만 최소로 올린다" 패턴). `.onboarding-coach`의
+ * 기본 z-index(90)는 자식 stacking context 규칙상 그 45를 그냥 이긴다 —
+ * 드롭다운 안 항목 자체의 z-index(201)는 부모 컨텍스트를 못 벗어나 무의미.
+ * 실제로 여행 전환 드롭다운을 열었더니 이 가이드가 위로 그려져 클릭을
+ * 가로채는 게 브라우저 검증에서 재현됐다. 상단바보다 항상 아래로 낮춘다
+ * — OnboardingCoach 자체의 z-index는 기존 동작이라 건드리지 않는다.
+ */
+.first-itinerary-guide {
+  z-index: 30;
+}
+
+.first-itinerary-guide-sheet-peek {
+  bottom: calc(92px + 12px + env(safe-area-inset-bottom, 0px));
+}
+
+.first-itinerary-guide-sheet-half {
+  bottom: calc(54% + 12px);
+}
+
+.first-itinerary-guide-sheet-full {
+  bottom: calc(82% + 12px);
+}
+
+.first-itinerary-guide-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.first-itinerary-guide-head strong {
+  font-size: 13.5px;
+}
+
+.first-itinerary-guide-close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.first-itinerary-guide-close:hover {
+  background: var(--color-bg-secondary);
+}
+
+.first-itinerary-guide-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.first-itinerary-guide-steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.first-itinerary-guide-check {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+
+.first-itinerary-guide-steps li.done .first-itinerary-guide-check {
+  background: #16a34a;
+  color: #fff;
+}
+
+.first-itinerary-guide-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--color-text-primary);
+}
+
+.first-itinerary-guide-steps li.muted .first-itinerary-guide-text,
+.first-itinerary-guide-steps li.muted .first-itinerary-guide-check {
+  color: var(--color-text-tertiary);
+  opacity: 0.7;
+}
+
+.first-itinerary-guide-steps li.done .first-itinerary-guide-text {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+  text-decoration-color: var(--color-border-strong);
+}
+
+.first-itinerary-guide-cta {
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  min-height: 30px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}

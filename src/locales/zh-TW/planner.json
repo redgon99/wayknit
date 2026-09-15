@@ -741,5 +741,14 @@
     "want": "想去",
     "hold": "待定",
     "failed": "無法儲存投票"
+  },
+  "firstGuide": {
+    "title": "製作你的第一個行程",
+    "dismiss": "不再顯示",
+    "step1": "收藏地點 ({{count}}/{{goal}})",
+    "step1Cta": "搜尋",
+    "step2": "選擇交通方式並產生路線",
+    "step2Cta": "產生路線",
+    "step3": "完成！看看你的時間表吧"
   }
 }

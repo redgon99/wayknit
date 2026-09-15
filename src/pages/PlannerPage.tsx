@@ -127,7 +127,13 @@ import { TaxiDriverCardModal } from '../components/TaxiDriverCardModal';
 import { ThemeScenarioPanel } from '../components/ThemeScenarioPanel';
 import { AppSheetModal } from '../components/AppSheetModal';
 import { isTourScenarioConfigured } from '../lib/tourScenario';
-import { shouldShowOnboarding, isPlazaNavUnlocked, unlockPlazaNav } from '../lib/onboarding';
+import {
+  shouldShowOnboarding,
+  shouldShowFirstItineraryGuide,
+  isPlazaNavUnlocked,
+  unlockPlazaNav,
+} from '../lib/onboarding';
+import { FirstItineraryGuide } from '../components/FirstItineraryGuide';
 import { TRIP_THEMES } from '../lib/themes';
 import { splitSearchQueries } from '../lib/searchQueries';
 import { filterPlacesBySubFilters, type SearchSubFilterId } from '../lib/searchSubFilters';
@@ -2505,6 +2511,19 @@ export default function PlannerPage() {
     [trip.pinnedByDay]
   );
   const showOnboarding = shouldShowOnboarding(totalPinCount, hydrated);
+  /** N08 — 목표는 "핀 3곳 + 동선 1개"(리포트가 명시한 완료 기준) */
+  const FIRST_ITINERARY_PIN_GOAL = 3;
+  const hasAnyRoute = useMemo(
+    () => Object.values(trip.generatedRouteByDay).some(Boolean),
+    [trip.generatedRouteByDay]
+  );
+  const showFirstItineraryGuide = shouldShowFirstItineraryGuide(
+    showOnboarding,
+    hydrated,
+    totalPinCount,
+    FIRST_ITINERARY_PIN_GOAL,
+    hasAnyRoute
+  );
 
   const saveStatus: SaveStatus = useMemo(() => {
     if (savePending) return 'syncing';
@@ -3573,6 +3592,29 @@ export default function PlannerPage() {
           mobile={useMobileChrome}
           onOpenSearch={() => toggleMobileSheet('search')}
           onOpenPins={() => toggleMobileSheet('pins')}
+          onOpenRoute={handleOpenRouteOptions}
+        />
+      )}
+      {/*
+        N08 — 탭 투어(위)가 끝난 뒤를 이어받는 진행 상태 기반 안내. 동시에 안 뜬다.
+        모바일 기본값이 sheet-half라(§414) RouteTimelineDock처럼 peek로만
+        제한하면 새 여행을 만드는 흔한 상황에서 거의 안 보이게 된다. 대신
+        시트의 현재 top(peek/half/full)에 맞춰 **시트 바로 위**에 뜨도록
+        bottom을 시트 높이만큼 띄운다 — 화면에 항상 남는 지도 영역 안에만
+        있어 어느 레벨에서도 시트 콘텐츠(검색 결과의 핀업 버튼 등)를
+        가리지 않는다. 실제로 고정 24px이었을 때 half 시트의 검색 결과를
+        가려 핀업 버튼 클릭이 막히는 게 브라우저 검증에서 재현됐다.
+      */}
+      {showFirstItineraryGuide && (
+        <FirstItineraryGuide
+          mobile={useMobileChrome}
+          sheetLevel={useMobileChrome ? mobileSheetLevel : undefined}
+          pinCount={totalPinCount}
+          pinGoal={FIRST_ITINERARY_PIN_GOAL}
+          routeReady={hasAnyRoute}
+          onOpenSearch={
+            useMobileChrome ? openMobileSearchTab : () => openPlannerTab('search')
+          }
           onOpenRoute={handleOpenRouteOptions}
         />
       )}

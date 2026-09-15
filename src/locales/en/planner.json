@@ -920,5 +920,14 @@
     "want": "Want to go",
     "hold": "Hold",
     "failed": "Couldn't save your vote"
+  },
+  "firstGuide": {
+    "title": "Build your first itinerary",
+    "dismiss": "Don't show again",
+    "step1": "Pin places ({{count}}/{{goal}})",
+    "step1Cta": "Search",
+    "step2": "Choose transit & build a route",
+    "step2Cta": "Build route",
+    "step3": "Done! Check your schedule"
   }
 }

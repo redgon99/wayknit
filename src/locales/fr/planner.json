@@ -920,5 +920,14 @@
     "want": "Je veux y aller",
     "hold": "En attente",
     "failed": "Impossible d'enregistrer votre vote"
+  },
+  "firstGuide": {
+    "title": "Créez votre premier itinéraire",
+    "dismiss": "Ne plus afficher",
+    "step1": "Épinglez des lieux ({{count}}/{{goal}})",
+    "step1Cta": "Rechercher",
+    "step2": "Choisissez un mode de transport et créez l'itinéraire",
+    "step2Cta": "Créer l'itinéraire",
+    "step3": "Terminé ! Consultez votre programme"
   }
 }

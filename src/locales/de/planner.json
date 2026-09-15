@@ -920,5 +920,14 @@
     "want": "Will hin",
     "hold": "Zurückstellen",
     "failed": "Stimme konnte nicht gespeichert werden"
+  },
+  "firstGuide": {
+    "title": "Erste Reiseroute erstellen",
+    "dismiss": "Nicht mehr anzeigen",
+    "step1": "Orte merken ({{count}}/{{goal}})",
+    "step1Cta": "Suchen",
+    "step2": "Verkehrsmittel wählen & Route erstellen",
+    "step2Cta": "Route erstellen",
+    "step3": "Fertig! Sieh dir deinen Zeitplan an"
   }
 }
