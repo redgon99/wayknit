@@ -148,12 +148,14 @@ export default function AdminDashboardPage() {
             <h2>영역별 현황</h2>
             <div className="dash-grid">
               <MetricCard
-                title="여행 · 사용자"
+                title="여행 · 가입자"
                 to="/admin"
                 primary={summary.trips.total}
                 primaryLabel="여행"
                 details={[
-                  { label: '사용자', value: summary.trips.owners },
+                  { label: '가입자', value: summary.users.total },
+                  { label: '여행 소유자', value: summary.trips.owners },
+                  { label: '테스트 계정', value: summary.users.test },
                   { label: '공개', value: summary.trips.public },
                   { label: '최근 7일', value: summary.trips.created_7d },
                 ]}

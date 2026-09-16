@@ -14,6 +14,7 @@ import {
   listAdminUserRows,
   listPlazaListings,
   removeAdminUserAccount,
+  setUserTestFlag,
   updateAdminNotice,
   upsertUserVerification,
   ADMIN_PAGE_SIZE,
@@ -84,6 +85,7 @@ export default function AdminPage() {
   const [searchParams] = useSearchParams();
 
   const [users, setUsers] = useState<AdminUserRow[]>([]);
+  const [includeTestUsers, setIncludeTestUsers] = useState(false);
   const [userTotal, setUserTotal] = useState(0);
   const [userSearch, setUserSearch] = useState(() => searchParams.get('q') ?? '');
   const [userPage, setUserPage] = useState(0);
@@ -138,12 +140,13 @@ export default function AdminPage() {
    * 목록 두 개는 서버에서 페이지 단위로 가져온다. 검색어는 타이핑마다
    * 요청이 나가지 않도록 디바운스한다.
    */
-  const loadUsers = useCallback(async (search: string, page: number) => {
+  const loadUsers = useCallback(async (search: string, page: number, includeTest: boolean) => {
     try {
       const result = await listAdminUserRows({
         search,
         limit: ADMIN_PAGE_SIZE,
         offset: page * ADMIN_PAGE_SIZE,
+        includeTest,
       });
       setUsers(result.rows);
       setUserTotal(result.totalCount);
@@ -175,10 +178,18 @@ export default function AdminPage() {
   const handleExportUsers = async () => {
     setExporting('users');
     try {
-      const { rows } = await listAdminUserRows({ search: userSearch, limit: EXPORT_LIMIT });
+      const { rows } = await listAdminUserRows({
+        search: userSearch,
+        limit: EXPORT_LIMIT,
+        includeTest: includeTestUsers,
+      });
       const csv = toCsv(rows, [
         { header: '이메일', value: (r) => r.email ?? '' },
         { header: '사용자 ID', value: (r) => r.userId },
+        { header: '가입일', value: (r) => r.createdAt },
+        { header: '최종 로그인', value: (r) => r.lastSignInAt ?? '' },
+        { header: '플랜', value: (r) => r.plan ?? 'free' },
+        { header: '테스트 계정', value: (r) => (r.isTest ? 'Y' : '') },
         { header: '여행수', value: (r) => r.tripCount },
         { header: '첫 생성', value: (r) => r.firstTripAt ?? '' },
         { header: '마지막 활동', value: (r) => r.lastUpdatedAt ?? '' },
@@ -215,9 +226,9 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (access !== 'ok') return;
-    const timer = setTimeout(() => void loadUsers(userSearch, userPage), 250);
+    const timer = setTimeout(() => void loadUsers(userSearch, userPage, includeTestUsers), 250);
     return () => clearTimeout(timer);
-  }, [access, userSearch, userPage, loadUsers]);
+  }, [access, userSearch, userPage, includeTestUsers, loadUsers]);
 
   useEffect(() => {
     if (access !== 'ok') return;
@@ -285,7 +296,7 @@ export default function AdminPage() {
         isVerified: !row.isVerified,
         memo: row.memo ?? '',
       });
-      await loadUsers(userSearch, userPage);
+      await loadUsers(userSearch, userPage, includeTestUsers);
     } catch (e) {
       setError(e instanceof Error ? e.message : '사용자 확인 상태 변경 실패');
     }
@@ -298,9 +309,18 @@ export default function AdminPage() {
         isVerified: row.isVerified,
         memo,
       });
-      await loadUsers(userSearch, userPage);
+      await loadUsers(userSearch, userPage, includeTestUsers);
     } catch (e) {
       setError(e instanceof Error ? e.message : '메모 저장 실패');
+    }
+  };
+
+  const handleToggleTest = async (row: AdminUserRow) => {
+    try {
+      await setUserTestFlag(row.userId, !row.isTest);
+      await loadUsers(userSearch, userPage, includeTestUsers);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '테스트 계정 표시 변경 실패');
     }
   };
 
@@ -331,7 +351,7 @@ export default function AdminPage() {
     try {
       const result = await deleteWayknitMockMailUsers();
       setUserPage(0);
-      await Promise.all([loadUsers(userSearch, 0), loadAll()]);
+      await Promise.all([loadUsers(userSearch, 0, includeTestUsers), loadAll()]);
       window.alert(`목업 계정 ${result.deletedUsers}명, 여행 ${result.deletedTrips}건을 삭제했습니다.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : '목업 계정 삭제 실패');
@@ -529,15 +549,34 @@ export default function AdminPage() {
             >
               {deletingMocks ? '삭제 중…' : '목업 계정 삭제'}
             </button>
+            <label className="admin-cell-sub" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input
+                type="checkbox"
+                checked={includeTestUsers}
+                onChange={(e) => {
+                  setIncludeTestUsers(e.target.checked);
+                  setUserPage(0);
+                }}
+              />
+              테스트 계정 포함
+            </label>
           </div>
 
+          {/*
+            U1(관리자 검토 2026-09-16) — 예전엔 wayknit_trips를 owner_id로 묶는
+            데서 시작해서, 여행을 한 번도 안 만든 가입자는 목록에 아예 안
+            보였다. 이제 auth.users가 시작점이라 가입일·최종 로그인·플랜이
+            항상 있고(여행 관련 값만 없을 수 있음), U2로 테스트 계정도 구분된다.
+          */}
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
                 <tr>
                   <th>이메일</th>
+                  <th>가입일</th>
+                  <th>최종 로그인</th>
+                  <th>플랜</th>
                   <th>여행수</th>
-                  <th>첫 생성</th>
                   <th>마지막 활동</th>
                   <th>확인 상태</th>
                   <th>메모</th>
@@ -548,10 +587,20 @@ export default function AdminPage() {
                   <tr key={row.userId}>
                     <td>
                       {row.email ?? <span className="admin-cell-sub">(계정 없음)</span>}
+                      {row.isTest && <span className="admin-pill">테스트</span>}
                       <div className="admin-cell-sub mono">{row.userId}</div>
+                      <button
+                        type="button"
+                        className="admin-link-btn"
+                        onClick={() => void handleToggleTest(row)}
+                      >
+                        {row.isTest ? '테스트 표시 해제' : '테스트로 표시'}
+                      </button>
                     </td>
+                    <td>{formatDateTime(row.createdAt)}</td>
+                    <td>{formatDateTime(row.lastSignInAt)}</td>
+                    <td>{row.plan ?? 'free'}</td>
                     <td>{row.tripCount}</td>
-                    <td>{formatDateTime(row.firstTripAt)}</td>
                     <td>{formatDateTime(row.lastUpdatedAt)}</td>
                     <td>
                       <button
@@ -577,7 +626,7 @@ export default function AdminPage() {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan={6}>
+                    <td colSpan={8}>
                       {userSearch ? '검색 결과가 없습니다.' : '표시할 사용자가 없습니다.'}
                     </td>
                   </tr>
