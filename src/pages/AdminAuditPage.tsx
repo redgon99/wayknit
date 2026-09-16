@@ -7,6 +7,7 @@ import {
   AUDIT_PAGE_SIZE,
   AUDIT_TABLES,
   OPERATION_LABEL,
+  SYSTEM_ACTOR,
   auditSubject,
   auditTableLabel,
   auditTargetHref,
@@ -71,6 +72,17 @@ export default function AdminAuditPage() {
   const [tableFilter, setTableFilter] = useState('');
   const [operationFilter, setOperationFilter] = useState<AuditOperation | ''>('');
   const [actorFilter, setActorFilter] = useState('');
+  /* A4(관리자 검토 2026-09-16) — 기간·대상 검색 추가 */
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+
+  /* 검색어는 타이핑마다 쿼리를 보내지 않고 300ms 멈췄을 때만 반영 */
+  useEffect(() => {
+    const t = window.setTimeout(() => setSearch(searchInput.trim()), 300);
+    return () => window.clearTimeout(t);
+  }, [searchInput]);
 
   const loadFirstPage = useCallback(async () => {
     setRefreshing(true);
@@ -80,6 +92,9 @@ export default function AdminAuditPage() {
         tableName: tableFilter || undefined,
         operation: operationFilter || undefined,
         actorEmail: actorFilter || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        search: search || undefined,
       });
       setEntries(rows);
       setHasMore(rows.length === AUDIT_PAGE_SIZE);
@@ -89,7 +104,7 @@ export default function AdminAuditPage() {
     } finally {
       setRefreshing(false);
     }
-  }, [tableFilter, operationFilter, actorFilter]);
+  }, [tableFilter, operationFilter, actorFilter, dateFrom, dateTo, search]);
 
   useEffect(() => {
     if (access !== 'ok') return;
@@ -112,6 +127,9 @@ export default function AdminAuditPage() {
         tableName: tableFilter || undefined,
         operation: operationFilter || undefined,
         actorEmail: actorFilter || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        search: search || undefined,
         beforeId: last.id,
       });
       setEntries((prev) => [...prev, ...rows]);
@@ -149,6 +167,9 @@ export default function AdminAuditPage() {
         tableName: tableFilter || undefined,
         operation: operationFilter || undefined,
         actorEmail: actorFilter || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        search: search || undefined,
         limit: EXPORT_LIMIT,
       });
       const csv = toCsv(rows, [
@@ -260,12 +281,52 @@ export default function AdminAuditPage() {
               aria-label="작업자 필터"
             >
               <option value="">전체 작업자</option>
+              <option value={SYSTEM_ACTOR}>시스템(자동)</option>
               {actors.map((a) => (
                 <option key={a} value={a}>
                   {a}
                 </option>
               ))}
             </select>
+
+            {/* A4 — 기간·대상 검색 */}
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              aria-label="시작일"
+              max={dateTo || undefined}
+            />
+            <span className="admin-cell-sub">~</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              aria-label="종료일"
+              min={dateFrom || undefined}
+            />
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="대상 이름·ID 검색"
+              aria-label="대상 검색"
+              style={{ minWidth: 160 }}
+            />
+            {(dateFrom || dateTo || search) && (
+              <button
+                type="button"
+                className="admin-link-btn"
+                onClick={() => {
+                  setDateFrom('');
+                  setDateTo('');
+                  setSearchInput('');
+                  setSearch('');
+                }}
+              >
+                필터 초기화
+              </button>
+            )}
 
             <button
               type="button"

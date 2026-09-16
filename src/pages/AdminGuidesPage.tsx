@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminHeader } from '../components/AdminHeader';
@@ -51,6 +51,7 @@ const STATUS_LABEL: Record<GuideStatus, string> = {
 export default function AdminGuidesPage() {
   const { configured } = useAuth();
   const access = useAdminAccess();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [guides, setGuides] = useState<GuideArticle[]>([]);
   const [statusFilter, setStatusFilter] = useState<GuideStatus | ''>('');
@@ -113,6 +114,27 @@ export default function AdminGuidesPage() {
       setError(e instanceof Error ? e.message : '가이드를 열 수 없습니다.');
     }
   };
+
+  /* R1(관리자 검토 2026-09-16)에서 신고 큐의 "관리 화면에서 열기" 링크가
+   * 실제로는 죽어 있던 걸 고치며 같이 뚫음 — adminAudit.ts의
+   * auditTargetHref도 이미 `/admin/guides?id=` 를 가리키고 있었는데
+   * 이 페이지가 쿼리 파라미터를 읽은 적이 없었다(distribution 페이지의
+   * ?account=/?post= 와 같은 종류의 죽은 링크, §31-8 참고). */
+  useEffect(() => {
+    if (access !== 'ok') return;
+    const id = searchParams.get('id');
+    if (!id) return;
+    void openEdit(id);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('id');
+        return next;
+      },
+      { replace: true }
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [access, searchParams]);
 
   function editableGuidePatch(g: GuideArticle) {
     return {

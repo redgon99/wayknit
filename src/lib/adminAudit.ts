@@ -81,10 +81,19 @@ function mapRow(row: Record<string, unknown>): AdminAuditEntry {
   };
 }
 
+/** actorFilter에 이 값을 넣으면 "시스템(자동)" — actor_email이 null인 것만 */
+export const SYSTEM_ACTOR = '__system__';
+
 export interface AuditFilter {
   tableName?: string;
   actorEmail?: string;
   operation?: AuditOperation;
+  /** YYYY-MM-DD (그날 00:00부터, 로컬 기준 그대로 ISO 비교) */
+  dateFrom?: string;
+  /** YYYY-MM-DD (그날 23:59:59까지) */
+  dateTo?: string;
+  /** 대상 이름(row_label)·대상 키(row_id) 부분 일치 검색 */
+  search?: string;
   /** 키셋 페이지네이션 커서 — 이 id보다 작은 항목만 가져온다 */
   beforeId?: number;
   limit?: number;
@@ -107,7 +116,14 @@ export async function listAdminAuditLog(filter: AuditFilter = {}): Promise<Admin
 
   if (filter.tableName) query = query.eq('table_name', filter.tableName);
   if (filter.operation) query = query.eq('operation', filter.operation);
-  if (filter.actorEmail) query = query.eq('actor_email', filter.actorEmail);
+  if (filter.actorEmail === SYSTEM_ACTOR) query = query.is('actor_email', null);
+  else if (filter.actorEmail) query = query.eq('actor_email', filter.actorEmail);
+  if (filter.dateFrom) query = query.gte('created_at', `${filter.dateFrom}T00:00:00`);
+  if (filter.dateTo) query = query.lte('created_at', `${filter.dateTo}T23:59:59.999`);
+  if (filter.search?.trim()) {
+    const term = filter.search.trim().replace(/[%_]/g, '\\$&');
+    query = query.or(`row_label.ilike.%${term}%,row_id.ilike.%${term}%`);
+  }
   if (filter.beforeId != null) query = query.lt('id', filter.beforeId);
 
   const { data, error } = await query;

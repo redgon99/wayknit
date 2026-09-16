@@ -46,11 +46,13 @@ export interface ContentReport {
   status: ReportStatus;
   adminNote: string | null;
   reviewedAt: string | null;
+  /** R1 — trip_materials.created_by_email과 같은 패턴(auth.users 조인 없이 표시용) */
+  reviewedByEmail: string | null;
   createdAt: string;
 }
 
 const REPORT_SELECT =
-  'id, target_type, target_id, target_label, target_url, reason, detail, reporter_id, reporter_locale, status, admin_note, reviewed_at, created_at';
+  'id, target_type, target_id, target_label, target_url, reason, detail, reporter_id, reporter_locale, status, admin_note, reviewed_at, reviewed_by_email, created_at';
 
 interface ReportRow {
   id: string;
@@ -65,6 +67,7 @@ interface ReportRow {
   status: ReportStatus;
   admin_note: string | null;
   reviewed_at: string | null;
+  reviewed_by_email: string | null;
   created_at: string;
 }
 
@@ -82,6 +85,7 @@ function rowToReport(row: ReportRow): ContentReport {
     status: row.status,
     adminNote: row.admin_note,
     reviewedAt: row.reviewed_at,
+    reviewedByEmail: row.reviewed_by_email,
     createdAt: row.created_at,
   };
 }
@@ -149,6 +153,7 @@ export async function updateContentReport(
   id: string,
   patch: { status?: ReportStatus; adminNote?: string },
   reviewerId?: string | null,
+  reviewerEmail?: string | null,
 ): Promise<void> {
   const sb = requireSupabase();
   const next: Record<string, unknown> = {};
@@ -156,6 +161,7 @@ export async function updateContentReport(
     next.status = patch.status;
     next.reviewed_at = new Date().toISOString();
     next.reviewed_by = reviewerId ?? null;
+    next.reviewed_by_email = reviewerEmail ?? null;
   }
   if (patch.adminNote !== undefined) next.admin_note = patch.adminNote.trim() || null;
   if (Object.keys(next).length === 0) return;
@@ -173,6 +179,7 @@ export async function bulkUpdateContentReports(
   ids: string[],
   patch: { status: ReportStatus },
   reviewerId?: string | null,
+  reviewerEmail?: string | null,
 ): Promise<void> {
   if (ids.length === 0) return;
   const sb = requireSupabase();
@@ -182,6 +189,7 @@ export async function bulkUpdateContentReports(
       status: patch.status,
       reviewed_at: new Date().toISOString(),
       reviewed_by: reviewerId ?? null,
+      reviewed_by_email: reviewerEmail ?? null,
     })
     .in('id', ids);
   if (error) throw error;

@@ -90,9 +90,23 @@ export default function AdminReportsPage() {
     [reports],
   );
 
+  /**
+   * R1(관리자 검토 2026-09-16) — "조치 완료"·"반려"로 결론을 낼 땐 사유를
+   * 먼저 적게 한다. 검토 중/재검토로 되돌리는 건 결론이 아니라서 안 막는다
+   * — 이게 곧 "재검토 동선"이다(따로 버튼을 만들 필요 없이 드롭다운이
+   * 이미 열려 있음).
+   */
+  const CONCLUDING_STATUSES: ReportStatus[] = ['resolved', 'rejected'];
+
   const handleStatus = async (report: ContentReport, status: ReportStatus) => {
+    if (CONCLUDING_STATUSES.includes(status) && !(report.adminNote ?? '').trim()) {
+      setError(
+        `"${STATUS_LABEL[status]}"로 바꾸기 전에 관리 메모(사유)를 먼저 입력하고 칸 밖을 클릭해 저장하세요.`
+      );
+      return;
+    }
     try {
-      await updateContentReport(report.id, { status }, user?.id ?? null);
+      await updateContentReport(report.id, { status }, user?.id ?? null, user?.email ?? null);
       await loadAll(filter);
     } catch (e) {
       setError(e instanceof Error ? e.message : '상태 변경 실패');
@@ -147,10 +161,19 @@ export default function AdminReportsPage() {
    */
   const handleBulkStatus = async (status: ReportStatus) => {
     if (selectedIds.size === 0) return;
+    if (CONCLUDING_STATUSES.includes(status)) {
+      const missing = reports.filter((r) => selectedIds.has(r.id) && !(r.adminNote ?? '').trim());
+      if (missing.length > 0) {
+        setError(
+          `선택한 항목 중 ${missing.length}건에 관리 메모가 없습니다. "${STATUS_LABEL[status]}"는 사유를 먼저 적어야 합니다 — 해당 항목만 개별로 메모를 채운 뒤 다시 시도하세요.`
+        );
+        return;
+      }
+    }
     setBulkBusy(true);
     setError(null);
     try {
-      await bulkUpdateContentReports([...selectedIds], { status }, user?.id ?? null);
+      await bulkUpdateContentReports([...selectedIds], { status }, user?.id ?? null, user?.email ?? null);
       setSelectedIds(new Set());
       await loadAll(filter);
     } catch (e) {
@@ -317,6 +340,14 @@ export default function AdminReportsPage() {
                           열기
                         </a>
                       )}
+                      {/* R1 — 복구 동선. 가이드는 이미 초안/버전 되돌리기(§31-5)가 있으니
+                          관리 화면으로 바로 보내면 게시중지 취소·이전 버전 복원까지 그 안에서 된다. */}
+                      {r.targetType === 'guide' && (
+                        <Link className="admin-cell-sub" to={`/admin/guides?id=${encodeURIComponent(r.targetId)}`}>
+                          {' '}
+                          · 관리 화면에서 열기
+                        </Link>
+                      )}
                     </td>
                     <td>{REASON_LABEL[r.reason]}</td>
                     <td className="admin-cell-detail">{r.detail ?? '-'}</td>
@@ -365,7 +396,14 @@ export default function AdminReportsPage() {
                         ))}
                       </select>
                       {r.reviewedAt && (
-                        <div className="admin-cell-sub">{formatDateTime(r.reviewedAt)}</div>
+                        <div className="admin-cell-sub">
+                          {formatDateTime(r.reviewedAt)}
+                          {r.reviewedByEmail ? ` · ${r.reviewedByEmail}` : ''}
+                        </div>
+                      )}
+                      {/* R1 — 조치 완료/반려는 메모가 있어야 통과된다는 걸 미리 알려준다 */}
+                      {!r.reviewedAt && !(r.adminNote ?? '').trim() && (
+                        <div className="admin-cell-sub">완료/반려엔 메모 필요</div>
                       )}
                     </td>
                     <td>
