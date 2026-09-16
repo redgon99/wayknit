@@ -15,25 +15,37 @@ import {
   parentIdOf,
   removeNode,
   updateNode,
-  walkEnabled,
   type LandingMenuNode,
   type LandingNodeType,
 } from '../lib/landingMenu';
 import {
+  buildLandingPromoRow,
   emptyLandingPromo,
   fetchLandingPromo,
+  fromRow as landingPromoFromRow,
   landingImageKey,
   MAX_LANDING_IMAGES,
   moveIndex,
   parseYoutubeId,
   removeLandingAsset,
-  saveLandingPromo,
   uploadLandingAsset,
   youtubeEmbedUrl,
   type LandingPromo,
+  type LandingPromoRow,
 } from '../lib/landingPromo';
+import {
+  discardDraft as discardContentDraft,
+  listVersions,
+  loadDraft,
+  publishDraft,
+  restoreVersion,
+  saveDraft,
+  type ContentVersion,
+} from '../lib/adminContentDrafts';
+import { landingNavItems, LandingCmsNav, LandingCmsSections } from '../components/LandingCms';
 import { LOCALE_LABELS, SUPPORTED_LOCALES, type AppLocale } from '../lib/locale';
 import '../styles/app.css';
+import '../styles/landing.css';
 
 const DEFAULT_GALLERY = [
   { src: '/landing/hero.png', alt: '히어로' },
@@ -51,6 +63,13 @@ export default function AdminLandingPage() {
     return q && (SUPPORTED_LOCALES as readonly string[]).includes(q) ? (q as AppLocale) : 'ko';
   });
   const [promo, setPromo] = useState<LandingPromo>(() => emptyLandingPromo(locale));
+  const [hasLive, setHasLive] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
+  const [versions, setVersions] = useState<ContentVersion[]>([]);
+  const [showVersions, setShowVersions] = useState(false);
+  const [restoringVersionId, setRestoringVersionId] = useState<number | null>(null);
+  /* L4 — 마지막으로 불러오거나 저장한 시점의 스냅샷. 이거랑 다르면 "미저장 변경"이다 */
+  const lastLoadedRef = useRef<LandingPromo>(promo);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addType, setAddType] = useState<LandingNodeType>('text');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -94,14 +113,30 @@ export default function AdminLandingPage() {
     };
   }, [discardPendingUploads]);
 
+  /*
+   * L1(관리자 검토 2026-09-16) — "초안 저장"이 게시된 행을 그대로 덮어써서
+   * 저장하는 순간 라이브 랜딩이 바뀌었다. 이제 게시본(landing_promo)과
+   * 초안(admin_content_drafts)을 따로 읽는다 — 초안이 있으면 그걸 편집
+   * 대상으로 쓰고, 없으면 게시본을 그대로 편집 시작점으로 삼는다.
+   */
   const load = useCallback(async (nextLocale: AppLocale) => {
     setRefreshing(true);
     setError(null);
     await discardPendingUploads();
     try {
-      const row = await fetchLandingPromo(nextLocale);
-      const next = row ?? emptyLandingPromo(nextLocale);
+      const [liveRow, draftData, versionRows] = await Promise.all([
+        fetchLandingPromo(nextLocale),
+        loadDraft('landing_promo', nextLocale),
+        listVersions('landing_promo', nextLocale),
+      ]);
+      setHasLive(Boolean(liveRow));
+      setVersions(versionRows);
+      const next = draftData
+        ? landingPromoFromRow(draftData as unknown as LandingPromoRow)
+        : (liveRow ?? emptyLandingPromo(nextLocale));
+      setHasDraft(Boolean(draftData));
       setPromo(next);
+      lastLoadedRef.current = next;
       setSelectedId((cur) => {
         if (cur && findNode(next.menu, cur)) return cur;
         return next.menu[0]?.id ?? null;
@@ -120,12 +155,37 @@ export default function AdminLandingPage() {
     } catch (e) {
       const fallback = emptyLandingPromo(nextLocale);
       setPromo(fallback);
+      lastLoadedRef.current = fallback;
+      setHasDraft(false);
+      setHasLive(false);
+      setVersions([]);
       setSelectedId(fallback.menu[0]?.id ?? null);
       setError(e instanceof Error ? e.message : '랜딩 설정을 불러오지 못했습니다.');
     } finally {
       setRefreshing(false);
     }
   }, [discardPendingUploads]);
+
+  const dirty = JSON.stringify(promo) !== JSON.stringify(lastLoadedRef.current);
+
+  /* L4 — 저장 안 한 변경을 두고 브라우저를 닫거나 새로고침하면 경고 */
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [dirty]);
+
+  const switchLocale = (next: AppLocale) => {
+    if (next === locale) return;
+    if (dirty && !window.confirm('저장하지 않은 변경 사항이 있습니다. 버리고 다른 언어로 이동할까요?')) {
+      return;
+    }
+    setLocale(next);
+  };
 
   useEffect(() => {
     if (access !== 'ok') return;
@@ -141,7 +201,7 @@ export default function AdminLandingPage() {
     setMenu(updateNode(promo.menu, selectedId, patch));
   };
 
-  const persist = async (next: LandingPromo) => {
+  function findInvalidYoutubeUrl(next: LandingPromo): boolean {
     const videoNodes: LandingMenuNode[] = [];
     const collect = (nodes: LandingMenuNode[]) => {
       for (const n of nodes) {
@@ -150,31 +210,85 @@ export default function AdminLandingPage() {
       }
     };
     collect(next.menu);
-    if (
-      videoNodes.some(
-        (n) => n.enabled && n.videoKind === 'youtube' && n.youtubeUrl.trim() && !parseYoutubeId(n.youtubeUrl)
-      )
-    ) {
+    return videoNodes.some(
+      (n) => n.enabled && n.videoKind === 'youtube' && n.youtubeUrl.trim() && !parseYoutubeId(n.youtubeUrl)
+    );
+  }
+
+  /** 초안 저장 — 게시본은 안 건드린다(L1). Storage 정리는 아직 안 함 — 게시할 때 한다. */
+  const handleSaveDraft = async () => {
+    if (findInvalidYoutubeUrl(promo)) {
       setError('유튜브 주소가 올바르지 않습니다.');
       return;
     }
     setSaving(true);
     setError(null);
     try {
-      const saved = await saveLandingPromo(next);
-      setPromo(saved);
+      await saveDraft('landing_promo', locale, buildLandingPromoRow(promo));
+      lastLoadedRef.current = promo;
+      setHasDraft(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '초안 저장에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /** 게시 — 지금 편집 중인 내용을 먼저 초안으로 저장한 뒤, 그 초안을 라이브에 반영한다 */
+  const handlePublish = async () => {
+    if (findInvalidYoutubeUrl(promo)) {
+      setError('유튜브 주소가 올바르지 않습니다.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await saveDraft('landing_promo', locale, buildLandingPromoRow(promo));
+      await publishDraft('landing_promo', locale);
+
       const removals = [...pendingRemovalsRef.current];
       pendingRemovalsRef.current.clear();
       pendingUploadsRef.current.clear();
       for (const p of removals) {
         await removeLandingAsset(p).catch((err) =>
-          console.warn('랜딩 자산 정리 실패(저장은 완료됨)', p, err)
+          console.warn('랜딩 자산 정리 실패(게시는 완료됨)', p, err)
         );
       }
+      await load(locale);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '저장에 실패했습니다. 마이그레이션 적용 여부를 확인해 주세요.');
+      setError(e instanceof Error ? e.message : '게시에 실패했습니다.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDiscardDraft = async () => {
+    if (!window.confirm('초안을 버리고 게시본으로 되돌릴까요?')) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await discardContentDraft('landing_promo', locale);
+      await load(locale);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '초안 버리기에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /** 스냅샷을 초안으로만 되돌린다 — 라이브는 안 바뀐다. 확인 후 "게시"를 눌러야 반영됨(A2) */
+  const handleRestoreVersion = async (versionId: number) => {
+    if (dirty && !window.confirm('저장하지 않은 변경 사항을 버리고 이전 버전을 불러올까요?')) return;
+    setRestoringVersionId(versionId);
+    setError(null);
+    try {
+      await restoreVersion(versionId);
+      await load(locale);
+      setShowVersions(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '버전 복원에 실패했습니다.');
+    } finally {
+      setRestoringVersionId(null);
     }
   };
 
@@ -287,8 +401,6 @@ export default function AdminLandingPage() {
     );
   }
 
-  const visible = walkEnabled(promo.menu);
-
   return (
     <main className="admin-page">
       <div className="admin-shell admin-shell-wide">
@@ -315,29 +427,66 @@ export default function AdminLandingPage() {
                 role="tab"
                 aria-selected={locale === code}
                 className={`admin-tab-btn${locale === code ? ' active' : ''}`}
-                onClick={() => setLocale(code)}
+                onClick={() => switchLocale(code)}
               >
                 {LOCALE_LABELS[code]}
               </button>
             ))}
           </div>
           <div className="admin-landing-actions">
-            <span className={`admin-pill${promo.isPublished ? ' ok' : ''}`}>
-              {promo.isPublished ? '게시됨' : '초안'}
-            </span>
-            <button type="button" disabled={saving || uploading} onClick={() => void persist(promo)}>
+            {hasDraft ? (
+              <span className="admin-pill">초안 편집 중{dirty ? ' · 미저장' : ''}(게시본과 다름)</span>
+            ) : (
+              <span className={`admin-pill${hasLive ? ' ok' : ''}`}>
+                {hasLive ? '게시본과 동일' : '미게시'}
+                {dirty ? ' · 미저장' : ''}
+              </span>
+            )}
+            {versions.length > 0 && (
+              <button type="button" onClick={() => setShowVersions((v) => !v)}>
+                이전 버전 ({versions.length})
+              </button>
+            )}
+            {hasDraft && (
+              <button type="button" disabled={saving || uploading} onClick={() => void handleDiscardDraft()}>
+                초안 버리기
+              </button>
+            )}
+            <button type="button" disabled={saving || uploading} onClick={() => void handleSaveDraft()}>
               {saving ? '저장 중…' : '초안 저장'}
             </button>
             <button
               type="button"
               className="admin-create-btn"
               disabled={saving || uploading}
-              onClick={() => void persist({ ...promo, isPublished: true })}
+              onClick={() => void handlePublish()}
             >
               게시
             </button>
           </div>
         </div>
+
+        {showVersions && (
+          <div className="admin-section admin-landing-versions">
+            <h2>이전 버전</h2>
+            <ul>
+              {versions.map((v) => (
+                <li key={v.id}>
+                  <span>
+                    v{v.version} · {new Date(v.publishedAt).toLocaleString('ko-KR', { hour12: false })}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={restoringVersionId === v.id}
+                    onClick={() => void handleRestoreVersion(v.id)}
+                  >
+                    {restoringVersionId === v.id ? '불러오는 중…' : '초안으로 복원'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="admin-landing-triple">
           <aside className="admin-section admin-landing-tree">
@@ -574,18 +723,21 @@ export default function AdminLandingPage() {
               </div>
             </div>
             {/*
-              실제 페이지를 그대로 렌더링하는 게 아니라 무엇이 켜져 있는지 보여주는
-              별도 요약 마크업이라(PreviewForest), 뷰포트 기준 미디어쿼리를 그대로
-              흉내 낼 수는 없다. 폭만 폰 크기로 좁혀 이미지 그리드·CTA 줄바꿈처럼
-              flex/grid로 반응하는 부분만이라도 미리 보이게 한다 — 정확한 복제가
-              아니라 "폭이 좁아지면 이렇게 흐른다" 정도의 근사치임을 라벨로 밝힌다.
+              L5(관리자 검토 2026-09-16) — 예전엔 "뭐가 켜져 있는지"만 보여주는
+              별도 요약 마크업(PreviewForest)이라 실제 공개 화면과 다르게 보였다.
+              이제 공개 페이지가 쓰는 것과 같은 렌더러(LandingCms.tsx)로 그린다 —
+              단, 전체 사이트 헤더(SiteHeader, 로그인 상태·라우팅 의존)는 관리자
+              화면 안에 그대로 넣기엔 위험이 커서 가벼운 내비 목록만 흉내 낸다.
             */}
             <div
-              className={`admin-landing-preview-frame ${
+              className={`admin-landing-preview-frame landing-page ${
                 previewWidth === 'mobile' ? 'is-mobile' : ''
               }`}
             >
-              <PreviewForest nodes={visible} />
+              <nav className="admin-landing-preview-nav" aria-label="랜딩 내비 미리보기">
+                <LandingCmsNav items={landingNavItems(promo.menu)} />
+              </nav>
+              <LandingCmsSections tree={promo.menu} />
             </div>
           </aside>
         </div>

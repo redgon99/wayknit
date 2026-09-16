@@ -92,12 +92,15 @@ export async function getAdminGuide(id: string): Promise<GuideArticle | null> {
   return data ? mapRow(data as Record<string, unknown>) : null;
 }
 
-export async function updateGuide(
-  id: string,
+/**
+ * patch(camelCase) → guide_articles 행 모양(snake_case) 부분 객체.
+ * updateGuide와, 묶음 2의 초안 저장/게시(adminContentDrafts.ts,
+ * admin_publish_draft RPC)가 같이 쓴다.
+ */
+export function buildGuideRow(
   patch: Partial<GuideArticleInput> & { status?: GuideStatus; publishedAt?: string | null }
-): Promise<void> {
-  const sb = requireSupabase();
-  const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
+): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
   if (patch.title !== undefined) row.title = patch.title;
   if (patch.summary !== undefined) row.summary = patch.summary;
   if (patch.bodyMd !== undefined) row.body_md = patch.bodyMd;
@@ -110,6 +113,15 @@ export async function updateGuide(
   if (patch.slug !== undefined) row.slug = patch.slug;
   if (patch.status !== undefined) row.status = patch.status;
   if (patch.publishedAt !== undefined) row.published_at = patch.publishedAt;
+  return row;
+}
+
+export async function updateGuide(
+  id: string,
+  patch: Partial<GuideArticleInput> & { status?: GuideStatus; publishedAt?: string | null }
+): Promise<void> {
+  const sb = requireSupabase();
+  const row = { ...buildGuideRow(patch), updated_at: new Date().toISOString() };
 
   const { error } = await sb.from('guide_articles').update(row).eq('id', id);
   if (error) throw error;

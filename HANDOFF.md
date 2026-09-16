@@ -5952,9 +5952,84 @@ Distribution·Guides·Insights·Page·Reports·Scenarios·Search) 전부 이 훅
 **변경 파일:** `AdminLandingPage.tsx`, `AdminAuditPage.tsx`, `adminAudit.ts`,
 `AdminDistributionPage.tsx`, `useAdminAccess.ts`(신규) + 위 8개 관리자 페이지,
 마이그레이션 `20260916100000_admin_audit_target.sql`. `tsc -b`·`npm run build`
-클린. 아직 커밋 전.
+클린. 커밋 `8cf6825`(아직 푸시 전).
 
-**다음:** 묶음 2(초안/버전 시스템 — L1·A2 나머지·C4·L4·L5)로 진행 중.
+### 31-5. 묶음 2 — 관리자 콘텐츠 초안·게시·버전 이력 (L1·A2 나머지·C4·L4·L5) (2026-09-16)
+
+L1(랜딩 "초안 저장"이 게시본을 바로 덮음)·A2 나머지(landing_promo는 menu_tree가
+커서 감사 로그로 복원 불가)·C4(가이드 운영본을 직접 수정)·L4(미저장 이탈 보호
+없음)가 전부 "게시본과 작업본이 한 행, 이전 버전 없음"이라는 같은 원인이라
+범용 초안/버전 테이블 하나로 풀었다.
+
+**스키마** — 새 마이그레이션 `20260916110000_admin_content_drafts.sql`:
+- `admin_content_drafts`(table_name, row_key, data jsonb) — 관리자별 작업 중인
+  초안 1행. `admin_content_versions`(+version, snapshot jsonb) — 게시할 때마다
+  게시 직전 라이브 행을 스냅샷으로 쌓는다.
+- `admin_publish_draft(table, key)` RPC — 초안을 라이브에 반영 + 버전 스냅샷
+  생성 + 초안 삭제. `admin_restore_version(version_id)` RPC — 스냅샷을 **초안
+  으로만** 복사한다(라이브는 안 건드림 — A2가 지적한 "잘못 복원하면 라이브가
+  바로 망가지는" 위험을 없앰. 관리자가 미리보기로 확인 후 "게시"를 눌러야
+  실제 반영).
+- 보고서가 놓쳤던 것도 같이 막음: `landing_promo_select_all`이 `using(true)`라
+  `is_published=false` 초안 행도 누구나 REST로 읽을 수 있었다 —
+  `is_published = true or is_admin()`으로 교체.
+- 감사 로그의 복원 allowlist에서 `landing_promo`·`guide_articles` 제거(버전
+  테이블이 대체).
+
+**🔴 로컬 테스트로 찾아서 고친 버그(라이브엔 안 나갔던 것):**
+`admin_publish_draft`의 `jsonb_populate_record`가 초안에 없는 컬럼을 테이블
+기본값이 아니라 **명시적 NULL**로 채운다는 걸 몰랐다 — `landing_promo.updated_at`
+은 NOT NULL인데 갱신 트리거가 `BEFORE UPDATE`에만 붙어 있어서(이 locale이
+처음 게시되는 INSERT 경로엔 안 붙음), 첫 게시 때 제약 위반으로 막혔다. 초안에
+`updated_at = now()`를 직접 채워 넣는 것으로 고쳤다. 로컬 dev 서버에서 실제
+게시를 눌러보기 전엔 코드 리뷰만으론 못 잡았을 문제 — 그래서 이번 항목은
+꼭 브라우저로 끝까지 확인했다.
+
+**클라이언트:**
+- `src/lib/adminContentDrafts.ts`(신규) — `loadDraft`/`saveDraft`/`discardDraft`/
+  `publishDraft`/`listVersions`/`restoreVersion`/`listDraftKeys`. `data`는
+  이 모듈에겐 불투명한 JSON — 랜딩은 `landingPromo.ts`의 새 `buildLandingPromoRow`
+  (기존 `saveLandingPromo`에서 페이로드 조립 부분을 분리·재사용), 가이드는
+  `guides.ts`의 새 `buildGuideRow`(기존 `updateGuide`에서 분리)가 DB 컬럼
+  이름(snake_case)으로 이미 맞춰서 넘긴다.
+- **랜딩(L1·L4·L5)** — `AdminLandingPage.tsx`: `load()`가 게시본과 초안을 각각
+  읽어, 초안이 있으면 그걸 편집 시작점으로 쓴다. "초안 저장"은 `admin_content_drafts`
+  에만 쓰고 게시본은 안 건드림. "게시"는 초안 저장 → `admin_publish_draft` →
+  §31-1의 pendingRemovals 정리 순서. "초안 버리기"·"이전 버전"(목록+"초안으로
+  복원") 패널 추가. `dirty` 플래그(마지막 로드/저장 시점과 현재 state
+  비교)로 `beforeunload` 경고 + 언어 탭 전환 시 확인창(L4). 미리보기는
+  `PreviewForest`(요약 마크업) 대신 공개 페이지와 같은 렌더러
+  `LandingCms.tsx`의 `LandingCmsNav`/`LandingCmsSections`를 그대로 재사용
+  (L5) — 단, `SiteHeader`(로그인 상태·라우팅 의존)는 관리자 화면에 넣기
+  위험이 커서 가벼운 내비 목록만 흉내 냄. `PreviewForest`는 관례대로 삭제
+  안 하고 미사용으로 둠.
+- **가이드(C4)** — `AdminGuidesPage.tsx`: `status==='published'`인 글만
+  초안/게시/버전 경로(목록에 "수정 초안 있음" 배지, 편집창에 초안 저장·
+  게시·초안 버리기·이전 버전 버튼). `draft`/`archived` 글은 예전처럼
+  `updateGuide` 직접 수정 그대로(운영본 개념이 없어서 안 바꿈).
+
+**✅ 브라우저 검증(Playwright, 로컬 admin — `.env.local` `VITE_ADMIN_EMAILS`
++ `admin_users`에 mock 계정 `user5@mail.com`을 테스트 중에만 임시로 넣고
+끝나고 원복):**
+- 랜딩: 한 번도 게시 안 한 언어(ja)에서 초안 저장 → 공개 페이지엔 안 보임 →
+  게시 → 배지가 "게시본과 동일"로 바뀜 → 두 번째 편집·게시 후 "이전 버전"에
+  v1이 생기고, "초안으로 복원"이 라이브를 안 건드린 채 초안에만 v1 내용을
+  넣는 것 확인. 감사 로그 대상에 `ja · 테스트제목…`처럼 이름이 뜨는 것도
+  같이 확인(§31-2 A1과 연결).
+- 가이드: 실제 발행된 글("강남 올림픽공원 방문 가이드")로 초안 저장 →
+  "수정 초안 있음" 배지(편집창+목록) → 게시 → "운영본과 동일" → 이전 버전
+  복원 → 재게시로 원래 제목 정확히 원복 확인(SQL로 직접 대조). 테스트로
+  쌓인 버전 스냅샷은 정리, `admin_users`도 원상 복구.
+
+**변경 파일:** `adminContentDrafts.ts`(신규), `landingPromo.ts`(`buildLandingPromoRow`/
+`fromRow`/`LandingPromoRow` export), `guides.ts`(`buildGuideRow` export),
+`AdminLandingPage.tsx`, `AdminGuidesPage.tsx`, `app.css`, 마이그레이션
+`20260916110000_admin_content_drafts.sql`. `tsc -b`·`npm run build` 클린.
+
+**확인 방법:** `/admin/landing`에서 아무 언어나 수정 → "초안 저장"(공개
+화면 안 바뀜 확인) → "게시"(바뀜 확인) → "이전 버전" 눌러 v1이 있는지.
+`/admin/guides`에서 발행된 글 하나 열어 "초안 저장"→목록에 "수정 초안
+있음" 배지→"게시"→"이전 버전"으로 복원 가능한지.
 
 ---
 
