@@ -12,11 +12,11 @@
   },
   "nav": {
     "features": "Fonctions",
-    "howItWorks": "Commencer",
+    "howItWorks": "Comment ça marche",
     "plaza": "Place de partage",
     "tips": "Conseils de voyage",
     "info": "Infos voyage en Corée",
-    "start": "Planifier un itinéraire",
+    "start": "Ouvrir le planificateur",
     "login": "Connexion",
     "menu": "Menu"
   },
@@ -24,7 +24,7 @@
     "eyebrow": "Planificateur d’itinéraires",
     "title": "Collectez des lieux.\nAssemblez votre itinéraire.",
     "subtitle": "Recherchez et épinglez des spots : ils se regroupent par catégorie. Glissez pour réordonner, puis créez un itinéraire horodaté. Pas une carte des visites — un outil pour tisser votre prochaine route.",
-    "ctaPrimary": "Commencer gratuitement",
+    "ctaPrimary": "Ouvrir le planificateur",
     "ctaSecondary": "Voir la place",
     "note": "App web · fonctionne en local sans connexion",
     "demo": {

@@ -12,11 +12,11 @@
   },
   "nav": {
     "features": "功能",
-    "howItWorks": "開始",
+    "howItWorks": "使用方法",
     "plaza": "分享廣場",
     "tips": "旅行貼士",
     "info": "韓國旅行信息",
-    "start": "創建路線",
+    "start": "打開規劃器",
     "login": "登錄",
     "menu": "選單"
   },
@@ -24,7 +24,7 @@
     "eyebrow": "Wayknit",
     "title": "收藏想去的地方，\n編織旅行路線",
     "subtitle": "搜索並標記地點，按分類整理。拖動調整順序，生成幾點到幾點的行程。不是去過哪裡，而是規劃下一步怎麼走。",
-    "ctaPrimary": "免費開始",
+    "ctaPrimary": "打開規劃器",
     "ctaSecondary": "瀏覽分享廣場",
     "note": "無需安裝 · 可本地保存",
     "demo": {
@@ -116,7 +116,7 @@
   "cta": {
     "title": "開始規劃下一段旅程",
     "subtitle": "無需登錄即可本地保存。Plus 提供雲同步。",
-    "button": "打開路線規劃"
+    "button": "打開規劃器"
   },
   "footer": {
     "tagline": "收藏 → 編織 → 路線 → 分享",

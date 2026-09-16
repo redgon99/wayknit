@@ -12,11 +12,11 @@
   },
   "nav": {
     "features": "Features",
-    "howItWorks": "Get started",
+    "howItWorks": "How it works",
     "plaza": "Share plaza",
     "tips": "Travel tips",
     "info": "Korea travel info",
-    "start": "Plan a route",
+    "start": "Open planner",
     "login": "Sign in",
     "menu": "Menu"
   },
@@ -24,7 +24,7 @@
     "eyebrow": "Trip route planner",
     "title": "Collect places.\nMeld your route.",
     "subtitle": "Search and pin spots—they group by category. Drag to reorder, then build a timed itinerary. Not a visited map—a tool for weaving your next route.",
-    "ctaPrimary": "Start free",
+    "ctaPrimary": "Open planner",
     "ctaSecondary": "Browse share plaza",
     "note": "Web app · works offline locally without sign-in",
     "demo": {
@@ -97,7 +97,7 @@
   "cta": {
     "title": "Plan your next route today",
     "subtitle": "Save locally without signing in. Cloud sync and multilingual export on Plus.",
-    "button": "Open route planner"
+    "button": "Open planner"
   },
   "footer": {
     "tagline": "Collect → Knit → Route → Share",

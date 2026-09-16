@@ -12,11 +12,11 @@
   },
   "nav": {
     "features": "Funktionen",
-    "howItWorks": "Loslegen",
+    "howItWorks": "So funktioniert’s",
     "plaza": "Teilen-Platz",
     "tips": "Reisetipps",
     "info": "Korea-Reiseinfos",
-    "start": "Route planen",
+    "start": "Planer öffnen",
     "login": "Anmelden",
     "menu": "Menü"
   },
@@ -24,7 +24,7 @@
     "eyebrow": "Routenplaner",
     "title": "Orte sammeln.\nRoute zusammenfügen.",
     "subtitle": "Suchen und pinnen — die Orte gruppieren sich nach Kategorie. Ziehen zum Umsortieren, dann einen zeitlichen Plan erstellen. Keine Besuchskarte, sondern ein Werkzeug für die nächste Route.",
-    "ctaPrimary": "Kostenlos starten",
+    "ctaPrimary": "Planer öffnen",
     "ctaSecondary": "Platz ansehen",
     "note": "Web-App · funktioniert lokal ohne Anmeldung",
     "demo": {
@@ -97,7 +97,7 @@
   "cta": {
     "title": "Planen Sie heute Ihre nächste Route",
     "subtitle": "Lokal speichern ohne Anmeldung. Cloud-Sync und mehrsprachiger Export mit Plus.",
-    "button": "Routenplaner öffnen"
+    "button": "Planer öffnen"
   },
   "footer": {
     "tagline": "Sammeln → Zusammenfügen → Route → Teilen",

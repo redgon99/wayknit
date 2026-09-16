@@ -137,8 +137,11 @@ export function PlannerAppBar({
     <header className="planner-app-bar desktop-only-overlay">
       {/* 1. 브랜드 + 여행 */}
       <Link to={pathWithLocale('/', locale)} className="planner-brand" title="Wayknit">
+        {/* 랜딩(SiteHeader)과 같은 마크로 통일 — landing-planner-navigation-review §1.
+            "여" 글자는 옆 텍스트(planner-brand-ko)가 이미 담당하므로 pin 아이콘으로
+            바꿔도 브랜드 인지에 문제없다. */}
         <span className="planner-brand-mark" aria-hidden>
-          여
+          <Icon name="pin" size={14} />
         </span>
         <span className="planner-brand-text">
           Wayknit <span className="planner-brand-ko">{t('chrome.brandKo')}</span>

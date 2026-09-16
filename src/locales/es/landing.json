@@ -12,11 +12,11 @@
   },
   "nav": {
     "features": "Funciones",
-    "howItWorks": "Empezar",
+    "howItWorks": "Cómo funciona",
     "plaza": "Plaza de compartir",
     "tips": "Consejos de viaje",
     "info": "Info de viaje en Corea",
-    "start": "Planear una ruta",
+    "start": "Abrir el planificador",
     "login": "Iniciar sesión",
     "menu": "Menú"
   },
@@ -24,7 +24,7 @@
     "eyebrow": "Planificador de rutas",
     "title": "Reúne lugares.\nUne tu ruta.",
     "subtitle": "Busca y fija sitios: se agrupan por categoría. Arrastra para reordenar y crea un itinerario con horarios. No es un mapa de visitas: es una herramienta para tejer tu próxima ruta.",
-    "ctaPrimary": "Empezar gratis",
+    "ctaPrimary": "Abrir el planificador",
     "ctaSecondary": "Ver la plaza",
     "note": "App web · funciona en local sin iniciar sesión",
     "demo": {

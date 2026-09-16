@@ -12,11 +12,11 @@
   },
   "nav": {
     "features": "功能",
-    "howItWorks": "开始",
+    "howItWorks": "使用方法",
     "plaza": "分享广场",
     "tips": "旅行贴士",
     "info": "韩国旅行信息",
-    "start": "创建路线",
+    "start": "打开规划器",
     "login": "登录",
     "menu": "菜单"
   },
@@ -24,7 +24,7 @@
     "eyebrow": "Wayknit",
     "title": "收藏想去的地方，\n编织旅行路线",
     "subtitle": "搜索并标记地点，按分类整理。拖动调整顺序，生成几点到几点的行程。不是去过哪里，而是规划下一步怎么走。",
-    "ctaPrimary": "免费开始",
+    "ctaPrimary": "打开规划器",
     "ctaSecondary": "浏览分享广场",
     "note": "无需安装 · 可本地保存",
     "demo": {
@@ -116,7 +116,7 @@
   "cta": {
     "title": "开始规划下一段旅程",
     "subtitle": "无需登录即可本地保存。Plus 提供云同步。",
-    "button": "打开路线规划"
+    "button": "打开规划器"
   },
   "footer": {
     "tagline": "收藏 → 编织 → 路线 → 分享",

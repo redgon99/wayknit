@@ -10259,17 +10259,18 @@ button {
   flex-shrink: 0;
 }
 
+/* 랜딩(.landing-brand-mark, landing.css)과 같은 형태·색 체계로 통일
+   (landing-planner-navigation-review §1) — 다크그레이 그라디언트 박스에
+   accent색 아이콘. 앱바 폭이 좁아 크기만 랜딩(36px)보다 작게(26px) 둔다. */
 .planner-brand-mark {
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  background: var(--color-accent);
+  background: linear-gradient(145deg, #1f2937 0%, #374151 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--color-text-primary);
+  color: var(--color-accent);
 }
 
 .planner-brand-text {
