@@ -15,17 +15,8 @@
   },
   "limits": {
     "tripCount": "El plan gratuito permite hasta {{max}} viajes.",
-    "exportPlus": "La exportación es una función Plus.",
-    "cloudLogin": "Inicia sesión para usar el guardado en la nube.",
     "searchCap": "Has alcanzado el límite diario de búsquedas. Plus lo aumenta.",
     "materialCount": "El plan gratuito permite hasta {{max}} archivos por viaje. Plus elimina el límite."
-  },
-  "features": {
-    "unlimitedTrips": "Viajes ilimitados",
-    "cloudSync": "Sincronización en la nube",
-    "exportI18n": "Exporta el itinerario en tu idioma",
-    "realRoute": "Rutas por carretera reales ilimitadas",
-    "unlimitedSearch": "Búsquedas de Google ilimitadas"
   },
   "checkout": {
     "redirecting": "Abriendo el pago…",
