@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import { AuthBar } from './AuthBar';
@@ -11,6 +11,8 @@ import { HelpContent } from './HelpContent';
 import { KoreaSetupContent } from './KoreaSetupContent';
 import { SharePlazaPanel } from './SharePlazaPanel';
 import { PresenceStack } from './PresenceStack';
+import { normalizeLocale, pathWithLocale } from '../lib/locale';
+import i18n from '../lib/i18n';
 import type { PresenceViewer } from '../lib/tripPresence';
 import type { Trip, TripSummary } from '../lib/trips';
 
@@ -81,6 +83,11 @@ export function PlannerAppBar({
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: ts } = useTranslation('share');
+  /* 랜딩과 같은 사이트 이동 문구(여행 팁·한국여행정보)를 그대로 재사용 —
+   * 새로 번역하지 않고 landing.json의 nav.tips/nav.info를 그대로 쓴다. */
+  const { t: tl } = useTranslation('landing');
+  const navigate = useNavigate();
+  const locale = normalizeLocale(i18n.language);
   const [moreOpen, setMoreOpen] = useState(false);
   const [sheet, setSheet] = useState<AppSheet | null>(null);
   const [helpAirportFocus, setHelpAirportFocus] = useState(false);
@@ -129,7 +136,7 @@ export function PlannerAppBar({
     <>
     <header className="planner-app-bar desktop-only-overlay">
       {/* 1. 브랜드 + 여행 */}
-      <Link to="/" className="planner-brand" title="Wayknit">
+      <Link to={pathWithLocale('/', locale)} className="planner-brand" title="Wayknit">
         <span className="planner-brand-mark" aria-hidden>
           여
         </span>
@@ -271,6 +278,12 @@ export function PlannerAppBar({
                 setHelpAirportFocus(false);
                 setSheet('plaza');
               })}
+            {/* 가이드·정보는 시트로 보여줄 재사용 콘텐츠가 없는 실제 페이지라
+                (보고서 landing-planner-navigation-review §4) 억지로 시트에
+                끼우지 않고 그대로 이동시킨다. */}
+            {moreItem(tl('nav.tips'), () => navigate(pathWithLocale('/guides', locale)))}
+            {moreItem(tl('nav.info'), () => navigate(pathWithLocale('/info', locale)))}
+            <div className="planner-more-sep" aria-hidden />
             {onOpenPreferences && moreItem(t('themes.label'), onOpenPreferences)}
             {moreItem(t('nav.setup'), () => {
               setHelpAirportFocus(false);

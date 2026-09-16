@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../Icon';
+import { normalizeLocale, pathWithLocale } from '../../lib/locale';
+import i18n from '../../lib/i18n';
 import type { PlanId } from '../../lib/subscription';
 
 interface Props {
@@ -44,7 +46,10 @@ export function MobileMoreMenu({
   const { t } = useTranslation('planner');
   const { t: ts } = useTranslation('share');
   const { t: tb } = useTranslation('billing');
+  /* 랜딩과 같은 사이트 이동 문구(여행 팁·한국여행정보) 재사용 — 새로 번역 안 함 */
+  const { t: tl } = useTranslation('landing');
   const navigate = useNavigate();
+  const locale = normalizeLocale(i18n.language);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -103,9 +108,14 @@ export function MobileMoreMenu({
             )}
           {onOpenPreferences && item(t('themes.label'), onOpenPreferences)}
           {onOpenTableView && item(t('view.table'), onOpenTableView)}
-          {plazaNavVisible && item(t('plazaNav'), () => navigate('/plaza'))}
-          {item(t('nav.setup'), () => navigate('/setup'))}
-          {item(t('nav.help'), () => navigate('/help'))}
+          {plazaNavVisible && item(t('plazaNav'), () => navigate(pathWithLocale('/plaza', locale)))}
+          {/* 가이드·정보 링크는 이전엔 이 메뉴 어디에도 없었다(landing-planner
+              -navigation-review §4) */}
+          {item(tl('nav.tips'), () => navigate(pathWithLocale('/guides', locale)))}
+          {item(tl('nav.info'), () => navigate(pathWithLocale('/info', locale)))}
+          <div className="planner-more-sep" aria-hidden />
+          {item(t('nav.setup'), () => navigate(pathWithLocale('/setup', locale)))}
+          {item(t('nav.help'), () => navigate(pathWithLocale('/help', locale)))}
           <div className="planner-more-sep" aria-hidden />
           {item(
             t('chrome.tabAccount'),
