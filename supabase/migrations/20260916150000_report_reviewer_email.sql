@@ -10,6 +10,13 @@
 -- 처리 메모가 비어 있는 게 정상이었다(사람이 따로 안 적으면). 콘텐츠에
 -- 실제로 손을 댄 경우와 상태만 바꾼 경우를 화면에서 구분할 수 있게, 관리자가
 -- 메모를 안 남겼으면 자동으로 표시해 둔다.
+--
+-- 🔴 §31-13 — 이 기회에 원래 20260904050000부터 있던 버그도 같이 고친다:
+-- 함수 본문이 개명 전 테이블명 `waymeld_trips`를 그대로 쓰고 있었다
+-- (Wayknit 개명은 §7, `wayknit_trips`로 바뀐 지 오래). trip·plaza_listing
+-- 대상 제재("비공개 전환"/"마당에서 내리기")를 누를 때마다 "relation
+-- does not exist"로 계속 실패했을 것 — 마이그레이션을 손대기 전까진
+-- 아무도 실제로 안 눌러봐서 안 들켰던 것으로 보인다. 전부 wayknit_trips로.
 -- =============================================
 
 alter table public.content_reports add column if not exists reviewed_by_email text;
@@ -44,24 +51,24 @@ begin
   if v_type in ('trip', 'plaza_listing') then
     select jsonb_build_object('is_public', t.is_public, 'listed_in_plaza', t.listed_in_plaza)
       into v_before
-      from public.waymeld_trips t where t.id::text = v_target;
+      from public.wayknit_trips t where t.id::text = v_target;
     if v_before is null then
       raise exception '대상 여행이 이미 삭제되었습니다.' using errcode = 'P0002';
     end if;
 
     if v_type = 'trip' then
-      update public.waymeld_trips
+      update public.wayknit_trips
          set is_public = false, listed_in_plaza = false
        where id::text = v_target;
     else
-      update public.waymeld_trips
+      update public.wayknit_trips
          set listed_in_plaza = false
        where id::text = v_target;
     end if;
 
     select jsonb_build_object('is_public', t.is_public, 'listed_in_plaza', t.listed_in_plaza)
       into v_after
-      from public.waymeld_trips t where t.id::text = v_target;
+      from public.wayknit_trips t where t.id::text = v_target;
 
     select array_agg(k order by k) into v_changed
       from jsonb_object_keys(v_after) k
@@ -71,7 +78,7 @@ begin
       insert into public.admin_audit_log (
         actor_email, actor_id, table_name, operation, row_id, changed_fields, before, after
       ) values (
-        v_actor, auth.uid(), 'waymeld_trips', 'UPDATE', v_target, v_changed, v_before, v_after
+        v_actor, auth.uid(), 'wayknit_trips', 'UPDATE', v_target, v_changed, v_before, v_after
       );
     end if;
 
