@@ -1,0 +1,33 @@
+-- profiles.plan 자가승격 구멍 막기 (§30-1)
+--
+-- profiles_update_own 정책은 auth.uid() = id 조건만 있고 with_check도
+-- 컬럼 제한도 없었다. 즉 로그인한 사용자가 클라이언트에서 직접
+--   supabase.from('profiles').update({ plan: 'plus' }).eq('id', 내ID)
+-- 를 호출하면 결제 없이 영구 Plus로 자가승격할 수 있었다
+-- (docs/Wayknit_수익화_실행계획_2026-08-27.md §1.1에 이미 알려져 있던
+-- Tier 1 미완료 항목).
+--
+-- 조사 결과 클라이언트 코드 어디에도 profiles UPDATE를 쓰는 곳이 없다
+-- (src/lib/profiles.ts는 select만 한다 — display_name을 사용자가 고치는
+-- 화면도 아직 없다). 그래서 컬럼 단위로 좁히는 대신 **클라이언트 UPDATE
+-- 권한 자체를 없앤다** — 지금 아무것도 이걸 의존하지 않으므로 가장 안전한
+-- 선택이다. plan/subscription_status/subscription_expires_at 갱신은
+-- 이미 서비스 롤 키로 도는 Edge Function(billing-subscribe 등, RLS를
+-- 우회함)에서만 이루어지도록 설계돼 있었고 이 마이그레이션 이후에도
+-- 그 경로는 그대로 동작한다.
+--
+-- 나중에 "표시 이름 직접 수정" 같은 기능이 생기면, 그때 컬럼 단위
+-- with_check(예: plan/subscription_*는 변경 못 하게)로 다시 열면 된다.
+
+drop policy if exists "profiles_update_own" on public.profiles;
+
+-- 참고용으로 기록만 남긴다: 재도입할 때는 반드시 with_check로
+-- plan/subscription_status/subscription_expires_at 변경을 막을 것.
+-- create policy "profiles_update_own_display_name" on public.profiles
+--   for update using (auth.uid() = id)
+--   with_check (
+--     auth.uid() = id
+--     and plan = (select plan from public.profiles where id = auth.uid())
+--     and subscription_status is not distinct from (select subscription_status from public.profiles where id = auth.uid())
+--     and subscription_expires_at is not distinct from (select subscription_expires_at from public.profiles where id = auth.uid())
+--   );

@@ -1,6 +1,20 @@
 import { Icon } from './Icon';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { PinnedPlace, TripMaterial, TripMaterialKind } from '../types';
+import type { PlanId } from '../lib/subscription';
+import {
+  canAddTripMaterial,
+  FREE_MAX_TRIP_MATERIALS,
+  canUseOfflineMaterials,
+} from '../lib/subscription';
+import {
+  isMaterialOffline,
+  saveMaterialOffline,
+  removeMaterialOffline,
+  getOfflineMaterialObjectUrl,
+  pruneOfflineMaterials,
+} from '../lib/offlineMaterials';
 import {
   createMaterialId,
   formatByteSize,
@@ -11,12 +25,20 @@ import {
   validateMaterialFile,
 } from '../lib/tripMaterialsStorage';
 import { MaterialsExportMenu } from './MaterialsExportMenu';
+import { AppSheetModal } from './AppSheetModal';
+import { presenceColor, presenceInitial } from '../lib/tripPresence';
+import {
+  extractReservation,
+  type ReservationPinCandidate,
+  type ReservationSuggestion,
+} from '../lib/reservationExtract';
 import { MaterialsPhotoGallery } from './MaterialsPhotoGallery';
 import {
   albumDisplayTitle,
   buildMaterialDisplayItems,
   type MaterialDisplayItem,
 } from '../lib/materialAlbums';
+import i18n from '../lib/i18n';
 
 type KindFilter = 'all' | TripMaterialKind;
 type ViewMode = 'grid' | 'list';
@@ -42,6 +64,30 @@ interface Props {
   userId: string | null;
   authConfigured: boolean;
   onNotify: (message: string) => void;
+  plan: PlanId;
+  isAdmin: boolean;
+  /** F07과 같은 패턴 — Free가 막힌 기능을 누르면 요금제 안내를 띄운다 */
+  onUpgradeRequest: () => void;
+  /**
+   * 자료 id → 올린 사람 이메일. 공유받은 자료에 작성자 배지를 달 때만 쓴다.
+   * 볼 자격이 없는 화면(공개 여행 열람)에서는 넘기지 않는다 — §14-2 와 같은 판단.
+   */
+  materialAuthors?: Record<string, string | null>;
+  /** 내가 올린 것에는 배지를 달지 않으려고 비교한다. */
+  currentUserEmail?: string | null;
+  /**
+   * U14(모바일 UX 리포트 2026-09-13) — 핀 카드의 "자료" 배지에서 열었을
+   * 때 그 장소로 바로 필터링한다. 넘기지 않으면(일반 "자료" 탭 진입)
+   * 대신 오늘(currentDay)로 기본 필터링한다 — "여행자는 보통 오늘 자료를
+   * 찾는다"는 관찰에 맞춘 기본값.
+   */
+  initialPlaceFilter?: string | null;
+  /**
+   * N04(모바일 UX 리포트 2026-09-13) — 메모에서 찾은 예약 시각을 핀에 고정한다
+   * (`fixedArrival` + `itemKind:'reserved'`). 넘기지 않으면 제안 기능 자체가 꺼진다
+   * (공개 여행 열람처럼 수정 권한이 없는 화면).
+   */
+  onApplyReservation?: (placeId: string, time: string) => void;
 }
 
 function sortMaterials(list: TripMaterial[]): TripMaterial[] {
@@ -77,15 +123,46 @@ export function TripMaterialsPanel({
   userId,
   authConfigured,
   onNotify,
+  plan,
+  isAdmin,
+  onUpgradeRequest,
+  materialAuthors,
+  currentUserEmail,
+  initialPlaceFilter,
+  onApplyReservation,
 }: Props) {
+  const { t } = useTranslation('planner');
+  const { t: tc } = useTranslation('common');
+  const { t: tb } = useTranslation('billing');
   const [kindFilter, setKindFilter] = useState<KindFilter>('all');
   const [dayFilter, setDayFilter] = useState<number | null>(null);
   const [placeFilter, setPlaceFilter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => readViewMode());
+
+  /*
+   * U14(모바일 UX 리포트 2026-09-13) — 열 때마다 필터를 다시 잡는다.
+   * 장소 배지로 열렸으면(initialPlaceFilter) 그 장소 기준으로만 보여주고
+   * (일차로 또 좁히면 계획이 바뀐 자료를 놓칠 수 있어 day는 전체로 둔다),
+   * 일반 진입이면 "오늘" 자료를 기본으로 보여준다.
+   */
+  useEffect(() => {
+    if (!open) return;
+    if (initialPlaceFilter) {
+      setPlaceFilter(initialPlaceFilter);
+      setDayFilter(null);
+    } else {
+      setPlaceFilter(null);
+      setDayFilter(currentDay);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialPlaceFilter]);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [offlineIds, setOfflineIds] = useState<Set<string>>(new Set());
+  const [offlineBusy, setOfflineBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [draftText, setDraftText] = useState('');
+  const [composingNote, setComposingNote] = useState(false);
   const [gallery, setGallery] = useState<{ ids: string[]; index: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragDepthRef = useRef(0);
@@ -94,11 +171,55 @@ export function TripMaterialsPanel({
     const out: PinOption[] = [];
     for (let d = 1; d <= totalDays; d++) {
       for (const p of pinnedByDay[d] ?? []) {
-        out.push({ id: p.id, label: `${d}일 · ${p.name}`, day: d });
+        out.push({ id: p.id, label: t('materials.pinOptionLabel', { day: d, name: p.name }), day: d });
+      }
+    }
+    return out;
+  }, [pinnedByDay, totalDays, t]);
+
+  /*
+   * N04 — 메모에서 예약 정보(시각·장소)를 찾아 "연결할까요?"로 제안한다.
+   *
+   * 대상은 **텍스트 메모만**이다. 사진 예약서는 OCR이 필요하고 파일은 이름뿐이라
+   * 근거가 약하다 — 억지로 넓히면 틀린 제안만 늘어난다.
+   */
+  const reservationPins = useMemo((): ReservationPinCandidate[] => {
+    const out: ReservationPinCandidate[] = [];
+    for (let d = 1; d <= totalDays; d++) {
+      for (const p of pinnedByDay[d] ?? []) {
+        out.push({ id: p.id, name: p.name, nameKo: p.nameKo, day: d });
       }
     }
     return out;
   }, [pinnedByDay, totalDays]);
+
+  /** 이번 세션 동안만 "무시"를 기억한다. 자료 데이터에 필드를 더하면 원격 스키마까지
+   *  건드려야 해서, 되돌리기 쉬운 화면 상태로만 둔다. */
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
+
+  const suggestions = useMemo(() => {
+    if (!onApplyReservation) return [] as Array<{ material: TripMaterial; hint: ReservationSuggestion }>;
+    const pinById = new Map(reservationPins.map((p) => [p.id, p]));
+    const pinObjById = new Map<string, PinnedPlace>();
+    for (let d = 1; d <= totalDays; d++) {
+      for (const p of pinnedByDay[d] ?? []) pinObjById.set(p.id, p);
+    }
+    const out: Array<{ material: TripMaterial; hint: ReservationSuggestion }> = [];
+    for (const m of materials) {
+      if (m.kind !== 'text') continue;
+      if (dismissedSuggestions.has(m.id)) continue;
+      const hint = extractReservation(`${m.title}\n${m.body ?? ''}`, reservationPins);
+      // 장소를 못 찾으면 적용할 대상이 없다(시각은 핀에 붙는 값이다).
+      if (!hint?.placeId || !pinById.has(hint.placeId)) continue;
+      // 이미 그 장소에 연결됐고 시각까지 반영됐으면 제안할 게 없다 —
+      // 적용 후 제안이 저절로 사라지도록 별도 상태 없이 이걸로 판단한다.
+      const needLink = m.pinnedPlaceId !== hint.placeId;
+      const needTime = !!hint.time && pinObjById.get(hint.placeId)?.fixedArrival !== hint.time;
+      if (!needLink && !needTime) continue;
+      out.push({ material: m, hint });
+    }
+    return out;
+  }, [materials, reservationPins, pinnedByDay, totalDays, dismissedSuggestions, onApplyReservation]);
 
   const filtered = useMemo(() => {
     return sortMaterials(materials).filter((m) => {
@@ -121,6 +242,20 @@ export function TripMaterialsPanel({
       .filter((m): m is TripMaterial => !!m);
   }, [gallery, materials]);
 
+  /**
+   * 남이 올린 자료면 그 이메일. 내 것이거나 작성자를 모르면 null 이라 배지가 안 붙는다.
+   * §19 이전 payload 에서 옮겨 온 자료는 작성자가 비어 있다 — 모르는 사람의 이니셜을
+   * 지어내는 것보다 배지를 안 다는 편이 낫다.
+   */
+  const authorOf = useCallback(
+    (m: TripMaterial): string | null => {
+      const email = materialAuthors?.[m.id] ?? null;
+      if (!email) return null;
+      return email === (currentUserEmail ?? '') ? null : email;
+    },
+    [materialAuthors, currentUserEmail]
+  );
+
   const openGallery = useCallback((ids: string[], startIndex = 0) => {
     setGallery({ ids, index: Math.max(0, Math.min(startIndex, ids.length - 1)) });
   }, []);
@@ -134,16 +269,47 @@ export function TripMaterialsPanel({
 
     (async () => {
       const next: Record<string, string> = {};
+      const offline = new Set<string>();
       for (const { id, path } of paths) {
-        const url = await getMaterialSignedUrl(path);
-        if (url) next[id] = url;
+        const cached = await isMaterialOffline(id).catch(() => false);
+        if (cached) offline.add(id);
+        /*
+         * 오프라인일 땐 sb.storage.createSignedUrl()이 예외를 던질 수 있다
+         * (네트워크 자체가 없음). try/catch 없이 두면 for 루프가 그 자리에서
+         * 멈춰 그 뒤 자료들의 서명 URL까지 통째로 못 받아온다 — 오프라인
+         * 저장 기능을 붙이면서 겸사겸사 고친다.
+         */
+        let url: string | null = null;
+        try {
+          url = await getMaterialSignedUrl(path);
+        } catch {
+          url = null;
+        }
+        if (url) {
+          next[id] = url;
+        } else if (cached) {
+          const offlineUrl = await getOfflineMaterialObjectUrl(id).catch(() => null);
+          if (offlineUrl) next[id] = offlineUrl;
+        }
       }
-      if (!cancelled) setSignedUrls((prev) => ({ ...prev, ...next }));
+      if (!cancelled) {
+        setSignedUrls((prev) => ({ ...prev, ...next }));
+        setOfflineIds(offline);
+      }
     })();
 
     return () => {
       cancelled = true;
     };
+  }, [open, materials]);
+
+  /* 자료가 지워지면 그 캐시도 같이 치운다 — 안 그러면 삭제된 사진이 오프라인 캐시에 남는다 */
+  useEffect(() => {
+    if (!open) return;
+    const keepIds = new Set(
+      materials.filter((m) => m.storagePath).map((m) => m.id)
+    );
+    void pruneOfflineMaterials(keepIds);
   }, [open, materials]);
 
 
@@ -161,12 +327,12 @@ export function TripMaterialsPanel({
   const requireAuthForUpload = useCallback((): boolean => {
     if (userId) return true;
     if (authConfigured) {
-      onNotify('사진·파일은 클라우드 로그인 후 업로드할 수 있습니다.');
+      onNotify(t('materials.uploadNeedsLogin'));
     } else {
-      onNotify('사진·파일 업로드는 Supabase 설정이 필요합니다.');
+      onNotify(t('materials.uploadNeedsSupabase'));
     }
     return false;
-  }, [userId, authConfigured, onNotify]);
+  }, [userId, authConfigured, onNotify, t]);
 
   const handleUploadFiles = useCallback(
     async (files: FileList | File[] | null) => {
@@ -183,10 +349,20 @@ export function TripMaterialsPanel({
             ? createMaterialId()
             : undefined;
         const next = [...materials];
+        /* 텍스트 메모는 스토리지를 안 쓰니 캡 계산에서 뺀다 */
+        let fileCount = materials.filter((m) => m.storagePath).length;
+        let capBlocked = false;
         for (const file of fileArr) {
           const validation = validateMaterialFile(file);
           if (validation) {
             onNotify(validation);
+            continue;
+          }
+          if (!canAddTripMaterial(plan, fileCount, isAdmin)) {
+            if (!capBlocked) {
+              onNotify(tb('limits.materialCount', { max: FREE_MAX_TRIP_MATERIALS }));
+              capBlocked = true;
+            }
             continue;
           }
           const kind = inferMaterialKindFromFile(file);
@@ -207,29 +383,96 @@ export function TripMaterialsPanel({
             updatedAt: now,
           });
           added++;
+          fileCount++;
           if (kind === 'image') imageAdded++;
         }
         if (added > 0) {
           onChange(sortMaterials(next));
           const albumMsg =
             batchAlbumId && imageAdded > 0
-              ? ` (사진 ${imageAdded}장을 한 묶음으로 표시)`
+              ? t('materials.albumGroupedSuffix', { count: imageAdded })
               : '';
-          onNotify(`${added}개 파일을 추가했습니다.${albumMsg}`);
+          onNotify(`${t('materials.filesAdded', { count: added })}${albumMsg}`);
         }
       } catch (e) {
-        onNotify((e as Error).message || '업로드에 실패했습니다.');
+        onNotify((e as Error).message || t('materials.uploadFailed'));
       } finally {
         setUploading(false);
       }
     },
-    [materials, onChange, tripId, userId, currentDay, requireAuthForUpload, onNotify]
+    [
+      materials,
+      onChange,
+      tripId,
+      userId,
+      currentDay,
+      requireAuthForUpload,
+      onNotify,
+      t,
+      tb,
+      plan,
+      isAdmin,
+    ]
   );
+
+  const offlineCapableIds = useMemo(
+    () => materials.filter((m) => m.storagePath).map((m) => m.id),
+    [materials]
+  );
+  const allOffline =
+    offlineCapableIds.length > 0 && offlineCapableIds.every((id) => offlineIds.has(id));
+
+  /*
+   * 한 장씩이 아니라 "여행 통째로" 저장/해제한다 — 카드마다 버튼을 놓으면
+   * 컴포넌트 3단(그리드/목록 카드 → 더보기 시트)을 다 뚫어야 하고, 실제로도
+   * "이 여행 오프라인으로 보기"가 사용자가 기대하는 단위에 더 가깝다.
+   */
+  const handleToggleOfflineAll = useCallback(async () => {
+    if (!canUseOfflineMaterials(plan, isAdmin)) {
+      onUpgradeRequest();
+      return;
+    }
+    if (offlineBusy || offlineCapableIds.length === 0) return;
+    setOfflineBusy(true);
+    try {
+      if (allOffline) {
+        for (const id of offlineCapableIds) await removeMaterialOffline(id);
+        setOfflineIds(new Set());
+        onNotify(t('materials.offlineCleared'));
+      } else {
+        const nextOffline = new Set(offlineIds);
+        let failed = 0;
+        for (const m of materials) {
+          if (!m.storagePath || nextOffline.has(m.id)) continue;
+          const url = signedUrls[m.id] ?? (await getMaterialSignedUrl(m.storagePath).catch(() => null));
+          const ok = url ? await saveMaterialOffline(m.id, url) : false;
+          if (ok) nextOffline.add(m.id);
+          else failed++;
+        }
+        setOfflineIds(nextOffline);
+        onNotify(failed > 0 ? t('materials.offlineSavedPartial', { failed }) : t('materials.offlineSaved'));
+      }
+    } finally {
+      setOfflineBusy(false);
+    }
+  }, [
+    plan,
+    isAdmin,
+    onUpgradeRequest,
+    offlineBusy,
+    offlineCapableIds,
+    allOffline,
+    offlineIds,
+    materials,
+    signedUrls,
+    onNotify,
+    t,
+  ]);
 
   const handleSaveText = useCallback(() => {
     const body = draftText.trim();
     if (!body) {
-      onNotify('저장할 내용을 입력해 주세요.');
+      onNotify(t('materials.noteEmpty'));
       return;
     }
     const firstLine = body.split('\n').find((l) => l.trim())?.trim() ?? '';
@@ -237,7 +480,7 @@ export function TripMaterialsPanel({
     const item: TripMaterial = {
       id: createMaterialId(),
       kind: 'text',
-      title: firstLine.slice(0, 48) || '메모',
+      title: firstLine.slice(0, 48) || t('materials.noteDefaultTitle'),
       body,
       day: currentDay,
       createdAt: now,
@@ -245,8 +488,8 @@ export function TripMaterialsPanel({
     };
     onChange(sortMaterials([item, ...materials]));
     setDraftText('');
-    onNotify('텍스트를 저장했습니다.');
-  }, [draftText, materials, onChange, currentDay, onNotify]);
+    onNotify(t('materials.textSaved'));
+  }, [draftText, materials, onChange, currentDay, onNotify, t]);
 
   const handleDelete = useCallback(
     async (item: TripMaterial) => {
@@ -254,7 +497,7 @@ export function TripMaterialsPanel({
         try {
           await removeMaterialFile(item.storagePath);
         } catch {
-          onNotify('저장소 파일 삭제에 실패했습니다. 목록만 제거합니다.');
+          onNotify(t('materials.deleteStorageFailed'));
         }
       }
       onChange(materials.filter((m) => m.id !== item.id));
@@ -264,9 +507,9 @@ export function TripMaterialsPanel({
         return next;
       });
       if (gallery?.ids.includes(item.id)) setGallery(null);
-      onNotify('자료를 삭제했습니다.');
+      onNotify(t('materials.deleted'));
     },
-    [materials, onChange, userId, gallery, onNotify]
+    [materials, onChange, userId, gallery, onNotify, t]
   );
 
   const handleDeleteMany = useCallback(
@@ -289,9 +532,9 @@ export function TripMaterialsPanel({
         return next;
       });
       if (gallery?.ids.some((id) => ids.has(id))) setGallery(null);
-      onNotify(`${items.length}개 자료를 삭제했습니다.`);
+      onNotify(t('materials.deletedMany', { count: items.length }));
     },
-    [materials, onChange, userId, gallery, onNotify]
+    [materials, onChange, userId, gallery, onNotify, t]
   );
 
   const patchAlbum = useCallback(
@@ -322,6 +565,26 @@ export function TripMaterialsPanel({
       });
     },
     [patchAlbum, pinOptions]
+  );
+
+  /** N04 — 제안 적용: 자료를 그 장소에 연결하고(기존 경로 재사용), 시각이 있으면 핀에 고정 */
+  const handleApplySuggestion = useCallback(
+    (materialId: string, hint: ReservationSuggestion) => {
+      if (!hint.placeId) return;
+      const pin = pinOptions.find((p) => p.id === hint.placeId);
+      patchOne(materialId, {
+        pinnedPlaceId: hint.placeId,
+        pinnedPlaceName: hint.placeName,
+        day: pin?.day ?? hint.placeDay,
+      });
+      if (hint.time) onApplyReservation?.(hint.placeId, hint.time);
+      onNotify(
+        hint.time
+          ? t('materials.suggestAppliedWithTime', { place: hint.placeName, time: hint.time })
+          : t('materials.suggestApplied', { place: hint.placeName })
+      );
+    },
+    [patchOne, pinOptions, onApplyReservation, onNotify, t]
   );
 
   const handlePlaceLink = useCallback(
@@ -378,168 +641,288 @@ export function TripMaterialsPanel({
   if (!open) return null;
 
   const uploadHint = userId
-    ? '사진·문서 파일을 끌어다 놓거나 클릭하세요'
+    ? t('materials.dropHint')
     : authConfigured
-      ? '로그인 후 사진·파일을 끌어다 놓을 수 있습니다'
-      : '클라우드 설정 후 사진·파일을 추가할 수 있습니다';
+      ? t('materials.dropHintNeedLogin')
+      : t('materials.dropHintNeedSupabase');
 
   return (
     <>
-      <aside className="materials-panel open" aria-label="여행 자료">
-        <header className="route-panel-header materials-panel-header">
-          <div>
-            <div className="panel-title">
-              <Icon name="folder" />
-              <span>여행 자료</span>
-            </div>
-            <div className="panel-subtitle">
-              {tripTitle} · {materials.length}개
+      <aside
+        className="materials-panel open"
+        aria-label={t('materials.panelTitle')}
+        /* 드롭 영역이 패널 전체다 — 전용 드롭존 상자를 없앤 자리를 대신한다.
+           끄는 동안에만 오버레이가 떠서, 평소에는 목록이 그 공간을 쓴다. */
+        onDragEnter={onDropZoneDragEnter}
+        onDragLeave={onDropZoneDragLeave}
+        onDragOver={onDropZoneDragOver}
+        onDrop={onDropZoneDrop}
+      >
+        <header className="materials-head">
+          <div className="materials-head-text">
+            <div className="materials-head-title">{t('materials.panelTitle')}</div>
+            <div className="materials-head-sub">
+              {tripTitle} · {t('materials.countSuffix', { count: materials.length })}
             </div>
           </div>
-          <MaterialsExportMenu
-            tripTitle={tripTitle}
-            materials={materials}
-            onNotify={onNotify}
-          />
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="패널 닫기">
-            <Icon name="close" />
-          </button>
-        </header>
-
-        <div className="materials-compose">
-          <div
-            className={`materials-dropzone${dragOver ? ' drag-over' : ''}${uploading ? ' uploading' : ''}`}
-            onDragEnter={onDropZoneDragEnter}
-            onDragLeave={onDropZoneDragLeave}
-            onDragOver={onDropZoneDragOver}
-            onDrop={onDropZoneDrop}
-            onClick={() => {
-              if (requireAuthForUpload()) fileInputRef.current?.click();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                if (requireAuthForUpload()) fileInputRef.current?.click();
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label="파일 추가"
-          >
-            <Icon name="upload" />
-            <span className="materials-dropzone-label">
-              {uploading ? '업로드 중…' : uploadHint}
-            </span>
-            {uploading && <Icon name="loader" spin />}
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="materials-file-input"
-            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.hwp"
-            multiple
-            onChange={(e) => {
-              void handleUploadFiles(e.target.files);
-              e.target.value = '';
-            }}
-          />
-
-          <div className="materials-text-compose">
-            <textarea
-              className="materials-draft-text"
-              value={draftText}
-              onChange={(e) => setDraftText(e.target.value)}
-              placeholder="메모·일정 메모를 입력하고 저장하세요…"
-              rows={3}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                  e.preventDefault();
-                  handleSaveText();
+          <div className="materials-head-actions">
+            <button
+              type="button"
+              className="materials-head-btn"
+              onClick={() => setViewModePersist(viewMode === 'grid' ? 'list' : 'grid')}
+              aria-label={viewMode === 'grid' ? t('materials.viewList') : t('materials.viewGrid')}
+              title={viewMode === 'grid' ? t('materials.viewList') : t('materials.viewGrid')}
+            >
+              <Icon name={viewMode === 'grid' ? 'layoutList' : 'layoutGrid'} size={17} />
+            </button>
+            {offlineCapableIds.length > 0 && (
+              <button
+                type="button"
+                className={`materials-head-btn${allOffline ? ' active' : ''}`}
+                disabled={offlineBusy}
+                onClick={() => void handleToggleOfflineAll()}
+                aria-label={
+                  !canUseOfflineMaterials(plan, isAdmin)
+                    ? t('materials.offlineLocked')
+                    : allOffline
+                      ? t('materials.offlineClearAll')
+                      : t('materials.offlineSaveAll')
                 }
-              }}
+                title={
+                  !canUseOfflineMaterials(plan, isAdmin)
+                    ? t('materials.offlineLocked')
+                    : allOffline
+                      ? t('materials.offlineClearAll')
+                      : t('materials.offlineSaveAll')
+                }
+              >
+                {offlineBusy ? (
+                  <Icon name="loader" size={17} spin />
+                ) : !canUseOfflineMaterials(plan, isAdmin) ? (
+                  <Icon name="lock" size={17} />
+                ) : allOffline ? (
+                  <Icon name="cloudOk" size={17} />
+                ) : (
+                  <Icon name="download" size={17} />
+                )}
+              </button>
+            )}
+            <MaterialsExportMenu
+              tripTitle={tripTitle}
+              materials={materials}
+              onNotify={onNotify}
+              iconOnly
             />
             <button
               type="button"
-              className="materials-text-save-btn"
-              disabled={!draftText.trim()}
-              onClick={handleSaveText}
+              className="materials-head-btn"
+              onClick={onClose}
+              aria-label={t('materials.closePanel')}
             >
-              <Icon name="save" /> 저장
+              <Icon name="close" size={17} />
             </button>
           </div>
-        </div>
+        </header>
 
-        <div className="materials-filters" role="group" aria-label="자료 필터">
-          <div className="materials-view-toggle" role="group" aria-label="보기 방식">
-            <button
-              type="button"
-              className={`materials-view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-              title="큰 아이콘"
-              aria-pressed={viewMode === 'grid'}
-              onClick={() => setViewModePersist('grid')}
-            >
-              <Icon name="layoutGrid" />
-            </button>
-            <button
-              type="button"
-              className={`materials-view-btn ${viewMode === 'list' ? 'active' : ''}`}
-              title="목록"
-              aria-pressed={viewMode === 'list'}
-              onClick={() => setViewModePersist('list')}
-            >
-              <Icon name="layoutList" />
-            </button>
+        {/* 드롭존·메모창·저장 3층을 한 줄로. 메모는 누를 때만 펼친다. */}
+        <div className="materials-add-row">
+          <button
+            type="button"
+            className="materials-add-btn"
+            disabled={uploading}
+            onClick={() => {
+              if (requireAuthForUpload()) fileInputRef.current?.click();
+            }}
+          >
+            {uploading ? <Icon name="loader" size={15} spin /> : <Icon name="upload" size={15} />}
+            {uploading ? t('materials.uploading') : t('materials.addPhotoFile')}
+          </button>
+          <button
+            type="button"
+            className={`materials-add-btn${composingNote ? ' active' : ''}`}
+            onClick={() => setComposingNote((v) => !v)}
+            aria-expanded={composingNote}
+          >
+            <Icon name="pencil" size={15} />
+            {t('materials.writeNote')}
+          </button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="materials-file-input"
+          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.hwp"
+          multiple
+          onChange={(e) => {
+            void handleUploadFiles(e.target.files);
+            e.target.value = '';
+          }}
+        />
+
+        {composingNote && (
+          <div className="materials-note-compose">
+            <textarea
+              className="materials-draft-text"
+              value={draftText}
+              autoFocus
+              onChange={(e) => setDraftText(e.target.value)}
+              placeholder={t('materials.notePlaceholder')}
+              rows={3}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setComposingNote(false);
+                  return;
+                }
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                  e.preventDefault();
+                  handleSaveText();
+                  setComposingNote(false);
+                }
+              }}
+            />
+            <div className="materials-note-compose-actions">
+              <button
+                type="button"
+                className="materials-note-cancel"
+                onClick={() => {
+                  setDraftText('');
+                  setComposingNote(false);
+                }}
+              >
+                {tc('cancel')}
+              </button>
+              <button
+                type="button"
+                className="materials-note-save"
+                disabled={!draftText.trim()}
+                title={t('materials.saveShortcutHint')}
+                onClick={() => {
+                  handleSaveText();
+                  setComposingNote(false);
+                }}
+              >
+                {tc('save')}
+              </button>
+            </div>
           </div>
-          {(
-            [
-              ['all', '전체'],
-              ['text', '텍스트'],
-              ['image', '사진'],
-              ['file', '파일'],
-            ] as const
-          ).map(([k, label]) => (
-            <button
-              key={k}
-              type="button"
-              className={`materials-filter-chip ${kindFilter === k ? 'active' : ''}`}
-              onClick={() => setKindFilter(k)}
-            >
-              {label}
-            </button>
-          ))}
-          {Array.from({ length: totalDays }, (_, i) => i + 1).map((d) => (
-            <button
-              key={`day-${d}`}
-              type="button"
-              className={`materials-filter-chip ${dayFilter === d ? 'active' : ''}`}
-              onClick={() => setDayFilter(dayFilter === d ? null : d)}
-            >
-              {d}일차
-            </button>
-          ))}
-          {pinOptions.length > 0 && (
-            <select
-              className="materials-place-filter"
-              value={placeFilter ?? ''}
-              onChange={(e) => setPlaceFilter(e.target.value || null)}
-              aria-label="장소 필터"
-            >
-              <option value="">모든 장소</option>
-              {pinOptions.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          )}
+        )}
+
+        {dragOver && (
+          <div className="materials-drop-overlay" aria-hidden>
+            <Icon name="upload" size={26} />
+            <span>{uploadHint}</span>
+          </div>
+        )}
+
+        {/* 칩 8개가 두 줄로 접히던 자리 — 세그먼트 하나와 메뉴 둘로 줄였다.
+            일차는 여행 길이만큼 늘어나므로 칩으로 두면 언제든 다시 넘친다. */}
+        <div className="materials-filterbar">
+          <div className="materials-seg" role="group" aria-label={t('materials.kindFilterAria')}>
+            {(
+              [
+                ['all', t('materials.kindAll')],
+                ['image', t('materials.kindImage')],
+                ['text', t('materials.kindNote')],
+                ['file', t('materials.kindFile')],
+              ] as const
+            ).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                className={`materials-seg-btn${kindFilter === k ? ' active' : ''}`}
+                aria-pressed={kindFilter === k}
+                onClick={() => setKindFilter(k)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="materials-filter-menus">
+            <FilterMenu
+              label={t('materials.dayFilterLabel')}
+              activeLabel={dayFilter != null ? t('table.dayLabel', { day: dayFilter }) : null}
+              options={[
+                { value: '', label: t('materials.allDays') },
+                ...Array.from({ length: totalDays }, (_, i) => ({
+                  value: String(i + 1),
+                  label: t('table.dayLabel', { day: i + 1 }),
+                })),
+              ]}
+              value={dayFilter != null ? String(dayFilter) : ''}
+              onSelect={(v) => setDayFilter(v ? Number(v) : null)}
+            />
+            {pinOptions.length > 0 && (
+              <FilterMenu
+                label={t('materials.placeFilterLabel')}
+                activeLabel={
+                  placeFilter
+                    ? (pinOptions.find((p) => p.id === placeFilter)?.label.split(' · ').pop() ??
+                      t('materials.place'))
+                    : null
+                }
+                options={[
+                  { value: '', label: t('materials.allPlaces') },
+                  ...pinOptions.map((p) => ({ value: p.id, label: p.label })),
+                ]}
+                value={placeFilter ?? ''}
+                onSelect={(v) => setPlaceFilter(v || null)}
+              />
+            )}
+          </div>
         </div>
 
         <div className="materials-panel-body">
+          {suggestions.length > 0 && (
+            <section className="materials-suggest" aria-label={t('materials.suggestTitle')}>
+              <div className="materials-suggest-head">
+                <Icon name="sparkles" size={14} />
+                {t('materials.suggestTitle')}
+              </div>
+              {suggestions.map(({ material, hint }) => (
+                <div key={material.id} className="materials-suggest-row">
+                  <div className="materials-suggest-text">
+                    <strong>{material.title}</strong>
+                    <span>
+                      {hint.time
+                        ? t('materials.suggestWithTime', { place: hint.placeName, time: hint.time })
+                        : t('materials.suggestLinkOnly', { place: hint.placeName })}
+                    </span>
+                    {(hint.timeRaw || hint.dateRaw) && (
+                      <span className="materials-suggest-basis">
+                        {t('materials.suggestBasis', {
+                          raw: [hint.dateRaw, hint.timeRaw].filter(Boolean).join(' · '),
+                        })}
+                      </span>
+                    )}
+                  </div>
+                  <div className="materials-suggest-actions">
+                    <button
+                      type="button"
+                      className="materials-suggest-apply"
+                      onClick={() => handleApplySuggestion(material.id, hint)}
+                    >
+                      {t('materials.suggestApply')}
+                    </button>
+                    <button
+                      type="button"
+                      className="materials-suggest-dismiss"
+                      onClick={() =>
+                        setDismissedSuggestions((prev) => new Set(prev).add(material.id))
+                      }
+                    >
+                      {t('materials.suggestDismiss')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
           {displayItems.length === 0 ? (
             <p className="materials-empty">
               {materials.length === 0
-                ? '위에서 파일을 끌어오거나 텍스트를 저장해 보세요.'
-                : '필터에 맞는 자료가 없습니다.'}
+                ? t('materials.emptyNoMaterials')
+                : t('materials.emptyFiltered')}
             </p>
           ) : viewMode === 'grid' ? (
             <div className="materials-grid materials-grid--large" role="list">
@@ -557,6 +940,7 @@ export function TripMaterialsPanel({
                   onDelete={(m) => void handleDelete(m)}
                   onDeleteAlbum={(ms) => void handleDeleteMany(ms)}
                   onOpenGallery={openGallery}
+                  authorOf={authorOf}
                 />
               ))}
             </div>
@@ -576,6 +960,7 @@ export function TripMaterialsPanel({
                   onDelete={(m) => void handleDelete(m)}
                   onDeleteAlbum={(ms) => void handleDeleteMany(ms)}
                   onOpenGallery={openGallery}
+                  authorOf={authorOf}
                 />
               ))}
             </div>
@@ -608,6 +993,8 @@ interface DisplayItemProps {
   onDelete: (m: TripMaterial) => void;
   onDeleteAlbum: (materials: TripMaterial[]) => void;
   onOpenGallery: (ids: string[], startIndex?: number) => void;
+  /** 남이 올린 자료면 그 이메일, 내 것이거나 모르면 null */
+  authorOf: (m: TripMaterial) => string | null;
 }
 
 function DisplayGridItem({
@@ -622,11 +1009,12 @@ function DisplayGridItem({
   onDelete,
   onDeleteAlbum,
   onOpenGallery,
+  authorOf,
 }: DisplayItemProps) {
   if (item.type === 'album') {
     const rep = item.materials[0]!;
     return (
-      <div className="materials-grid-card materials-grid-card--album" role="listitem">
+      <div className="materials-card materials-card--album" role="listitem">
         <ImageAlbumStack
           materials={item.materials}
           signedUrls={signedUrls}
@@ -638,18 +1026,19 @@ function DisplayGridItem({
             )
           }
         />
-        <div className="materials-grid-caption" title={albumDisplayTitle(item.materials)}>
-          {albumDisplayTitle(item.materials)}
-        </div>
-        <MaterialMetaRow
+        {authorOf(rep) && <MaterialAuthorBadge email={authorOf(rep)!} />}
+        <MaterialMetaMenu
           material={rep}
           totalDays={totalDays}
           pinOptions={pinOptions}
-          onPatch={(patch) => onPatchAlbum(item.albumId, patch)}
-          onPlaceLink={(pid) => onPlaceLinkAlbum(item.albumId, pid)}
+          onPatch={(patch: Partial<TripMaterial>) => onPatchAlbum(item.albumId, patch)}
+          onPlaceLink={(pid: string) => onPlaceLinkAlbum(item.albumId, pid)}
           onDelete={() => onDeleteAlbum(item.materials)}
-          compact
         />
+        <div className="materials-card-caption" title={albumDisplayTitle(item.materials)}>
+          {albumDisplayTitle(item.materials)}
+        </div>
+        <div className="materials-card-meta">{materialMetaLabel(rep)}</div>
       </div>
     );
   }
@@ -660,6 +1049,7 @@ function DisplayGridItem({
       signedUrl={signedUrls[item.material.id]}
       totalDays={totalDays}
       pinOptions={pinOptions}
+      authorEmail={authorOf(item.material)}
       onPatch={(patch) => onPatch(item.material.id, patch)}
       onPlaceLink={(pid) => onPlaceLink(item.material.id, pid)}
       onDelete={() => onDelete(item.material)}
@@ -672,7 +1062,8 @@ function DisplayGridItem({
 }
 
 function DisplayListItem(props: DisplayItemProps) {
-  const { item, signedUrls, totalDays, pinOptions, onPatch, onPatchAlbum, onPlaceLink, onPlaceLinkAlbum, onDelete, onDeleteAlbum, onOpenGallery } = props;
+  const { item, signedUrls, totalDays, pinOptions, onPatch, onPatchAlbum, onPlaceLink, onPlaceLinkAlbum, onDelete, onDeleteAlbum, onOpenGallery, authorOf } = props;
+  const { t } = useTranslation('planner');
 
   if (item.type === 'album') {
     const rep = item.materials[0]!;
@@ -692,18 +1083,20 @@ function DisplayListItem(props: DisplayItemProps) {
           />
           <div className="materials-list-body">
             <div className="materials-list-title-static">{albumDisplayTitle(item.materials)}</div>
-            <div className="materials-album-hint">탭하여 사진 모두 보기</div>
+            <div className="materials-card-meta">
+              {materialMetaLabel(rep)} · {t('materials.tapToViewAll')}
+            </div>
           </div>
+          {authorOf(rep) && <MaterialAuthorBadge email={authorOf(rep)!} />}
+          <MaterialMetaMenu
+            material={rep}
+            totalDays={totalDays}
+            pinOptions={pinOptions}
+            onPatch={(patch: Partial<TripMaterial>) => onPatchAlbum(item.albumId, patch)}
+            onPlaceLink={(pid: string) => onPlaceLinkAlbum(item.albumId, pid)}
+            onDelete={() => onDeleteAlbum(item.materials)}
+          />
         </div>
-        <MaterialMetaRow
-          material={rep}
-          totalDays={totalDays}
-          pinOptions={pinOptions}
-          onPatch={(patch) => onPatchAlbum(item.albumId, patch)}
-          onPlaceLink={(pid) => onPlaceLinkAlbum(item.albumId, pid)}
-          onDelete={() => onDeleteAlbum(item.materials)}
-          compact
-        />
       </article>
     );
   }
@@ -714,6 +1107,7 @@ function DisplayListItem(props: DisplayItemProps) {
       signedUrl={signedUrls[item.material.id]}
       totalDays={totalDays}
       pinOptions={pinOptions}
+      authorEmail={authorOf(item.material)}
       onPatch={(patch) => onPatch(item.material.id, patch)}
       onPlaceLink={(pid) => onPlaceLink(item.material.id, pid)}
       onDelete={() => onDelete(item.material)}
@@ -736,6 +1130,7 @@ function ImageAlbumStack({
   variant: 'grid' | 'list';
   onOpen: () => void;
 }) {
+  const { t } = useTranslation('planner');
   const layers = materials.slice(0, 3);
   const stackLayers = [...layers].reverse();
 
@@ -744,7 +1139,7 @@ function ImageAlbumStack({
       type="button"
       className={`materials-album-stack materials-album-stack--${variant}`}
       onClick={onOpen}
-      aria-label={`${materials.length}장 사진 보기`}
+      aria-label={t('materials.viewPhotosAria', { count: materials.length })}
     >
       <span className="materials-album-stack-inner">
         {stackLayers.map((m, i) => (
@@ -771,14 +1166,118 @@ function ImageAlbumStack({
   );
 }
 
-function MaterialMetaRow({
+/**
+ * 필터 메뉴 — 칩이 늘어나는 자리를 대신한다.
+ *
+ * OS 기본 `<select>` 를 쓰지 않는다. 패널 안의 다른 컨트롤과 유일하게 생김새가
+ * 달라서 "장소" 필터만 튀어 보였다.
+ */
+function FilterMenu({
+  label,
+  activeLabel,
+  options,
+  value,
+  onSelect,
+}: {
+  label: string;
+  activeLabel: string | null;
+  options: Array<{ value: string; label: string }>;
+  value: string;
+  onSelect: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className="materials-filter-menu" ref={ref}>
+      <button
+        type="button"
+        className={`materials-filter-menu-btn${activeLabel ? ' active' : ''}`}
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+      >
+        {activeLabel ?? label}
+        <Icon name="chevronDown" size={11} />
+      </button>
+      {open && (
+        <div className="materials-filter-menu-pop" role="menu">
+          {options.map((o) => (
+            <button
+              key={o.value || '__all'}
+              type="button"
+              role="menuitemradio"
+              aria-checked={o.value === value}
+              className={o.value === value ? 'active' : ''}
+              onClick={() => {
+                onSelect(o.value);
+                setOpen(false);
+              }}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * 공유받은 자료 배지 — 남이 올린 것에만 붙는다(§22).
+ * 색·이니셜 규칙은 핀 작성자 배지·presence 아바타와 같다.
+ */
+function MaterialAuthorBadge({ email }: { email: string }) {
+  const { t } = useTranslation('planner');
+  const label = t('materials.uploadedBy', { email });
+  return (
+    <span
+      className="material-author-badge"
+      style={{ background: presenceColor(email) }}
+      title={label}
+      aria-label={label}
+    >
+      {presenceInitial(email)}
+    </span>
+  );
+}
+
+function materialMetaLabel(material: TripMaterial): string {
+  const day = material.day
+    ? i18n.t('table.dayLabel', { ns: 'planner', day: material.day })
+    : i18n.t('materials.noDay', { ns: 'planner' });
+  return `${day} · ${material.pinnedPlaceName ?? i18n.t('materials.noPlace', { ns: 'planner' })}`;
+}
+
+/**
+ * 카드 위 "더보기" — 일차·장소 셀렉트와 삭제를 여기로 넣었다.
+ *
+ * 전에는 카드마다 셀렉트 2개와 휴지통이 그대로 놓여 있어 조작 3개가 사진보다
+ * 눈에 띄었다. 기능은 그대로 두고 자리만 옮긴다.
+ */
+function MaterialMetaMenu({
   material,
   totalDays,
   pinOptions,
   onPatch,
   onPlaceLink,
   onDelete,
-  compact,
 }: {
   material: TripMaterial;
   totalDays: number;
@@ -786,53 +1285,87 @@ function MaterialMetaRow({
   onPatch: (patch: Partial<TripMaterial>) => void;
   onPlaceLink: (placeId: string) => void;
   onDelete: () => void;
-  compact?: boolean;
 }) {
+  const { t } = useTranslation('planner');
+  const { t: tc } = useTranslation('common');
+  const [open, setOpen] = useState(false);
+
+  /*
+   * 부수 버그(2026-09-14, U14 확인 중 사용자 발견) — 이 메뉴는 원래
+   * 카드 모서리에 작은 팝오버(position:absolute)로 떴다. 자료 패널
+   * (.materials-panel)이 슬라이드 애니메이션 때문에 transform +
+   * overflow:hidden을 걸어 둔 컨테이너라, 좁은 2열 그리드 카드나
+   * (position:static이 되어 포지셔닝 기준 자체가 엉뚱한 조상으로
+   * 튀던) 목록보기 행에서 팝오버가 패널 밖으로 잘리거나 아예 안
+   * 보이는 위치에 렌더링됐다("목록보기에서 …이 실행이 안 됨"으로
+   * 보고됨). 카드마다 다른 좁은 폭에 맞춰 매번 위치를 계산하는 대신,
+   * 이미 검증된 패턴(§27-6 PinupBar 더보기 시트)대로 AppSheetModal로
+   * 바꿔 위치 계산 자체를 없앴다.
+   */
   return (
-    <div className={`materials-meta${compact ? ' materials-meta--compact' : ''}`}>
-      <select
-        className="materials-meta-select"
-        value={material.day ?? ''}
-        onChange={(e) =>
-          onPatch({
-            day: e.target.value ? Number(e.target.value) : undefined,
-          })
-        }
-        aria-label="일차"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <option value="">일차 없음</option>
-        {Array.from({ length: totalDays }, (_, i) => i + 1).map((d) => (
-          <option key={d} value={d}>
-            {d}일차
-          </option>
-        ))}
-      </select>
-      <select
-        className="materials-meta-select"
-        value={material.pinnedPlaceId ?? ''}
-        onChange={(e) => onPlaceLink(e.target.value)}
-        aria-label="연결 장소"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <option value="">장소 없음</option>
-        {pinOptions.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.label}
-          </option>
-        ))}
-      </select>
+    <div className="materials-card-menu">
       <button
         type="button"
-        className="materials-delete-btn"
+        className="materials-card-menu-btn"
+        aria-label={t('materials.settingsAria')}
+        aria-expanded={open}
+        aria-haspopup="dialog"
         onClick={(e) => {
           e.stopPropagation();
-          onDelete();
+          setOpen(true);
         }}
-        aria-label="삭제"
       >
-        <Icon name="trash" />
+        <Icon name="more" size={15} />
       </button>
+      <AppSheetModal
+        open={open}
+        title={material.fileName ?? material.title ?? t('materials.settingsAria')}
+        onClose={() => setOpen(false)}
+      >
+        <div className="materials-card-menu-sheet">
+          <label className="materials-card-menu-field">
+            <span>{t('materials.dayFilterLabel')}</span>
+            <select
+              value={material.day ?? ''}
+              onChange={(e) =>
+                onPatch({ day: e.target.value ? Number(e.target.value) : undefined })
+              }
+            >
+              <option value="">{t('materials.noDay')}</option>
+              {Array.from({ length: totalDays }, (_, i) => i + 1).map((d) => (
+                <option key={d} value={d}>
+                  {t('table.dayLabel', { day: d })}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="materials-card-menu-field">
+            <span>{t('materials.placeFilterLabel')}</span>
+            <select
+              value={material.pinnedPlaceId ?? ''}
+              onChange={(e) => onPlaceLink(e.target.value)}
+            >
+              <option value="">{t('materials.noPlace')}</option>
+              {pinOptions.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            className="materials-card-menu-delete"
+            onClick={() => {
+              setOpen(false);
+              onDelete();
+            }}
+          >
+            <Icon name="trash" size={14} />
+            {tc('delete')}
+          </button>
+        </div>
+      </AppSheetModal>
     </div>
   );
 }
@@ -842,6 +1375,7 @@ function MaterialGridCard({
   signedUrl,
   totalDays,
   pinOptions,
+  authorEmail,
   onPatch,
   onPlaceLink,
   onDelete,
@@ -851,47 +1385,57 @@ function MaterialGridCard({
   signedUrl?: string;
   totalDays: number;
   pinOptions: PinOption[];
+  authorEmail: string | null;
   onPatch: (patch: Partial<TripMaterial>) => void;
   onPlaceLink: (placeId: string) => void;
   onDelete: () => void;
   onImageOpen: () => void;
 }) {
+  const { t } = useTranslation('planner');
+  const overlay = (
+    <>
+      {authorEmail && <MaterialAuthorBadge email={authorEmail} />}
+      <MaterialMetaMenu
+        material={material}
+        totalDays={totalDays}
+        pinOptions={pinOptions}
+        onPatch={onPatch}
+        onPlaceLink={onPlaceLink}
+        onDelete={onDelete}
+      />
+    </>
+  );
+
   if (material.kind === 'text') {
     return (
-      <article className="materials-grid-card materials-grid-card--text" role="listitem">
-        <div className="materials-grid-text-icon">
-          <Icon name="note" />
-        </div>
+      <article className="materials-card materials-card--text" role="listitem">
+        {overlay}
         <input
           className="materials-text-title"
           value={material.title}
           onChange={(e) => onPatch({ title: e.target.value })}
-          aria-label="제목"
+          aria-label={t('materials.titleAria')}
         />
         <textarea
           className="materials-text-body materials-text-body--compact"
           value={material.body ?? ''}
           rows={3}
           onChange={(e) => onPatch({ body: e.target.value })}
-          aria-label="내용"
+          aria-label={t('materials.bodyAria')}
         />
-        <MaterialMetaRow
-          material={material}
-          totalDays={totalDays}
-          pinOptions={pinOptions}
-          onPatch={onPatch}
-          onPlaceLink={onPlaceLink}
-          onDelete={onDelete}
-          compact
-        />
+        <div className="materials-card-meta">{materialMetaLabel(material)}</div>
       </article>
     );
   }
 
   if (material.kind === 'image') {
     return (
-      <div className="materials-grid-card materials-grid-card--image" role="listitem">
-        <button type="button" className="materials-thumb-btn materials-thumb-btn--large" onClick={onImageOpen}>
+      <div className="materials-card materials-card--image" role="listitem">
+        <button
+          type="button"
+          className="materials-thumb-btn materials-thumb-btn--large"
+          onClick={onImageOpen}
+        >
           {signedUrl ? (
             <img src={signedUrl} alt={material.title} />
           ) : (
@@ -900,54 +1444,45 @@ function MaterialGridCard({
             </span>
           )}
         </button>
-        <div className="materials-grid-caption" title={material.title}>
+        {overlay}
+        <div className="materials-card-caption" title={material.title}>
           {material.title}
         </div>
-        <MaterialMetaRow
-          material={material}
-          totalDays={totalDays}
-          pinOptions={pinOptions}
-          onPatch={onPatch}
-          onPlaceLink={onPlaceLink}
-          onDelete={onDelete}
-          compact
-        />
+        <div className="materials-card-meta">{materialMetaLabel(material)}</div>
       </div>
     );
   }
 
   return (
-    <div className="materials-grid-card materials-grid-card--file" role="listitem">
+    <div className="materials-card materials-card--file" role="listitem">
       <div className="materials-grid-file-icon">
         <Icon name="file" />
+        {material.byteSize != null && (
+          <span className="materials-file-size">{formatByteSize(material.byteSize)}</span>
+        )}
       </div>
-      <div className="materials-grid-caption" title={material.fileName ?? material.title}>
+      {overlay}
+      <div className="materials-card-caption" title={material.fileName ?? material.title}>
         {material.fileName ?? material.title}
       </div>
-      {material.byteSize != null && (
-        <div className="materials-file-size">{formatByteSize(material.byteSize)}</div>
-      )}
-      {signedUrl && (
-        <a
-          className="materials-file-download"
-          href={signedUrl}
-          download={material.fileName ?? material.title}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-        >
-          다운로드
-        </a>
-      )}
-      <MaterialMetaRow
-        material={material}
-        totalDays={totalDays}
-        pinOptions={pinOptions}
-        onPatch={onPatch}
-        onPlaceLink={onPlaceLink}
-        onDelete={onDelete}
-        compact
-      />
+      <div className="materials-card-meta">
+        {materialMetaLabel(material)}
+        {signedUrl && (
+          <>
+            {' · '}
+            <a
+              className="materials-file-download"
+              href={signedUrl}
+              download={material.fileName ?? material.title}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {t('materials.download')}
+            </a>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -957,6 +1492,7 @@ function MaterialListRow({
   signedUrl,
   totalDays,
   pinOptions,
+  authorEmail,
   onPatch,
   onPlaceLink,
   onDelete,
@@ -966,30 +1502,31 @@ function MaterialListRow({
   signedUrl?: string;
   totalDays: number;
   pinOptions: PinOption[];
+  authorEmail: string | null;
   onPatch: (patch: Partial<TripMaterial>) => void;
   onPlaceLink: (placeId: string) => void;
   onDelete: () => void;
   onImageOpen: () => void;
 }) {
+  const { t } = useTranslation('planner');
   const kindIcon =
     material.kind === 'image' ? 'photo' : material.kind === 'file' ? 'file' : 'note';
 
   return (
     <article className="materials-list-row" role="listitem">
       <div className="materials-list-main">
-        {material.kind === 'image' ? (
-          <button type="button" className="materials-list-thumb" onClick={onImageOpen}>
-            {signedUrl ? (
-              <img src={signedUrl} alt="" />
-            ) : (
-              <Icon name="photo" />
-            )}
-          </button>
-        ) : (
-          <div className="materials-list-kind-icon" aria-hidden>
-            <Icon name={kindIcon} />
-          </div>
-        )}
+        <div className="materials-list-lead">
+          {material.kind === 'image' ? (
+            <button type="button" className="materials-list-thumb" onClick={onImageOpen}>
+              {signedUrl ? <img src={signedUrl} alt="" /> : <Icon name="photo" />}
+            </button>
+          ) : (
+            <div className="materials-list-kind-icon" aria-hidden>
+              <Icon name={kindIcon} />
+            </div>
+          )}
+          {authorEmail && <MaterialAuthorBadge email={authorEmail} />}
+        </div>
         <div className="materials-list-body">
           {material.kind === 'text' ? (
             <>
@@ -997,23 +1534,27 @@ function MaterialListRow({
                 className="materials-list-title"
                 value={material.title}
                 onChange={(e) => onPatch({ title: e.target.value })}
-                aria-label="제목"
+                aria-label={t('materials.titleAria')}
               />
               <textarea
                 className="materials-text-body materials-text-body--compact"
                 value={material.body ?? ''}
                 rows={2}
                 onChange={(e) => onPatch({ body: e.target.value })}
-                aria-label="내용"
+                aria-label={t('materials.bodyAria')}
               />
             </>
           ) : (
-            <>
-              <div className="materials-list-title-static">{material.fileName ?? material.title}</div>
-              {material.byteSize != null && (
-                <div className="materials-file-size">{formatByteSize(material.byteSize)}</div>
-              )}
-              {material.kind === 'file' && signedUrl && (
+            <div className="materials-list-title-static">
+              {material.fileName ?? material.title}
+            </div>
+          )}
+          <div className="materials-card-meta">
+            {materialMetaLabel(material)}
+            {material.byteSize != null && ` · ${formatByteSize(material.byteSize)}`}
+            {material.kind === 'file' && signedUrl && (
+              <>
+                {' · '}
                 <a
                   className="materials-file-download"
                   href={signedUrl}
@@ -1021,22 +1562,21 @@ function MaterialListRow({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  다운로드
+                  {t('materials.download')}
                 </a>
-              )}
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
+        <MaterialMetaMenu
+          material={material}
+          totalDays={totalDays}
+          pinOptions={pinOptions}
+          onPatch={onPatch}
+          onPlaceLink={onPlaceLink}
+          onDelete={onDelete}
+        />
       </div>
-      <MaterialMetaRow
-        material={material}
-        totalDays={totalDays}
-        pinOptions={pinOptions}
-        onPatch={onPatch}
-        onPlaceLink={onPlaceLink}
-        onDelete={onDelete}
-        compact
-      />
     </article>
   );
 }

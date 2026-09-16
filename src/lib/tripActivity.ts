@@ -66,6 +66,17 @@ export async function listTripActivity(
   return collapse((data ?? []) as ActivityRow[]);
 }
 
+/**
+ * 재정렬 묶기 창.
+ *
+ * 2026-09-08부터는 **DB 트리거가 같은 규칙으로 기록 시점에 먼저 묶는다**
+ * (`20260908180000_trip_activity_retention.sql`) — 한 번의 재정렬이 핀 개수만큼
+ * 행을 만들던 것을 막았다. 그래서 여기 오는 행은 대개 이미 1건이다.
+ *
+ * 그래도 이 로직은 남긴다. 마이그레이션 이전에 쌓인 행이 DB에 그대로 있고,
+ * 트리거가 못 묶는 경계(정확히 1분을 넘겨 들어온 연속 재정렬)도 있다.
+ * 둘의 창을 같은 60초로 맞춰 두는 게 중요하다 — 어긋나면 화면과 기록이 갈린다.
+ */
 const GROUP_WINDOW_MS = 60_000;
 
 function collapse(rows: ActivityRow[]): TripActivityEntry[] {
@@ -82,11 +93,14 @@ function collapse(rows: ActivityRow[]): TripActivityEntry[] {
       count: 1,
     };
     const prev = out[out.length - 1];
-    // 재정렬만 묶는다. 추가·삭제는 어떤 장소였는지가 정보라서 묶으면 안 된다.
+    // 재정렬·이름변경만 묶는다. 추가·삭제는 어떤 장소였는지가 정보라서 묶으면 안 된다.
+    // 이름변경은 입력을 멈출 때마다(1.5초) 한 건씩 남아 타이핑 중 여러 번 쉬면
+    // "이름 변경"이 연달아 여러 건 찍힌다 — F21(모바일 감사). prev(최신)가 대표로
+    // 남고 target(최종 이름)도 최신 값을 유지한다.
     if (
       prev &&
-      entry.action === 'pin_reorder' &&
-      prev.action === 'pin_reorder' &&
+      (entry.action === 'pin_reorder' || entry.action === 'trip_rename') &&
+      prev.action === entry.action &&
       prev.actorId === entry.actorId &&
       Math.abs(prev.createdAt - entry.createdAt) <= GROUP_WINDOW_MS
     ) {

@@ -11,10 +11,13 @@ import { HelpContent } from './HelpContent';
 import { KoreaSetupContent } from './KoreaSetupContent';
 import { SharePlazaPanel } from './SharePlazaPanel';
 import { PresenceStack } from './PresenceStack';
-import { useTripPresence } from '../hooks/useTripPresence';
+import type { PresenceViewer } from '../lib/tripPresence';
 import type { Trip, TripSummary } from '../lib/trips';
 
 type AppSheet = 'plaza' | 'setup' | 'help';
+
+/** 기본값을 매 렌더 새 배열로 만들지 않는다 — 불필요한 리렌더를 막는다. */
+const EMPTY_VIEWERS: PresenceViewer[] = [];
 
 interface Props {
   trip: Trip;
@@ -33,11 +36,21 @@ interface Props {
   onDeleteTrip?: () => void;
   onShare: () => void;
   onManageCollaborators?: () => void;
+  /** 협업자에게는 "관리"가 아니라 함께 편집 중인 사람을 보는 입구다. */
+  collabEntryLabel?: 'manage' | 'shared';
+  /** 관심 테마 편집 — §26-7. 핀 탭 위에 얹혀 있던 걸 탭 무관 더보기 메뉴로 옮겼다. */
+  onOpenPreferences?: () => void;
   presentationMode: boolean;
   onTogglePresentation: () => void;
   tableViewMode?: boolean;
   onToggleTableView?: () => void;
   plazaNavVisible?: boolean;
+  /**
+   * 같은 여행을 보고 있는 사람들. 채널은 `PlannerPage` 가 연다 — 이 앱바는
+   * 데스크톱에서만 렌더되므로 여기서 열면 모바일에 아바타가 생기지 않고,
+   * 양쪽에서 각각 열면 같은 여행에 채널이 두 개 열린다.
+   */
+  presenceViewers?: PresenceViewer[];
 }
 
 export function PlannerAppBar({
@@ -57,11 +70,14 @@ export function PlannerAppBar({
   onDeleteTrip,
   onShare,
   onManageCollaborators,
+  onOpenPreferences,
+  collabEntryLabel = 'manage',
   presentationMode,
   onTogglePresentation,
   tableViewMode = false,
   onToggleTableView,
   plazaNavVisible,
+  presenceViewers = EMPTY_VIEWERS,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: ts } = useTranslation('share');
@@ -69,8 +85,6 @@ export function PlannerAppBar({
   const [sheet, setSheet] = useState<AppSheet | null>(null);
   const [helpAirportFocus, setHelpAirportFocus] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
-  // 공유 중인 여행에서만 채널을 연다 (혼자 편집할 때는 열 이유가 없다)
-  const viewers = useTripPresence(trip.id, Boolean(trip.isPublic));
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -196,7 +210,7 @@ export function PlannerAppBar({
       <div className="planner-app-bar-divider" aria-hidden />
 
       {/* 4. 액션 */}
-      <PresenceStack viewers={viewers} />
+      <PresenceStack viewers={presenceViewers} />
 
       <SaveStatusBadge
         status={saveStatus}
@@ -229,8 +243,8 @@ export function PlannerAppBar({
           type="button"
           className="planner-bar-icon-btn"
           onClick={onManageCollaborators}
-          title={ts('collab.entry')}
-          aria-label={ts('collab.entry')}
+          title={ts(collabEntryLabel === 'shared' ? 'collab.entryShared' : 'collab.entry')}
+          aria-label={ts(collabEntryLabel === 'shared' ? 'collab.entryShared' : 'collab.entry')}
         >
           <Icon name="facilityGroup" size={17} />
         </button>
@@ -257,6 +271,7 @@ export function PlannerAppBar({
                 setHelpAirportFocus(false);
                 setSheet('plaza');
               })}
+            {onOpenPreferences && moreItem(t('themes.label'), onOpenPreferences)}
             {moreItem(t('nav.setup'), () => {
               setHelpAirportFocus(false);
               setSheet('setup');

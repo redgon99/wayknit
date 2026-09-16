@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import type { TripSummary } from '../lib/trips';
+import { formatDate } from '../lib/format';
+import { normalizeLocale } from '../lib/locale';
+import i18n from '../lib/i18n';
 
 interface Props {
   summaries: TripSummary[];
@@ -11,10 +14,6 @@ interface Props {
   /** 여행 허브: 새 여행·삭제 등을 같은 메뉴에 묶음 */
   onNewTrip?: () => void;
   onDeleteTrip?: () => void;
-  /** 지정 시 트리거 버튼에 아이콘과 함께 라벨을 표시 (예: 모바일 탭바 재사용) */
-  label?: string;
-  /** 트리거 버튼에 추가할 클래스 (예: 모바일 탭바 아이템 스타일) */
-  triggerClassName?: string;
 }
 
 export function TripSelectMenu({
@@ -24,10 +23,9 @@ export function TripSelectMenu({
   compact = false,
   onNewTrip,
   onDeleteTrip,
-  label,
-  triggerClassName,
 }: Props) {
   const { t } = useTranslation('planner');
+  const locale = normalizeLocale(i18n.language);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const isHub = Boolean(onNewTrip || onDeleteTrip);
@@ -73,7 +71,7 @@ export function TripSelectMenu({
     >
       <button
         type="button"
-        className={`trip-select-trigger ${triggerClassName ?? ''}`.trim()}
+        className="trip-select-trigger"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup={isHub ? 'menu' : 'listbox'}
@@ -86,8 +84,7 @@ export function TripSelectMenu({
         }
         title={isHub ? t('trip.hubAria', { defaultValue: '여행 설정' }) : currentLabel}
       >
-        <Icon name={label ? 'folder' : 'chevronDown'} size={label ? 20 : compact ? 16 : 18} />
-        {label && <span className="trip-select-trigger-label">{label}</span>}
+        <Icon name="chevronDown" size={compact ? 16 : 18} />
       </button>
 
       {open && (
@@ -131,10 +128,19 @@ export function TripSelectMenu({
                         className={`trip-select-option ${selected ? 'selected' : ''}`}
                         onClick={() => handleSelect(s.id)}
                       >
-                        <span className="trip-select-option-label">
-                          {s.title}
-                          <span className="trip-select-option-days">
-                            ({t('trip.daysCount', { count: s.totalDays })})
+                        <span className="trip-select-option-text">
+                          <span className="trip-select-option-label">
+                            {s.title}
+                            <span className="trip-select-option-days">
+                              ({t('trip.daysCount', { count: s.totalDays })})
+                            </span>
+                          </span>
+                          {/* F18(모바일 감사) — 동명 여행이 둘 이상이면 제목·일수만으로
+                              구분이 안 됐다. 이미 있던 수정일·핀 수를 한 줄 더 보여준다. */}
+                          <span className="trip-select-option-meta">
+                            {formatDate(s.updatedAt, { month: 'short', day: 'numeric' }, locale)}
+                            {' · '}
+                            {t('pinup.pinCount', { count: s.pinCount ?? 0 })}
                           </span>
                         </span>
                         {selected && (

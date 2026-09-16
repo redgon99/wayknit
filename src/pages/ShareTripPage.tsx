@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/Icon';
 import { useSeoMeta } from '../hooks/useSeoMeta';
@@ -8,10 +8,12 @@ import { loadKakaoSdk } from '../lib/kakao';
 import { loadGoogleMapsSdk } from '../lib/googleMaps';
 import { resolveMapProvider } from '../lib/mapProvider';
 import { cloneTripFromShare, tripsRepo, type Trip } from '../lib/trips';
+import { canCreateTrip, FREE_MAX_TRIPS } from '../lib/subscription';
 import { getRouteOptionsForDay } from '../lib/tripRouteOptions';
 import { MapView } from '../components/MapView';
 import { DayTabs } from '../components/DayTabs';
 import { RouteSummary } from '../components/RouteSummary';
+import { ItineraryTableView } from '../components/ItineraryTableView';
 import { ShareOnboardingCoach } from '../components/ShareOnboardingCoach';
 import { PresenceStack } from '../components/PresenceStack';
 import { ReportButton } from '../components/ReportButton';
@@ -26,11 +28,15 @@ const DEFAULT_CENTER = { lat: 37.8813, lng: 127.7298 };
 
 export default function ShareTripPage() {
   const { t } = useTranslation('share');
+  const { t: tb } = useTranslation('billing');
   const locale = normalizeLocale(i18n.language);
   const planPath = plannerPath(locale);
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  /** 표로보기 공유 아이콘("?view=table")으로 들어온 링크는 표 모달이 그대로 열린 채 시작한다. */
+  const tableViewOpen = searchParams.get('view') === 'table';
+  const { user, plan, isAdmin } = useAuth();
   const [kakaoReady, setKakaoReady] = useState(false);
   const [googleReady, setGoogleReady] = useState(false);
   const [trip, setTrip] = useState<Trip | null>(null);
@@ -100,6 +106,18 @@ export default function ShareTripPage() {
     setAddMessage(null);
     try {
       const userId = user?.id ?? null;
+      /*
+       * 세 번째로 찾은 같은 구멍(2026-09-15) — 이것도 새 여행을 만드는
+       * 경로인데 Free 캡 체크가 없었다(PlannerPage 세션 복구 경로,
+       * SharePlazaPanel "복사"에 이어). 여기서 막지 않으면 공유 링크를
+       * 계속 열어 "내 여행에 추가"만 눌러도 무한히 쌓인다.
+       */
+      const currentCount = (await tripsRepo.list(userId)).length;
+      if (!canCreateTrip(plan, currentCount, isAdmin)) {
+        setAddMessage(tb('limits.tripCount', { max: FREE_MAX_TRIPS }));
+        setAdding(false);
+        return;
+      }
       const cloned = cloneTripFromShare(trip, userId ?? undefined);
       await tripsRepo.save(cloned);
       navigate('/', { state: { openTripId: cloned.id } });
@@ -108,7 +126,7 @@ export default function ShareTripPage() {
       setAddMessage('저장에 실패했습니다. 다시 시도해 주세요.');
       setAdding(false);
     }
-  }, [trip, adding, user?.id, navigate]);
+  }, [trip, adding, user?.id, navigate, plan, isAdmin, tb]);
 
   const currentDay = trip?.currentDay ?? 1;
   const pinned = useMemo(
@@ -237,6 +255,12 @@ export default function ShareTripPage() {
           <ShareOnboardingCoach onComplete={() => setShareOnboardingOpen(false)} />
         </div>
       )}
+
+      <ItineraryTableView
+        open={tableViewOpen}
+        trip={trip}
+        onClose={() => setSearchParams({}, { replace: true })}
+      />
     </div>
   );
 }

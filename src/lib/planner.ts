@@ -256,6 +256,34 @@ export function generateRoute(
 }
 
 // =============================================
+// N02(모바일 UX 리포트 2026-09-13, 신규 제안): 재계획 전후 비교
+// =============================================
+
+export interface RouteDiffSummary {
+  addedCount: number;
+  removedCount: number;
+  distanceDeltaKm: number;
+  travelDeltaMinutes: number;
+}
+
+/**
+ * 재계획 직전/직후 동선을 비교한다. "장소가 몇 곳 늘고 줄었는지"는
+ * 동선 자체가 만드는 변화가 아니라(순서·시간만 다시 계산) 그 사이 사용자가
+ * 핀을 추가·삭제한 결과가 새 동선에 반영된 것이다 — "다시 짜기" 전에 뭐가
+ * 바뀌어서 결과가 달라졌는지 한눈에 보여주기 위한 것.
+ */
+export function diffRoutes(prev: GeneratedRoute, next: GeneratedRoute): RouteDiffSummary {
+  const prevIds = new Set(prev.stops.map((s) => s.id));
+  const nextIds = new Set(next.stops.map((s) => s.id));
+  return {
+    addedCount: next.stops.filter((s) => !prevIds.has(s.id)).length,
+    removedCount: prev.stops.filter((s) => !nextIds.has(s.id)).length,
+    distanceDeltaKm: Math.round((next.totalDistanceKm - prev.totalDistanceKm) * 10) / 10,
+    travelDeltaMinutes: next.totalTravelMinutes - prev.totalTravelMinutes,
+  };
+}
+
+// =============================================
 // 비동기 버전: 실제 길찾기 API 결과로 재계산
 // =============================================
 

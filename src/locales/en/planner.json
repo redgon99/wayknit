@@ -28,7 +28,7 @@
     "placeholder": "Search places",
     "placeholderWithYoutube": "Place name or YouTube link",
     "placeholderWithLink": "Place · YouTube · web · SNS link",
-    "placeholderDesign": "Place, YouTube, or blog link",
+    "placeholderDesign": "Search places",
     "pasteExtracted": "Extracted {{count}} places from paste. Press search.",
     "metaNearby": "Near map center · 지도 주변 {{km}} km · {{count}} results",
     "metaNationwide": "Nationwide · 전국 · {{count}} results",
@@ -46,7 +46,7 @@
     "radiusAria": "Search radius",
     "hintNationwideKakao": "Nationwide · relevance (Kakao API)",
     "hintNationwideGoogle": "Nationwide · relevance (Google Places)",
-    "emptyHint": "Find places by keyword or category.",
+    "emptyHint": "Find places by keyword or category — or paste a YouTube or blog link.",
     "noResults": "No results found.",
     "loading": "Searching…",
     "enriching": "Loading ratings…",
@@ -72,7 +72,12 @@
     "resetResults": "Reset results",
     "insightTop": "Top pick",
     "insightPositive": "Well reviewed",
-    "insightWait": "Long wait"
+    "insightWait": "Long wait",
+    "filters": "Filters",
+    "subFilterCount": "{{count}} filters",
+    "resultsCountShort": "{{count}} results",
+    "filterApply": "Show {{count}} results",
+    "reviewsSuffix": "{{count}} reviews"
   },
   "trip": {
     "newTrip": "New trip",
@@ -130,7 +135,11 @@
     "countPlaces": "{{count}} places",
     "filterAll": "All",
     "filterAria": "Filter by day",
-    "empty": "No itinerary yet. Pin places or generate a route."
+    "empty": "No itinerary yet. Pin places or generate a route.",
+    "dayLabel": "Day {{day}}",
+    "shareAria": "Share this table",
+    "required": "Required",
+    "unscheduled": "Not in route"
   },
   "pinup": {
     "reservedAt": "Reserved for {{time}}",
@@ -157,7 +166,12 @@
     "mustVisitOnly": "Must visit",
     "markRequired": "Mark as must visit",
     "unmarkRequired": "Remove must visit",
-    "requiredBadge": "Must-visit place"
+    "requiredBadge": "Must-visit place",
+    "addedBy": "Added by {{who}}",
+    "toolbarMore": "Tools",
+    "sortVisit": "Visit order",
+    "sortCategory": "By type",
+    "placeMaterials": "View {{count}} linked materials"
   },
   "route": {
     "fixedArrivalAt": "Arrival fixed at {{time}}",
@@ -227,6 +241,8 @@
       "aiSuggestError": "Couldn't get AI suggestions. Using category defaults instead — adjust below or try again.",
       "stayMinutesAria": "{{name}} stay (min)",
       "preview": "Preview",
+      "previewAfterChange": "Estimate after change",
+      "current": "Current: {{km}} km · {{minutes}} min",
       "previewStats": "{{km}} km · {{minutes}} min travel · {{stayMinutes}} min stay · ends {{time}}",
       "build": "Build route",
       "rebuild": "Rebuild route",
@@ -285,7 +301,12 @@
     "detailTravel": "{{minutes}} min travel",
     "detailStops": "{{count}} stops",
     "pillTitle": "Day {{day}} · {{count}} stops",
-    "pillNext": "Next {{name}} · ends {{finish}}"
+    "pillNext": "Next {{name}} · ends {{finish}}",
+    "departRecommend": "Leave by {{time}}",
+    "departNow": "Time to leave now",
+    "navigateHere": "Directions to here",
+    "arrivedGoNext": "Arrived · Next stop",
+    "lastStop": "This is today's last stop"
   },
   "taxi": {
     "title": "Show to taxi driver",
@@ -405,7 +426,8 @@
       "history": "Palaces, museums, and heritage",
       "nightlife": "Evening food, cafes, and city views",
       "family": "Kid-friendly sights and meals"
-    }
+    },
+    "editLead": "Used to highlight search results, weight your route order, and tag your trip in the plaza when shared."
   },
   "foodRestrictions": {
     "label": "Food preferences",
@@ -650,7 +672,11 @@
   "scenario": {
     "menuLabel": "Create Theme Trip",
     "title": "Theme Trip Scenario",
-    "subtitle": "Pick a travel theme and AI will build a day-by-day trip scenario from real place data.",
+    "subtitle": "Pick a travel theme to choose from ready-made day-by-day trip scenarios.",
+    "courseCount": "{{count}} courses",
+    "courseCountZero": "Coming soon",
+    "tryOtherTheme": "Other themes have courses ready",
+    "goToSearch": "Search places",
     "themeLabel": "Travel theme",
     "theme": {
       "meditation": "Temples",
@@ -712,7 +738,20 @@
     "sheetRouteTitle": "Day {{n}} route",
     "sheetPinsSummary": "{{count}} pins · Day {{n}}",
     "tabTrips": "My trips",
-    "tabAccount": "Account"
+    "tabAccount": "Account",
+    "sheetSearchSummary": "{{count}} results",
+    "tabMap": "Map",
+    "tabItinerary": "Itinerary {{count}}",
+    "tabMenu": "Menu",
+    "viewList": "View as list",
+    "viewRoute": "View as route",
+    "viewToggleAria": "Switch view",
+    "sheetLevelPeek": "Peek",
+    "sheetLevelHalf": "Half view",
+    "sheetLevelFull": "Full view",
+    "sheetHandleAria": "Resize panel, currently {{current}}, tap to switch to {{next}}",
+    "routeSummary": "Today's route · {{km}}km · {{min}}min",
+    "replanCta": "Re-plan"
   },
   "map": {
     "centerHere": "Search around here",
@@ -724,7 +763,8 @@
     "insightHigh": "Highly rated by travelers.",
     "insightMixed": "Check recent reviews, hours, and payment.",
     "pin": "Pin",
-    "pinned": "Pinned"
+    "pinned": "Pinned",
+    "searchThisArea": "Search this area"
   },
   "toast": {
     "searchAtCenter": "Searching around this point",
@@ -749,7 +789,12 @@
     "shareCopied": "Share link copied (saved as public)",
     "shareCopiedPlaza": "Share link copied (saved as public · listed on plaza)",
     "copiedDepart": "Copied day {{day}} departure settings",
-    "pickOriginHint": "Tap the map to set the start point"
+    "pickOriginHint": "Tap the map to set the start point",
+    "tableViewLinkCopied": "Table view link copied",
+    "routeDiffAdded": "{{count}} place added",
+    "routeDiffRemoved": "{{count}} place removed",
+    "routeDiffTravel": "travel {{sign}}{{minutes}} min",
+    "routeChangeUndo": "Undo"
   },
   "confirm": {
     "newTrip": "Save 「{{title}}」 and start a new trip?\nPins and route on this screen will switch to the new trip.",
@@ -786,5 +831,109 @@
     "doneHint": "An administrator will review it.",
     "duplicate": "You have already reported this.",
     "failed": "Could not send the report. Please try again."
+  },
+  "account": {
+    "guestLead": "Sign in to keep planning across devices and save your trips to the cloud.",
+    "viewPlans": "View plans",
+    "backToHome": "Back to home",
+    "version": "Version"
+  },
+  "materials": {
+    "panelTitle": "Trip materials",
+    "countSuffix": "{{count}}",
+    "viewList": "View as list",
+    "viewGrid": "View as large icons",
+    "closePanel": "Close panel",
+    "uploading": "Uploading…",
+    "addPhotoFile": "Photo/file",
+    "writeNote": "Write note",
+    "notePlaceholder": "Enter a note",
+    "saveShortcutHint": "You can also save with ⌘/Ctrl + Enter",
+    "dropHint": "Drag photos or documents here, or click",
+    "dropHintNeedLogin": "Sign in to drag and drop photos or files",
+    "dropHintNeedSupabase": "Set up the cloud to add photos or files",
+    "kindFilterAria": "Type filter",
+    "kindAll": "All",
+    "kindImage": "Photos",
+    "kindNote": "Notes",
+    "kindFile": "Files",
+    "dayFilterLabel": "Day",
+    "allDays": "All days",
+    "placeFilterLabel": "Place",
+    "place": "Place",
+    "allPlaces": "All places",
+    "emptyNoMaterials": "Drag a file above or save a text note.",
+    "emptyFiltered": "No materials match this filter.",
+    "tapToViewAll": "Tap to view all photos",
+    "viewPhotosAria": "View {{count}} photos",
+    "uploadedBy": "Uploaded by {{email}}",
+    "noDay": "No day",
+    "noPlace": "No place",
+    "settingsAria": "Material settings",
+    "titleAria": "Title",
+    "bodyAria": "Content",
+    "download": "Download",
+    "pinOptionLabel": "Day {{day}} · {{name}}",
+    "uploadNeedsLogin": "Sign in to your cloud account to upload photos or files.",
+    "uploadNeedsSupabase": "Uploading photos or files requires Supabase setup.",
+    "filesAdded": "Added {{count}} files.",
+    "albumGroupedSuffix": " (grouped {{count}} photos into one album)",
+    "uploadFailed": "Upload failed.",
+    "offlineSaveAll": "Save offline",
+    "offlineClearAll": "Remove offline copy",
+    "offlineLocked": "Offline saving is a Plus feature",
+    "offlineSaved": "Saved for offline viewing.",
+    "offlineSavedPartial": "{{failed}} file(s) could not be saved. Please try again.",
+    "offlineCleared": "Removed the offline copy.",
+    "noteEmpty": "Please enter something to save.",
+    "noteDefaultTitle": "Note",
+    "textSaved": "Text saved.",
+    "deleteStorageFailed": "Failed to delete the stored file. Removing it from the list only.",
+    "deleted": "Material deleted.",
+    "deletedMany": "Deleted {{count}} materials.",
+    "suggestTitle": "Found reservation details",
+    "suggestWithTime": "Link to {{place}} · fix arrival at {{time}}",
+    "suggestLinkOnly": "Link to {{place}}",
+    "suggestBasis": "From: {{raw}}",
+    "suggestApply": "Apply",
+    "suggestDismiss": "Dismiss",
+    "suggestApplied": "Linked to {{place}}",
+    "suggestAppliedWithTime": "Linked to {{place}} and fixed arrival at {{time}}"
+  },
+  "alt": {
+    "find": "Alternatives",
+    "title": "Find an alternative",
+    "replacing": "Nearby places of the same kind instead of {{name}}",
+    "searching": "Searching nearby…",
+    "empty": "No suitable alternative found nearby",
+    "failed": "Couldn't load alternatives",
+    "noCategory": "This place has no known category, so alternatives can't be suggested",
+    "replace": "Replace with this",
+    "replaced": "Replaced with {{name}}"
+  },
+  "recent": {
+    "keywords": "Recent searches",
+    "keywordsAria": "Recent searches",
+    "places": "Recently viewed",
+    "placesAria": "Recently viewed places",
+    "clear": "Clear",
+    "pin": "Pin",
+    "pinned": "Pinned",
+    "removeAria": "Remove {{name}} from list"
+  },
+  "vote": {
+    "groupAria": "Companion votes",
+    "want": "Want to go",
+    "hold": "Hold",
+    "failed": "Couldn't save your vote"
+  },
+  "firstGuide": {
+    "title": "Build your first itinerary",
+    "dismiss": "Don't show again",
+    "step1": "Pin places ({{count}}/{{goal}})",
+    "step1Cta": "Search",
+    "step2": "Choose transit & build a route",
+    "step2Cta": "Build route",
+    "step3": "Done! Check your schedule"
   }
 }

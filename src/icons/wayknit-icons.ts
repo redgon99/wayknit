@@ -36,6 +36,8 @@ export type IconName =
   | 'file'
   | 'trash'
   | 'plus'
+  | 'more'
+  | 'pencil'
   | 'grip'
   | 'flag'
   | 'lock'
@@ -86,7 +88,8 @@ export type IconName =
   | 'facilityPayment'
   | 'facilityWifi'
   | 'facilitySmoking'
-  | 'facilityInfo';
+  | 'facilityInfo'
+  | 'filter';
 
 export interface IconPath {
   d: string;
@@ -247,6 +250,13 @@ export const WAYKNIT_ICONS: Record<IconName, IconPath[]> = {
     { d: 'M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2' },
   ],
   plus: [{ d: 'M5 12h14' }, { d: 'M12 5v14' }],
+  // 가로 점 셋 — 카드 위 "더보기". grip(세로 2열)과 달리 한 줄이라 좁은 자리에 맞는다.
+  more: [
+    { d: 'M5 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0' },
+    { d: 'M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0' },
+    { d: 'M17 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0' },
+  ],
+  pencil: [{ d: 'M4 20h4l10.5-10.5a2.83 2.83 0 0 0-4-4L4 16z' }, { d: 'M13.5 6.5l4 4' }],
   grip: [
     { d: 'M8 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0' },
     { d: 'M8 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0' },
@@ -523,6 +533,14 @@ export const WAYKNIT_ICONS: Record<IconName, IconPath[]> = {
     { d: 'M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0' },
     { d: 'M12 16v-4' },
     { d: 'M12 8h.01' },
+  ],
+  filter: [
+    { d: 'M4 6h16' },
+    { d: 'M6 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0' },
+    { d: 'M4 12h16' },
+    { d: 'M12 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0' },
+    { d: 'M4 18h16' },
+    { d: 'M8 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0' },
   ],
 };
 

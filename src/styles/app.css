@@ -74,6 +74,20 @@
   --mobile-pinup-dock-compact: 24vh;
   --mobile-pr-pinup-max: 42vh;
   --mobile-gutter: 14px;
+  --mobile-tabbar-h: 58px;
+  /*
+   * iOS 세이프에어리어(노치·다이내믹아일랜드 / 홈 인디케이터).
+   *
+   * index.html이 `viewport-fit=cover`라 앱 캔버스가 화면 물리 끝까지 채운다 —
+   * 즉 상단에 고정한 요소는 보정하지 않으면 **상태바(시계·배터리) 밑으로 깔려**
+   * 가려지고 터치도 안 된다(2026-09-15 아이폰 제보). env()를 직접 쓰지 않고
+   * 변수로 한 겹 두는 이유는 두 가지다 — 상단바 기준으로 배치된 요소들이
+   * 여럿이라 한 군데서 관리해야 어긋나지 않고, 테스트에서 이 변수만 덮어쓰면
+   * 노치 기기를 흉내 낼 수 있다(env()는 덮어쓸 수 없다).
+   * 노치 없는 기기·데스크톱에서는 0이라 아무 영향이 없다.
+   */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* 지도 위 공통 플로팅 표면 */
@@ -128,7 +142,20 @@ button {
 .wayknit-root {
   position: relative;
   width: 100vw;
+  /*
+   * 모바일 브라우저(설치 PWA 아님)에서 주소창이 보일 때 하단 탭바가 화면 밖으로
+   * 밀려 안 보이던 문제 — 2026-09-15 안드로이드 크롬 제보.
+   *
+   * `100vh`는 "주소창이 숨겨졌다고 쳤을 때"의 큰 뷰포트 높이로 고정이다. 그런데
+   * 이 루트는 `overflow:hidden`인 앱 셸이라, 주소창이 보이는 동안 실제 보이는
+   * 높이는 그보다 작고 `bottom:0`에 붙인 탭바가 화면 아래로 잘려 **스크롤로도
+   * 닿을 수 없게** 된다(주소창을 숨기면 다시 보이던 이유가 이것).
+   *
+   * `dvh`는 주소창 표시/숨김에 따라 실제 보이는 높이를 따라간다. 지원 안 하는
+   * 구형 브라우저를 위해 `vh`를 먼저 두어 폴백으로 남긴다.
+   */
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--color-map);
 }
@@ -358,6 +385,13 @@ button {
   font-weight: 600;
 }
 
+.trip-select-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .trip-select-option-label {
   min-width: 0;
   overflow: hidden;
@@ -369,6 +403,15 @@ button {
   font-weight: 500;
   color: var(--color-text-secondary);
   margin-left: 4px;
+}
+
+.trip-select-option-meta {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .trip-select-option-check {
@@ -815,10 +858,8 @@ button {
 .map-provider-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
+  gap: 5px;
+  padding: 4px 8px 4px 4px;
   border: none;
   border-radius: 6px;
   background: transparent;
@@ -848,6 +889,19 @@ button {
 .map-brand-icon {
   display: block;
   flex-shrink: 0;
+}
+
+/* F14(모바일 감사) — 아이콘만으로는 어느 지도 서비스가 선택된 상태인지
+   알 수 없었다. 이름을 항상 보여준다. */
+.map-provider-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.map-provider-btn.active .map-provider-label {
+  color: var(--color-text-primary);
 }
 
 .result-card {
@@ -1290,12 +1344,37 @@ button {
   text-align: center;
   font-size: 12px;
   color: var(--color-text-tertiary);
-  padding: 10px 16px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pinup-empty-message {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+/* 빈 일정의 주 실행 버튼 — F13(모바일 감사). "읽어오기"만 있던 자리에
+   가장 흔한 첫 동작(검색)을 눈에 띄게 둔다. */
+.pinup-empty-search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: #fff;
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .pinup-header {
@@ -1743,7 +1822,10 @@ button {
 .photos-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  /* 표로보기(12000)·여행공유(12000) 모달 안 행을 눌러서 여는 경로가 있어
+     그보다 위여야 한다. 시트 계층(app-sheet-backdrop 13000)보다는 아래로 둔다 —
+     상세보기 위에 시트가 열리는 흐름은 있어도 그 반대는 없다. */
+  z-index: 12500;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
@@ -2237,16 +2319,6 @@ button {
   justify-content: center;
 }
 
-.materials-album-hint {
-  font-size: 10px;
-  color: var(--color-text-tertiary);
-  margin-top: 2px;
-}
-
-.materials-grid-card--album {
-  padding-bottom: 10px;
-}
-
 .place-detail-tab-scroll {
   flex: 1;
   min-height: 0;
@@ -2700,10 +2772,15 @@ button {
   word-break: break-all;
 }
 
+/*
+ * U09(모바일 UX 리포트 2026-09-13) — 이 행은 아이콘(22px, 고정폭)과
+ * flex:1인 주소 텍스트만 옆에 있어 복사 버튼 높이를 키워도 텍스트 폭을
+ * 갉아먹지 않는다 — 이웃 없는 케이스라 40px까지 올린다.
+ */
 .place-detail-copy-btn {
   flex-shrink: 0;
-  margin-top: 1px;
-  padding: 4px 8px;
+  min-height: 40px;
+  padding: 0 12px;
   font-size: 11px;
   border-radius: var(--radius-sm);
   border: 0.5px solid var(--color-border-strong);
@@ -3229,6 +3306,32 @@ button {
   animation: toast-in 0.2s ease;
 }
 
+/* N02 — 버튼이 있는 토스트만 클릭을 받는다(기본 토스트는 통과시켜야 지도 조작을 막지 않음) */
+.app-toast.with-action {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding-right: 8px;
+}
+
+.app-toast-action {
+  flex-shrink: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.app-toast-action:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;
@@ -3364,6 +3467,26 @@ button {
   font-weight: 500;
 }
 
+/*
+ * 남이 넣은 핀 표시 (공동편집 4단계).
+ * presence 아바타와 같은 색·이니셜 규칙을 쓴다 — 상단 아바타에서 본 사람과
+ * 핀의 배지가 같은 색이어야 "저 사람이 넣었구나"가 바로 읽힌다.
+ * 순서 배지(.chip-order)보다 작게 두어 순서를 먼저 읽는 흐름을 방해하지 않는다.
+ */
+.chip-author {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0;
+}
+
 .chip-body {
   flex: 1;
   min-width: 0;
@@ -3402,6 +3525,34 @@ button {
 
 .chip-rating .wm-icon {
   font-size: 9px;
+}
+
+/*
+ * U14(모바일 UX 리포트 2026-09-13) — 이 장소에 연결된 자료로 바로
+ * 이동하는 배지. 개수가 있을 때만 렌더링되므로(JSX 쪽 조건) 항상
+ * 작게 유지해도 눈에 띈다.
+ */
+.chip-materials {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  border: none;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip-materials:hover {
+  background: var(--color-border);
+}
+
+.chip-materials .wm-icon {
+  font-size: 10px;
 }
 
 .chip-taxi {
@@ -3515,15 +3666,6 @@ button {
   transform: translateX(0);
 }
 
-.materials-panel-header {
-  flex-shrink: 0;
-}
-
-.materials-panel-header .route-panel-header {
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
 .materials-export-menu {
   position: relative;
   flex-shrink: 0;
@@ -3586,56 +3728,6 @@ button {
   background: var(--color-bg-secondary);
 }
 
-.materials-compose {
-  flex-shrink: 0;
-  padding: 10px 14px;
-  border-bottom: 0.5px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.materials-dropzone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 72px;
-  padding: 12px;
-  border: 1.5px dashed var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
-  color: var(--color-text-secondary);
-  font-size: 11px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.materials-dropzone:hover,
-.materials-dropzone.drag-over {
-  border-color: var(--color-primary, #007aff);
-  background: rgba(0, 122, 255, 0.05);
-  color: var(--color-text-primary);
-}
-
-.materials-dropzone.uploading {
-  pointer-events: none;
-  opacity: 0.75;
-}
-
-.materials-dropzone-label {
-  line-height: 1.4;
-  max-width: 240px;
-}
-
-.materials-text-compose {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
 .materials-draft-text {
   font-size: 12px;
   line-height: 1.45;
@@ -3647,60 +3739,6 @@ button {
   background: var(--color-surface);
   color: var(--color-text-primary);
   font-family: inherit;
-}
-
-.materials-text-save-btn {
-  align-self: flex-end;
-  font-size: 11px;
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--color-primary, #007aff);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-
-.materials-text-save-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.materials-view-toggle {
-  display: inline-flex;
-  border: 0.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  flex-shrink: 0;
-  margin-right: 4px;
-}
-
-.materials-view-btn {
-  width: 30px;
-  height: 28px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.materials-view-btn + .materials-view-btn {
-  border-left: 0.5px solid var(--color-border);
-}
-
-.materials-view-btn.active {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-}
-
-.materials-view-btn:hover:not(.active) {
-  background: var(--color-bg);
 }
 
 .materials-file-input {
@@ -3722,42 +3760,6 @@ button {
   flex-shrink: 0;
 }
 
-.materials-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 8px 14px;
-  border-bottom: 0.5px solid var(--color-border);
-  flex-shrink: 0;
-  align-items: center;
-}
-
-.materials-filter-chip {
-  font-size: 10px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  border: 0.5px solid var(--color-border);
-  background: transparent;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-}
-
-.materials-filter-chip.active {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  border-color: var(--color-border-hover);
-}
-
-.materials-place-filter {
-  font-size: 10px;
-  padding: 4px 6px;
-  border-radius: var(--radius-sm);
-  border: 0.5px solid var(--color-border);
-  background: var(--color-bg);
-  max-width: 140px;
-  margin-left: auto;
-}
-
 .materials-panel-body {
   flex: 1;
   overflow-y: auto;
@@ -3765,6 +3767,82 @@ button {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* N04 — 메모에서 찾은 예약 정보 제안. 목록 맨 위에 모아 두고, 적용은 사용자가 누를 때만. */
+.materials-suggest {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-accent);
+  background: rgba(250, 204, 21, 0.1);
+}
+
+.materials-suggest-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.materials-suggest-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.materials-suggest-text {
+  flex: 1 1 180px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.materials-suggest-text strong {
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.materials-suggest-basis {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.materials-suggest-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.materials-suggest-apply,
+.materials-suggest-dismiss {
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.materials-suggest-apply {
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.materials-suggest-dismiss {
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text-secondary);
 }
 
 .materials-empty {
@@ -3786,22 +3864,10 @@ button {
   gap: 10px;
 }
 
-.materials-grid-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border: 0.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 8px;
-  background: var(--color-bg);
-  min-width: 0;
-}
-
 .materials-grid-card--text {
   grid-column: 1 / -1;
 }
 
-.materials-grid-text-icon,
 .materials-grid-file-icon {
   display: flex;
   align-items: center;
@@ -3824,14 +3890,6 @@ button {
   overflow: hidden;
   white-space: pre-wrap;
   word-break: break-word;
-}
-
-.materials-grid-caption {
-  font-size: 11px;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .materials-thumb-btn--large {
@@ -3945,10 +4003,6 @@ button {
   word-break: break-word;
 }
 
-.materials-meta--compact .materials-meta-select {
-  min-width: 64px;
-}
-
 .materials-thumb-btn img {
   width: 100%;
   height: 100%;
@@ -4052,43 +4106,6 @@ button {
   text-decoration: underline;
 }
 
-.materials-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: center;
-}
-
-.materials-meta-select {
-  font-size: 10px;
-  padding: 3px 6px;
-  border-radius: var(--radius-sm);
-  border: 0.5px solid var(--color-border);
-  background: var(--color-bg);
-  flex: 1;
-  min-width: 72px;
-}
-
-.materials-delete-btn {
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-}
-
-.materials-delete-btn:hover {
-  background: rgba(255, 59, 48, 0.1);
-  color: #ff3b30;
-}
-
 .route-panel-header {
   padding: 14px 18px;
   border-bottom: 0.5px solid var(--color-border);
@@ -4111,9 +4128,16 @@ button {
   margin-top: 2px;
 }
 
+/*
+ * U09(모바일 UX 리포트 2026-09-13) — 터치영역 스윕. `.icon-btn`은 7개
+ * 모달/패널(장소 상세, 택시, 로드뷰, 수동핀, 동선요약, 신고, 동선옵션)의
+ * 닫기 버튼으로 쓰이는데 전부 헤더에 혼자(또는 제목과만 나란히) 있어
+ * 이웃과 폭을 다툴 일이 없다 — §27-14/F09와 같은 "이웃이 없으면 타협
+ * 없이" 판단으로 44px 그대로 키운다.
+ */
 .icon-btn {
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   background: transparent;
   border: none;
@@ -5163,12 +5187,6 @@ button {
   cursor: pointer;
 }
 
-.wayknit-root.mobile-layout .map-type-toggle {
-  /* 모바일 상단 바(검색·자료·더보기 + 날짜 탭) 아래로 — 더보기 버튼을 가려 탭을 가로채던 문제 수정 */
-  top: 108px;
-  right: 16px;
-}
-
 .map-type-toggle:hover {
   background: var(--color-bg-secondary);
 }
@@ -5346,6 +5364,54 @@ button {
   pointer-events: none;
 }
 
+/*
+ * 롱프레스로 지도 핀업에 들어갔을 때 누른 지점을 가리키는 말풍선.
+ * `.picking-toast`(가운데 고정, 데스크톱 버튼용)와 달리 좌표에 고정되므로
+ * `position:fixed` + body 포털(`MapContextMenu`와 같은 방식) — 상단 툴바 같은
+ * 조상의 쌓임 맥락에 걸리지 않게 한다.
+ */
+.map-pin-pick-hint {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  background: var(--color-primary);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  max-width: min(280px, calc(100vw - 24px));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-float-lg);
+  z-index: 13500;
+  pointer-events: none;
+}
+
+.map-pin-pick-hint.below {
+  transform: translate(-50%, 0%);
+}
+
+.map-pin-pick-hint::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - var(--map-pin-pick-tail-shift, 0px));
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+}
+
+.map-pin-pick-hint.above::after {
+  top: 100%;
+  border-top-color: var(--color-primary);
+}
+
+.map-pin-pick-hint.below::after {
+  bottom: 100%;
+  border-bottom-color: var(--color-primary);
+}
+
 /* =============================================
    반응형 — 태블릿 (901px 이하 ~ 769px) + 모바일 (768px 이하)
    ============================================= */
@@ -5476,9 +5542,16 @@ button {
     max-width: 100%;
   }
 
-  .pinup-groups {
-    max-height: min(140px, 18vh);
-  }
+  /*
+   * 예전엔 이 지도 위 플로팅독(`.overlay-map-header`/`.overlay-bottom-left`,
+   * 지금은 렌더되는 곳이 없는 죽은 클래스)의 핀 목록 높이를 눌러 뒀는데,
+   * 스코프가 없어서 `.mobile-planner-sheet` 안의 실제 핀 목록(`.pinup-bar-panel
+   * .pinup-groups`)까지 140px로 눌렸다 — 시트 안에서 핀이 몇 개만 있어도
+   * 내부에 별도 스크롤이 생기고, "동선 만들기" 버튼이 그 140px 바로 뒤에
+   * 고정돼 핀이 늘어도 안 밀려나고 그 아래는 빈 공간만 남았다.
+   * 시트는 자체 스크롤(`.mobile-sheet-content`)이 있으니 여기서 다시 가둘
+   * 필요가 없다 — 지웠다.
+   */
 
   /* --- 검색 확장 (목업 2) --- */
   .wayknit-root.search-expanded .overlay-left {
@@ -5547,10 +5620,21 @@ button {
     top: auto;
     left: var(--mobile-gutter);
     right: var(--mobile-gutter);
-    bottom: 0;
+    /*
+     * bottom:0이면 탭바(58px)를 깔고 앉아, "지도" 탭이 자료 시트를 닫는
+     * 손짓(§ 하단내비 통합)을 눌러도 탭바 자체가 시트 밑에 깔려 눌리지
+     * 않았다 — 핀 시트(.mobile-planner-sheet)처럼 탭바 높이만큼 띄운다.
+     */
+    bottom: calc(var(--mobile-tabbar-h) + env(safe-area-inset-bottom, 0px));
     width: auto;
     max-height: 85vh;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    /*
+     * 데스크톱의 z-index:20을 여기서 올린다. 모바일에선 이 패널이 우측
+     * 사이드패널이 아니라 하단 시트가 되는데, 같은 자리에 핀 시트(22)가
+     * 이미 있어 20으로는 가려진다.
+     */
+    z-index: 24;
     transform: translateY(100%);
     transition: transform 0.28s ease-out;
   }
@@ -5577,6 +5661,40 @@ button {
   .share-action-btn {
     font-size: 12px;
     padding: 8px 10px;
+  }
+
+  /*
+   * 검색 결과 카드 밀도(§6-7). 실측: 배지 3종이 각각 줄을 잡아먹는 문제는
+   * 위에서 .search-result-badges 로 이미 묶었다. 여기서는 좁은 화면에서
+   * 카드 자체의 여백·글자를 줄여 한 화면에 2~3개가 아니라 4~5개가 보이게
+   * 한다. 데스크톱은 건드리지 않는다 — 사이드 패널은 세로가 넉넉하다.
+   */
+  .search-result-card {
+    gap: 10px;
+    padding: 9px 10px;
+  }
+
+  .search-result-card .result-thumb {
+    width: 34px;
+    height: 34px;
+  }
+
+  .search-result-body {
+    gap: 3px;
+  }
+
+  .search-result-name {
+    font-size: 13.5px;
+  }
+
+  .search-result-en {
+    /* 두 줄째까지 잡아먹지 않도록 — 원문 이름만으로 충분히 식별된다 */
+    display: none;
+  }
+
+  .search-pin-btn {
+    width: 34px;
+    height: 34px;
   }
 }
 
@@ -5982,11 +6100,77 @@ button {
   margin: 0 0 12px;
 }
 
+/* F07(모바일 감사 보고서) — 결제 버튼 누르기 전에 가격이 눈에 띄게 보여야 한다.
+   요금제 화면에서 가장 눈에 띄는 요소가 돼야 하므로 기능 목록보다 크게 잡는다. */
+.upgrade-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.upgrade-price-amount {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  /* U17(모바일 UX 리포트 2026-09-13) — "월 4,900원"에서 숫자·한글 경계의
+     줄바꿈 허용 때문에 "원"만 다음 줄로 떨어졌다. 가격 한 덩어리는 붙여 둔다. */
+  white-space: nowrap;
+}
+
+.upgrade-price-note {
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+}
+
 .upgrade-features {
   margin: 0 0 16px;
   padding-left: 18px;
   font-size: 13px;
   color: var(--color-text-secondary);
+}
+
+/* Free/Plus 비교표 — §29-43·이후 불릿 목록을 대체 */
+.upgrade-compare {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 16px;
+  font-size: 12.5px;
+}
+
+.upgrade-compare th,
+.upgrade-compare td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.upgrade-compare thead th {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-tertiary);
+}
+
+.upgrade-compare th[scope='row'] {
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.upgrade-compare td {
+  color: var(--color-text-secondary);
+}
+
+/* Plus 열을 강조 — 왜 돈을 내는지 시선이 바로 그쪽으로 가야 한다 */
+.upgrade-compare-plus-col {
+  background: rgba(250, 204, 21, 0.12);
+  color: var(--color-text-primary) !important;
+  font-weight: 700;
+  border-radius: 6px 6px 0 0;
+}
+
+.upgrade-compare tbody tr:last-child .upgrade-compare-plus-col {
+  border-radius: 0 0 6px 6px;
 }
 
 .upgrade-error {
@@ -6049,7 +6233,9 @@ button {
 .plaza-locale-filter {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
+  margin-top: 14px;
   font-size: 12px;
 }
 
@@ -7382,12 +7568,17 @@ button {
 
 .collab-invite-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin: 10px 0 4px;
 }
 
+/* F17(모바일 감사) — 이메일·권한·초대를 한 줄에 욱여넣어 좁은 화면에서
+   이메일 입력 폭이 몇 글자밖에 안 됐다. 이메일은 항상 자기 줄을 차지하게
+   강제하고(flex-wrap과 조합하는 줄바꿈 트릭, §3-6과 같은 방식), 권한·초대
+   버튼만 그다음 줄에서 나눠 쓴다. */
 .collab-invite-email {
-  flex: 1;
+  flex: 1 1 100%;
   min-width: 0;
   padding: 9px 10px;
   border-radius: var(--radius-md);
@@ -7396,6 +7587,8 @@ button {
 }
 
 .collab-invite-role {
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 9px 8px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-strong);
@@ -7412,17 +7605,38 @@ button {
   gap: 4px;
 }
 
+/*
+ * U12(모바일 UX 리포트 2026-09-13) — 이메일(식별 정보)과 권한 선택기·
+ * 제거 버튼(조작)이 한 줄에서 폭을 다퉈 이메일이 심하게 줄었다. 식별
+ * 줄(.collab-row-identity)과 조작 줄(.collab-row-actions)로 나눠
+ * 이메일에 줄 전체를 준다 — U01(핀 카드)과 같은 방향의 해결.
+ */
 .collab-list-item {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 10px 10px;
   border-radius: var(--radius-md);
   background: var(--color-bg-secondary);
 }
 
 .collab-list-item--pending {
   opacity: 0.75;
+}
+
+.collab-row-identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.collab-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .collab-list-email {
@@ -7432,6 +7646,13 @@ button {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 13px;
+}
+
+/* 조작 줄 안에서는 이메일과 더 이상 폭을 다투지 않으니 내용 크기로 고정 */
+.collab-row-role {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 96px;
 }
 
 .collab-role-badge {
@@ -7482,6 +7703,13 @@ button {
   font-size: 12.5px;
   font-weight: 600;
   box-shadow: var(--shadow-float);
+  /* 누를 것이 없는 알림이다 — 아래 버튼의 탭을 가로채면 안 된다 */
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.trip-readonly-banner.faded {
+  opacity: 0;
 }
 
 .wayknit-root.mobile-layout .trip-readonly-banner {
@@ -7555,6 +7783,88 @@ button {
   color: #9a3412;
 }
 
+.plaza-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.plaza-filter-summary {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plaza-filter-icon-btn {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface-solid);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.plaza-filter-icon-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.plaza-filter-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--color-accent);
+  color: #78350f;
+  border-radius: 99px;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-bg);
+}
+
+.plaza-day-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+/* 데스크톱·태블릿(768px+) — 시트 대신 항상 펼쳐서 보여준다 */
+.plaza-filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  background: #fff;
+  border: 1px solid var(--color-border);
+}
+
+.plaza-filter-panel-count {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
 .plaza-tabs {
   display: flex;
   gap: 4px;
@@ -7614,9 +7924,49 @@ button {
   color: var(--color-text-primary);
 }
 
+/* F15(모바일 감사) — 운영 초기 빈 화면을 막으려고 심어둔 예시 글과 실제
+   사용자 글이 구분 없이 섞여 있었다. payload.mock 플래그를 읽어 표시만
+   한다(지우지 않음 — 계속 채워둘 목적으로 넣은 데이터로 보여서). */
+.plaza-mock-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .plaza-board-trip-title {
   margin: 8px 0 4px;
   font-size: 17px;
+}
+
+/*
+ * U16(모바일 UX 리포트 2026-09-13) — 문장형 요약(pinSummary)만으로는
+ * 며칠짜리인지·장소가 몇 곳인지 한눈에 안 들어왔다. 이미 있는 데이터로
+ * 구조화된 칩 3종을 문장 요약 위에 얹는다.
+ */
+.plaza-board-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.plaza-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
 }
 
 .plaza-board-summary {
@@ -7884,6 +8234,32 @@ button {
   background: var(--color-primary, #1f2937);
   color: #fff;
   border-color: var(--color-primary, #1f2937);
+}
+
+.admin-link-btn-danger {
+  color: var(--color-danger-text, #b91c1c);
+  border-color: var(--color-danger-text, #b91c1c);
+  cursor: pointer;
+}
+
+.admin-link-btn-danger:hover {
+  background: var(--color-danger-bg, #fef2f2);
+}
+
+.admin-link-btn-danger:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* 표 안에서 값을 바로 고치는 셀렉트(카테고리 재분류 등, §2-7) */
+.admin-inline-select {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-primary);
 }
 
 .admin-tab-bar {
@@ -8982,6 +9358,28 @@ button {
 .phrase-en {
   font-size: 13px;
   color: var(--color-text-secondary);
+}
+
+/* F08(모바일 감사 보고서) — 클래스 없이 브라우저 기본 버튼(~26px)으로
+   렌더되고 있었다. 카드 안에 세로 여유가 있어 44px까지 그대로 확보. */
+.phrase-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.phrase-copy-btn:hover {
+  background: var(--color-bg);
 }
 .themes-board-grid {
   display: grid;
@@ -10171,13 +10569,16 @@ button {
 }
 
 .planner-more-item {
+  /* F08(모바일 감사 보고서) — 35px 높이였다. 세로로 쌓이는 목록이라
+     아이콘 버튼들과 달리 옆으로 밀어낼 이웃이 없어 목표(44px)에 맞췄다.
+     데스크톱·모바일 더보기 메뉴가 이 클래스를 같이 쓴다. */
   display: block;
   width: 100%;
   text-align: left;
   border: none;
   background: transparent;
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 13px 10px;
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-primary);
@@ -10801,11 +11202,29 @@ button {
   padding: 0;
 }
 
+/*
+ * U04(모바일 UX 리포트 2026-09-13) — 저장된 동선이 있을 때 그 값을
+ * "변경 시 예상" 위에 한 줄 더 보여준다. `.preview-stats`를 재사용하면
+ * `.preview-stats > div { flex-direction: column }` 규칙이 아래
+ * `.route-preview-line`(가로 배치가 필요)에도 걸려 레이아웃이 깨져서
+ * 새 래퍼로 분리했다.
+ */
+.route-preview-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 9px;
+}
+
+.route-preview-current-line {
+  font-size: 11px;
+  color: var(--color-text-tertiary, #94a3b8);
+}
+
 .route-preview-line {
   display: flex !important;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 9px;
   font-size: 12.5px;
 }
 
@@ -10861,6 +11280,15 @@ button {
 .pinup-bar-panel .pinup-groups {
   flex: 1 1 auto;
   min-height: 0;
+  /*
+   * 기본 `.pinup-groups`는 작은 드롭다운형 목록(200px)을 전제로 자체 스크롤을
+   * 갖는다 — `overflow:visible`은 이미 그 클립을 지웠지만 `max-height`는
+   * `overflow`와 별개 속성이라 여기서도 다시 지워야 한다. 패널(데스크톱
+   * 사이드패널·모바일 시트)에서는 `.pinup-panel-scroll` 하나가 스크롤을
+   * 맡아야 한다 — 둘 다 각자 스크롤을 가지면 목록이 작은 상자 안에 갇히고
+   * "동선 만들기" 버튼이 핀이 늘어도 그 상자 바로 뒤에 고정돼 버린다.
+   */
+  max-height: none;
   overflow: visible;
   padding: 12px 16px;
   display: flex;
@@ -10887,6 +11315,61 @@ button {
   border-radius: var(--radius-lg);
   padding: 10px 12px;
   background: #fff;
+  /*
+   * U01(모바일 UX 리포트 2026-09-13) — 순번·작성자·깃발·이름·잠금·별점·
+   * 택시·삭제가 한 줄에서 경쟁해 이름이 한두 글자로 잘렸다. 이름 줄
+   * (.chip-row-main)과 메타 줄(.chip-row-meta)로 나눠 이름에 한 줄을
+   * 통째로 내준다.
+   */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.chip-row-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.chip-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/*
+ * F03(모바일 감사 보고서, 2026-09-10) — 이름 잘림·짧은 이름("드름산")이
+ * "드름/산"으로 꺾여 보이던 문제. 기본 .chip-name엔 flex 폭 배정이 없어서
+ * .chip-body(flex row) 안에서 기본 min-width(auto = 글자 전체 폭)를 지켜
+ * 줄바꿈이 일어났다. flex:1로 남는 폭을 장소명에 먼저 주고, min-width:0으로
+ * 줄여도 되게 한 뒤 진짜 CSS 말줄임표로 자른다 — 이제 실제 픽셀 폭 기준
+ * 이라 짧은 이름은 그대로, 긴 이름만 자연스럽게 끝에 …가 붙는다.
+ */
+.pinup-bar-panel .chip-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pinup-panel-footer {
@@ -11377,8 +11860,26 @@ button {
   color: rgba(255, 255, 255, 0.55);
 }
 
-.route-dock-focus-edit {
+/* N01(모바일 UX 리포트 2026-09-13, 신규 제안) — "출발 권장 시각" 표시.
+   past(이미 지남/지금 출발해야 함)일 때만 경고색으로 바꿔 눈에 띄게 한다. */
+.route-dock-focus-depart {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #7dd3fc;
+}
+
+.route-dock-focus-depart.past {
+  color: #fca5a5;
+}
+
+.route-dock-focus-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 4px;
+}
+
+.route-dock-focus-edit {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
@@ -11391,10 +11892,43 @@ button {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .route-dock-focus-edit:hover {
   background: rgba(255, 255, 255, 0.16);
+}
+
+/* N01 — "도착 완료" CTA. 다음 장소로 포커스를 넘기는 가장 자주 누를 버튼이라
+   자동차 이동 등 다른 accent 버튼과 같은 색으로 눈에 띄게 잡는다. */
+.route-dock-focus-arrived {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  border: none;
+  background: var(--color-accent);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-pill);
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.route-dock-focus-arrived:hover {
+  filter: brightness(0.96);
+}
+
+.route-dock-focus-lastbadge {
+  margin-top: 6px;
+  padding: 6px 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
 }
 
 .route-dock-chip-track {
@@ -11540,7 +12074,16 @@ button {
   color: #64748b;
 }
 
-.itinerary-table-modal-close {
+.itinerary-table-modal-header-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.itinerary-table-modal-close,
+.itinerary-table-modal-share,
+.itinerary-table-modal-edit {
   flex-shrink: 0;
   width: 36px;
   height: 36px;
@@ -11554,7 +12097,9 @@ button {
   cursor: pointer;
 }
 
-.itinerary-table-modal-close:hover {
+.itinerary-table-modal-close:hover,
+.itinerary-table-modal-share:hover,
+.itinerary-table-modal-edit:hover {
   background: #e2e8f0;
 }
 
@@ -11783,6 +12328,28 @@ button {
   color: var(--color-text-secondary);
   line-height: 1.5;
 }
+/*
+ * U13(모바일 UX 리포트 2026-09-13) — 테마를 눌러야만 시나리오 유무를
+ * 알 수 있던 문제. 카드에 개수 배지를 미리 붙이고, 0개인 카드는 살짝
+ * 죽여(클릭은 그대로 가능) 눈으로 먼저 걸러지게 한다.
+ */
+.theme-scenario-theme-count {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+.theme-scenario-theme-card.is-empty {
+  opacity: 0.6;
+}
+.theme-scenario-theme-card.is-empty .theme-scenario-theme-count {
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-secondary);
+}
+
 .theme-scenario-theme-check {
   position: absolute;
   top: 6px;
@@ -11856,6 +12423,64 @@ button {
   font-size: 12px;
   color: var(--color-danger-text);
   margin: 0;
+}
+/*
+ * U13(모바일 UX 리포트 2026-09-13) — "완료 기준: 결과가 없을 때 유효한
+ * 다음 행동을 제공한다". 다른(재고 있는) 테마로 바로 넘어가거나 직접
+ * 검색하는 두 경로를 붙인다.
+ */
+.theme-scenario-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.theme-scenario-empty-alt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.theme-scenario-empty-alt-label {
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+}
+.theme-scenario-empty-alt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.theme-scenario-empty-alt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: var(--color-surface-solid);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.theme-scenario-empty-alt-chip:hover {
+  background: var(--color-bg-secondary);
+}
+.theme-scenario-empty-search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.theme-scenario-empty-search-btn:hover {
+  background: var(--color-bg);
 }
 .theme-scenario-option-list {
   display: flex;
@@ -12119,6 +12744,26 @@ button {
   background: #f1f5f9;
 }
 
+/* F16(모바일 감사) — 일차를 매 행 반복하던 열을 없애고 그룹 제목으로 뺐다.
+   일차별로 tbody를 나눠서 넣는다(§27-16). */
+.itinerary-table-day-group {
+  cursor: default;
+}
+
+.itinerary-table-day-group th {
+  background: var(--color-bg-secondary, #f1f5f9);
+  color: var(--color-text-primary, #0f172a);
+  font-weight: 700;
+  font-size: 12.5px;
+  text-align: left;
+  padding: 7px 14px;
+  border: 1px solid #cbd5e1;
+}
+
+.itinerary-table-day-group:hover {
+  background: none;
+}
+
 .itinerary-table tbody tr {
   cursor: pointer;
   color: #0f172a;
@@ -12161,6 +12806,32 @@ button {
   min-width: 0;
   font-weight: 600;
   word-break: keep-all;
+}
+
+/*
+ * U10(모바일 UX 리포트 2026-09-13) — 필수 방문·동선 미반영 표시가
+ * 색상(빨간 글씨)뿐이라 색을 못 보거나 놓치면 상태를 알 수 없었다.
+ */
+.itinerary-table-required-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: #991b1b;
+  background: #fee2e2;
+  border-radius: var(--radius-pill);
+  padding: 1px 7px;
+}
+
+.itinerary-table-unscheduled-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-tertiary, #94a3b8);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-pill);
+  padding: 1px 7px;
+  white-space: nowrap;
 }
 
 .overview-chrome {
@@ -12244,12 +12915,14 @@ button {
 /* Mobile redesign */
 .mobile-planner-top {
   position: absolute;
-  top: 14px;
+  /* 노치 기기에선 상태바 아래로 내려야 한다 — 안 그러면 시계·배터리에 가려
+     여행 제목·일차·도구 버튼이 통째로 터치 불가가 된다(--safe-top 주석 참고). */
+  top: calc(14px + var(--safe-top));
   left: 14px;
   right: 14px;
   z-index: 25;
   display: none;
-  flex-direction: column;
+  align-items: center;
   gap: 8px;
 }
 
@@ -12257,55 +12930,93 @@ button {
   display: flex;
 }
 
+/*
+ * 여행 전환 드롭다운(TripSelectMenu)이 다른 오버레이에 덮이던 문제와 같은 종류.
+ *
+ * .mobile-planner-top이 position+z-index로 쌓임 맥락을 만든다. 그 안의
+ * .trip-select-dropdown가 z-index:201이어도 바깥의 다른 오버레이(예: 공유받은
+ * 여행 알림 알약, z-index:40)를 이기지 못한다 — 자식은 부모 맥락의 천장(25)을
+ * 넘을 수 없기 때문이다. 그래서 드롭다운 쪽 z-index를 올리는 방식으로는
+ * 고쳐지지 않는다. 올려야 하는 건 상단바다.
+ *
+ * 올리는 건 드롭다운이 열려 있는 동안만이다. 상단바를 상시로 올리면 지도 위
+ * 다른 오버레이와의 위아래가 통째로 뒤집히므로, 필요한 순간에만 최소로 올린다.
+ */
+.wayknit-root.mobile-layout .mobile-planner-top:has(.trip-select-menu.open),
+.wayknit-root.mobile-layout .mobile-planner-top:has(.mobile-day-select.open) {
+  z-index: 45;
+}
+
 .wayknit-root.mobile-layout .mobile-top-bar,
 .wayknit-root.mobile-layout .mobile-dock {
   display: none !important;
 }
 
-.mobile-planner-search-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+/*
+ * 여행 전환 트리거 — 검색·위성지도 버튼과 같은 36px 아이콘 버튼처럼 보이게
+ * 기본 .trip-select-trigger(데스크톱 스타일)를 .mobile-tool-btn 치수로 맞춘다.
+ * 트리거가 이제 한 줄의 맨 왼쪽에 있으므로 드롭다운은 기본값(left:0, 오른쪽
+ * 으로 펼침) 그대로 쓴다 — 예전엔 칩이 오른쪽 끝에 있어 반대로 펼쳐야 했다.
+ */
+.mobile-planner-trip-trigger {
+  flex-shrink: 0;
 }
 
-.mobile-planner-search-pill {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  padding: 12px 16px;
-  box-shadow: var(--shadow-panel);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text-tertiary);
-  text-align: left;
+.mobile-planner-trip-trigger .trip-select-trigger {
+  /* F08(모바일 감사 보고서) — 36px는 WCAG 최소(24px)는 넘지만 권장(44px)엔
+     못 미쳤다. 상단 한 줄이 이미 빠듯해(§27) 44px까진 못 가고 40px로
+     절충 — §6-4의 핀 카드 터치영역 때와 같은 판단(꽉 채우면 옆 요소가
+     밀린다, 조금이라도 키우는 쪽을 택한다). */
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
 }
 
-.mobile-planner-menu-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  border: 1px solid var(--color-border);
-  background: #fff;
-  box-shadow: var(--shadow-panel);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* 여행 제목 — 배경 없는 텍스트. 일차를 버튼 하나로 접어 생긴 공간에 넣는다.
+   전용 폭을 정하지 않고 flex:1로 남는 공간만큼만 쓰고 나머지는 말줄임한다. */
+.mobile-planner-trip-title {
+  flex: 1 1 auto;
+  min-width: 24px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
-.mobile-planner-days {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
+.mobile-day-select {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.mobile-day-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/*
+ * 데스크톱 PlannerDayPills의 오버플로 메뉴(.planner-day-overflow-menu/-item)를
+ * 그대로 쓴다 — "넘치는 일차를 드롭다운으로 접는다"는 같은 문제라 스타일을
+ * 새로 만들지 않았다. 폭만 화면에 맞춰 좁힌다(데스크톱 기본 132px는 여기선
+ * 충분하지만, 트리거가 화면 가운데쯤 있을 때도 폭 때문에 밀려나지 않게
+ * 최대치를 잡아 둔다).
+ */
+.mobile-day-overflow-menu {
+  max-width: 200px;
 }
 
 .mobile-planner-day {
+  /* F08(모바일 감사 보고서) — 32px 높이였다. 아이콘 버튼과 달리 정사각형
+     제약이 없어 세로 패딩만 늘리면 되므로 다른 셋보다 목표(44px)에
+     가깝게 갈 수 있었다. */
   border: none;
   border-radius: var(--radius-pill);
-  padding: 7px 14px;
+  padding: 12px 14px;
   font-size: 12.5px;
   font-weight: 600;
   background: rgba(255, 255, 255, 0.94);
@@ -12319,8 +13030,208 @@ button {
   color: #fff;
 }
 
+/* 예전엔 위성지도 토글·지도 핀업이 지도 위에 따로 떠 있었다 — 검색·일차와
+   한 툴바로 묶어 통제 지점을 줄인다. */
+.mobile-planner-tools {
+  flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+}
+
+.mobile-tool-btn {
+  /* F08(모바일 감사 보고서) — 40px로 절충. 같은 줄의 여행 전환 버튼과
+     같은 이유(§27 상단 한 줄이 빠듯함). */
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-secondary);
+}
+
+/*
+ * U06(모바일 UX 리포트 2026-09-13) — 상단 한 줄 저장 상태 아이콘.
+ * `.mobile-save-status .save-status-badge`를 44px·아이콘만 남기는 규칙은
+ * 이미 있었지만(옛 `.mobile-top-bar` 플로팅 레이아웃용, 실제로는 어떤
+ * JSX에도 연결된 적 없는 죽은 코드) 지금 `.mobile-planner-top`은 훨씬
+ * 빠듯한 한 줄이라 이웃 아이콘 버튼(`.mobile-tool-btn`, 40px)에 맞춰
+ * 다시 잡는다.
+ */
+.mobile-planner-top .mobile-save-status {
+  flex-shrink: 0;
+}
+
+.mobile-planner-top .mobile-save-status .save-status-badge {
+  width: 40px;
+  height: 40px;
+  min-height: 0;
+  justify-content: center;
+  padding: 0;
+  gap: 0;
+}
+
+.mobile-tool-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+/*
+ * "이 지역 검색" — 상단 툴바(약 102px) 바로 아래 가운데.
+ * z-index는 지도 위·시트 아래(22 미만)면 충분하다 — 시트가 덮는 영역까지
+ * 내려오지 않는 위치다.
+ */
+/*
+ * 통합 요약줄 — 하단 시트의 검색 탭에서만 쓴다(SearchPanel collapsibleTools).
+ * 범위·반경·하위조건·결과수를 한 줄로 합치고, 정렬은 아이콘 토글로, 범위·반경·
+ * 내 위치·축제행사 같은 나머지 옵션은 "필터" 버튼 뒤 다이얼로그로 보낸다 —
+ * 예전엔 이 줄+메타줄+정렬줄 셋이 따로 있어 결과가 화면 2/3 아래로 밀렸었다.
+ */
+.search-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-summary-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-summary-sort {
+  flex-shrink: 0;
+  display: flex;
+  gap: 3px;
+}
+
+.search-summary-sort-btn {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.search-summary-sort-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.search-filter-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.search-filter-badge {
+  background: var(--color-accent);
+  color: #78350f;
+  border-radius: 99px;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-filter-apply {
+  width: 100%;
+  margin-top: 8px;
+  border: none;
+  background: var(--color-accent);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-pill);
+  padding: 12px 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* 필터 다이얼로그 안에서는 부모 gap이 없어, 쌓인 칩 줄 사이에 직접 여백을 준다 */
+.app-sheet-body .search-pill-tools,
+.app-sheet-body .search-subfilters {
+  margin-bottom: 14px;
+}
+
+/*
+ * F01(모바일 감사 보고서, 2026-09-10) — sheet-half 상태에서 검색 결과가
+ * 15개 잡혀 있어도 카드가 0px로 접혀 하나도 안 보이던 버그.
+ *
+ * 1차 시도(height:100%+display:flex 체인 복구)로는 부족했다 — 사용자가
+ * 실기기로 재확인해서 드러났다. 진짜 원인은 flex 계산 자체다.
+ * `.search-panel > :not(.result-card) { flex-shrink: 0; }`(726줄) 때문에
+ * 검색어·"전국 N개 결과"·카테고리 칩 같은 고정 행들이 전혀 안 줄어든다.
+ * sheet-half는 이 고정 행들만으로 이미 공간을 다 쓰는 높이라, flex:1인
+ * .search-result-list가 "남는 공간"을 계산하면 정확히 0이 나온다 — 이건
+ * 버그가 아니라 flex가 정직하게 "남는 공간 없음"을 계산한 결과였다.
+ *
+ * 그래서 "안에서 남는 공간을 계산"하는 방식 자체를 버렸다. height:100%로
+ * 시트 높이에 억지로 맞추지 않고 자연스러운 콘텐츠 높이로 두고, 스크롤은
+ * 부모(.mobile-sheet-content, 이미 overflow:auto)가 통째로 맡는다 — 같은
+ * 시트 안 "일정" 탭(PinupBar)도 이미 이 방식이다. 검색만 유독 안에서
+ * 따로 높이를 맞추려다 이 문제가 생겼다.
+ */
+.mobile-sheet-content .search-panel {
+  height: auto;
+  overflow: visible;
+}
+
+.mobile-search-area-btn {
+  position: absolute;
+  /* 상단바 기준으로 놓인 요소라 상단바와 같은 폭만큼 함께 내려가야 겹치지 않는다 */
+  top: calc(112px + var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 21;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  backdrop-filter: var(--blur-surface);
+  -webkit-backdrop-filter: var(--blur-surface);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-float);
+  cursor: pointer;
+}
+
 .mobile-planner-sheet {
-  --mobile-tabbar-h: 58px;
   position: absolute;
   left: 0;
   right: 0;
@@ -12353,8 +13264,7 @@ button {
   padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
 }
 
-.mobile-planner-tabbar .mobile-tabbar-btn,
-.mobile-planner-tabbar .trip-select-trigger {
+.mobile-planner-tabbar .mobile-tabbar-btn {
   flex: 1;
   width: auto;
   height: auto;
@@ -12375,29 +13285,24 @@ button {
   position: relative;
 }
 
-.mobile-planner-tabbar .trip-select-trigger:hover,
-.mobile-planner-tabbar .trip-select-menu.open .trip-select-trigger {
-  border-color: transparent;
-  background: var(--color-bg-secondary);
-  box-shadow: none;
-  color: var(--color-text-secondary);
-}
-
-.mobile-planner-tabbar .trip-select-dropdown {
-  bottom: calc(100% + 8px);
-  top: auto;
-  left: 6px;
-}
-
-.mobile-planner-tabbar .trip-select-menu {
+/* 메뉴(더보기) 팝오버 — 상단바와 달리 탭바는 화면 맨 아래라 위로 펼친다 */
+.mobile-planner-tabbar .planner-bar-more {
   flex: 1;
   display: flex;
 }
 
-.trip-select-trigger-label {
-  font-size: 10.5px;
-  font-weight: 600;
-  line-height: 1;
+.mobile-planner-tabbar .planner-more-menu {
+  top: auto;
+  bottom: calc(100% + 8px);
+  right: 6px;
+  left: auto;
+}
+
+.planner-more-item-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .mobile-tabbar-plan-badge {
@@ -12419,18 +13324,32 @@ button {
   top: calc(100% - 92px);
 }
 
+/*
+ * U02(모바일 UX 리포트 2026-09-13) — 반보기(sheet-half)에서 여행명·3탭·
+ * "오늘 동선" 카드·하단 CTA 같은 고정 UI가 목록 높이를 다 써서 첫 장소도
+ * 온전히 안 보였다. 52% → 46%로 6%p(≈50px, 844px 기준) 더 준다. 지도가
+ * 보이는 몫이 그만큼 줄지만 지도는 전체보기 전환이나 핀 선택 시 peek로
+ * 접는 경로가 이미 있어 반보기의 우선순위를 목록 쪽에 둔다.
+ */
 .mobile-planner-sheet.sheet-half {
-  top: 52%;
+  top: 46%;
 }
 
 .mobile-planner-sheet.sheet-full {
   top: 18%;
 }
 
+/*
+ * F09(모바일 감사 보고서, 2026-09-10) — 시트 핸들 버튼이 시각적 바(4px)
+ * 기준 padding만 있어 실제 터치 높이가 18px에 불과했다. sheet-peek일 때
+ * 보이는 건 이 핸들 + .mobile-sheet-head뿐이고 그 둘을 합쳐도 peek 높이
+ * 예산(92px)에 여유가 있어(핸들 44px + head ~28px ≈ 72px), §6-4/F08과
+ * 달리 타협 없이 WCAG 44px을 그대로 적용했다.
+ */
 .mobile-sheet-handle-btn {
   border: none;
   background: transparent;
-  padding: 9px 0 5px;
+  padding: 20px 0;
   display: flex;
   justify-content: center;
   width: 100%;
@@ -12504,25 +13423,121 @@ button {
   background: transparent;
 }
 
+/*
+ * 데스크톱 사이드패널(`.planner-side-body > .pinup-bar-panel`)은 패널이 꽉 찬
+ * 높이를 가져서 내부 목록만 스크롤되고 "동선 만들기" 버튼은 늘 패널 맨
+ * 아래 보인다. 모바일 시트에선 이 높이 체인이 `.mobile-itinerary-view`에서
+ * 끊겨 있었다 — 목록이 짧으면 버튼 뒤에 빈 공간이, 길면 버튼까지 스크롤해야
+ * 닿을 수 있었다. 여기서 다시 이어서 데스크톱과 같은 동작을 준다: 짧은
+ * 목록은 그 아래 버튼이 바로 붙고, 목록이 시트보다 길어지는 순간부터 목록만
+ * 내부 스크롤되며 버튼은 시트 하단에 고정된다.
+ */
+.mobile-itinerary-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.mobile-itinerary-view > .pinup-bar.pinup-bar-panel,
+.mobile-itinerary-view > .route-panel.route-panel-embedded {
+  /*
+   * flex-grow는 일부러 0(기본값)으로 둔다 — 목록이 짧을 때 억지로 시트
+   * 높이만큼 늘리면 늘어난 빈칸이 목록과 버튼 사이에 생긴다(정확히 이전
+   * 버그와 같은 모양). shrink만 켜 두면 목록이 짧을 땐 내용만큼만 차지해
+   * 버튼이 바로 붙고, 시트보다 길어질 때만 이 높이(100%)에 눌려 내부
+   * 스크롤로 전환된다.
+   */
+  min-height: 0;
+}
+
+/*
+ * 세그먼트 토글 공통 스타일. 원래 "핀·동선"을 "일정" 한 탭으로 합칠 때
+ * 만들었으나 §27-7에서 그 탭 구조 자체가 3탭으로 바뀌며 쓰이지 않게
+ * 됐다 — U07(모바일 UX 리포트 2026-09-13)의 핀 목록 정렬 토글(방문순서/
+ * 종류별, `.pinup-sort-toggle`)이 다시 가져다 쓴다.
+ */
+.mobile-view-toggle {
+  display: flex;
+  gap: 3px;
+  background: var(--color-bg-secondary);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 12px;
+}
+
+.mobile-view-toggle-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 7px 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-family: inherit;
+}
+
+.mobile-view-toggle-btn.active {
+  background: #fff;
+  color: var(--color-text-primary);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+/*
+ * 핀 목록(.pinup-panel-scroll) 안에서 이 토글만 형제로 떠 있어 목록의
+ * 좌우 여백(.pinup-groups의 16px)을 못 물려받는다 — 직접 맞춘다.
+ */
+.pinup-sort-toggle {
+  margin: 10px 16px 0;
+}
+
+/* 목록 보기에서 오늘 동선을 한눈에 — 예전엔 "동선" 탭과 플로팅 카드로 나뉘어 있었다 */
+.mobile-route-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-accent-soft);
+  border: 1px solid #fde68a;
+  border-radius: 14px;
+  padding: 11px 13px;
+  margin-bottom: 12px;
+  color: var(--color-amber);
+}
+
+.mobile-route-summary-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.mobile-route-replan-btn {
+  flex-shrink: 0;
+  border: none;
+  background: #fff;
+  border-radius: var(--radius-pill);
+  padding: 7px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--color-amber);
+  font-family: inherit;
+  box-shadow: var(--shadow-sm);
+}
+
 .mobile-sheet-peek-only .mobile-sheet-tabs,
 .mobile-sheet-peek-only .mobile-sheet-content {
   display: none;
 }
 
-.mobile-search-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 40;
-  background: #fff;
-  display: none;
-  flex-direction: column;
-}
-
-.wayknit-root.mobile-layout.mobile-search-open .mobile-search-overlay {
-  display: flex;
-}
-
-.wayknit-root.mobile-layout.mobile-search-open .mobile-planner-sheet {
+/*
+ * 여행 자료 패널도 모바일에선 하단 시트라, 핀 시트와 같은 자리에 겹친다.
+ * z-index만 올리면 자료 시트가 짧을 때(자료 0개) 그 위로 핀 시트 윗부분이
+ * 삐져나와 시트가 두 장 겹쳐 보인다. 그래서 아예 감춘다.
+ */
+.wayknit-root.mobile-layout.materials-open .mobile-planner-sheet {
   display: none;
 }
 
@@ -12974,6 +13989,20 @@ button {
   margin-bottom: 10px;
 }
 
+/* 신고 여러 건 선택 시 나타나는 일괄 처리 바(§2-7) */
+.admin-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-secondary, #f1f5f9);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .admin-cell-detail {
   max-width: 280px;
   white-space: pre-wrap;
@@ -13088,7 +14117,8 @@ button {
 /* 초대 링크 안내 배너 */
 .invite-banner {
   position: absolute;
-  top: 58px;
+  /* 화면 상단에 뜨는 오버레이라 노치 기기에선 상태바 아래로 내린다(데스크톱은 0) */
+  top: calc(58px + var(--safe-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
@@ -13157,7 +14187,7 @@ button {
 @media (max-width: 560px) {
   .invite-banner {
     flex-wrap: wrap;
-    top: 52px;
+    top: calc(52px + var(--safe-top));
   }
 }
 
@@ -13459,6 +14489,108 @@ button {
   margin-top: 2px;
   color: #b45309;
   font-size: 11px;
+  flex-wrap: wrap;
+}
+
+/* N05 — 영업시간 경고 옆 "대체 장소" 버튼 */
+.route-stay-alt-btn {
+  margin-left: 4px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  border-radius: var(--radius-pill);
+  padding: 3px 9px;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.route-stay-alt-btn:hover {
+  background: rgba(180, 83, 9, 0.12);
+}
+
+/* N05 — 대체 장소 시트 */
+.alt-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alt-reason {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.alt-target {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.alt-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
+
+.alt-status-error {
+  color: var(--color-danger-text);
+}
+
+.alt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alt-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.alt-item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alt-item-text strong {
+  font-size: 13.5px;
+}
+
+.alt-item-text span {
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alt-item-btn {
+  flex-shrink: 0;
+  min-height: 40px;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 9px 14px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .route-hours-filter {
@@ -13650,54 +14782,6 @@ button {
   flex-direction: column;
   gap: 6px;
   flex-shrink: 0;
-}
-
-.mobile-search-overlay {
-  padding: 0;
-}
-
-.mobile-search-fullscreen {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: #fff;
-}
-
-.mobile-search-fullscreen-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink: 0;
-}
-
-.mobile-search-back {
-  width: 38px;
-  height: 38px;
-  border: none;
-  border-radius: 12px;
-  background: var(--color-bg-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mobile-search-fullscreen-title {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.mobile-search-fullscreen-body {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-}
-
-.mobile-search-fullscreen-body .search-panel {
-  border: none;
-  box-shadow: none;
-  height: 100%;
 }
 
 .result-card {
@@ -14023,6 +15107,14 @@ button {
   font-size: 12px;
   font-weight: 500;
   color: #64748b;
+}
+
+/* theme-match·rating·reaction 배지를 한 줄로 흐르게(§6-7) */
+.search-result-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
 }
 
 .search-result-stats {
@@ -14387,9 +15479,43 @@ button {
   margin: 0;
 }
 
+.admin-landing-preview-head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .admin-landing-preview-head span {
   font-size: 12px;
   color: var(--color-text-secondary);
+}
+
+/* 데스크톱/모바일 폭 전환(§2-7) — 실제 뷰포트 재현이 아니라 폭 근사치다 */
+.admin-landing-preview-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--color-bg-secondary);
+  border-radius: 999px;
+}
+
+.admin-landing-preview-toggle button {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.admin-landing-preview-toggle button.active {
+  background: #fff;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .admin-landing-preview-frame {
@@ -14397,6 +15523,47 @@ button {
   border-radius: 12px;
   overflow: hidden;
   background: #fafaf9;
+  transition: max-width 0.2s ease;
+}
+
+.admin-landing-preview-frame.is-mobile {
+  max-width: 390px;
+  margin: 0 auto;
+}
+
+/* L5 — 실제 렌더러(LandingCms) 재사용 미리보기. 전체 SiteHeader는 안 쓰고 링크 목록만 */
+.admin-landing-preview-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+}
+.admin-landing-preview-nav a {
+  color: inherit;
+  text-decoration: none;
+}
+.admin-landing-preview-nav a:hover {
+  text-decoration: underline;
+}
+
+.admin-landing-versions ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.admin-landing-versions li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
 }
 
 .admin-landing-preview-notice {
@@ -14484,11 +15651,22 @@ button {
   border-radius: 4px;
 }
 
+/*
+ * 실제 랜딩페이지(landing.css .landing-gallery)와 같은 기준: 모바일 2열,
+ * 768px 이상 3열. 처음엔 이 규칙을 안 옮기고 항상 3열로 고정해 놔서,
+ * "모바일" 토글을 눌러도 사진 배치가 안 바뀌는 것처럼 보였다(실측으로 확인).
+ * 기본값을 모바일(2열)로 두고 데스크톱에서만 3열로 넓힌다 — 실제 CSS도
+ * 모바일 우선이라 순서를 맞췄다.
+ */
 .admin-landing-preview-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   padding: 0 16px 16px;
+}
+
+.admin-landing-preview-frame:not(.is-mobile) .admin-landing-preview-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .admin-landing-preview-grid figure {
@@ -14523,27 +15701,49 @@ button {
 }
 
 /* =============================================
-   모바일 시트 · 터치 영역 확대
+   모바일 시트 · 핀 카드 터치 영역 + 이름 가독성
    손가락 터치 최소 권장 크기(약 44px)에 한참 못 미치던 핀 카드 버튼들
    (드래그 핸들 17px, 택시·삭제 22px, 필수방문 24px)을 넓힌다.
    아이콘 크기는 그대로 두고 버튼 박스만 키워 겉모습 변화는 최소화한다.
    모바일 시트 안에서만 적용 — 지도 위 오버레이 칩(.pin-chip 기본형)은
    공간이 빠듯해 그대로 둔다.
+
+   U01(모바일 UX 리포트 2026-09-13) 이후: 필수방문 깃발은 이름 줄에서
+   이름 하나와만 폭을 나누므로 44px 그대로 키웠다(§27-14/F09와 같은
+   "이웃이 없으면 타협 없이" 판단). 택시·삭제는 여전히 작성자·도착시각·
+   별점과 메타 줄을 나눠 쓰므로 40px로 절충한다(§6-4/F08과 같은 판단).
    ============================================= */
 
 .mobile-planner-sheet .pinup-bar-panel .pin-chip {
-  /* 버튼이 커진 만큼 세로 여백을 줄여 행 높이 증가를 최소화 */
-  padding: 6px 10px;
+  padding: 8px 10px;
   gap: 6px;
 }
 
-/* 배경이 투명한 버튼들 — 박스만 키우므로 눈에 보이는 변화가 거의 없다 */
-.mobile-planner-sheet .pin-chip .chip-taxi,
-.mobile-planner-sheet .pin-chip .chip-delete,
 .mobile-planner-sheet .pin-chip .chip-required {
-  /* 40px까지 키우면 이름 칸이 너무 좁아져 36px로 절충 (기존 22px) */
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
+}
+
+.mobile-planner-sheet .pin-chip .chip-taxi,
+.mobile-planner-sheet .pin-chip .chip-delete {
+  width: 40px;
+  height: 40px;
+}
+
+/*
+ * 이름을 1줄 말줄임 대신 2줄까지 허용 — "육대장 후평점"류 이름이
+ * "육…" 한 글자로 잘리던 걸 완화한다. 데스크톱 패널은 폭이 넉넉해
+ * 기존 1줄 말줄임(.pinup-bar-panel .chip-name)을 그대로 둔다.
+ */
+.mobile-planner-sheet .pinup-bar-panel .chip-name {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: keep-all;
+  line-height: 1.3;
+  font-size: 12.5px;
 }
 
 /* 순번 배지 겸 드래그 핸들. 원 자체가 보이는 요소라 40px까지는 키우지 않고
@@ -14649,4 +15849,1068 @@ button {
   background: var(--chip-bg, #f1f3f5);
   border-radius: 999px;
   padding: 1px 7px;
+}
+
+/* ── 협업자 모달: 협업자에게도 열린 화면 (활동 로그 마감) ─────────── */
+/* 새로고침 줄을 목록 위에 둔다. 목록이 max-height로 스크롤되므로
+   버튼을 목록 안에 넣으면 같이 스크롤돼 사라진다. */
+.collab-activity-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+.collab-activity-refresh {
+  appearance: none;
+  background: none;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+  cursor: pointer;
+}
+.collab-activity-refresh:hover:not(:disabled) {
+  color: var(--text, #111827);
+  border-color: var(--color-border-strong, #d1d5db);
+}
+.collab-activity-refresh:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* 목록에서 자기 자신을 바로 찾을 수 있게 — 이메일이 서로 비슷하면
+   누가 나인지 헷갈린다(§14-4 이니셜 문제와 같은 이유). */
+.collab-me-badge {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--chip-bg, #f1f3f5);
+  color: var(--text-muted, #6b7280);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ── 모바일 공동편집 마감: presence 아바타 ────────────────────────── */
+/*
+ * 아바타는 여행 칩 옆에 선다. 혼자일 때는 PresenceStack이 렌더되지 않아
+ * 이 규칙도 걸리지 않는다 — 좁은 화면을 상시로 잡아먹지 않는다.
+ * 데스크톱 앱바보다 한 치수 작게 잡아 칩이 밀리는 폭을 줄인다.
+ */
+.mobile-planner-top .presence-stack {
+  flex: 0 0 auto;
+}
+.mobile-planner-top .presence-avatar {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+
+/*
+ * 위성지도 토글·지도 핀업은 이제 상단 툴바 안의 .mobile-tool-btn이라 항상
+ * y<=100px 안쪽이다 — 여행 자료 시트(top:auto·bottom:0·max-height:85vh, 즉
+ * 위쪽 15vh부터 시작)와 겹치지 않아 예전처럼 따로 숨길 필요가 없다.
+ */
+
+/* ══════════════════════════════════════════════════════════════════════
+ * 여행 자료 패널 — A안 "조용한 캔버스" (§23)
+ *
+ * 바뀐 것: 입력 3층(드롭존·메모창·저장) → 한 줄 버튼 2개, 필터 칩 8개 →
+ * 세그먼트 하나 + 메뉴 둘, 카드에서 셀렉트 2개·휴지통을 걷어내 더보기 안으로.
+ * 아래 규칙이 .materials-compose / .materials-dropzone / .materials-filters /
+ * .materials-grid-card / .materials-meta* 계열을 대신한다.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+.materials-head {
+  flex-shrink: 0;
+  padding: 16px 18px 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.materials-head-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.materials-head-sub {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: 3px;
+}
+.materials-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+/*
+ * U09(모바일 UX 리포트 2026-09-13) — 자료 패널 헤더는 제목 블록(flex:1)
+ * 옆에 아이콘 버튼 3개뿐이라 여유가 있다. 40px로 키운다(§6-4/F08과
+ * 같은 절충 — 모바일 폭에서 3개가 나란히라 44px까지는 안 감).
+ */
+.materials-head-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.materials-head-btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+/* 헤더에서는 보내기도 아이콘 하나로 — 라벨은 aria-label 로 남는다 */
+.materials-export-btn.icon-only {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+/* ── 한 줄 추가 바 ─────────────────────────────────────────────────── */
+.materials-add-row {
+  flex-shrink: 0;
+  padding: 0 18px 12px;
+  display: flex;
+  gap: 8px;
+}
+.materials-add-btn {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  border: none;
+  border-radius: 11px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.materials-add-btn:hover:not(:disabled) {
+  background: #e7ecf2;
+  color: var(--color-text-primary);
+}
+.materials-add-btn.active {
+  background: var(--color-primary-soft);
+  color: var(--color-amber);
+}
+.materials-add-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.materials-note-compose {
+  flex-shrink: 0;
+  padding: 0 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.materials-note-compose-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.materials-note-cancel,
+.materials-note-save {
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.materials-note-cancel {
+  border: 0.5px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+.materials-note-save {
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+}
+.materials-note-save:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 드롭 대상이 패널 전체다 — 끄는 동안에만 덮는다.
+   전에는 항상 자리를 차지하던 점선 상자가 이 역할을 했다. */
+.materials-drop-overlay {
+  position: absolute;
+  inset: 8px;
+  z-index: 5;
+  border-radius: 16px;
+  border: 2px dashed var(--color-accent-hover);
+  background: rgba(255, 251, 235, 0.94);
+  color: var(--color-amber);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* ── 한 줄 필터 ────────────────────────────────────────────────────── */
+.materials-filterbar {
+  flex-shrink: 0;
+  padding: 0 18px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 0.5px solid var(--color-border);
+}
+.materials-seg {
+  display: inline-flex;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  min-width: 0;
+}
+.materials-seg-btn {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.materials-seg-btn.active {
+  background: #fff;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.materials-filter-menus {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+.materials-filter-menu {
+  position: relative;
+}
+.materials-filter-menu-btn {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 8px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  max-width: 92px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.materials-filter-menu-btn:hover {
+  background: var(--color-bg-secondary);
+}
+.materials-filter-menu-btn.active {
+  background: var(--color-primary-soft);
+  color: var(--color-amber);
+  font-weight: 600;
+}
+.materials-filter-menu-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 140;
+  min-width: 150px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--color-surface-solid);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float-lg);
+  padding: 5px;
+}
+.materials-filter-menu-pop button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--color-text-primary);
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.materials-filter-menu-pop button:hover {
+  background: var(--color-bg-secondary);
+}
+.materials-filter-menu-pop button.active {
+  background: var(--color-primary-soft);
+  color: var(--color-amber);
+  font-weight: 600;
+}
+
+/* ── 카드: 테두리를 걷어 사진이 주인공 ─────────────────────────────── */
+.materials-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.materials-card--text {
+  grid-column: 1 / -1;
+  background: var(--color-accent-soft);
+  border-radius: var(--radius-lg);
+  padding: 11px 12px;
+  gap: 4px;
+}
+.materials-card--album {
+  padding-bottom: 2px;
+}
+.materials-card-caption {
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  margin-top: 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.materials-card-meta {
+  font-size: 10.5px;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.materials-card--text .materials-card-meta {
+  color: var(--color-amber);
+  opacity: 0.8;
+  margin-top: 6px;
+}
+/* 사진·파일 타일의 테두리를 없앤다 — 카드 테두리와 이중이었다 */
+.materials-card .materials-thumb-btn {
+  border: none;
+  border-radius: var(--radius-md);
+}
+.materials-card .materials-grid-file-icon {
+  height: auto;
+  aspect-ratio: 4 / 3;
+  flex-direction: column;
+  gap: 5px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 0.5px solid var(--color-border);
+  color: var(--color-text-tertiary);
+}
+.materials-card .materials-grid-file-icon .materials-file-size {
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+}
+
+/* 더보기 — 일차·장소·삭제를 여기로 모았다 */
+.materials-card-menu {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 3;
+}
+.materials-list-row .materials-card-menu {
+  position: static;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.materials-card-menu-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.16);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.materials-list-row .materials-card-menu-btn {
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-text-tertiary);
+}
+.materials-card-menu-btn:hover {
+  color: var(--color-text-primary);
+  background: #fff;
+}
+/*
+ * 부수 버그 수정(2026-09-14)으로 죽은 규칙 — 카드 모서리 팝오버가
+ * .materials-panel(overflow:hidden + transform)에 잘리거나(그리드 좁은
+ * 칸) 위치 기준이 엉뚱한 조상으로 튀는(목록보기, position:static) 문제가
+ * 있어 AppSheetModal(.materials-card-menu-sheet)로 교체했다. 같은 이름의
+ * JSX 사용처가 없다.
+ */
+.materials-card-menu-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 140;
+  width: 190px;
+  background: var(--color-surface-solid);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float-lg);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.materials-card-menu-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.materials-card-menu-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+}
+.materials-card-menu-field select {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 7px;
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--color-border-strong);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  width: 100%;
+}
+.materials-card-menu-delete {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--color-danger-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.materials-card-menu-delete:hover {
+  background: var(--color-danger-bg);
+}
+
+/* ── 공유받은 자료 배지 (§22) ──────────────────────────────────────── */
+/* 색·이니셜 규칙은 핀 작성자 배지·presence 아바타와 같다. 남이 올린 것에만 붙는다. */
+.material-author-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 3;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  /* 사진 위에서도 읽히도록 흰 링 */
+  box-shadow:
+    0 0 0 1.5px rgba(255, 255, 255, 0.92),
+    0 1px 3px rgba(15, 23, 42, 0.28);
+}
+.materials-card--text .material-author-badge {
+  top: 10px;
+  left: 11px;
+}
+.materials-card--text .materials-text-title,
+.materials-card--text .materials-text-body {
+  padding-left: 26px;
+}
+/* 목록에서는 썸네일 모서리에 겹쳐 단다 */
+.materials-list-lead {
+  position: relative;
+  flex-shrink: 0;
+}
+.materials-list-lead .material-author-badge {
+  top: -5px;
+  left: -5px;
+  width: 18px;
+  height: 18px;
+  font-size: 9px;
+}
+
+/* 목록 행도 조작이 빠진 만큼 간결하게 */
+.materials-list-row .materials-list-main {
+  align-items: flex-start;
+}
+
+/* ── 모바일 "계정" 시트 (2026-09-10) ─────────────────────────────────
+   실제 계정 정보·로그인/로그아웃·홈 진입로. .trip-hub-action/-sep은
+   TripSelectMenu의 것을 그대로 재사용한다(같은 "시트 안 액션 목록" 패턴). */
+.mobile-account-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px;
+  color: var(--color-text-secondary);
+  font-size: 13.5px;
+}
+
+.mobile-account-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px 14px;
+}
+
+.mobile-account-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.mobile-account-identity-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mobile-account-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.mobile-account-identity-text .mobile-tabbar-plan-badge {
+  align-self: flex-start;
+}
+
+.mobile-account-guest-lead {
+  margin: 0 0 12px;
+  padding: 0 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* 빌드 식별자 (§29-32) — 계정 시트 맨 아래, 눈에 띄지 않되 읽을 수는 있게.
+   폰에서 "지금 열린 게 방금 배포한 빌드인가"를 확인하는 유일한 구분점이라
+   글자를 너무 흐리게 두지 않는다. */
+.mobile-account-build {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 16px 0 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.mobile-account-build code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  /* 길어도 줄바꿈되지 않게 — 한 줄로 읽히는 게 식별에 유리하다 */
+  white-space: nowrap;
+  user-select: all; /* 탭 한 번으로 전체 선택돼 복사·제보가 쉽다 */
+}
+
+/* ── PWA 설치 플로팅 아이콘 (2026-09-10) ─────────────────────────────
+   기존 .pwa-install-btn/.pwa-install-btn-label 은 만들어져 있었지만 어디서도
+   렌더되지 않았다(PwaInstallButton.tsx가 완전히 고아 컴포넌트였다). 예전에
+   딱 하나 있던 스코프(.mobile-top-bar .pwa-install-btn, 6283줄 부근)도
+   §25에서 .mobile-top-bar 자체를 죽이면서 같이 죽은 스타일이라 재사용하지
+   않는다 — 지금 레이아웃 기준으로 새로 잡는다.
+
+   위치: 상단바(top:14px~50px) 바로 아래, 우측 여백에 고정. 시트가 'full'
+   이어도 상단 18%(top:18%)는 지도로 남으므로(.mobile-planner-sheet.sheet-full)
+   시트 레벨과 무관하게 항상 보인다 — RouteTimelineDock처럼 peek일 때만
+   보이게 조건부로 숨길 필요가 없다. */
+.pwa-install-wrap {
+  position: absolute;
+  /* 상단바 바로 아래 고정이라 상단바와 같이 내려간다 */
+  top: calc(64px + var(--safe-top));
+  right: 14px;
+  z-index: 20;
+}
+
+.mobile-pwa-install-fab .pwa-install-btn {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: var(--shadow-float);
+}
+
+.mobile-pwa-install-fab .pwa-install-btn-label {
+  display: none;
+}
+
+.pwa-install-dismiss-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── PinupBar 툴바 압축 (F02, 2026-09-10) ────────────────────────────
+   모바일 sheet-half 기본 높이에서 가져오기/보내기/필수만/전체해제 한 줄이
+   핀 목록 공간을 먹어 첫 카드조차 다 안 보였다. 아이콘 하나 뒤 시트로 접어
+   그 줄의 높이를 없앤다. .trip-hub-action(TripSelectMenu가 쓰던 것과 같은
+   "시트 안 액션 목록" 패턴)을 재사용해 새 스타일을 최소화했다. */
+.pinup-panel-toolbar-compact {
+  justify-content: flex-end;
+}
+
+.pinup-toolbar-trigger {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+
+.pinup-toolbar-sheet-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pinup-toolbar-sheet-items .pin-transfer-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/*
+ * U11(모바일 UX 리포트 2026-09-13) — "공유" 진입 선택 시트(링크로 보기 /
+ * 함께 편집). 아이콘 하나로 표시되던 기존 버튼과 달리, 각 선택지가
+ * 실행 전에 뭘 하는지(제목+한 줄 설명)까지 보여줘야 해서 새 레이아웃을 쓴다.
+ */
+.share-choose-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.share-choose-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-solid);
+  text-align: left;
+  cursor: pointer;
+}
+
+.share-choose-option:hover {
+  background: var(--color-bg-secondary);
+}
+
+.share-choose-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.share-choose-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.share-choose-text strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.share-choose-text span {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+/* =============================================
+   N07 — 탐색 이어보기 (검색 빈 화면의 최근 검색어·최근 본 장소)
+   ============================================= */
+.recent-block {
+  margin: 10px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recent-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.recent-clear {
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.recent-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.recent-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-solid);
+  overflow: hidden;
+}
+
+.recent-chip-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  padding: 7px 4px 7px 10px;
+  font-size: 12.5px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  min-height: 34px;
+}
+
+.recent-chip-x {
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  padding: 0 8px;
+  min-height: 34px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.recent-chip-x:hover {
+  color: var(--color-danger-text);
+}
+
+.recent-place-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recent-place {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-solid);
+  padding: 6px 6px 6px 10px;
+}
+
+.recent-place-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.recent-place-main strong {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-place-main span {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-place-pin {
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 7px 11px;
+  min-height: 34px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--color-primary);
+  color: #fff;
+  cursor: pointer;
+}
+
+.recent-place-pin.pinned {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+
+/* =============================================
+   N06 — 동행자 투표 (핀 카드 메타 줄)
+   ============================================= */
+.chip-votes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chip-vote {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-solid);
+  color: var(--color-text-tertiary);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chip-vote-n {
+  font-variant-numeric: tabular-nums;
+}
+
+.chip-vote.want.active {
+  border-color: #16a34a;
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+.chip-vote.hold.active {
+  border-color: #b45309;
+  background: rgba(180, 83, 9, 0.12);
+  color: #b45309;
+}
+
+/* 모바일 시트에선 터치 목표를 조금 더 키운다 (F08 계열과 같은 판단) */
+.mobile-planner-sheet .chip-vote {
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+/* =============================================
+   N08 — 첫 일정 완성 가이드 (OnboardingCoach 자리를 이어받는 진행형 안내)
+   ============================================= */
+/*
+ * 시트 바로 위에 붙인다 — sheet-half/full의 top%과 정확히 대칭인 bottom%을
+ * 준다(예: half는 top:46%이므로 남는 아래쪽 54% 바로 위 경계에 앉는다).
+ * position:fixed에서 %는 뷰포트 기준이라 이 대칭이 그대로 성립한다.
+ * peek는 고정 높이(92px)라 그만큼만 띄운다. 세 값 다 §13280 근처
+ * .mobile-planner-sheet.sheet-* 의 top 값과 반드시 같이 맞출 것.
+ */
+/*
+ * 상단바 드롭다운(여행 전환·일차 선택)이 열릴 때 z-index를 45로 올린다
+ * (§12902 — "필요한 순간에만 최소로 올린다" 패턴). `.onboarding-coach`의
+ * 기본 z-index(90)는 자식 stacking context 규칙상 그 45를 그냥 이긴다 —
+ * 드롭다운 안 항목 자체의 z-index(201)는 부모 컨텍스트를 못 벗어나 무의미.
+ * 실제로 여행 전환 드롭다운을 열었더니 이 가이드가 위로 그려져 클릭을
+ * 가로채는 게 브라우저 검증에서 재현됐다. 상단바보다 항상 아래로 낮춘다
+ * — OnboardingCoach 자체의 z-index는 기존 동작이라 건드리지 않는다.
+ */
+.first-itinerary-guide {
+  z-index: 30;
+}
+
+.first-itinerary-guide-sheet-peek {
+  bottom: calc(92px + 12px + env(safe-area-inset-bottom, 0px));
+}
+
+.first-itinerary-guide-sheet-half {
+  bottom: calc(54% + 12px);
+}
+
+.first-itinerary-guide-sheet-full {
+  bottom: calc(82% + 12px);
+}
+
+.first-itinerary-guide-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.first-itinerary-guide-head strong {
+  font-size: 13.5px;
+}
+
+.first-itinerary-guide-close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.first-itinerary-guide-close:hover {
+  background: var(--color-bg-secondary);
+}
+
+.first-itinerary-guide-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.first-itinerary-guide-steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.first-itinerary-guide-check {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+
+.first-itinerary-guide-steps li.done .first-itinerary-guide-check {
+  background: #16a34a;
+  color: #fff;
+}
+
+.first-itinerary-guide-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--color-text-primary);
+}
+
+.first-itinerary-guide-steps li.muted .first-itinerary-guide-text,
+.first-itinerary-guide-steps li.muted .first-itinerary-guide-check {
+  color: var(--color-text-tertiary);
+  opacity: 0.7;
+}
+
+.first-itinerary-guide-steps li.done .first-itinerary-guide-text {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+  text-decoration-color: var(--color-border-strong);
+}
+
+.first-itinerary-guide-cta {
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  min-height: 30px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
 }

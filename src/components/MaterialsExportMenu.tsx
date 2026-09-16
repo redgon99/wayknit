@@ -12,6 +12,8 @@ interface Props {
   materials: TripMaterial[];
   onNotify?: (message: string) => void;
   label?: string;
+  /** 아이콘만 보여준다 — 좁은 패널 헤더용. 라벨은 aria-label 로 남는다. */
+  iconOnly?: boolean;
 }
 
 export function MaterialsExportMenu({
@@ -19,6 +21,7 @@ export function MaterialsExportMenu({
   materials,
   onNotify,
   label = '보내기',
+  iconOnly = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -56,13 +59,15 @@ export function MaterialsExportMenu({
     <div className="materials-export-menu" ref={rootRef}>
       <button
         type="button"
-        className={`materials-export-btn ${open ? 'active' : ''}`}
+        className={`materials-export-btn${iconOnly ? ' icon-only' : ''} ${open ? 'active' : ''}`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-label={iconOnly ? label : undefined}
+        title={iconOnly ? label : undefined}
       >
-        <Icon name="download" />
-        {label}
+        <Icon name="download" size={iconOnly ? 17 : 20} />
+        {!iconOnly && label}
       </button>
 
       {open && (

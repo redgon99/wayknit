@@ -15,6 +15,12 @@ export interface AdminUserRow {
   isVerified: boolean;
   memo: string | null;
   verifiedAt: string | null;
+  /** U2(관리자 검토 2026-09-16) — user1~30@mail.com 등 mock 계정 표시 */
+  isTest: boolean;
+  /** U1 — 가입일(여행 안 만든 계정도 이제 목록에 보임) */
+  createdAt: string;
+  lastSignInAt: string | null;
+  plan: string | null;
 }
 
 /** 목록 조회 결과 — 페이지네이션을 위해 필터 적용 후 전체 건수를 함께 준다 */
@@ -97,13 +103,14 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
  * 늘수록 매 조회마다 전체를 내려받아야 했다.
  */
 export async function listAdminUserRows(
-  query: AdminListQuery = {}
+  query: AdminListQuery & { includeTest?: boolean } = {}
 ): Promise<AdminPage<AdminUserRow>> {
   const sb = requireSupabase();
   const { data, error } = await sb.rpc('admin_user_rows', {
     p_search: query.search?.trim() || null,
     p_limit: query.limit ?? ADMIN_PAGE_SIZE,
     p_offset: query.offset ?? 0,
+    p_include_test: query.includeTest ?? false,
   });
   if (error) throw error;
 
@@ -118,6 +125,10 @@ export async function listAdminUserRows(
       isVerified: Boolean(row.is_verified),
       memo: (row.memo as string | null) ?? null,
       verifiedAt: (row.verified_at as string | null) ?? null,
+      isTest: Boolean(row.is_test),
+      createdAt: row.created_at as string,
+      lastSignInAt: (row.last_sign_in_at as string | null) ?? null,
+      plan: (row.plan as string | null) ?? null,
     })),
     totalCount: Number(rows[0]?.total_count ?? 0),
   };
@@ -143,6 +154,21 @@ export async function upsertUserVerification(input: {
       updated_by: adminId,
       updated_at: new Date().toISOString(),
     },
+    { onConflict: 'user_id' }
+  );
+  if (error) throw error;
+}
+
+/** U2 — 테스트 계정 플래그만 토글(메모·확인 상태는 안 건드림) */
+export async function setUserTestFlag(userId: string, isTest: boolean): Promise<void> {
+  const sb = requireSupabase();
+  const { data: userData, error: userError } = await sb.auth.getUser();
+  if (userError) throw userError;
+  const adminId = userData.user?.id;
+  if (!adminId) throw new Error('로그인이 필요합니다.');
+
+  const { error } = await sb.from('admin_user_verifications').upsert(
+    { user_id: userId, is_test: isTest, updated_by: adminId, updated_at: new Date().toISOString() },
     { onConflict: 'user_id' }
   );
   if (error) throw error;

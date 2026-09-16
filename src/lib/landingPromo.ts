@@ -45,7 +45,7 @@ export interface LandingPromo {
   updatedAt: string | null;
 }
 
-interface LandingPromoRow {
+export interface LandingPromoRow {
   locale: string;
   notice_text: string;
   notice_enabled: boolean;
@@ -157,7 +157,7 @@ function parseImages(raw: unknown): LandingPromoImage[] {
   return out;
 }
 
-function fromRow(row: LandingPromoRow): LandingPromo {
+export function fromRow(row: LandingPromoRow): LandingPromo {
   const videoPath = row.video_path ?? null;
   const base: LandingPromo = {
     locale: row.locale as AppLocale,
@@ -214,20 +214,19 @@ export async function fetchLandingPromo(
   return fromRow(data as LandingPromoRow);
 }
 
-export async function saveLandingPromo(promo: LandingPromo): Promise<LandingPromo> {
-  const sb = getSupabase();
-  if (!sb) throw new Error('Supabase가 설정되지 않았습니다.');
-  const { data: userData, error: userError } = await sb.auth.getUser();
-  if (userError) throw userError;
-  const updatedBy = userData.user?.id;
-  if (!updatedBy) throw new Error('로그인이 필요합니다.');
-
+/**
+ * `LandingPromo`(camelCase) → `landing_promo` 행 모양(snake_case)으로.
+ * saveLandingPromo와, 묶음 2의 초안 저장(adminContentDrafts.ts)이 같이 쓴다 —
+ * 두 곳이 각자 다른 모양을 만들면 초안 게시(admin_publish_draft RPC의
+ * jsonb_populate_record)가 컬럼과 안 맞아 조용히 깨진다.
+ */
+export function buildLandingPromoRow(promo: LandingPromo): Record<string, unknown> {
   const notice = findFirstOfType(promo.menu, 'notice');
   const copy = findFirstOfType(promo.menu, 'copy');
   const video = findFirstOfType(promo.menu, 'video');
   const images = findFirstOfType(promo.menu, 'images');
 
-  const payload = {
+  return {
     locale: promo.locale,
     notice_text: (notice?.noticeText ?? promo.noticeText).trim(),
     notice_enabled: notice?.enabled ?? promo.noticeEnabled,
@@ -245,8 +244,18 @@ export async function saveLandingPromo(promo: LandingPromo): Promise<LandingProm
     is_published: promo.isPublished,
     block_order: normalizeBlockOrder(promo.blockOrder),
     menu_tree: promo.menu,
-    updated_by: updatedBy,
   };
+}
+
+export async function saveLandingPromo(promo: LandingPromo): Promise<LandingPromo> {
+  const sb = getSupabase();
+  if (!sb) throw new Error('Supabase가 설정되지 않았습니다.');
+  const { data: userData, error: userError } = await sb.auth.getUser();
+  if (userError) throw userError;
+  const updatedBy = userData.user?.id;
+  if (!updatedBy) throw new Error('로그인이 필요합니다.');
+
+  const payload = { ...buildLandingPromoRow(promo), updated_by: updatedBy };
 
   const { data, error } = await sb
     .from('landing_promo')

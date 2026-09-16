@@ -6,25 +6,35 @@
   },
   "upgrade": {
     "title": "Wayknit Plus",
-    "subtitle": "無制限クラウド · 多言語エクスポート · 実ルート",
+    "subtitle": "無制限の旅行保存 · 多言語エクスポート · Google検索無制限",
     "cta": "Plusにアップグレード",
     "manage": "サブスクリプション管理",
-    "currentPlan": "現在のプラン: {{plan}}"
+    "currentPlan": "現在のプラン: {{plan}}",
+    "price": "月額 ₩{{amount}}",
+    "priceNote": "毎月自動決済され、いつでも解約できます。"
   },
   "limits": {
     "tripCount": "Freeプランは旅行{{max}}件までです。",
-    "exportPlus": "エクスポートはPlus専用です。",
-    "cloudLogin": "クラウド保存にはログインが必要です。",
-    "searchCap": "本日の検索上限に達しました。Plusで上限が上がります。"
-  },
-  "features": {
-    "unlimitedTrips": "無制限の旅行保存",
-    "cloudSync": "クラウド同期",
-    "exportI18n": "選択言語でエクスポート",
-    "realRoute": "実ルート無制限"
+    "searchCap": "本日の検索上限に達しました。Plusで上限が上がります。",
+    "materialCount": "Freeプランは旅行1件につき資料{{max}}件までです。Plusでは上限がなくなります。"
   },
   "checkout": {
     "redirecting": "決済ページへ移動します…",
     "notConfigured": "決済はまだ設定されていません。"
+  },
+  "compare": {
+    "feature": "機能",
+    "trips": "旅行の保存",
+    "tripsFree": "{{n}}件",
+    "export": "旅程のエクスポート",
+    "no": "不可",
+    "exportPlus": "可能(選択言語)",
+    "search": "Google検索",
+    "searchFree": "1日{{n}}回",
+    "materials": "旅行資料のアップロード",
+    "materialsFree": "旅行ごとに{{n}}件",
+    "offline": "資料のオフライン保存",
+    "offlinePlus": "利用可能",
+    "unlimited": "無制限"
   }
 }

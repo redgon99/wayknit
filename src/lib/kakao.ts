@@ -216,6 +216,12 @@ export function searchPlacesByCategory(opts: CategorySearchOptions): Promise<Pla
 }
 
 /** 키워드·카테고리·범위 통합 검색 */
+/**
+ * 키워드 검색은 항상 관련도(accuracy) 기준으로 가져온다 — 화면 표시 순서(거리순/평점순)는
+ * 어차피 SearchPanel이 매 place의 distance 필드로 자체 재정렬하므로, API를 거리순으로
+ * 받으면 "경복궁"과 이름만 약하게 겹치는 근처 상점이 진짜 관련 결과를 밀어내는
+ * 부작용만 남는다(§27-10, F10).
+ */
 export async function searchPlacesUnified(params: UnifiedSearchParams): Promise<PlacesSearchResult> {
   const keyword = params.keyword?.trim() ?? '';
   const category = params.categoryGroupCode ?? undefined;
@@ -269,7 +275,7 @@ export async function searchPlacesUnified(params: UnifiedSearchParams): Promise<
         categoryGroupCode: 'MT1',
         center: nearby ? params.center : undefined,
         radiusMeters: nearby ? params.radiusMeters : undefined,
-        sort: nearby ? 'distance' : 'accuracy',
+        sort: 'accuracy',
         size: params.size,
         page: params.page,
       }),
@@ -278,7 +284,7 @@ export async function searchPlacesUnified(params: UnifiedSearchParams): Promise<
         categoryGroupCode: 'CS2',
         center: nearby ? params.center : undefined,
         radiusMeters: nearby ? params.radiusMeters : undefined,
-        sort: nearby ? 'distance' : 'accuracy',
+        sort: 'accuracy',
         size: params.size,
         page: params.page,
       }),
@@ -291,7 +297,7 @@ export async function searchPlacesUnified(params: UnifiedSearchParams): Promise<
     categoryGroupCode: category,
     center: nearby ? params.center : undefined,
     radiusMeters: nearby ? params.radiusMeters : undefined,
-    sort: nearby ? 'distance' : 'accuracy',
+    sort: 'accuracy',
     size: params.size,
     page: params.page,
   });

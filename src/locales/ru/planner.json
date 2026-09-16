@@ -28,7 +28,7 @@
     "placeholder": "Поиск мест",
     "placeholderWithYoutube": "Название места или ссылка YouTube",
     "placeholderWithLink": "Место · YouTube · веб · ссылка соцсети",
-    "placeholderDesign": "Место, YouTube или ссылка на блог",
+    "placeholderDesign": "Поиск мест",
     "pasteExtracted": "Из вставленного текста извлечено мест: {{count}}. Нажмите поиск.",
     "metaNearby": "Рядом с центром карты · 지도 주변 {{km}} km · {{count}} результатов",
     "metaNationwide": "По всей стране · 전국 · {{count}} результатов",
@@ -46,7 +46,7 @@
     "radiusAria": "Радиус поиска",
     "hintNationwideKakao": "По всей стране · релевантность (Kakao API)",
     "hintNationwideGoogle": "По всей стране · релевантность (Google Places)",
-    "emptyHint": "Ищите места по ключевому слову или категории.",
+    "emptyHint": "Ищите места по ключевому слову или категории, либо вставьте ссылку на YouTube или блог.",
     "noResults": "Ничего не найдено.",
     "loading": "Поиск…",
     "enriching": "Загрузка оценок…",
@@ -72,7 +72,12 @@
     "resetResults": "Сбросить результаты",
     "insightTop": "Топ выбор",
     "insightPositive": "Хорошие отзывы",
-    "insightWait": "Долгая очередь"
+    "insightWait": "Долгая очередь",
+    "filters": "Фильтры",
+    "subFilterCount": "Условий: {{count}}",
+    "resultsCountShort": "Результатов: {{count}}",
+    "filterApply": "Показать {{count}}",
+    "reviewsSuffix": "{{count}} отзывов"
   },
   "trip": {
     "newTrip": "Новая поездка",
@@ -130,7 +135,11 @@
     "countPlaces": "{{count}} мест",
     "filterAll": "Все",
     "filterAria": "Фильтр по дням",
-    "empty": "Маршрута пока нет. Закрепите места или постройте маршрут."
+    "empty": "Маршрута пока нет. Закрепите места или постройте маршрут.",
+    "dayLabel": "День {{day}}",
+    "shareAria": "Поделиться таблицей",
+    "required": "Обязательно",
+    "unscheduled": "Не в маршруте"
   },
   "pinup": {
     "reservedAt": "Бронь на {{time}}",
@@ -157,7 +166,12 @@
     "mustVisitOnly": "Обязательно",
     "markRequired": "Отметить как обязательное",
     "unmarkRequired": "Снять отметку «обязательно»",
-    "requiredBadge": "Обязательное место"
+    "requiredBadge": "Обязательное место",
+    "addedBy": "Добавил(а) {{who}}",
+    "toolbarMore": "Инструменты",
+    "sortVisit": "По порядку посещения",
+    "sortCategory": "По типу",
+    "placeMaterials": "Смотреть материалы ({{count}})"
   },
   "route": {
     "fixedArrivalAt": "Прибытие зафиксировано на {{time}}",
@@ -227,6 +241,8 @@
       "aiSuggestError": "Не удалось получить рекомендации ИИ. Используются значения по умолчанию для категории — измените ниже вручную или повторите попытку.",
       "stayMinutesAria": "Стоянка {{name}} (мин)",
       "preview": "Предпросмотр",
+      "previewAfterChange": "Оценка после изменения",
+      "current": "Сейчас: {{km}} км · {{minutes}} мин",
       "previewStats": "{{km}} км · {{minutes}} мин в пути · {{stayMinutes}} мин на месте · окончание {{time}}",
       "build": "Построить маршрут",
       "rebuild": "Перестроить маршрут",
@@ -285,7 +301,12 @@
     "detailTravel": "{{minutes}} мин в пути",
     "detailStops": "Остановок: {{count}}",
     "pillTitle": "День {{day}} · остановок: {{count}}",
-    "pillNext": "Далее {{name}} · окончание {{finish}}"
+    "pillNext": "Далее {{name}} · окончание {{finish}}",
+    "departRecommend": "Выехать до {{time}}",
+    "departNow": "Пора выезжать",
+    "navigateHere": "Маршрут сюда",
+    "arrivedGoNext": "Прибыл · Следующая остановка",
+    "lastStop": "Это последняя остановка сегодня"
   },
   "taxi": {
     "title": "Показать водителю такси",
@@ -405,7 +426,8 @@
       "history": "Дворцы, музеи и наследие",
       "nightlife": "Вечерняя еда, кафе и виды города",
       "family": "Места и кафе, удобные с детьми"
-    }
+    },
+    "editLead": "Используется, чтобы выделять результаты поиска, влиять на порядок маршрута и отмечать поездку тегом на площади при публикации."
   },
   "foodRestrictions": {
     "label": "Предпочтения в еде",
@@ -650,7 +672,11 @@
   "scenario": {
     "menuLabel": "Создать тематическую поездку",
     "title": "Сценарий тематической поездки",
-    "subtitle": "Выберите тему путешествия — ИИ составит сценарий по дням на основе реальных мест.",
+    "subtitle": "Выберите тему, чтобы подобрать готовый сценарий путешествия по дням.",
+    "courseCount": "{{count}} шт.",
+    "courseCountZero": "Скоро",
+    "tryOtherTheme": "В других темах уже есть готовые маршруты",
+    "goToSearch": "Искать места",
     "themeLabel": "Тема путешествия",
     "theme": {
       "meditation": "Храмы",
@@ -712,7 +738,20 @@
     "sheetRouteTitle": "Маршрут дня {{n}}",
     "sheetPinsSummary": "{{count}} пинов · День {{n}}",
     "tabTrips": "Мои поездки",
-    "tabAccount": "Аккаунт"
+    "tabAccount": "Аккаунт",
+    "sheetSearchSummary": "Результатов: {{count}}",
+    "tabMap": "Карта",
+    "tabItinerary": "План {{count}}",
+    "tabMenu": "Меню",
+    "viewList": "Список",
+    "viewRoute": "Маршрут",
+    "viewToggleAria": "Переключить вид",
+    "sheetLevelPeek": "Предпросмотр",
+    "sheetLevelHalf": "Половина экрана",
+    "sheetLevelFull": "Весь экран",
+    "sheetHandleAria": "Изменить размер панели, сейчас {{current}}, нажмите для {{next}}",
+    "routeSummary": "Маршрут на сегодня · {{km}} км · {{min}} мин",
+    "replanCta": "Пересчитать"
   },
   "map": {
     "centerHere": "Искать вокруг этой точки",
@@ -724,7 +763,8 @@
     "insightHigh": "Высокие оценки у путешественников.",
     "insightMixed": "Проверьте свежие отзывы, часы и оплату.",
     "pin": "Закрепить",
-    "pinned": "Закреплено"
+    "pinned": "Закреплено",
+    "searchThisArea": "Искать в этой области"
   },
   "toast": {
     "searchAtCenter": "Поиск вокруг этой точки",
@@ -749,7 +789,12 @@
     "shareCopied": "Ссылка скопирована (сохранено как публичное)",
     "shareCopiedPlaza": "Ссылка скопирована (публично · на площади)",
     "copiedDepart": "Скопирован старт дня {{day}}",
-    "pickOriginHint": "Нажмите на карту, чтобы выбрать старт"
+    "pickOriginHint": "Нажмите на карту, чтобы выбрать старт",
+    "tableViewLinkCopied": "Ссылка на таблицу скопирована",
+    "routeDiffAdded": "добавлено мест: {{count}}",
+    "routeDiffRemoved": "удалено мест: {{count}}",
+    "routeDiffTravel": "в пути {{sign}}{{minutes}} мин",
+    "routeChangeUndo": "Отменить"
   },
   "confirm": {
     "newTrip": "Сохранить 「{{title}}」 и начать новую поездку?\nПины и маршрут перейдут в новую поездку.",
@@ -786,5 +831,109 @@
     "doneHint": "Администратор рассмотрит её.",
     "duplicate": "Вы уже жаловались на это.",
     "failed": "Не удалось отправить жалобу. Попробуйте позже."
+  },
+  "account": {
+    "guestLead": "Войдите, чтобы продолжать планировать на других устройствах и сохранять в облаке.",
+    "viewPlans": "Тарифы",
+    "backToHome": "На главную",
+    "version": "Версия"
+  },
+  "materials": {
+    "panelTitle": "Материалы поездки",
+    "countSuffix": "{{count}}",
+    "viewList": "Показать списком",
+    "viewGrid": "Показать крупными значками",
+    "closePanel": "Закрыть панель",
+    "uploading": "Загрузка…",
+    "addPhotoFile": "Фото/файл",
+    "writeNote": "Написать заметку",
+    "notePlaceholder": "Введите заметку",
+    "saveShortcutHint": "Можно также сохранить через ⌘/Ctrl + Enter",
+    "dropHint": "Перетащите сюда фото или документы или нажмите",
+    "dropHintNeedLogin": "Войдите, чтобы перетаскивать фото или файлы",
+    "dropHintNeedSupabase": "Настройте облако, чтобы добавлять фото или файлы",
+    "kindFilterAria": "Фильтр по типу",
+    "kindAll": "Все",
+    "kindImage": "Фото",
+    "kindNote": "Заметки",
+    "kindFile": "Файлы",
+    "dayFilterLabel": "День",
+    "allDays": "Все дни",
+    "placeFilterLabel": "Место",
+    "place": "Место",
+    "allPlaces": "Все места",
+    "emptyNoMaterials": "Перетащите файл выше или сохраните текстовую заметку.",
+    "emptyFiltered": "Нет материалов, соответствующих фильтру.",
+    "tapToViewAll": "Нажмите, чтобы посмотреть все фото",
+    "viewPhotosAria": "Посмотреть {{count}} фото",
+    "uploadedBy": "Загрузил(а) {{email}}",
+    "noDay": "Без дня",
+    "noPlace": "Без места",
+    "settingsAria": "Настройки материала",
+    "titleAria": "Заголовок",
+    "bodyAria": "Содержимое",
+    "download": "Скачать",
+    "pinOptionLabel": "День {{day}} · {{name}}",
+    "uploadNeedsLogin": "Войдите в облачный аккаунт, чтобы загружать фото или файлы.",
+    "uploadNeedsSupabase": "Для загрузки фото или файлов нужна настройка Supabase.",
+    "filesAdded": "Добавлено файлов: {{count}}.",
+    "albumGroupedSuffix": " (сгруппировано {{count}} фото в один альбом)",
+    "uploadFailed": "Не удалось загрузить.",
+    "offlineSaveAll": "Сохранить офлайн",
+    "offlineClearAll": "Убрать офлайн-копию",
+    "offlineLocked": "Офлайн-сохранение доступно только в Plus",
+    "offlineSaved": "Сохранено для просмотра офлайн.",
+    "offlineSavedPartial": "Не удалось сохранить {{failed}} файл(ов). Попробуйте ещё раз.",
+    "offlineCleared": "Офлайн-копия удалена.",
+    "noteEmpty": "Введите текст для сохранения.",
+    "noteDefaultTitle": "Заметка",
+    "textSaved": "Текст сохранён.",
+    "deleteStorageFailed": "Не удалось удалить файл из хранилища. Удалено только из списка.",
+    "deleted": "Материал удалён.",
+    "deletedMany": "Удалено материалов: {{count}}.",
+    "suggestTitle": "Найдены данные брони",
+    "suggestWithTime": "Привязать к {{place}} · прибытие в {{time}}",
+    "suggestLinkOnly": "Привязать к {{place}}",
+    "suggestBasis": "Источник: {{raw}}",
+    "suggestApply": "Применить",
+    "suggestDismiss": "Скрыть",
+    "suggestApplied": "Привязано к {{place}}",
+    "suggestAppliedWithTime": "Привязано к {{place}}, прибытие в {{time}}"
+  },
+  "alt": {
+    "find": "Замена",
+    "title": "Найти замену",
+    "replacing": "Похожие места рядом вместо «{{name}}»",
+    "searching": "Поиск поблизости…",
+    "empty": "Поблизости не нашлось подходящей замены",
+    "failed": "Не удалось загрузить варианты",
+    "noCategory": "У этого места нет категории — подобрать замену нельзя",
+    "replace": "Заменить на это",
+    "replaced": "Заменено на «{{name}}»"
+  },
+  "recent": {
+    "keywords": "Недавние запросы",
+    "keywordsAria": "Недавние запросы",
+    "places": "Недавно просмотренные",
+    "placesAria": "Недавно просмотренные места",
+    "clear": "Очистить",
+    "pin": "Добавить",
+    "pinned": "Добавлено",
+    "removeAria": "Убрать «{{name}}» из списка"
+  },
+  "vote": {
+    "groupAria": "Голосование попутчиков",
+    "want": "Хочу пойти",
+    "hold": "Отложить",
+    "failed": "Не удалось сохранить голос"
+  },
+  "firstGuide": {
+    "title": "Составьте первый маршрут",
+    "dismiss": "Больше не показывать",
+    "step1": "Добавьте места ({{count}}/{{goal}})",
+    "step1Cta": "Искать",
+    "step2": "Выберите транспорт и постройте маршрут",
+    "step2Cta": "Построить маршрут",
+    "step3": "Готово! Проверьте расписание"
   }
 }

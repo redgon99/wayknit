@@ -74,6 +74,33 @@ export async function deleteInsightKeyword(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * 잘못 수집된 원문을 지운다(§2-7). insight_analysis · insight_place_mentions 의
+ * raw_item_id FK가 on delete cascade라 분석·장소 언급도 함께 지워진다.
+ * place_reactions 집계는 자동으로 다시 계산되지 않는다 — refresh_place_reactions()
+ * 는 서비스 롤 전용(RPC 권한 회수됨)이라 관리자 화면에서 직접 부를 수 없다.
+ * 이미 집계에 반영된 원문을 지우면 그 집계가 다음 수집 전까지 부풀어 있을 수
+ * 있다는 뜻 — 분석 전(아직 place_reactions에 안 들어간) 원문 정리 용도로 우선 쓴다.
+ */
+export async function deleteInsightRawItem(id: string): Promise<void> {
+  const sb = requireSupabase();
+  const { error } = await sb.from('insight_raw_items').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/** AI가 잘못 분류한 카테고리를 관리자가 고친다(§2-7). */
+export async function updateInsightAnalysisCategory(
+  analysisId: string,
+  category: InsightCategory
+): Promise<void> {
+  const sb = requireSupabase();
+  const { error } = await sb
+    .from('insight_analysis')
+    .update({ category })
+    .eq('id', analysisId);
+  if (error) throw error;
+}
+
 export async function listInsightItems(filter: {
   source?: InsightSource;
   category?: InsightCategory;

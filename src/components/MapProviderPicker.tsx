@@ -13,28 +13,28 @@ export function MapProviderPicker({ value, onChange }: Props) {
   const googleOk = isGoogleMapsConfigured();
 
   return (
-    <div className="map-provider-picker" role="group" aria-label="지도·검색 앱 선택">
+    <div className="map-provider-picker" role="group" aria-label={t('mapProvider.groupAria')}>
       <button
         type="button"
         className={`map-provider-btn ${value === 'kakao' ? 'active' : ''}`}
         onClick={() => onChange('kakao')}
         disabled={!kakaoOk}
-        title={kakaoOk ? t('mapProvider.kakao') : t('mapProvider.kakao')}
+        title={t('mapProvider.kakao')}
         aria-pressed={value === 'kakao'}
-        aria-label={t('mapProvider.kakao')}
       >
         <KakaoMapBrandIcon />
+        <span className="map-provider-label">{t('mapProvider.kakao')}</span>
       </button>
       <button
         type="button"
         className={`map-provider-btn ${value === 'google' ? 'active' : ''}`}
         onClick={() => onChange('google')}
         disabled={!googleOk}
-        title={googleOk ? t('mapProvider.google') : t('mapProvider.google')}
+        title={t('mapProvider.google')}
         aria-pressed={value === 'google'}
-        aria-label={t('mapProvider.google')}
       >
         <GoogleMapBrandIcon />
+        <span className="map-provider-label">{t('mapProvider.google')}</span>
       </button>
     </div>
   );

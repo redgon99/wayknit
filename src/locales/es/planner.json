@@ -28,7 +28,7 @@
     "placeholder": "Buscar lugares",
     "placeholderWithYoutube": "Nombre del lugar o enlace de YouTube",
     "placeholderWithLink": "Lugar · YouTube · web · enlace de redes",
-    "placeholderDesign": "Lugar, YouTube o enlace de blog",
+    "placeholderDesign": "Buscar lugares",
     "pasteExtracted": "Se extrajeron {{count}} lugares del texto. Pulsa buscar.",
     "metaNearby": "Cerca del centro del mapa · 지도 주변 {{km}} km · {{count}} resultados",
     "metaNationwide": "Todo el país · 전국 · {{count}} resultados",
@@ -46,7 +46,7 @@
     "radiusAria": "Radio de búsqueda",
     "hintNationwideKakao": "Todo el país · relevancia (Kakao API)",
     "hintNationwideGoogle": "Todo el país · relevancia (Google Places)",
-    "emptyHint": "Busca lugares por palabra o categoría.",
+    "emptyHint": "Busca lugares por palabra o categoría, o pega un enlace de YouTube o blog.",
     "noResults": "No hay resultados.",
     "loading": "Buscando…",
     "enriching": "Cargando valoraciones…",
@@ -72,7 +72,12 @@
     "resetResults": "Restablecer resultados",
     "insightTop": "Favorito",
     "insightPositive": "Bien valorado",
-    "insightWait": "Mucha espera"
+    "insightWait": "Mucha espera",
+    "filters": "Filtros",
+    "subFilterCount": "{{count}} criterios",
+    "resultsCountShort": "{{count}} resultados",
+    "filterApply": "Ver {{count}} resultados",
+    "reviewsSuffix": "{{count}} reseñas"
   },
   "trip": {
     "newTrip": "Nuevo viaje",
@@ -130,7 +135,11 @@
     "countPlaces": "{{count}} lugares",
     "filterAll": "Todo",
     "filterAria": "Filtrar por día",
-    "empty": "Aún no hay itinerario. Fija lugares o genera una ruta."
+    "empty": "Aún no hay itinerario. Fija lugares o genera una ruta.",
+    "dayLabel": "Día {{day}}",
+    "shareAria": "Compartir esta tabla",
+    "required": "Obligatorio",
+    "unscheduled": "Sin ruta asignada"
   },
   "pinup": {
     "reservedAt": "Reservado a las {{time}}",
@@ -157,7 +166,12 @@
     "mustVisitOnly": "Imprescindible",
     "markRequired": "Marcar como imprescindible",
     "unmarkRequired": "Quitar imprescindible",
-    "requiredBadge": "Lugar imprescindible"
+    "requiredBadge": "Lugar imprescindible",
+    "addedBy": "Añadido por {{who}}",
+    "toolbarMore": "Herramientas",
+    "sortVisit": "Orden de visita",
+    "sortCategory": "Por tipo",
+    "placeMaterials": "Ver {{count}} archivos vinculados"
   },
   "route": {
     "fixedArrivalAt": "Llegada fijada a las {{time}}",
@@ -227,6 +241,8 @@
       "aiSuggestError": "No se pudieron obtener sugerencias de la IA. Usando valores predeterminados por categoría — ajusta abajo o vuelve a intentarlo.",
       "stayMinutesAria": "{{name}} estancia (min)",
       "preview": "Vista previa",
+      "previewAfterChange": "Estimación tras el cambio",
+      "current": "Actual: {{km}} km · {{minutes}} min",
       "previewStats": "{{km}} km · {{minutes}} min de trayecto · {{stayMinutes}} min de estancia · termina {{time}}",
       "build": "Crear ruta",
       "rebuild": "Recrear ruta",
@@ -285,7 +301,12 @@
     "detailTravel": "{{minutes}} min de trayecto",
     "detailStops": "{{count}} paradas",
     "pillTitle": "Día {{day}} · {{count}} paradas",
-    "pillNext": "Siguiente {{name}} · termina {{finish}}"
+    "pillNext": "Siguiente {{name}} · termina {{finish}}",
+    "departRecommend": "Sal antes de las {{time}}",
+    "departNow": "Es hora de salir",
+    "navigateHere": "Cómo llegar aquí",
+    "arrivedGoNext": "Llegada · Siguiente parada",
+    "lastStop": "Esta es la última parada de hoy"
   },
   "taxi": {
     "title": "Mostrar al taxista",
@@ -405,7 +426,8 @@
       "history": "Palacios, museos y patrimonio",
       "nightlife": "Comida nocturna, cafés y vistas de la ciudad",
       "family": "Visitas y comidas para niños"
-    }
+    },
+    "editLead": "Se usa para resaltar resultados de búsqueda, priorizar tu ruta y etiquetar tu viaje en la plaza al compartirlo."
   },
   "foodRestrictions": {
     "label": "Preferencias alimentarias",
@@ -650,7 +672,11 @@
   "scenario": {
     "menuLabel": "Crear viaje temático",
     "title": "Escenario de viaje temático",
-    "subtitle": "Elige un tema y la IA creará un itinerario día a día con datos reales de lugares.",
+    "subtitle": "Elige un tema para escoger entre itinerarios día a día ya preparados.",
+    "courseCount": "{{count}} rutas",
+    "courseCountZero": "Próximamente",
+    "tryOtherTheme": "Otros temas tienen rutas listas",
+    "goToSearch": "Buscar lugares",
     "themeLabel": "Tema de viaje",
     "theme": {
       "meditation": "Templos",
@@ -712,7 +738,20 @@
     "sheetRouteTitle": "Ruta del día {{n}}",
     "sheetPinsSummary": "{{count}} pines · Día {{n}}",
     "tabTrips": "Mis viajes",
-    "tabAccount": "Cuenta"
+    "tabAccount": "Cuenta",
+    "sheetSearchSummary": "{{count}} resultados",
+    "tabMap": "Mapa",
+    "tabItinerary": "Itinerario {{count}}",
+    "tabMenu": "Menú",
+    "viewList": "Ver como lista",
+    "viewRoute": "Ver como ruta",
+    "viewToggleAria": "Cambiar vista",
+    "sheetLevelPeek": "Vista previa",
+    "sheetLevelHalf": "Vista media",
+    "sheetLevelFull": "Vista completa",
+    "sheetHandleAria": "Cambiar tamaño del panel, actualmente {{current}}, toca para cambiar a {{next}}",
+    "routeSummary": "Ruta de hoy · {{km}} km · {{min}} min",
+    "replanCta": "Replanificar"
   },
   "map": {
     "centerHere": "Buscar alrededor de aquí",
@@ -724,7 +763,8 @@
     "insightHigh": "Muy bien valorado por viajeros.",
     "insightMixed": "Revisa reseñas recientes, horario y pago.",
     "pin": "Fijar",
-    "pinned": "Fijado"
+    "pinned": "Fijado",
+    "searchThisArea": "Buscar en esta zona"
   },
   "toast": {
     "searchAtCenter": "Buscando alrededor de este punto",
@@ -749,7 +789,12 @@
     "shareCopied": "Enlace copiado (guardado como público)",
     "shareCopiedPlaza": "Enlace copiado (público · publicado en la plaza)",
     "copiedDepart": "Copiada la salida del día {{day}}",
-    "pickOriginHint": "Toca el mapa para marcar el inicio"
+    "pickOriginHint": "Toca el mapa para marcar el inicio",
+    "tableViewLinkCopied": "Enlace de la tabla copiado",
+    "routeDiffAdded": "{{count}} lugar añadido",
+    "routeDiffRemoved": "{{count}} lugar eliminado",
+    "routeDiffTravel": "trayecto {{sign}}{{minutes}} min",
+    "routeChangeUndo": "Deshacer"
   },
   "confirm": {
     "newTrip": "¿Guardar 「{{title}}」 y empezar un viaje nuevo?\nLos pines y la ruta de esta pantalla pasarán al nuevo viaje.",
@@ -786,5 +831,109 @@
     "doneHint": "Un administrador la revisará.",
     "duplicate": "Ya has denunciado este contenido.",
     "failed": "No se pudo enviar la denuncia. Inténtalo de nuevo."
+  },
+  "account": {
+    "guestLead": "Inicia sesión para seguir planificando en otros dispositivos y guardar en la nube.",
+    "viewPlans": "Ver planes",
+    "backToHome": "Volver al inicio",
+    "version": "Versión"
+  },
+  "materials": {
+    "panelTitle": "Materiales del viaje",
+    "countSuffix": "{{count}}",
+    "viewList": "Ver como lista",
+    "viewGrid": "Ver con iconos grandes",
+    "closePanel": "Cerrar panel",
+    "uploading": "Subiendo…",
+    "addPhotoFile": "Foto/archivo",
+    "writeNote": "Escribir nota",
+    "notePlaceholder": "Escribe una nota",
+    "saveShortcutHint": "También puedes guardar con ⌘/Ctrl + Enter",
+    "dropHint": "Arrastra fotos o documentos aquí, o haz clic",
+    "dropHintNeedLogin": "Inicia sesión para arrastrar fotos o archivos",
+    "dropHintNeedSupabase": "Configura la nube para añadir fotos o archivos",
+    "kindFilterAria": "Filtro por tipo",
+    "kindAll": "Todos",
+    "kindImage": "Fotos",
+    "kindNote": "Notas",
+    "kindFile": "Archivos",
+    "dayFilterLabel": "Día",
+    "allDays": "Todos los días",
+    "placeFilterLabel": "Lugar",
+    "place": "Lugar",
+    "allPlaces": "Todos los lugares",
+    "emptyNoMaterials": "Arrastra un archivo arriba o guarda una nota de texto.",
+    "emptyFiltered": "Ningún material coincide con este filtro.",
+    "tapToViewAll": "Toca para ver todas las fotos",
+    "viewPhotosAria": "Ver {{count}} fotos",
+    "uploadedBy": "Subido por {{email}}",
+    "noDay": "Sin día",
+    "noPlace": "Sin lugar",
+    "settingsAria": "Ajustes del material",
+    "titleAria": "Título",
+    "bodyAria": "Contenido",
+    "download": "Descargar",
+    "pinOptionLabel": "Día {{day}} · {{name}}",
+    "uploadNeedsLogin": "Inicia sesión en tu cuenta en la nube para subir fotos o archivos.",
+    "uploadNeedsSupabase": "Subir fotos o archivos requiere configurar Supabase.",
+    "filesAdded": "Se añadieron {{count}} archivos.",
+    "albumGroupedSuffix": " (se agruparon {{count}} fotos en un álbum)",
+    "uploadFailed": "Error al subir.",
+    "offlineSaveAll": "Guardar sin conexión",
+    "offlineClearAll": "Quitar copia sin conexión",
+    "offlineLocked": "Guardar sin conexión es una función Plus",
+    "offlineSaved": "Guardado para verlo sin conexión.",
+    "offlineSavedPartial": "No se pudieron guardar {{failed}} archivo(s). Inténtalo de nuevo.",
+    "offlineCleared": "Se quitó la copia sin conexión.",
+    "noteEmpty": "Escribe algo para guardar.",
+    "noteDefaultTitle": "Nota",
+    "textSaved": "Texto guardado.",
+    "deleteStorageFailed": "No se pudo eliminar el archivo almacenado. Se quitará solo de la lista.",
+    "deleted": "Material eliminado.",
+    "deletedMany": "Se eliminaron {{count}} materiales.",
+    "suggestTitle": "Datos de reserva detectados",
+    "suggestWithTime": "Vincular a {{place}} · fijar llegada a las {{time}}",
+    "suggestLinkOnly": "Vincular a {{place}}",
+    "suggestBasis": "Origen: {{raw}}",
+    "suggestApply": "Aplicar",
+    "suggestDismiss": "Descartar",
+    "suggestApplied": "Vinculado a {{place}}",
+    "suggestAppliedWithTime": "Vinculado a {{place}} con llegada fijada a las {{time}}"
+  },
+  "alt": {
+    "find": "Alternativas",
+    "title": "Buscar alternativa",
+    "replacing": "Lugares cercanos del mismo tipo en vez de {{name}}",
+    "searching": "Buscando cerca…",
+    "empty": "No se encontró una alternativa cercana",
+    "failed": "No se pudieron cargar las alternativas",
+    "noCategory": "Este lugar no tiene categoría conocida, no se pueden sugerir alternativas",
+    "replace": "Reemplazar por este",
+    "replaced": "Reemplazado por {{name}}"
+  },
+  "recent": {
+    "keywords": "Búsquedas recientes",
+    "keywordsAria": "Búsquedas recientes",
+    "places": "Vistos recientemente",
+    "placesAria": "Lugares vistos recientemente",
+    "clear": "Borrar",
+    "pin": "Guardar",
+    "pinned": "Guardado",
+    "removeAria": "Quitar {{name}} de la lista"
+  },
+  "vote": {
+    "groupAria": "Votos del grupo",
+    "want": "Quiero ir",
+    "hold": "En espera",
+    "failed": "No se pudo guardar tu voto"
+  },
+  "firstGuide": {
+    "title": "Crea tu primer itinerario",
+    "dismiss": "No volver a mostrar",
+    "step1": "Guarda lugares ({{count}}/{{goal}})",
+    "step1Cta": "Buscar",
+    "step2": "Elige el transporte y crea la ruta",
+    "step2Cta": "Crear ruta",
+    "step3": "¡Listo! Revisa tu horario"
   }
 }

@@ -6,25 +6,35 @@
   },
   "upgrade": {
     "title": "Wayknit Plus",
-    "subtitle": "無限雲存儲 · 多語言導出 · 實際路線",
+    "subtitle": "無限行程 · 多語言導出 · 無限次Google搜尋",
     "cta": "升級到 Plus",
     "manage": "管理訂閱",
-    "currentPlan": "當前方案：{{plan}}"
+    "currentPlan": "當前方案：{{plan}}",
+    "price": "每月 ₩{{amount}}",
+    "priceNote": "每月自動扣款，可隨時取消。"
   },
   "limits": {
     "tripCount": "Free 方案最多保存 {{max}} 個行程。",
-    "exportPlus": "導出為 Plus 專屬功能。",
-    "cloudLogin": "請登錄後使用雲保存。",
-    "searchCap": "已達到今日搜索上限。Plus 可提高上限。"
-  },
-  "features": {
-    "unlimitedTrips": "無限行程",
-    "cloudSync": "雲同步",
-    "exportI18n": "按所選語言導出",
-    "realRoute": "無限實際路線"
+    "searchCap": "已達到今日搜索上限。Plus 可提高上限。",
+    "materialCount": "Free 方案每個行程最多上傳 {{max}} 個資料。Plus 無限制。"
   },
   "checkout": {
     "redirecting": "正在打開支付頁面…",
     "notConfigured": "支付尚未配置。"
+  },
+  "compare": {
+    "feature": "功能",
+    "trips": "儲存行程數",
+    "tripsFree": "{{n}}個",
+    "export": "匯出行程",
+    "no": "不可用",
+    "exportPlus": "可用(所選語言)",
+    "search": "Google搜尋",
+    "searchFree": "每天{{n}}次",
+    "materials": "行程資料上傳",
+    "materialsFree": "每個行程{{n}}個",
+    "offline": "資料離線保存",
+    "offlinePlus": "支援",
+    "unlimited": "無限制"
   }
 }

@@ -2,6 +2,7 @@ import { Icon } from './Icon';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type {
+  GeneratedRoute,
   PinnedPlace,
   RouteOptions,
   RouteStop,
@@ -40,6 +41,12 @@ interface Props {
   onCopyFromPreviousDay?: () => void;
   pickingOriginFromMap?: boolean;
   hasExistingRoute?: boolean;
+  /**
+   * U04(모바일 UX 리포트 2026-09-13) — 하단 "예상" 수치가 저장된 동선과
+   * 뭐가 다른지 라벨만으로는 안 보였다. hasExistingRoute일 때 이 값과
+   * 나란히 보여줘 "저장된 값 → 바뀌면 이렇게 됨"을 명시한다.
+   */
+  existingRoute?: GeneratedRoute | null;
   onUpdateStayMinutes?: (placeId: string, minutes: number) => void;
   /** 도착 시각 고정 — null이면 해제 */
   onUpdateFixedArrival?: (placeId: string, time: string | null) => void;
@@ -53,6 +60,12 @@ interface Props {
   embedded?: boolean;
   /** 최적화 3종 비교 경로 — 지도에 겹쳐 그리도록 상위로 올린다 */
   onCompareRoutesChange?: (routes: RouteComparison[]) => void;
+  /**
+   * N05(모바일 UX 리포트 2026-09-13) — 도착 시각에 영업이 안 하는 장소의 대체
+   * 후보를 찾는다. 검색·교체는 상위(PlannerPage)가 맡고 여기선 버튼만 낸다.
+   * 안 넘기면 버튼이 사라진다(열람 전용 등).
+   */
+  onFindAlternatives?: (stop: PinnedPlace & Partial<RouteStop>) => void;
 }
 
 const OPTIMIZE_KEYS: OptimizeBy[] = ['distance', 'time', 'no-toll'];
@@ -76,6 +89,7 @@ export function RouteOptionsPanel({
   onCopyFromPreviousDay,
   pickingOriginFromMap = false,
   hasExistingRoute = false,
+  existingRoute = null,
   onUpdateStayMinutes,
   onUpdateFixedArrival,
   onUpdateItemKind,
@@ -83,6 +97,7 @@ export function RouteOptionsPanel({
   onReorderPins,
   embedded = false,
   onCompareRoutesChange,
+  onFindAlternatives,
 }: Props) {
   const { t, i18n } = useTranslation('planner');
   const travelModeMeta = useTravelModeMeta();
@@ -168,6 +183,13 @@ export function RouteOptionsPanel({
 
   useEffect(() => {
     onCompareRoutesChange?.(comparisons);
+    /* R03(모바일 UX 리포트 2026-09-13) — 탭 전환 시 이 패널 자체가 언마운트된다
+     * (PlannerSidePanel의 `{tab === 'route' && routeSlot}`, 모바일도 동일 구조).
+     * 언마운트되면 이 effect가 다시 실행될 일이 없어, 부모(PlannerPage)의
+     * compareRoutes state에 마지막 비교선이 그대로 남아 지도 위에 계속 그려졌다
+     * — 검색 탭으로 돌아가 다른 장소를 선택해도 옛 비교선이 같이 떠 있던 원인.
+     * 언마운트 시 빈 배열로 되돌려 지운다. */
+    return () => onCompareRoutesChange?.([]);
   }, [comparisons, onCompareRoutesChange]);
 
   const selectedComparison = comparisons.find((c) => c.optimizeBy === options.optimizeBy) ?? null;
@@ -557,6 +579,16 @@ export function RouteOptionsPanel({
                           opens: p.hoursOpensAt ?? '',
                           closes: p.hoursClosesAt ?? '',
                         })}
+                        {/* N05 — 경고만 띄우고 끝내지 않고, 근처 같은 종류로 바꿀 길을 준다 */}
+                        {onFindAlternatives && (
+                          <button
+                            type="button"
+                            className="route-stay-alt-btn"
+                            onClick={() => onFindAlternatives(p)}
+                          >
+                            {t('alt.find')}
+                          </button>
+                        )}
                       </div>
                     )}
                     {onUpdateNote ? (
@@ -662,25 +694,43 @@ export function RouteOptionsPanel({
 
       <footer className="route-panel-footer">
         {preview && (
-          <div className="preview-stats route-preview-line">
-            <span className="stat-label">{t('route.options.preview')}</span>
-            <span className="stat-value">
-              {t('route.options.previewStats', {
-                km: preview.totalDistanceKm,
-                minutes: preview.totalTravelMinutes,
-                stayMinutes: preview.totalStayMinutes,
-                time: preview.finishAt,
-              })}
-              {/* 무료도로는 0원이 당연하므로 나머지 두 기준에서만 통행료를 적는다 */}
-              {options.optimizeBy !== 'no-toll' && selectedComparison?.tollFare != null && (
-                <>
-                  {' · '}
-                  {t('route.options.compareToll', {
-                    fare: selectedComparison.tollFare.toLocaleString('ko-KR'),
-                  })}
-                </>
-              )}
-            </span>
+          <div className="route-preview-block">
+            {/*
+              U04(모바일 UX 리포트 2026-09-13) — "예상" 한 단어로는 이 값이
+              저장된 동선과 다르다는 게 안 보였다. 이미 저장된 동선이 있으면
+              그 값을 별도 줄로 먼저 보여주고 아래 라벨도 "변경 시 예상"으로
+              바꿔 두 값이 비교 대상임을 명시한다.
+            */}
+            {hasExistingRoute && existingRoute && (
+              <div className="route-preview-current-line">
+                {t('route.options.current', {
+                  km: existingRoute.totalDistanceKm,
+                  minutes: existingRoute.totalTravelMinutes,
+                })}
+              </div>
+            )}
+            <div className="route-preview-line">
+              <span className="stat-label">
+                {t(hasExistingRoute ? 'route.options.previewAfterChange' : 'route.options.preview')}
+              </span>
+              <span className="stat-value">
+                {t('route.options.previewStats', {
+                  km: preview.totalDistanceKm,
+                  minutes: preview.totalTravelMinutes,
+                  stayMinutes: preview.totalStayMinutes,
+                  time: preview.finishAt,
+                })}
+                {/* 무료도로는 0원이 당연하므로 나머지 두 기준에서만 통행료를 적는다 */}
+                {options.optimizeBy !== 'no-toll' && selectedComparison?.tollFare != null && (
+                  <>
+                    {' · '}
+                    {t('route.options.compareToll', {
+                      fare: selectedComparison.tollFare.toLocaleString('ko-KR'),
+                    })}
+                  </>
+                )}
+              </span>
+            </div>
           </div>
         )}
         <button

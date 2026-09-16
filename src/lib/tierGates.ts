@@ -86,23 +86,31 @@ async function fetchRemoteCounts(sinceIso: string): Promise<Map<string, EventCou
 }
 
 /**
- * 게이트별 현재 수치. 원격 집계를 쓸 수 없으면(비관리자·미설정)
+ * 게이트별 현재 수치. 원격 집계를 쓸 수 없으면(비관리자·미설정·조회 실패)
  * 이 브라우저에 쌓인 로컬 이벤트로 대신 보여준다.
+ *
+ * M1(관리자 검토 2026-09-16) — 예전엔 "이 이벤트의 원격 행이 있는가"로
+ * source를 판단해서, 원격 조회 자체는 성공했는데 그 기간에 특정 이벤트가
+ * 0건이면(group by라 0건인 이벤트는 행 자체가 없다) 로컬 값으로 조용히
+ * 바뀌면서 "원격 집계 불가" 배너가 잘못 떴다. 원격 호출 성공 여부(remote가
+ * null인지)로만 source를 정하고, 성공했는데 그 이벤트가 없으면 0건·
+ * source='remote'로 둔다.
  */
 export async function evaluateTier3Gates(): Promise<GateStatus[]> {
   const maxWindow = Math.max(...TIER3_GATES.map((g) => g.windowDays));
   const since = new Date(Date.now() - maxWindow * 24 * 60 * 60 * 1000).toISOString();
   const remote = await fetchRemoteCounts(since);
+  const remoteOk = remote !== null;
 
   return TIER3_GATES.map((gate) => {
     const row = remote?.get(gate.event);
-    const count = row?.total ?? countLocalEvents(gate.event);
+    const count = remoteOk ? (row?.total ?? 0) : countLocalEvents(gate.event);
     return {
       ...gate,
       count,
       sessions: row?.sessions,
       met: count >= gate.threshold,
-      source: row ? 'remote' : 'local',
+      source: remoteOk ? 'remote' : 'local',
     };
   });
 }

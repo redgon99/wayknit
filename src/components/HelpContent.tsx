@@ -69,7 +69,7 @@ export function HelpContent({ airportFocus = false }: { airportFocus?: boolean }
             <li key={p.ko} className="phrase-card">
               <p className="phrase-ko">{p.ko}</p>
               <p className="phrase-en">{t(`help.phrases.${p.key}`)}</p>
-              <button type="button" onClick={() => void copy(p.ko)}>
+              <button type="button" className="phrase-copy-btn" onClick={() => void copy(p.ko)}>
                 <Icon name="note" size={14} /> {t('help.copyPhrase')}
               </button>
             </li>

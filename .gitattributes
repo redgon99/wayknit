@@ -1,2 +1,14 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# 셸 스크립트는 체크아웃할 때도 반드시 LF로 둔다.
+#
+# core.autocrlf=true 인 Windows에서 CRLF로 내려오면 bash 가 \r 을 명령으로 읽어
+# `$'\r': command not found` 로 깨진다. Git Bash(msys)는 CR 을 관대하게 넘겨서
+# 증상이 안 보이지만, PowerShell 에서 `bash` 는 WSL(C:\Windows\system32\bash.exe)로
+# 잡히고 그쪽은 진짜 리눅스 bash 라 그대로 실패한다 — 2026-09-08 npm run deploy 가
+# 이것으로 깨졌다.
+*.sh text eol=lf
+
+# PowerShell 은 반대로 CRLF 가 안전하다 (구버전 호스트가 LF 를 싫어하는 경우가 있다)
+*.ps1 text eol=crlf

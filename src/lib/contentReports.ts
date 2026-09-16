@@ -163,6 +163,30 @@ export async function updateContentReport(
   if (error) throw error;
 }
 
+/**
+ * 여러 신고를 한 번에 같은 상태로 바꾼다(§2-7 일괄 처리). 스팸 신고가 몰릴 때
+ * 하나씩 눌러야 했던 것을 한 번의 UPDATE로 묶는다. 제재(콘텐츠 비공개 등)는
+ * 신고마다 대상 유형·id가 달라 여기서 하지 않는다 — moderateReport()를 개별
+ * 호출해야 한다. 이 함수는 신고 큐 자체의 상태값만 바꾼다.
+ */
+export async function bulkUpdateContentReports(
+  ids: string[],
+  patch: { status: ReportStatus },
+  reviewerId?: string | null,
+): Promise<void> {
+  if (ids.length === 0) return;
+  const sb = requireSupabase();
+  const { error } = await sb
+    .from('content_reports')
+    .update({
+      status: patch.status,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: reviewerId ?? null,
+    })
+    .in('id', ids);
+  if (error) throw error;
+}
+
 /** 신고 대상의 현재 상태 — 제재 버튼 활성/비활성과 "이미 조치됨" 표시에 쓴다 */
 export interface ReportTargetState {
   reportId: string;

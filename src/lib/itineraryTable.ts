@@ -1,6 +1,7 @@
 import type { GeneratedRoute, PinnedPlace } from '../types';
 import type { Trip } from './trips';
 import { districtFromAddress } from './districtFromAddress';
+import i18n from './i18n';
 
 export interface ItineraryTableRow {
   key: string;
@@ -11,13 +12,20 @@ export interface ItineraryTableRow {
   district: string;
   placeId: string;
   required: boolean;
+  /**
+   * U10(모바일 UX 리포트 2026-09-13) — 이 핀이 현재 생성된 동선(route.stops)에
+   * 포함돼 있는지. false면 시간 칸의 "—"가 "시각 데이터 없음"이 아니라
+   * "동선에 아직 반영 안 됨"이라는 뜻이다 — 화면에서 이 둘을 구분해 보여줘야
+   * 사용자가 대시를 오류로 오해하지 않는다.
+   */
+  scheduled: boolean;
 }
 
 /** null = 전체 */
 export type ItineraryTableDayFilter = number | null;
 
 function dayLabelFor(day: number): string {
-  return `Day ${day} · ${day}일차`;
+  return i18n.t('table.dayLabel', { ns: 'planner', day });
 }
 
 function formatTimeRange(arriveAt?: string, leaveAt?: string, note?: string): string {
@@ -33,13 +41,14 @@ function formatTimeRange(arriveAt?: string, leaveAt?: string, note?: string): st
 }
 
 function formatPinTime(pin: PinnedPlace): string {
+  const minutesUnit = i18n.t('route.minutes', { ns: 'planner' });
   if (pin.note?.trim()) {
     const stay =
-      pin.stayMinutes != null && pin.stayMinutes > 0 ? `${pin.stayMinutes}min` : '—';
+      pin.stayMinutes != null && pin.stayMinutes > 0 ? `${pin.stayMinutes}${minutesUnit}` : '—';
     return `${stay} (${pin.note.trim()})`;
   }
   if (pin.stayMinutes != null && pin.stayMinutes > 0) {
-    return `${pin.stayMinutes}min`;
+    return `${pin.stayMinutes}${minutesUnit}`;
   }
   return '—';
 }
@@ -47,7 +56,8 @@ function formatPinTime(pin: PinnedPlace): string {
 function rowFromPin(
   pin: PinnedPlace,
   time: string,
-  day: number
+  day: number,
+  scheduled: boolean
 ): ItineraryTableRow {
   return {
     key: `${day}-${pin.id}-${pin.order}`,
@@ -58,6 +68,7 @@ function rowFromPin(
     district: districtFromAddress(pin.address, pin.roadAddress),
     placeId: pin.id,
     required: Boolean(pin.required),
+    scheduled,
   };
 }
 
@@ -79,8 +90,10 @@ function rowsForDay(
 
   if (route?.stops?.length) {
     for (const stop of route.stops) {
-      const pin = pinById.get(stop.id) ?? stop;
-      if (seen.has(pin.id)) continue;
+      // stop.id가 현재 핀에 없으면(삭제됨) 옛 stop을 되살리지 않는다 — U03(모바일 UX 리포트
+      // 2026-09-13). 되살리면 표가 "현재 일정"이 아니라 "핀+과거 동선"이 섞인 목록이 된다.
+      const pin = pinById.get(stop.id);
+      if (!pin || seen.has(pin.id)) continue;
       ordered.push(pin);
       seen.add(pin.id);
     }
@@ -97,7 +110,7 @@ function rowsForDay(
     const time = stop
       ? formatTimeRange(stop.arriveAt, stop.leaveAt, pin.note ?? stop.note)
       : formatPinTime(pin);
-    return rowFromPin(pin, time, day);
+    return rowFromPin(pin, time, day, Boolean(stop));
   });
 }
 

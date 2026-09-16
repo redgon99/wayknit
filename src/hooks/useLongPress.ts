@@ -6,11 +6,22 @@ interface LongPressOptions {
   moveThreshold?: number;
 }
 
+/** 길게 누른 지점 (뷰포트 기준 픽셀) */
+export interface LongPressPoint {
+  x: number;
+  y: number;
+}
+
 /**
  * 지도 팬(드래그)과 구분하기 위해 이동거리 임계치를 넘으면 타이머를 취소한다.
- * 좌표 변환은 하지 않는다 — 길게 누르면 "픽 모드 진입" 같은 순수 제스처 신호만 낸다.
+ * 지도 좌표(위경도) 변환은 하지 않는다 — 누른 지점을 화면 픽셀로만 넘겨서
+ * 카카오/구글 어느 지도에서도 같은 훅을 쓸 수 있게 한다.
+ * 이 좌표는 "여기를 눌렀다"고 말풍선이 가리키는 데 쓰인다.
  */
-export function useLongPress(onLongPress: () => void, options?: LongPressOptions) {
+export function useLongPress(
+  onLongPress: (point: LongPressPoint) => void,
+  options?: LongPressOptions,
+) {
   const delay = options?.delay ?? 550;
   const moveThreshold = options?.moveThreshold ?? 12;
   const timerRef = useRef<number | null>(null);
@@ -27,11 +38,13 @@ export function useLongPress(onLongPress: () => void, options?: LongPressOptions
   const onTouchStart = (e: TouchEvent) => {
     const touch = e.touches[0];
     if (!touch) return;
-    startRef.current = { x: touch.clientX, y: touch.clientY };
+    const point = { x: touch.clientX, y: touch.clientY };
+    startRef.current = point;
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => {
       timerRef.current = null;
-      onLongPress();
+      // 손가락이 임계치 안에서 미세하게 움직였을 수 있으니 최신 위치를 쓴다
+      onLongPress(startRef.current ?? point);
     }, delay);
   };
 

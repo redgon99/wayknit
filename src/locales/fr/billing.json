@@ -6,25 +6,35 @@
   },
   "upgrade": {
     "title": "Wayknit Plus",
-    "subtitle": "Cloud illimité · export multilingue · itinéraires réels",
+    "subtitle": "Voyages illimités · export multilingue · recherches Google illimitées",
     "cta": "Passer à Plus",
     "manage": "Gérer l’abonnement",
-    "currentPlan": "Offre actuelle : {{plan}}"
+    "currentPlan": "Offre actuelle : {{plan}}",
+    "price": "₩{{amount}} / mois",
+    "priceNote": "Facturé automatiquement chaque mois. Annulez à tout moment."
   },
   "limits": {
     "tripCount": "L’offre gratuite permet jusqu’à {{max}} voyages.",
-    "exportPlus": "L’export est une fonction Plus.",
-    "cloudLogin": "Connectez-vous pour enregistrer dans le cloud.",
-    "searchCap": "Limite quotidienne de recherches atteinte. Plus l’augmente."
-  },
-  "features": {
-    "unlimitedTrips": "Voyages illimités",
-    "cloudSync": "Sync cloud",
-    "exportI18n": "Exporter l’itinéraire dans votre langue",
-    "realRoute": "Itinéraires routiers réels illimités"
+    "searchCap": "Limite quotidienne de recherches atteinte. Plus l’augmente.",
+    "materialCount": "L’offre gratuite permet jusqu’à {{max}} fichiers par voyage. Plus supprime cette limite."
   },
   "checkout": {
     "redirecting": "Ouverture du paiement…",
     "notConfigured": "Le paiement n’est pas encore configuré."
+  },
+  "compare": {
+    "feature": "Fonction",
+    "trips": "Voyages enregistrés",
+    "tripsFree": "{{n}}",
+    "export": "Exporter l'itinéraire",
+    "no": "Indisponible",
+    "exportPlus": "Oui (votre langue)",
+    "search": "Recherche Google",
+    "searchFree": "{{n}}/jour",
+    "materials": "Fichiers du voyage",
+    "materialsFree": "{{n}} par voyage",
+    "offline": "Enregistrement hors ligne des fichiers",
+    "offlinePlus": "Disponible",
+    "unlimited": "Illimité"
   }
 }

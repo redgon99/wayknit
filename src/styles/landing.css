@@ -266,14 +266,16 @@
 }
 
 .landing-btn-primary,
-.landing-page a.landing-btn-primary {
+.landing-page a.landing-btn-primary,
+.landing-nav a.landing-btn-primary {
   background: #1f2937;
   color: #fff;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
 }
 
 .landing-btn-primary:hover,
-.landing-page a.landing-btn-primary:hover {
+.landing-page a.landing-btn-primary:hover,
+.landing-nav a.landing-btn-primary:hover {
   background: #111827;
   color: #fff;
 }
@@ -285,7 +287,8 @@
 }
 
 .landing-btn-accent,
-.landing-page a.landing-btn-accent {
+.landing-page a.landing-btn-accent,
+.landing-nav a.landing-btn-accent {
   background: var(--landing-accent);
   color: #1f2937;
 }

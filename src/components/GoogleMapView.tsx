@@ -19,9 +19,11 @@ import {
   kakaoLevelToGoogleZoom,
   MIN_PLANNER_GOOGLE_ZOOM,
 } from '../lib/mapZoom';
-import { useLongPress } from '../hooks/useLongPress';
+import { useLongPress, type LongPressPoint } from '../hooks/useLongPress';
 import { mapCentersNear, searchResultFitPadding, shouldAnimateMapCenter, validMapPoints, type MapLatLng } from '../lib/mapCenterMotion';
 import i18n from '../lib/i18n';
+import { COMPARE_LINE_WEIGHT } from '../lib/routeCompare';
+import type { OptimizeBy } from '../types';
 
 interface Props {
   mapsReady?: boolean;
@@ -39,12 +41,15 @@ interface Props {
   selectedOptimizeBy?: string;
   /** 좌측 패널이 지도를 가릴 때, 대상이 남은 영역 한가운데 오도록 미는 픽셀 */
   centerOffsetX?: number;
+  /** 모바일 상단바·하단시트가 지도를 가릴 때 미는 픽셀(위로 밀면 음수) */
+  centerOffsetY?: number;
   nearbySearchCenter?: { lat: number; lng: number } | null;
   pickingOriginFromMap?: boolean;
   pickingPinFromMap?: boolean;
   onOriginPicked?: (lat: number, lng: number, address: string) => void;
   onPinLocationPicked?: (lat: number, lng: number, address: string) => void;
-  onMapLongPress?: () => void;
+  /** 모바일 지도 롱프레스 — 누른 지점(뷰포트 픽셀)을 함께 전달해 말풍선이 그 자리를 가리키게 한다 */
+  onMapLongPress?: (point: LongPressPoint) => void;
   draftPinLocation?: { lat: number; lng: number } | null;
   onSelectPlace?: (place: Place) => void;
   onPinnedMarkerClick?: (place: Place) => void;
@@ -86,6 +91,7 @@ export function GoogleMapView({
 
 
   centerOffsetX = 0,
+  centerOffsetY = 0,
   nearbySearchCenter = null,
   pickingOriginFromMap = false,
   pickingPinFromMap = false,
@@ -219,7 +225,7 @@ export function GoogleMapView({
      * panBy는 쓰지 않는다 — 상대 이동인 데다 애니메이션이라 setCenter와 겹치면
      * 이동량이 누적된다. 대신 월드 좌표에서 offset(픽셀)을 현재 축척으로 나눠
      * 빼는 방식으로 중심을 구한다. 동기 계산이라 여러 번 실행해도 결과가 같다. */
-    if (centerOffsetX) {
+    if (centerOffsetX || centerOffsetY) {
       const projection = mapRef.current.getProjection();
       /* 지도의 현재 줌(getZoom)을 쓰면 안 된다. 이 효과는 줌 효과보다 먼저
        * 실행되므로 확대 전 축척이 잡히고, 그 축척으로 픽셀을 환산하면 수백 km
@@ -230,7 +236,10 @@ export function GoogleMapView({
         const pt = projection.fromLatLngToPoint(
           new window.google.maps.LatLng(target.lat, target.lng),
         );
-        const shifted = new window.google.maps.Point(pt.x - centerOffsetX / scale, pt.y);
+        const shifted = new window.google.maps.Point(
+          pt.x - centerOffsetX / scale,
+          pt.y - centerOffsetY / scale
+        );
         mapRef.current.setCenter(projection.fromPointToLatLng(shifted));
       } else {
         mapRef.current.setCenter(target);
@@ -243,7 +252,7 @@ export function GoogleMapView({
     } else if (!mapCentersNear(current, target)) {
       mapRef.current.setCenter(target);
     }
-  }, [center.lat, center.lng, fitSearchBounds, centerOffsetX, level]);
+  }, [center.lat, center.lng, fitSearchBounds, centerOffsetX, centerOffsetY, level]);
 
   useEffect(() => {
     if (!mapRef.current || fitSearchBounds) return;
@@ -519,14 +528,17 @@ export function GoogleMapView({
     for (const r of compareRoutes) {
       if (r.path.length < 2) continue;
       const selected = r.optimizeBy === selectedOptimizeBy;
+      const baseWeight = COMPARE_LINE_WEIGHT[r.optimizeBy as OptimizeBy] ?? 4;
       compareLinesRef.current.push(
         new window.google.maps.Polyline({
           map: mapRef.current,
           path: r.path,
           strokeColor: r.color,
-          strokeOpacity: selected ? 0.9 : 0.4,
-          strokeWeight: selected ? 6 : 4,
-          zIndex: selected ? 3 : 2,
+          strokeOpacity: selected ? 0.9 : 0.6,
+          strokeWeight: selected ? 7 : baseWeight,
+          // 선택된 것이 항상 맨 위, 미선택끼리는 얇은 쪽이 위 — 겹치는 구간에서
+          // 두꺼운 쪽 테두리가 옆으로 드러나 층이 보인다(§6-7).
+          zIndex: selected ? 10 : 10 - baseWeight,
         }),
       );
     }
@@ -621,7 +633,7 @@ export function GoogleMapView({
     origin?.lng,
   ]);
 
-  const longPress = useLongPress(() => onMapLongPress?.());
+  const longPress = useLongPress((point) => onMapLongPress?.(point));
 
   return (
     <div

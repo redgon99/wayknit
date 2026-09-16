@@ -11,6 +11,8 @@ import { normalizeTrip, DEFAULT_ROUTE_OPTIONS } from './tripRouteOptions';
 import { computeTripCenter } from './tripGeo';
 import i18n from './i18n';
 import { normalizeLocale } from './locale';
+import { regionCodesFromPins } from './koreaRegions';
+import { effectiveOwnerId } from './authIdentity';
 
 export interface Trip {
   id: string;
@@ -68,13 +70,18 @@ export interface PlazaListing {
   slug: string;
   title: string;
   displayName: string | null;
-  contactEmail: string | null;
   center: { lat: number; lng: number } | null;
   listedAt: number;
   totalDays: number;
   pinSummary: string;
   pinnedByDay: Record<number, PinnedPlace[]>;
   locale?: string | null;
+  /** 관심 테마 (필터용) — payload.preferences 그대로, 별도 컬럼 아님 */
+  themes: TripTheme[];
+  /** 지역 필터용 — 별도 컬럼 없음, 핀 주소에서 파생(koreaRegions.ts) */
+  regions: string[];
+  /** payload.mock — 실서비스 초기 공유마당이 비어 보이지 않게 심어둔 예시 데이터(§27-15, F15) */
+  isMock: boolean;
 }
 
 export interface TripSummary {
@@ -85,6 +92,8 @@ export interface TripSummary {
   totalDays: number;
   /** 내가 소유자가 아니라 협업자로 접근 중일 때만 채워짐 */
   collaboratorRole?: CollaboratorRole;
+  /** 여행 선택 목록에서 동명 여행을 구분하기 위한 것(F18, §27-19) */
+  pinCount?: number;
 }
 
 const LS_STORE = 'wayknit:trips-store:v2';
@@ -142,6 +151,7 @@ function rowToTrip(data: {
     routeOptionsByDay?: Record<number, RouteOptions>;
     generatedRouteByDay?: Trip['generatedRouteByDay'];
     materials?: TripMaterial[];
+    preferences?: TripTheme[];
   };
   return normalizeTrip({
     id: data.id,
@@ -154,6 +164,7 @@ function rowToTrip(data: {
     routeOptions: payload?.routeOptions,
     generatedRouteByDay: payload?.generatedRouteByDay ?? {},
     materials: payload?.materials ?? [],
+    preferences: payload?.preferences,
     createdAt: new Date(data.created_at).getTime(),
     updatedAt: new Date(data.updated_at).getTime(),
     ownerId: data.owner_id ?? undefined,
@@ -174,8 +185,13 @@ function rowToTrip(data: {
 const TRIP_SELECT =
   'id, slug, title, total_days, current_day, payload, created_at, updated_at, owner_id, is_public, listed_in_plaza, plaza_display_name, plaza_contact_email, plaza_center_lat, plaza_center_lng, plaza_listed_at, plaza_locale';
 
+// F04(모바일 감사 보고서, 2026-09-10) — plaza_contact_email을 일부러 뺐다.
+// 화면(SharePlazaPanel)에서만 안 보여주는 걸로는 부족하다 — anon도 이 SELECT를
+// 그대로 PostgREST에 보낼 수 있어서, 이메일을 계속 요청하면 원문이 그대로
+// JSON 응답에 실려 나간다. 여기서 아예 안 물어보는 게 유일하게 확실한 방법.
+// 소유자 본인의 조회(TRIP_SELECT)는 자기 글 관리용이라 그대로 둔다.
 const PLAZA_LIST_SELECT =
-  'id, slug, title, total_days, payload, listed_in_plaza, plaza_display_name, plaza_contact_email, plaza_center_lat, plaza_center_lng, plaza_listed_at, plaza_locale';
+  'id, slug, title, total_days, payload, listed_in_plaza, plaza_display_name, plaza_center_lat, plaza_center_lng, plaza_listed_at, plaza_locale';
 
 export function buildPlazaPinSummary(
   pinnedByDay: Record<number, PinnedPlace[]>,
@@ -202,13 +218,16 @@ function rowToPlazaListing(data: {
   total_days: number;
   payload: unknown;
   plaza_display_name?: string | null;
-  plaza_contact_email?: string | null;
   plaza_center_lat?: number | null;
   plaza_center_lng?: number | null;
   plaza_listed_at?: string | null;
   plaza_locale?: string | null;
 }): PlazaListing {
-  const payload = data.payload as { pinnedByDay?: Record<number, PinnedPlace[]> };
+  const payload = data.payload as {
+    pinnedByDay?: Record<number, PinnedPlace[]>;
+    preferences?: TripTheme[];
+    mock?: boolean;
+  };
   const pinnedByDay = payload?.pinnedByDay ?? { 1: [] };
   const center =
     data.plaza_center_lat != null && data.plaza_center_lng != null
@@ -219,7 +238,6 @@ function rowToPlazaListing(data: {
     slug: data.slug,
     title: data.title,
     displayName: data.plaza_display_name ?? null,
-    contactEmail: data.plaza_contact_email ?? null,
     center,
     listedAt: data.plaza_listed_at
       ? new Date(data.plaza_listed_at).getTime()
@@ -227,7 +245,10 @@ function rowToPlazaListing(data: {
     totalDays: data.total_days,
     pinSummary: buildPlazaPinSummary(pinnedByDay, data.total_days),
     pinnedByDay,
+    themes: payload?.preferences ?? [],
+    regions: regionCodesFromPins(pinnedByDay),
     locale: data.plaza_locale ?? 'ko',
+    isMock: payload?.mock === true,
   };
 }
 
@@ -304,6 +325,19 @@ function collaboratorIdsOf(roles: Map<string, CollaboratorRole>): string[] {
   return [...roles.keys()];
 }
 
+/** 여행 선택 목록의 동명 여행 구분용(F18) — 핀 데이터 전체가 아니라 trip_id만 받아 세기만 한다 */
+async function countPinsForTrips(tripIds: string[]): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  const sb = getSupabase();
+  if (!sb || tripIds.length === 0) return counts;
+  const { data, error } = await sb.from('trip_pins').select('trip_id').in('trip_id', tripIds);
+  if (error || !data) return counts;
+  for (const row of data as Array<{ trip_id: string }>) {
+    counts.set(row.trip_id, (counts.get(row.trip_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
 async function listRemote(userId: string): Promise<TripSummary[]> {
   const sb = getSupabase();
   if (!sb) return [];
@@ -318,6 +352,7 @@ async function listRemote(userId: string): Promise<TripSummary[]> {
 
   const { data, error } = await scoped.order('updated_at', { ascending: false });
   if (error || !data) return [];
+  const pinCounts = await countPinsForTrips(data.map((row) => row.id));
   return data.map((row) => ({
     id: row.id,
     slug: row.slug,
@@ -325,6 +360,7 @@ async function listRemote(userId: string): Promise<TripSummary[]> {
     totalDays: row.total_days,
     updatedAt: new Date(row.updated_at).getTime(),
     collaboratorRole: roles.get(row.id),
+    pinCount: pinCounts.get(row.id) ?? 0,
   }));
 }
 
@@ -340,7 +376,7 @@ async function readRemoteById(userId: string, tripId: string): Promise<Trip | nu
 
   const { data, error } = await scoped.maybeSingle();
   if (error || !data) return null;
-  return attachPins(rowToTrip(data, roles.get(tripId)));
+  return attachPins(rowToTrip(data, roles.get(tripId)), true);
 }
 
 async function readRemoteLatest(userId: string): Promise<Trip | null> {
@@ -362,7 +398,7 @@ async function readRemoteLatest(userId: string): Promise<Trip | null> {
     .limit(1)
     .maybeSingle();
   if (error || !data) return null;
-  return attachPins(rowToTrip(data, roles.get(data.id)));
+  return attachPins(rowToTrip(data, roles.get(data.id)), true);
 }
 
 async function readBySlugRemote(slug: string): Promise<Trip | null> {
@@ -397,6 +433,29 @@ interface TripPinRow {
   place_id: string;
   position: number;
   data: PinnedPlace;
+  created_by_email: string | null;
+}
+
+/**
+ * 핀을 누가 넣었는지 — 핀 객체가 아니라 여기에 따로 둔다.
+ *
+ * PinnedPlace 에 얹으면 안 된다. 그 객체는 그대로 `trip_pins.data` jsonb 로
+ * 저장되고 canonicalPin() 비교에도 쓰이므로,
+ *   1. 이미 컬럼으로 존재하는 값이 jsonb 안에 중복 저장돼 시간이 지나면 어긋나고
+ *   2. 내용은 그대로인데 작성자 필드만 달라도 "핀이 바뀌었다"로 잡혀
+ *      불필요한 저장이 나간다 — 동시 편집 중이면 충돌 면적이 넓어진다.
+ *
+ * 키는 `${day}:${placeId}` (trip_pins 의 자연키에서 trip_id 를 뺀 것).
+ */
+const pinAuthorsByTrip = new Map<string, Record<string, string | null>>();
+
+export function pinAuthorKey(day: number, placeId: string): string {
+  return `${day}:${placeId}`;
+}
+
+/** 핀 작성자 이메일 맵. readPinsRemote 가 갱신하므로 핀 목록과 항상 같은 시점이다. */
+export function getPinAuthors(tripId: string): Record<string, string | null> {
+  return pinAuthorsByTrip.get(tripId) ?? {};
 }
 
 /**
@@ -421,12 +480,26 @@ function clonePinnedByDay(src: Record<number, PinnedPlace[]>): Record<number, Pi
   return out;
 }
 
-async function readPinsRemote(tripId: string): Promise<Record<number, PinnedPlace[]> | null> {
+/**
+ * @param includeAuthors 작성자 이메일까지 읽을지.
+ *   공개 여행을 구경하는 비로그인 열람자는 이 컬럼을 읽을 권한이 없다
+ *   (anon 에서 회수했다). 요청에 넣으면 조회 전체가 실패해 핀이 통째로
+ *   안 보이므로, 볼 자격이 있을 때만 넣는다.
+ */
+async function readPinsRemote(
+  tripId: string,
+  includeAuthors = false
+): Promise<Record<number, PinnedPlace[]> | null> {
   const sb = getSupabase();
   if (!sb) return null;
+  // supabase-js 는 select 문자열의 리터럴 타입으로 결과를 추론한다.
+  // 삼항으로 넘기면 유니온이 되어 파싱에 실패하므로 string 으로 낮춘다.
+  const columns: string = includeAuthors
+    ? 'day, place_id, position, data, created_by_email'
+    : 'day, place_id, position, data';
   const { data, error } = await sb
     .from('trip_pins')
-    .select('day, place_id, position, data')
+    .select(columns)
     .eq('trip_id', tripId)
     .order('day', { ascending: true })
     .order('position', { ascending: true })
@@ -438,9 +511,12 @@ async function readPinsRemote(tripId: string): Promise<Record<number, PinnedPlac
     return null;
   }
   const byDay: Record<number, PinnedPlace[]> = {};
-  for (const row of (data ?? []) as TripPinRow[]) {
+  const authors: Record<string, string | null> = {};
+  for (const row of (data ?? []) as unknown as TripPinRow[]) {
     (byDay[row.day] ??= []).push({ ...row.data, id: row.place_id, day: row.day });
+    authors[pinAuthorKey(row.day, row.place_id)] = row.created_by_email ?? null;
   }
+  if (includeAuthors) pinAuthorsByTrip.set(tripId, authors);
   // order 필드는 화면이 쓰는 표시용 번호 — 행 순서대로 다시 매긴다.
   for (const list of Object.values(byDay)) list.forEach((p, i) => (p.order = i + 1));
   return byDay;
@@ -569,32 +645,203 @@ function samePinnedByDay(a: Record<number, PinnedPlace[]>, b: Record<number, Pin
 }
 
 /**
- * 이 여행의 핀 변경을 실시간으로 받아 병합 결과를 돌려준다.
+ * 실시간으로 받아 화면에 얹을 조각. 실제로 달라진 것만 담긴다.
+ * 아무것도 안 바뀌었으면 콜백 자체를 부르지 않는다 — 그러지 않으면
+ * 상대의 저장 → 내 화면 갱신 → 내 자동저장 → 상대 화면 갱신으로 끝없이 돈다.
+ */
+export interface TripRealtimePatch {
+  pinnedByDay?: Record<number, PinnedPlace[]>;
+  totalDays?: number;
+  title?: string;
+  routeOptionsByDay?: Record<number, RouteOptions>;
+  generatedRouteByDay?: Record<number, GeneratedRoute | null>;
+  materials?: TripMaterial[];
+}
+
+/**
+ * 여행 본체 행의 스칼라 기준점.
+ *
+ * `total_days`·`title`은 `wayknit_trips` 컬럼이라 행으로 쪼갤 수 없다.
+ * 대신 "마지막으로 원격과 맞춘 값"을 들고 있다가, 지금 화면 값이 그것과 같으면
+ * (= 내가 안 건드렸으면) 원격을 받아들이고, 다르면(= 내 미저장 편집이 있으면)
+ * 내 것을 지킨다. 핀·자료의 3-way 병합과 같은 원리를 스칼라에 적용한 것이다.
+ */
+const tripScalarBaselines = new Map<string, { totalDays: number; title: string }>();
+
+function mergeDayStateRemote(
+  remote: DayStateSnapshot,
+  baseline: Map<number, string>,
+  local: DayStateSnapshot
+): DayStateSnapshot {
+  const routeOptionsByDay: Record<number, RouteOptions> = {};
+  const generatedRouteByDay: Record<number, GeneratedRoute | null> = {};
+  const days = new Set<number>([
+    ...Object.keys(remote.routeOptionsByDay).map(Number),
+    ...Object.keys(remote.generatedRouteByDay).map(Number),
+    ...Object.keys(local.routeOptionsByDay).map(Number),
+    ...Object.keys(local.generatedRouteByDay).map(Number),
+  ]);
+
+  for (const day of days) {
+    const localOpts = local.routeOptionsByDay[day];
+    const localRoute = local.generatedRouteByDay[day] ?? null;
+    const localKey = dayStateKey(localOpts, localRoute);
+    const hasLocalEdit = baseline.get(day) !== localKey;
+
+    if (hasLocalEdit) {
+      // 아직 저장 전인 내 편집이다 — 원격보다 우선한다.
+      if (localOpts) routeOptionsByDay[day] = localOpts;
+      if (day in local.generatedRouteByDay) generatedRouteByDay[day] = localRoute;
+      continue;
+    }
+    // 내가 안 건드린 일차는 원격을 따른다(원격에서 사라졌으면 같이 사라진다).
+    if (remote.routeOptionsByDay[day]) routeOptionsByDay[day] = remote.routeOptionsByDay[day];
+    if (day in remote.generatedRouteByDay) {
+      generatedRouteByDay[day] = remote.generatedRouteByDay[day];
+    }
+  }
+  return { routeOptionsByDay, generatedRouteByDay };
+}
+
+function mergeMaterialsRemote(
+  remote: TripMaterial[],
+  baseline: Map<string, string>,
+  local: TripMaterial[]
+): TripMaterial[] {
+  const localById = new Map(local.map((m) => [m.id, m]));
+  const remoteById = new Map(remote.map((m) => [m.id, m]));
+  const out: TripMaterial[] = [];
+
+  // 원격 순서를 기준으로 깔고, 내 미저장 편집이 있으면 그것으로 바꾼다.
+  for (const m of remote) {
+    const mine = localById.get(m.id);
+    if (!mine) {
+      // 원격에는 있는데 내 화면에 없다. 둘 중 하나다:
+      //   기준점에 있었다  → 내가 방금 지웠다. 되살리지 않는다.
+      //   기준점에도 없다  → 상대가 방금 만든 것이다. 받는다.
+      if (!baseline.has(m.id)) out.push(m);
+      continue;
+    }
+    const hasLocalEdit = baseline.get(m.id) !== canonicalJson(mine);
+    out.push(hasLocalEdit ? mine : m);
+  }
+  // 원격에 없는 것: 내가 방금 만든 것만 살린다.
+  // 기준점에 있었는데 원격에서 사라졌다면 상대가 지운 것이므로 따라 지운다.
+  for (const m of local) {
+    if (remoteById.has(m.id)) continue;
+    if (!baseline.has(m.id)) out.push(m);
+  }
+  return out;
+}
+
+/**
+ * 이 여행의 원격 변경을 실시간으로 받아 화면에 얹을 조각을 돌려준다.
+ *
+ * 핀만 보던 것을 여행 전체로 넓혔다. **일차 추가·삭제가 상대에게 안 가던
+ * 문제(§20)가 여기서 왔다** — `total_days`는 `wayknit_trips` 컬럼인데 그 테이블을
+ * 아무도 구독하지 않았다. 상대가 만든 일차의 핀은 도착하는데 그 일차 탭이 없어
+ * 보이지 않았고, 게다가 각자 자기 `total_days`를 계속 되쓰고 있었다.
+ *
  * `getLocal`은 항상 최신 화면 상태를 돌려줘야 한다(ref 등으로 넘길 것).
  * 반환값은 구독 해제 함수.
  */
-export function subscribeTripPins(
+export function subscribeTripRealtime(
   tripId: string,
-  getLocal: () => Record<number, PinnedPlace[]>,
-  onMerged: (next: Record<number, PinnedPlace[]>) => void
+  getLocal: () => Trip,
+  onPatch: (patch: TripRealtimePatch) => void
 ): () => void {
   const sb = getSupabase();
   if (!sb || !tripId) return () => {};
 
   let disposed = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
+  // 무엇이 바뀌었다고 알림이 왔는지 — 필요한 것만 다시 읽는다.
+  // 상대가 제목을 타이핑하면 700ms마다 여행 행 UPDATE가 오는데,
+  // 그때마다 핀·일차·자료까지 전부 다시 읽으면 낭비가 크다.
+  let needPins = false;
+  let needDayState = false;
+  let needMaterials = false;
+  let needTripRow = false;
 
   const refresh = async () => {
     if (disposed) return;
-    const remote = await readPinsRemote(tripId);
-    if (disposed || !remote) return;
+    const [wantPins, wantDay, wantMat, wantRow] =
+      [needPins, needDayState, needMaterials, needTripRow];
+    needPins = needDayState = needMaterials = needTripRow = false;
+
     const local = getLocal();
-    const pending = pendingPinEdits(pinBaselines.get(tripId) ?? {}, local);
-    const merged = applyPendingEdits(remote, pending, local);
-    // 기준점을 원격으로 옮긴다 — 다음 저장의 diff가 내 미저장 편집만 담게 된다.
-    pinBaselines.set(tripId, clonePinnedByDay(remote));
-    // 내 저장이 되돌아온 에코면 화면이 그대로다 — 불필요한 리렌더를 막는다.
-    if (!samePinnedByDay(merged, local)) onMerged(merged);
+    const patch: TripRealtimePatch = {};
+
+    if (wantPins) {
+      const remote = await readPinsRemote(tripId, true);
+      if (disposed) return;
+      if (remote) {
+        const pending = pendingPinEdits(pinBaselines.get(tripId) ?? {}, local.pinnedByDay);
+        const merged = applyPendingEdits(remote, pending, local.pinnedByDay);
+        pinBaselines.set(tripId, clonePinnedByDay(remote));
+        if (!samePinnedByDay(merged, local.pinnedByDay)) patch.pinnedByDay = merged;
+      }
+    }
+
+    if (wantDay) {
+      const remote = await readDayStateRemote(tripId);
+      if (disposed) return;
+      if (remote) {
+        const baseline = dayStateBaselines.get(tripId) ?? new Map<number, string>();
+        const localSnap: DayStateSnapshot = {
+          routeOptionsByDay: local.routeOptionsByDay ?? {},
+          generatedRouteByDay: local.generatedRouteByDay ?? {},
+        };
+        const merged = mergeDayStateRemote(remote, baseline, localSnap);
+        dayStateBaselines.set(tripId, snapshotDayState(remote));
+        if (canonicalJson(merged) !== canonicalJson(localSnap)) {
+          patch.routeOptionsByDay = merged.routeOptionsByDay;
+          patch.generatedRouteByDay = merged.generatedRouteByDay;
+        }
+      }
+    }
+
+    if (wantMat) {
+      // 구독은 소유자·협업자 화면에서만 돈다(플래너 이펙트가 ownerId 를 요구한다).
+      const remote = await readMaterialsRemote(tripId, true);
+      if (disposed) return;
+      if (remote) {
+        const baseline = materialBaselines.get(tripId) ?? new Map<string, string>();
+        const merged = mergeMaterialsRemote(remote, baseline, local.materials ?? []);
+        materialBaselines.set(tripId, new Map(remote.map((m) => [m.id, canonicalJson(m)])));
+        if (canonicalJson(merged) !== canonicalJson(local.materials ?? [])) {
+          patch.materials = merged;
+        }
+      }
+    }
+
+    if (wantRow) {
+      const { data } = await sb
+        .from('wayknit_trips')
+        .select('total_days, title')
+        .eq('id', tripId)
+        .maybeSingle();
+      if (disposed) return;
+      if (data) {
+        const base = tripScalarBaselines.get(tripId);
+        // 내가 안 건드린 값만 원격으로 바꾼다. 건드렸다면 아직 저장 전인
+        // 내 편집이므로 지킨다(다음 저장에서 내 값이 원격이 된다).
+        if (base && local.totalDays === base.totalDays && data.total_days !== local.totalDays) {
+          patch.totalDays = data.total_days;
+        }
+        if (base && local.title === base.title && data.title !== local.title) {
+          patch.title = data.title;
+        }
+        tripScalarBaselines.set(tripId, {
+          totalDays: patch.totalDays ?? local.totalDays,
+          title: patch.title ?? local.title,
+        });
+      }
+    }
+
+    // 달라진 게 없으면 부르지 않는다 — 내 저장이 되돌아온 에코일 뿐이고,
+    // 여기서 setState를 하면 자동저장이 깨어나 두 클라이언트가 끝없이 주고받는다.
+    if (Object.keys(patch).length > 0) onPatch(patch);
   };
 
   const schedule = () => {
@@ -603,14 +850,28 @@ export function subscribeTripPins(
     timer = setTimeout(() => void refresh(), 350);
   };
 
+  const filter = `trip_id=eq.${tripId}`;
   const channel = sb
-    .channel(`trip-pins:${tripId}`)
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'trip_pins', filter: `trip_id=eq.${tripId}` },
-      schedule
-    )
-    .subscribe();
+    .channel(`trip-realtime:${tripId}`)
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'trip_pins', filter },
+      () => { needPins = true; schedule(); })
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'trip_day_state', filter },
+      () => { needDayState = true; schedule(); })
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'trip_materials', filter },
+      () => { needMaterials = true; schedule(); })
+    .on('postgres_changes',
+      // 여행 본체는 자연키가 id다 — 위의 trip_id 필터를 쓰면 아무것도 안 온다.
+      { event: 'UPDATE', schema: 'public', table: 'wayknit_trips', filter: `id=eq.${tripId}` },
+      () => { needTripRow = true; schedule(); })
+    // 구독은 조용히 죽을 수 있다. 그러면 화면은 멀쩡해 보이는데 상대 편집만
+    // 영영 안 들어온다 — 알 방법이 없으니 실패 상태만이라도 남긴다.
+    .subscribe((status, err) => {
+      if (status === 'SUBSCRIBED' || status === 'CLOSED') return;
+      console.warn(`여행 실시간 구독 실패(${status})`, err ?? '');
+    });
 
   return () => {
     disposed = true;
@@ -619,11 +880,279 @@ export function subscribeTripPins(
   };
 }
 
-async function attachPins(trip: Trip): Promise<Trip> {
-  const pins = await readPinsRemote(trip.id);
+/* ══════════════════════════════════════════════════════════════════════
+ * 일차 상태(trip_day_state) · 여행 자료(trip_materials) — 공동편집 5단계
+ *
+ * §5-2에서 핀만 먼저 행으로 쪼갰고, `routeOptionsByDay`·`generatedRouteByDay`·
+ * `materials`는 payload jsonb 한 덩어리로 남아 있었다. 그래서 핀에서 고쳤던
+ * last-write-wins가 이 셋에는 그대로 있었다 — 두 사람이 각자 동선을 만들면
+ * 나중에 저장한 쪽이 상대 것을 지웠다.
+ *
+ * 쪼개는 단위:
+ *   자료   → 행 1개 = 자료 1개 (항목마다 id가 있다. 핀과 같다)
+ *   일차   → 행 1개 = (여행, 일차). 동선은 "그 일차 전체를 다시 계산한 결과"라
+ *            부분 병합이 의미를 갖지 않는다. 일차 단위면 서로 다른 날을 만지는
+ *            흔한 경우에 충돌이 사라지고, 같은 날을 동시에 생성하는 것은
+ *            나중 것이 이기는 게 의미상 맞다.
+ *
+ * 읽기는 새 테이블만 본다. payload로 폴백하면 사용자가 자료를 전부 지웠을 때
+ * 옛 백업이 되살아난다 — 핀에서와 같은 판단이다.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+interface DayStateRow {
+  day: number;
+  route_options: RouteOptions | null;
+  generated_route: GeneratedRoute | null;
+}
+
+interface MaterialRow {
+  material_id: string;
+  data: TripMaterial;
+  created_by_email: string | null;
+}
+
+/**
+ * 자료를 누가 올렸는지 — 핀 작성자(§14-1)와 같은 이유로 `TripMaterial` 에 얹지 않는다.
+ *
+ * 그 객체는 그대로 `trip_materials.data` jsonb 로 저장되고 `canonicalJson()` 비교에도
+ * 쓰이므로,
+ *   1. 이미 컬럼으로 있는 값이 jsonb 안에 중복 저장돼 시간이 지나면 어긋나고
+ *   2. 내용은 그대로인데 작성자 필드만 달라도 "바뀌었다"로 잡혀 불필요한 저장이 나간다.
+ *
+ * 키는 자료 id.
+ */
+const materialAuthorsByTrip = new Map<string, Record<string, string | null>>();
+
+/** 자료 작성자 이메일 맵. readMaterialsRemote 가 자료와 같은 응답에서 채운다. */
+export function getMaterialAuthors(tripId: string): Record<string, string | null> {
+  return materialAuthorsByTrip.get(tripId) ?? {};
+}
+
+interface DayStateSnapshot {
+  routeOptionsByDay: Record<number, RouteOptions>;
+  generatedRouteByDay: Record<number, GeneratedRoute | null>;
+}
+
+/**
+ * 마지막으로 원격과 맞춘 상태. 저장 시 diff의 기준점이다.
+ * 핀과 같은 이유로 원격의 "지금" 상태와 비교하면 안 된다 — 상대가 방금 만든
+ * 동선이 "내가 지운 것"으로 보인다.
+ *
+ * 값은 정규화된 JSON 문자열로 들고 있는다. 원본 객체를 들고 있으면 화면 쪽에서
+ * 같은 참조를 변형했을 때 기준점까지 함께 바뀌어 diff가 항상 비어 버린다.
+ */
+const dayStateBaselines = new Map<string, Map<number, string>>();
+const materialBaselines = new Map<string, Map<string, string>>();
+
+/** 키 순서에 흔들리지 않는 비교용 직렬화 (canonicalPin과 같은 방식) */
+function canonicalJson(value: unknown): string {
+  if (value === null || value === undefined) return 'null';
+  if (typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  const obj = value as Record<string, unknown>;
+  return `{${Object.keys(obj)
+    .sort()
+    .map((k) => `${JSON.stringify(k)}:${canonicalJson(obj[k])}`)
+    .join(',')}}`;
+}
+
+/** 한 일차 행의 비교 키 — 옵션과 동선을 함께 본다 */
+function dayStateKey(options: RouteOptions | undefined, route: GeneratedRoute | null): string {
+  return `${canonicalJson(options ?? null)}|${canonicalJson(route ?? null)}`;
+}
+
+function snapshotDayState(snap: DayStateSnapshot): Map<number, string> {
+  const out = new Map<number, string>();
+  const days = new Set<number>([
+    ...Object.keys(snap.routeOptionsByDay).map(Number),
+    ...Object.keys(snap.generatedRouteByDay).map(Number),
+  ]);
+  for (const day of days) {
+    out.set(day, dayStateKey(snap.routeOptionsByDay[day], snap.generatedRouteByDay[day] ?? null));
+  }
+  return out;
+}
+
+async function readDayStateRemote(tripId: string): Promise<DayStateSnapshot | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from('trip_day_state')
+    .select('day, route_options, generated_route')
+    .eq('trip_id', tripId)
+    .order('day', { ascending: true });
+  if (error || !data) return null;
+
+  const routeOptionsByDay: Record<number, RouteOptions> = {};
+  const generatedRouteByDay: Record<number, GeneratedRoute | null> = {};
+  for (const row of data as unknown as DayStateRow[]) {
+    if (row.route_options) routeOptionsByDay[row.day] = row.route_options;
+    // null도 담는다 — "그 일차는 동선이 없다"는 것도 상태다.
+    generatedRouteByDay[row.day] = row.generated_route ?? null;
+  }
+  return { routeOptionsByDay, generatedRouteByDay };
+}
+
+/**
+ * @param includeAuthors 작성자 이메일까지 읽을지.
+ *   공개 여행을 구경하는 비로그인 열람자는 이 컬럼을 읽을 권한이 없다(anon 에서
+ *   회수했다 — §22). 요청에 넣으면 조회 전체가 실패해 자료가 통째로 안 보이므로,
+ *   볼 자격이 있을 때만 넣는다. readPinsRemote 와 같은 구조다.
+ */
+async function readMaterialsRemote(
+  tripId: string,
+  includeAuthors = false
+): Promise<TripMaterial[] | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  // 삼항을 select() 에 바로 넘기면 supabase-js 가 리터럴 유니온으로 추론해
+  // 타입체크가 깨진다(§14-4) — string 으로 낮춘다.
+  const columns: string = includeAuthors
+    ? 'material_id, data, created_by_email'
+    : 'material_id, data';
+  const { data, error } = await sb
+    .from('trip_materials')
+    .select(columns)
+    .eq('trip_id', tripId)
+    .order('created_at', { ascending: true });
+  if (error || !data) return null;
+
+  const rows = data as unknown as MaterialRow[];
+  if (includeAuthors) {
+    const authors: Record<string, string | null> = {};
+    for (const r of rows) authors[r.material_id] = r.created_by_email ?? null;
+    materialAuthorsByTrip.set(tripId, authors);
+  }
+  return rows.map((r) => r.data);
+}
+
+/**
+ * 기준점 대비 바뀐 일차만 쓴다.
+ * 상대가 그 사이에 만든 다른 일차의 동선은 diff에 안 잡히므로 건드리지 않는다.
+ */
+async function syncDayState(trip: Trip, userId: string | null): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  const baseline = dayStateBaselines.get(trip.id) ?? new Map<number, string>();
+  const next = snapshotDayState({
+    routeOptionsByDay: trip.routeOptionsByDay ?? {},
+    generatedRouteByDay: trip.generatedRouteByDay ?? {},
+  });
+
+  const upserts: Array<Record<string, unknown>> = [];
+  for (const [day, key] of next) {
+    if (baseline.get(day) === key) continue;
+    upserts.push({
+      trip_id: trip.id,
+      day,
+      route_options: trip.routeOptionsByDay?.[day] ?? null,
+      generated_route: trip.generatedRouteByDay?.[day] ?? null,
+      updated_by: userId,
+    });
+  }
+  const removedDays = [...baseline.keys()].filter((d) => !next.has(d));
+
+  if (upserts.length > 0) {
+    const { error } = await sb
+      .from('trip_day_state')
+      .upsert(upserts, { onConflict: 'trip_id,day' });
+    if (error) throw error;
+  }
+  if (removedDays.length > 0) {
+    const { error } = await sb
+      .from('trip_day_state')
+      .delete()
+      .eq('trip_id', trip.id)
+      .in('day', removedDays);
+    if (error) throw error;
+  }
+
+  dayStateBaselines.set(trip.id, next);
+}
+
+/** 기준점 대비 바뀐 자료만 행 단위로 반영한다 (핀과 같은 방식). */
+async function syncMaterials(trip: Trip): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  const baseline = materialBaselines.get(trip.id) ?? new Map<string, string>();
+  const list = trip.materials ?? [];
+  const next = new Map<string, string>();
+  const upserts: Array<Record<string, unknown>> = [];
+
+  for (const m of list) {
+    const key = canonicalJson(m);
+    next.set(m.id, key);
+    if (baseline.get(m.id) === key) continue;
+    // created_by / created_by_email / updated_by 는 보내지 않는다 —
+    // DB 트리거(`stamp_trip_material_author`)가 auth.uid() 로 찍고 클라이언트
+    // 값은 무시한다(§22). 여기서 보내면 "설정하는 것처럼 보이는데 무시되는" 코드가
+    // 되어 §19-4 처럼 다음 사람을 속인다.
+    upserts.push({ trip_id: trip.id, material_id: m.id, data: m });
+  }
+  const removed = [...baseline.keys()].filter((id) => !next.has(id));
+
+  if (upserts.length > 0) {
+    const { error } = await sb
+      .from('trip_materials')
+      .upsert(upserts, { onConflict: 'trip_id,material_id' });
+    if (error) throw error;
+  }
+  if (removed.length > 0) {
+    const { error } = await sb
+      .from('trip_materials')
+      .delete()
+      .eq('trip_id', trip.id)
+      .in('material_id', removed);
+    if (error) throw error;
+  }
+
+  materialBaselines.set(trip.id, next);
+}
+
+/**
+ * 여행 본체 행에 붙어 있지 않은 것들(핀·일차 상태·자료)을 한 번에 읽어 붙인다.
+ * 셋은 서로를 기다릴 이유가 없으므로 병렬로 나간다.
+ */
+async function attachPins(trip: Trip, includeAuthors = false): Promise<Trip> {
+  const [pins, dayState, materials] = await Promise.all([
+    readPinsRemote(trip.id, includeAuthors),
+    readDayStateRemote(trip.id),
+    readMaterialsRemote(trip.id, includeAuthors),
+  ]);
+
   const pinnedByDay = pins ?? trip.pinnedByDay;
   pinBaselines.set(trip.id, clonePinnedByDay(pinnedByDay));
-  return { ...trip, pinnedByDay };
+
+  // 조회가 실패했으면 기준점을 세우지 않는다. 빈 값으로 기준을 잡으면
+  // 다음 저장이 "전부 지워졌다"고 판단해 원격 행을 실제로 지운다.
+  const routeOptionsByDay = dayState?.routeOptionsByDay ?? trip.routeOptionsByDay;
+  const generatedRouteByDay = dayState?.generatedRouteByDay ?? trip.generatedRouteByDay;
+  if (dayState) {
+    dayStateBaselines.set(trip.id, snapshotDayState(dayState));
+  } else {
+    dayStateBaselines.delete(trip.id);
+  }
+
+  const nextMaterials = materials ?? trip.materials ?? [];
+  if (materials) {
+    materialBaselines.set(
+      trip.id,
+      new Map(materials.map((m) => [m.id, canonicalJson(m)]))
+    );
+  } else {
+    materialBaselines.delete(trip.id);
+  }
+
+  // 여행 행 스칼라의 기준점. 방금 읽은 값이 곧 "원격과 맞춘 값"이다.
+  tripScalarBaselines.set(trip.id, { totalDays: trip.totalDays, title: trip.title });
+
+  return {
+    ...trip,
+    pinnedByDay,
+    routeOptionsByDay,
+    generatedRouteByDay,
+    materials: nextMaterials,
+  };
 }
 
 /**
@@ -704,14 +1233,68 @@ async function writeRemote(trip: Trip): Promise<void> {
   const sb = getSupabase();
   if (!sb || !trip.ownerId) return;
   const normalized = normalizeTrip(trip);
-  // pinnedByDay는 일부러 빠져 있다 — 핀은 trip_pins 행이 유일한 진실이다.
-  // 기존 payload.pinnedByDay는 이전 시점 값 그대로 남아 롤백 백업 역할만 한다.
-  const payload = {
-    routeOptionsByDay: normalized.routeOptionsByDay,
-    routeOptions: normalized.routeOptionsByDay[normalized.currentDay] ?? DEFAULT_ROUTE_OPTIONS,
-    generatedRouteByDay: normalized.generatedRouteByDay,
-    materials: normalized.materials ?? [],
-  };
+  // payload는 이제 비어 있다. 여기 있던 것이 전부 자기 행으로 옮겨갔다:
+  //   pinnedByDay          → trip_pins        (공동편집 1단계)
+  //   routeOptionsByDay    ┐
+  //   generatedRouteByDay  ├→ trip_day_state  (5단계)
+  //   materials            → trip_materials   (5단계)
+  //
+  // 컬럼 자체는 남긴다 — NOT NULL 이고, 나중에 여행 본체에 붙는 작은 값이
+  // 생기면 다시 쓸 자리다. 기존 값은 `20260908200000` 마이그레이션이 새 테이블로
+  // 옮긴 뒤이고, 되돌릴 근거는 `wayknit_trips_payload_backup_20260908` 에 있다.
+  //
+  // 부수 효과: 자동저장이 700ms마다 다시 쓰던 덩어리가 사라졌다(실측 최대 151kB).
+  // 이제 저장은 바뀐 일차·자료·핀의 행만 건드린다.
+  //
+  // 예외 하나: preferences(관심 테마)는 자기 행이 없어 여기 남겨뒀다. 이 필드가
+  // 원격에 전혀 저장되지 않아(payload가 늘 {}였음) 로그인 사용자는 새로고침마다
+  // 테마 선택이 조용히 초기화되던 버그가 있었다 — 공유마당 테마 필터를 실데이터로
+  // 만들려고 payload를 들여다보다가 발견했다.
+  const payload =
+    normalized.preferences && normalized.preferences.length > 0
+      ? { preferences: normalized.preferences }
+      : {};
+  // 협업자는 upsert를 쓸 수 없다.
+  //
+  // `.upsert()`는 INSERT ... ON CONFLICT DO UPDATE 다. 행이 이미 있어서
+  // 결과적으로 UPDATE가 되더라도 PostgreSQL은 INSERT 정책의 WITH CHECK를
+  // 먼저 본다. wayknit_trips의 정책은 이렇게 갈린다:
+  //   owner_insert  WITH CHECK (auth.uid() = owner_id)          ← 소유자만
+  //   owner_update  USING/CHECK (auth.uid() = owner_id OR is_trip_editor(id))
+  // 그래서 협업자가 저장하면 UPDATE는 허용되는데 INSERT에서 42501로 막혀
+  // "new row violates row-level security policy" 가 났다. 그리고 이 함수는
+  // 여기서 throw 하므로 아래 syncPins()까지 못 가서 — 협업자가 찍은 핀이
+  // 서버에 아예 안 써졌고, 소유자 화면에 Realtime 이벤트도 오지 않았다.
+  // (협업자 본인 화면에만 보였던 이유다.)
+  //
+  // 협업자 경로는 순수 UPDATE로 보낸다. 여행 행을 새로 만드는 건 소유자의
+  // 일이므로 이게 기능적으로도 맞다. 쓰는 컬럼도 공동편집이 실제로 바꾸는
+  // 것만 남긴다 — 소유권(owner_id·slug)과 공개 설정(is_public·plaza_*)은
+  // 소유자만 정한다. current_day는 보는 사람마다 다른 값이라 협업자가
+  // 소유자의 날짜를 끌고 가지 않도록 뺀다.
+  const isCollaborator = Boolean(trip.collaboratorRole);
+  if (isCollaborator) {
+    if (trip.collaboratorRole === 'viewer') return;
+    const { data, error } = await sb
+      .from('wayknit_trips')
+      .update({
+        title: trip.title,
+        total_days: trip.totalDays,
+        payload,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', trip.id)
+      .select('id');
+    if (error) throw error;
+    // 0행이면 RLS나 삭제로 조용히 아무것도 안 써진 것이다. 저장된 척하는
+    // 것보다 시끄럽게 실패하는 편이 낫다.
+    if (!data || data.length === 0) {
+      throw new Error(`협업 저장이 어떤 행에도 적용되지 않았다 (trip ${trip.id})`);
+    }
+    await syncRows(normalized);
+    return;
+  }
+
   const { error } = await sb.from('wayknit_trips').upsert(
     {
       id: trip.id,
@@ -737,8 +1320,45 @@ async function writeRemote(trip: Trip): Promise<void> {
   );
   if (error) throw error;
 
-  // 여행 행이 확실히 존재한 뒤에 핀을 쓴다 — trip_pins.trip_id가 FK다.
-  await syncPins(normalized, trip.ownerId ?? null);
+  // 여행 행이 확실히 존재한 뒤에 자식 행을 쓴다 — 셋 다 trip_id가 FK다.
+  await syncRows(normalized);
+}
+
+/**
+ * 여행 본체 밖에 사는 것들을 한 번에 맞춘다.
+ *
+ * 셋은 서로 독립이지만 **순차로 보낸다.** 병렬로 던지면 하나가 실패했을 때
+ * 나머지가 이미 나가 있어, 어디까지 반영됐는지 알 수 없는 상태가 된다.
+ * 저장은 700ms 디바운스라 왕복 몇 번이 문제가 되지 않는다.
+ */
+async function syncRows(normalized: Trip): Promise<void> {
+  // 방금 원격에 쓴 값이 새 기준점이다. 이걸 안 옮기면 내가 저장한 뒤에도
+  // "내 미저장 편집이 있다"고 판단해 상대의 일차 수 변경을 영영 안 받는다.
+  tripScalarBaselines.set(normalized.id, {
+    totalDays: normalized.totalDays,
+    title: normalized.title,
+  });
+  const actorId = await currentUserId();
+  await syncPins(normalized, actorId);
+  await syncDayState(normalized, actorId);
+  await syncMaterials(normalized);
+}
+
+/**
+ * 지금 로그인한 사람.
+ *
+ * `trip.ownerId`를 쓰면 안 된다 — 협업자가 저장할 때도 소유자 id가 찍혀
+ * 자료를 누가 올렸는지가 통째로 틀어진다. 핀은 DB 트리거
+ * (`stamp_trip_pin_author`)가 `auth.uid()`로 덮어써서 드러나지 않았지만,
+ * `trip_day_state`·`trip_materials`에는 그런 트리거가 없다.
+ *
+ * `getSession()`은 로컬 저장소만 본다 — 네트워크 왕복이 아니다.
+ */
+async function currentUserId(): Promise<string | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data } = await sb.auth.getSession();
+  return data.session?.user?.id ?? null;
 }
 
 // =============================================
@@ -760,6 +1380,24 @@ export async function listCollaborators(tripId: string): Promise<TripCollaborato
     role: r.role as CollaboratorRole,
     createdAt: new Date(r.created_at).getTime(),
   }));
+}
+
+/**
+ * 협업자가 있는지만 알면 되는 곳을 위한 가벼운 조회.
+ *
+ * presence 채널을 열지 말지 정하는 데 쓴다 — 목록 자체는 필요 없고 0인지
+ * 아닌지만 보면 되므로 `head: true`로 행을 받지 않는다. 소유자만 이 질문을
+ * 한다(협업자는 자기 `collaboratorRole`만 봐도 공유 중임을 안다).
+ */
+export async function hasCollaborators(tripId: string): Promise<boolean> {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const { count, error } = await sb
+    .from('trip_collaborators')
+    .select('user_id', { count: 'exact', head: true })
+    .eq('trip_id', tripId);
+  if (error) return false;
+  return (count ?? 0) > 0;
 }
 
 /** 초대 링크. 아직 이메일 발송 수단이 없어 소유자가 직접 전달한다. */
@@ -916,6 +1554,7 @@ async function listPlazaRemote(localeFilter?: string | null): Promise<PlazaListi
       ...l,
       pinnedByDay,
       pinSummary: buildPlazaPinSummary(pinnedByDay, l.totalDays),
+      regions: regionCodesFromPins(pinnedByDay),
     };
   });
 }
@@ -935,13 +1574,15 @@ function listPlazaLocal(): PlazaListing[] {
         slug: t.slug,
         title: t.title,
         displayName: t.plazaDisplayName ?? null,
-        contactEmail: t.plazaContactEmail ?? null,
         center,
         listedAt: t.plazaListedAt ?? t.updatedAt,
         totalDays: t.totalDays,
         pinSummary: buildPlazaPinSummary(t.pinnedByDay, t.totalDays),
         pinnedByDay: t.pinnedByDay,
         locale: t.plazaLocale ?? 'ko',
+        themes: t.preferences ?? [],
+        regions: regionCodesFromPins(t.pinnedByDay),
+        isMock: false,
       };
     });
 }
@@ -1041,10 +1682,24 @@ function ownedBy(trip: Trip, userId?: string | null): boolean {
   return userId ? trip.ownerId === userId : !trip.ownerId;
 }
 
+/**
+ * §29-31 — 오프라인에서 새로고침하면 supabase가 만료된 토큰을 갱신하지 못해
+ * 세션을 못 돌려줄 수 있다. 그러면 userId가 null이 되고 위 `ownedBy`가
+ * "ownerId 없는 여행"만 내 것으로 보게 되어, 로컬에 멀쩡히 있는 내 여행이
+ * 전부 필터에 걸려 사라진다. 기기에 **아직 로그아웃되지 않은 세션이 남아
+ * 있을 때만** 그 세션의 주인으로 메운다 — 진짜 로그아웃(저장된 세션 없음)
+ * 상태에서는 절대 대체하지 않는다(이전 사용자 데이터가 보이면 안 된다).
+ * 판정 근거는 authIdentity.ts 주석 참고.
+ */
+function localOwnerId(userId?: string | null): string | null {
+  return effectiveOwnerId(userId);
+}
+
 function listLocal(userId?: string | null): TripSummary[] {
   const store = readStore();
+  const owner = localOwnerId(userId);
   return store.trips
-    .filter((t) => ownedBy(t, userId))
+    .filter((t) => ownedBy(t, owner))
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .map((t) => ({
       id: t.id,
@@ -1052,12 +1707,13 @@ function listLocal(userId?: string | null): TripSummary[] {
       title: t.title,
       totalDays: t.totalDays,
       updatedAt: t.updatedAt,
+      pinCount: Object.values(t.pinnedByDay).reduce((sum, pins) => sum + pins.length, 0),
     }));
 }
 
 function readLocal(tripId?: string, userId?: string | null): Trip | null {
   const store = readStore();
-  const pool = store.trips.filter((t) => ownedBy(t, userId));
+  const pool = store.trips.filter((t) => ownedBy(t, localOwnerId(userId)));
   if (pool.length === 0) return null;
   const id = tripId ?? store.activeId ?? pool[0]?.id;
   return pool.find((t) => t.id === id) ?? null;
@@ -1112,11 +1768,56 @@ export interface TripsRepo {
   migrateLocalToUser(userId: string): Promise<number>;
 }
 
+/**
+ * 오프라인(또는 네트워크 실패) 대비 — N03(모바일 UX 리포트 2026-09-13).
+ *
+ * 원격 조회 함수들은 supabase가 돌려주는 `error`는 잘 처리하지만, 네트워크가
+ * 아예 끊기면 그 전에 `TypeError: Failed to fetch`로 **던진다.** 그러면
+ * 아래 `return readLocal(...)` 폴백까지 가지도 못하고 호출부(PlannerPage의
+ * 하이드레이션)가 통째로 중단돼, **localStorage에 여행이 멀쩡히 있는데도**
+ * 화면엔 빈 "새 여행"이 뜬다(2026-09-14 비행기모드 재현으로 확인).
+ *
+ * 원격이 어떤 이유로 실패하든 로컬 사본으로 이어가는 게 맞다 — 실패를 삼키는
+ * 게 아니라, 읽기는 로컬이라는 정상 폴백이 이미 있는데 그리로 못 가던 것을
+ * 고치는 것이다.
+ */
+const REMOTE_READ_TIMEOUT_MS = 4000;
+const TIMED_OUT = Symbol('remote-timeout');
+
+async function remoteOrNull<T>(what: string, run: () => Promise<T>): Promise<T | null> {
+  // 오프라인이 확실하면 기다릴 이유가 없다. (navigator.onLine은 "온라인"일 때는
+  // 못 믿지만 "오프라인"일 때는 믿을 만하다 — 빠른 우회로만 쓴다.)
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return null;
+
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const result = await Promise.race([
+      run(),
+      new Promise<typeof TIMED_OUT>((resolve) => {
+        timer = setTimeout(() => resolve(TIMED_OUT), REMOTE_READ_TIMEOUT_MS);
+      }),
+    ]);
+    if (result === TIMED_OUT) {
+      /* 오프라인에서 supabase 호출은 곧바로 실패하지 않고 **응답 없이 매달린다**
+       * (인증 토큰 갱신 대기에 걸린다). 그래서 예외 처리만으로는 부족하고,
+       * 제한 시간을 둬야 로컬 폴백까지 갈 수 있다. */
+      console.warn(`원격 조회 지연(${what}) — 로컬 사본으로 진행합니다`);
+      return null;
+    }
+    return result;
+  } catch (e) {
+    console.warn(`원격 조회 실패(${what}) — 로컬 사본으로 진행합니다`, e);
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export const tripsRepo: TripsRepo = {
   async list(userId) {
     if (isSupabaseConfigured && userId) {
-      const remote = await listRemote(userId);
-      if (remote.length > 0) return remote;
+      const remote = await remoteOrNull('list', () => listRemote(userId));
+      if (remote && remote.length > 0) return remote;
     }
     return listLocal(userId);
   },
@@ -1124,10 +1825,10 @@ export const tripsRepo: TripsRepo = {
   async load(userId, tripId) {
     if (isSupabaseConfigured && userId) {
       if (tripId) {
-        const byId = await readRemoteById(userId, tripId);
+        const byId = await remoteOrNull('load', () => readRemoteById(userId, tripId));
         if (byId) return byId;
       }
-      const latest = await readRemoteLatest(userId);
+      const latest = await remoteOrNull('loadLatest', () => readRemoteLatest(userId));
       if (latest) return latest;
     }
     return readLocal(tripId, userId);
@@ -1135,7 +1836,7 @@ export const tripsRepo: TripsRepo = {
 
   async loadBySlug(slug) {
     if (isSupabaseConfigured) {
-      const remote = await readBySlugRemote(slug);
+      const remote = await remoteOrNull('loadBySlug', () => readBySlugRemote(slug));
       if (remote) return remote;
     }
     return readLocalBySlug(slug);

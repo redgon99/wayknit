@@ -6,25 +6,35 @@
   },
   "upgrade": {
     "title": "Wayknit Plus",
-    "subtitle": "Unbegrenzte Cloud · mehrsprachiger Export · echte Routen",
+    "subtitle": "Unbegrenzte Reisen · mehrsprachiger Export · unbegrenzte Google-Suche",
     "cta": "Auf Plus upgraden",
     "manage": "Abo verwalten",
-    "currentPlan": "Aktueller Plan: {{plan}}"
+    "currentPlan": "Aktueller Plan: {{plan}}",
+    "price": "₩{{amount}} / Monat",
+    "priceNote": "Monatlich automatisch abgebucht. Jederzeit kündbar."
   },
   "limits": {
     "tripCount": "Der Gratisplan erlaubt bis zu {{max}} Reisen.",
-    "exportPlus": "Export ist eine Plus-Funktion.",
-    "cloudLogin": "Melden Sie sich an, um in der Cloud zu speichern.",
-    "searchCap": "Tägliches Suchlimit erreicht. Plus erhöht das Limit."
-  },
-  "features": {
-    "unlimitedTrips": "Unbegrenzte Reisen",
-    "cloudSync": "Cloud-Sync",
-    "exportI18n": "Reiseplan in Ihrer Sprache exportieren",
-    "realRoute": "Unbegrenzte echte Straßenrouten"
+    "searchCap": "Tägliches Suchlimit erreicht. Plus erhöht das Limit.",
+    "materialCount": "Der Gratisplan erlaubt bis zu {{max}} Dateien pro Reise. Plus hebt das Limit auf."
   },
   "checkout": {
     "redirecting": "Zahlung wird geöffnet…",
     "notConfigured": "Die Zahlung ist noch nicht eingerichtet."
+  },
+  "compare": {
+    "feature": "Funktion",
+    "trips": "Gespeicherte Reisen",
+    "tripsFree": "{{n}}",
+    "export": "Route exportieren",
+    "no": "Nicht verfügbar",
+    "exportPlus": "Ja (Ihre Sprache)",
+    "search": "Google-Suche",
+    "searchFree": "{{n}}/Tag",
+    "materials": "Hochgeladene Reiseunterlagen",
+    "materialsFree": "{{n}} pro Reise",
+    "offline": "Offline-Speichern von Unterlagen",
+    "offlinePlus": "Verfügbar",
+    "unlimited": "Unbegrenzt"
   }
 }

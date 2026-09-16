@@ -1,0 +1,18 @@
+{
+  "method": "Run current itineraryTable.ts after TypeScript transpilation; only translation and district formatting are stubbed. No live account writes.",
+  "pinCounts": {
+    "1": 1
+  },
+  "tableRows": [
+    {
+      "key": "1-current-1",
+      "day": 1,
+      "dayLabel": "day 1",
+      "time": "—",
+      "placeName": "현재 핀",
+      "district": "test district",
+      "placeId": "current",
+      "required": false
+    }
+  ]
+}

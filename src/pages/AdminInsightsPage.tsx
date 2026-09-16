@@ -5,6 +5,7 @@ import { AdminHeader } from '../components/AdminHeader';
 import {
   addInsightKeyword,
   deleteInsightKeyword,
+  deleteInsightRawItem,
   listInsightCategoryCounts,
   listInsightCollectionRuns,
   listInsightItems,
@@ -13,6 +14,7 @@ import {
   triggerInsightAnalysis,
   triggerInsightCollection,
   triggerInsightPlaceMatch,
+  updateInsightAnalysisCategory,
   type InsightCollector,
 } from '../lib/adminInsights';
 import {
@@ -23,7 +25,7 @@ import {
   type InsightPeriodPreset,
 } from '../lib/insightCollectPeriod';
 import { triggerGuideDraftFromTips } from '../lib/guides';
-import { isCurrentUserAdmin } from '../lib/admin';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import type {
   InsightCategory,
   InsightCategoryCount,
@@ -70,9 +72,8 @@ function formatDateTime(iso: string | null): string {
 }
 
 export default function AdminInsightsPage() {
-  const { configured, loading, user } = useAuth();
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { configured } = useAuth();
+  const access = useAdminAccess();
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [runningCollector, setRunningCollector] = useState<
@@ -81,6 +82,8 @@ export default function AdminInsightsPage() {
   const [placeMatchResult, setPlaceMatchResult] = useState<string | null>(null);
   const [draftingGuides, setDraftingGuides] = useState(false);
   const [draftingAnalysisId, setDraftingAnalysisId] = useState<string | null>(null);
+  const [deletingRawItemId, setDeletingRawItemId] = useState<string | null>(null);
+  const [recategorizingId, setRecategorizingId] = useState<string | null>(null);
   const [selectedAnalysisIds, setSelectedAnalysisIds] = useState<Set<string>>(new Set());
 
   const [keywords, setKeywords] = useState<InsightKeyword[]>([]);
@@ -168,37 +171,14 @@ export default function AdminInsightsPage() {
   }, [filterSource, filterCategory]);
 
   useEffect(() => {
-    if (!configured || loading || !user) {
-      setCheckingAdmin(false);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      setCheckingAdmin(true);
-      try {
-        const ok = await isCurrentUserAdmin();
-        if (!alive) return;
-        setIsAdmin(ok);
-        if (ok) {
-          await loadAll();
-          await loadItems();
-        }
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : '관리자 확인 실패');
-      } finally {
-        if (alive) setCheckingAdmin(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
+    if (access !== 'ok') return;
+    void loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configured, loading, user, loadAll]);
+  }, [access, loadAll]);
 
   useEffect(() => {
-    if (isAdmin) void loadItems();
-  }, [isAdmin, loadItems]);
+    if (access === 'ok') void loadItems();
+  }, [access, loadItems]);
 
   const keywordsBySource = useMemo(() => {
     const map = new Map<InsightSource, InsightKeyword[]>();
@@ -280,11 +260,11 @@ export default function AdminInsightsPage() {
     );
   }
 
-  if (!loading && !user) {
+  if (access === 'anon') {
     return <Navigate to="/login" replace />;
   }
 
-  if (checkingAdmin) {
+  if (access === 'loading') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -295,7 +275,7 @@ export default function AdminInsightsPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (access === 'denied') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -419,6 +399,39 @@ export default function AdminInsightsPage() {
   const handleDraftOne = async (analysisId: string) => {
     setDraftingAnalysisId(analysisId);
     await handleDraftGuides([analysisId]);
+  };
+
+  const handleDeleteRawItem = async (item: InsightItemWithAnalysis) => {
+    if (!window.confirm('이 원문을 삭제할까요? 연결된 분석·장소 언급도 함께 지워집니다.')) {
+      return;
+    }
+    setDeletingRawItemId(item.id);
+    try {
+      await deleteInsightRawItem(item.id);
+      setItems((prev) => prev.filter((row) => row.id !== item.id));
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : '삭제에 실패했습니다.');
+    } finally {
+      setDeletingRawItemId(null);
+    }
+  };
+
+  const handleRecategorize = async (item: InsightItemWithAnalysis, category: InsightCategory) => {
+    const analysisId = item.analysis?.id;
+    if (!analysisId || category === item.analysis?.category) return;
+    setRecategorizingId(analysisId);
+    try {
+      await updateInsightAnalysisCategory(analysisId, category);
+      setItems((prev) =>
+        prev.map((row) =>
+          row.id === item.id && row.analysis ? { ...row, analysis: { ...row.analysis, category } } : row
+        )
+      );
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : '분류 변경에 실패했습니다.');
+    } finally {
+      setRecategorizingId(null);
+    }
   };
 
   const selectableItems = items.filter((item) => item.analysis != null);
@@ -827,6 +840,7 @@ export default function AdminInsightsPage() {
                   <th>수집시각</th>
                   <th>원문</th>
                   <th>가이드</th>
+                  <th>삭제</th>
                 </tr>
               </thead>
               <tbody>
@@ -834,6 +848,7 @@ export default function AdminInsightsPage() {
                   const analysisId = item.analysis?.id;
                   const canDraft = Boolean(analysisId);
                   const isRowDrafting = draftingAnalysisId === analysisId;
+                  const isDeleting = deletingRawItemId === item.id;
                   return (
                     <tr key={item.id}>
                       <td>
@@ -860,7 +875,21 @@ export default function AdminInsightsPage() {
                       </td>
                       <td>
                         {item.analysis ? (
-                          <span className="admin-pill">{CATEGORY_LABEL[item.analysis.category]}</span>
+                          <select
+                            className="admin-inline-select"
+                            value={item.analysis.category}
+                            disabled={recategorizingId === item.analysis.id}
+                            onChange={(e) =>
+                              void handleRecategorize(item, e.target.value as InsightCategory)
+                            }
+                            title="AI 분류가 틀렸으면 여기서 고칩니다"
+                          >
+                            {(Object.keys(CATEGORY_LABEL) as InsightCategory[]).map((c) => (
+                              <option key={c} value={c}>
+                                {CATEGORY_LABEL[c]}
+                              </option>
+                            ))}
+                          </select>
                         ) : (
                           <span className="admin-cell-sub">미분석</span>
                         )}
@@ -889,12 +918,23 @@ export default function AdminInsightsPage() {
                           <span className="admin-cell-sub">분석 필요</span>
                         )}
                       </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="admin-link-btn admin-link-btn-danger"
+                          disabled={isDeleting}
+                          title="잘못 수집된 원문을 지웁니다"
+                          onClick={() => void handleDeleteRawItem(item)}
+                        >
+                          {isDeleting ? '삭제 중…' : '삭제'}
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
                 {items.length === 0 && (
                   <tr>
-                    <td colSpan={8}>표시할 항목이 없습니다.</td>
+                    <td colSpan={9}>표시할 항목이 없습니다.</td>
                   </tr>
                 )}
               </tbody>

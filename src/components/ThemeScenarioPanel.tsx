@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, type IconName } from './Icon';
 import { normalizeLocale } from '../lib/locale';
 import { CATEGORY_MAP } from '../lib/categories';
 import type { Place, PinnedPlace } from '../types';
 import type { PinImportResult } from '../lib/importPins';
-import { listPublishedScenarios } from '../lib/scenarioCatalog';
+import { listPublishedScenarios, listPublishedScenarioCounts } from '../lib/scenarioCatalog';
 import { SCENARIO_THEMES, applyScenarioToTrip, scenarioStopToPlace, type ScenarioTheme, type TourScenario } from '../lib/tourScenario';
 
 const THEME_ICON: Record<ScenarioTheme, IconName> = {
@@ -33,6 +33,12 @@ interface Props {
   pinnedByDay: Record<number, PinnedPlace[]>;
   onApply: (result: PinImportResult) => void;
   onSelectPlace?: (place: Place) => void;
+  /**
+   * U13(모바일 UX 리포트 2026-09-13) — 고른 테마에 준비된 시나리오가
+   * 없을 때 "다음 행동"으로 검색 탭/시트로 보낸다. 안 넘기면 버튼 자체가
+   * 안 뜬다(호출부가 검색 이동 수단이 없는 맥락일 수 있어서).
+   */
+  onGoToSearch?: () => void;
 }
 
 export function ThemeScenarioPanel({
@@ -41,6 +47,7 @@ export function ThemeScenarioPanel({
   pinnedByDay,
   onApply,
   onSelectPlace,
+  onGoToSearch,
 }: Props) {
   const { t, i18n } = useTranslation('planner');
   const [theme, setTheme] = useState<ScenarioTheme | null>(null);
@@ -48,7 +55,18 @@ export function ThemeScenarioPanel({
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [scenario, setScenario] = useState<TourScenario | null>(null);
   const [appliedCount, setAppliedCount] = useState<number | null>(null);
+  const [themeCounts, setThemeCounts] = useState<Partial<Record<ScenarioTheme, number>> | null>(null);
   const optionsRequestRef = useRef<ScenarioTheme | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void listPublishedScenarioCounts().then((counts) => {
+      if (alive) setThemeCounts(counts);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const handleSelectTheme = (id: ScenarioTheme) => {
     setTheme(id);
@@ -89,11 +107,13 @@ export function ThemeScenarioPanel({
           <div className="theme-scenario-field">
             <span className="theme-scenario-field-label">{t('scenario.themeLabel')}</span>
             <div className="theme-scenario-theme-grid" role="group">
-              {SCENARIO_THEMES.map((id) => (
+              {SCENARIO_THEMES.map((id) => {
+                const count = themeCounts?.[id] ?? 0;
+                return (
                 <button
                   key={id}
                   type="button"
-                  className={`theme-scenario-theme-card theme-scenario-theme-card--${id} ${theme === id ? 'active' : ''}`}
+                  className={`theme-scenario-theme-card theme-scenario-theme-card--${id} ${theme === id ? 'active' : ''} ${themeCounts && count === 0 ? 'is-empty' : ''}`}
                   aria-pressed={theme === id}
                   title={t(`scenario.themeDesc.${id}`)}
                   onClick={() => handleSelectTheme(id)}
@@ -102,11 +122,21 @@ export function ThemeScenarioPanel({
                     <Icon name={THEME_ICON[id]} size={18} />
                   </span>
                   <span className="theme-scenario-theme-name">{t(`scenario.theme.${id}`)}</span>
+                  {/*
+                    U13(모바일 UX 리포트 2026-09-13) — 테마를 눌러야만
+                    시나리오 유무를 알 수 있었다. 개수를 미리 보여준다.
+                  */}
+                  {themeCounts && (
+                    <span className="theme-scenario-theme-count">
+                      {count > 0 ? t('scenario.courseCount', { count }) : t('scenario.courseCountZero')}
+                    </span>
+                  )}
                   <span className="theme-scenario-theme-check" aria-hidden>
                     <Icon name="check" size={12} />
                   </span>
                 </button>
-              ))}
+                );
+              })}
             </div>
             {theme && (
               <p className="theme-scenario-theme-desc-active">{t(`scenario.themeDesc.${theme}`)}</p>
@@ -120,7 +150,48 @@ export function ThemeScenarioPanel({
                 <p className="theme-scenario-days-hint">{t('scenario.catalogLoading')}</p>
               )}
               {!loadingOptions && options.length === 0 && (
-                <p className="theme-scenario-error">{t('scenario.catalogEmpty')}</p>
+                <div className="theme-scenario-empty">
+                  <p className="theme-scenario-error">{t('scenario.catalogEmpty')}</p>
+                  {/*
+                    U13(모바일 UX 리포트 2026-09-13) — "완료 기준: 결과가
+                    없을 때 유효한 다음 행동을 제공한다". 다른 테마로 바로
+                    넘어가거나 직접 장소를 검색하는 두 경로를 준다.
+                  */}
+                  {SCENARIO_THEMES.filter(
+                    (id) => id !== theme && (themeCounts?.[id] ?? 0) > 0
+                  ).length > 0 && (
+                    <div className="theme-scenario-empty-alt">
+                      <span className="theme-scenario-empty-alt-label">
+                        {t('scenario.tryOtherTheme')}
+                      </span>
+                      <div className="theme-scenario-empty-alt-chips">
+                        {SCENARIO_THEMES.filter(
+                          (id) => id !== theme && (themeCounts?.[id] ?? 0) > 0
+                        ).map((id) => (
+                          <button
+                            key={id}
+                            type="button"
+                            className="theme-scenario-empty-alt-chip"
+                            onClick={() => handleSelectTheme(id)}
+                          >
+                            <Icon name={THEME_ICON[id]} size={14} />
+                            {t(`scenario.theme.${id}`)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {onGoToSearch && (
+                    <button
+                      type="button"
+                      className="theme-scenario-empty-search-btn"
+                      onClick={onGoToSearch}
+                    >
+                      <Icon name="search" size={15} />
+                      {t('scenario.goToSearch')}
+                    </button>
+                  )}
+                </div>
               )}
               {!loadingOptions && options.length > 0 && (
                 <div className="theme-scenario-option-list">

@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
+import { ThemePreferenceChips } from './ThemePreferenceChips';
 import { formatDate } from '../lib/format';
 import { normalizeLocale } from '../lib/locale';
 import i18n from '../lib/i18n';
@@ -9,8 +10,12 @@ import { MapView } from './MapView';
 import { ReportButton } from './ReportButton';
 import { trackEvent } from '../lib/analytics';
 import { useAuth } from '../contexts/AuthContext';
+import { canCreateTrip, FREE_MAX_TRIPS } from '../lib/subscription';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { loadKakaoSdk } from '../lib/kakao';
 import { isSupabaseConfigured } from '../lib/supabase';
+import { KOREA_REGIONS, type KoreaRegion } from '../lib/koreaRegions';
+import type { TripTheme } from '../types';
 import {
   cloneTripFromShare,
   getImportedSourceIds,
@@ -25,14 +30,28 @@ const KOREA_CENTER = { lat: 36.38, lng: 127.51 };
 const KOREA_MAP_LEVEL = 13;
 
 type PlazaTab = 'board' | 'map';
+type DayFilter = 'all' | '1' | '2' | '3' | '4plus';
+const DAY_FILTER_VALUES: DayFilter[] = ['all', '1', '2', '3', '4plus'];
+
+function matchesDayFilter(totalDays: number, filter: DayFilter): boolean {
+  if (filter === 'all') return true;
+  if (filter === '4plus') return totalDays >= 4;
+  return totalDays === Number(filter);
+}
 
 export function SharePlazaPanel() {
   const { t } = useTranslation('share');
-  const { user } = useAuth();
+  const { t: tb } = useTranslation('billing');
+  const { user, plan, isAdmin } = useAuth();
   const locale = normalizeLocale(i18n.language);
   const [sdkReady, setSdkReady] = useState(false);
   const [tab, setTab] = useState<PlazaTab>('board');
+  const isMobile = useIsMobile();
   const [localeFilter, setLocaleFilter] = useState<string>('');
+  const [themeFilter, setThemeFilter] = useState<TripTheme[]>([]);
+  const [dayFilter, setDayFilter] = useState<DayFilter>('all');
+  const [regionFilter, setRegionFilter] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [entries, setEntries] = useState<PlazaListing[]>([]);
   const [importedIds, setImportedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -68,9 +87,34 @@ export function SharePlazaPanel() {
     void refresh();
   }, [refresh]);
 
+  const filteredEntries = useMemo(
+    () =>
+      entries.filter((e) => {
+        if (themeFilter.length > 0 && !themeFilter.some((t) => e.themes.includes(t))) {
+          return false;
+        }
+        if (regionFilter.length > 0 && !regionFilter.some((r) => e.regions.includes(r))) {
+          return false;
+        }
+        return matchesDayFilter(e.totalDays, dayFilter);
+      }),
+    [entries, themeFilter, dayFilter, regionFilter]
+  );
+
+  const activeFilterCount =
+    themeFilter.length + regionFilter.length + (dayFilter === 'all' ? 0 : 1);
+
+  // 실제로 등장하는 지역만 보여준다 — 핀 주소가 없어 지역을 못 정한 여행도 많아,
+  // 17개를 다 늘어놓으면 대부분 눌러도 결과가 0개인 빈 칩이 된다.
+  const availableRegions = useMemo(() => {
+    const present = new Set<string>();
+    for (const e of entries) for (const r of e.regions) present.add(r);
+    return KOREA_REGIONS.filter((r) => present.has(r.code));
+  }, [entries]);
+
   const plazaMarkers = useMemo(
     () =>
-      entries
+      filteredEntries
         .filter((e) => e.center != null)
         .map((e) => ({
           id: e.id,
@@ -78,12 +122,26 @@ export function SharePlazaPanel() {
           lng: e.center!.lng,
           title: e.title,
         })),
-    [entries]
+    [filteredEntries]
   );
 
   const handlePull = useCallback(
     async (listing: PlazaListing) => {
       if (importedIds.has(listing.id) || pullingId) return;
+      /*
+       * "내 여행으로 복사"도 새 여행을 만드는 또 하나의 경로였는데 Free
+       * 캡(여행 3개) 체크가 없었다 — "+ 새 여행" 버튼에만 걸려 있던 캡의
+       * 구멍 중 하나(2026-09-15 사용자 제보로 발견, PlannerPage.tsx의
+       * 세션 복구 경로와 같은 종류). 복사도 결국 새 행 하나를 만드는 거라
+       * 똑같이 막아야 한다.
+       */
+      const userId = user?.id ?? null;
+      const currentCount = (await tripsRepo.list(userId)).length;
+      if (!canCreateTrip(plan, currentCount, isAdmin)) {
+        setToast(tb('limits.tripCount', { max: FREE_MAX_TRIPS }));
+        setTimeout(() => setToast(null), 3500);
+        return;
+      }
       setPullingId(listing.id);
       try {
         const full =
@@ -103,16 +161,58 @@ export function SharePlazaPanel() {
         setPullingId(null);
       }
     },
-    [importedIds, pullingId, user?.id, t]
+    [importedIds, pullingId, user?.id, t, plan, isAdmin, tb]
   );
 
-  return (
-    <div className="plaza-panel">
-      {!isSupabaseConfigured && (
-        <p className="plaza-local-notice">
-          {t('plaza.localNotice')}
-        </p>
+  const toggleRegion = useCallback((code: string) => {
+    setRegionFilter((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
+    );
+  }, []);
+
+  const filterFields: ReactNode = (
+    <>
+      <ThemePreferenceChips selected={themeFilter} onChange={setThemeFilter} />
+
+      <div className="plaza-day-filter">
+        <span className="theme-chips-label">{t('plaza.dayFilterLabel')}</span>
+        <div className="theme-chips-row" role="group" aria-label={t('plaza.dayFilterLabel')}>
+          {DAY_FILTER_VALUES.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`theme-chip ${dayFilter === value ? 'active' : ''}`}
+              aria-pressed={dayFilter === value}
+              onClick={() => setDayFilter(value)}
+            >
+              {t(`plaza.day.${value}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {availableRegions.length > 0 && (
+        <div className="plaza-day-filter">
+          <span className="theme-chips-label">{t('plaza.regionFilterLabel')}</span>
+          <div className="theme-chips-row" role="group" aria-label={t('plaza.regionFilterLabel')}>
+            {availableRegions.map((region) => {
+              const active = regionFilter.includes(region.code);
+              return (
+                <button
+                  key={region.code}
+                  type="button"
+                  className={`theme-chip ${active ? 'active' : ''}`}
+                  aria-pressed={active}
+                  onClick={() => toggleRegion(region.code)}
+                >
+                  {t(region.labelKey)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       )}
+
       <label className="plaza-locale-filter">
         <span>{t('plaza.filterLocale')}</span>
         <select
@@ -132,6 +232,58 @@ export function SharePlazaPanel() {
           <option value="ru">{t('plaza.localeRu')}</option>
         </select>
       </label>
+    </>
+  );
+
+  return (
+    <div className="plaza-panel">
+      {!isSupabaseConfigured && (
+        <p className="plaza-local-notice">
+          {t('plaza.localNotice')}
+        </p>
+      )}
+      {isMobile ? (
+        <>
+          <div className="plaza-filter-bar">
+            <span className="plaza-filter-summary">
+              {activeFilterCount > 0
+                ? t('plaza.filterSummaryActive', {
+                    count: activeFilterCount,
+                    results: filteredEntries.length,
+                  })
+                : t('plaza.filterSummaryEmpty', { count: entries.length })}
+            </span>
+            <button
+              type="button"
+              className={`plaza-filter-icon-btn ${filterOpen ? 'active' : ''}`}
+              onClick={() => setFilterOpen((v) => !v)}
+              aria-expanded={filterOpen}
+              aria-label={t('plaza.filters')}
+              title={t('plaza.filters')}
+            >
+              <Icon name="filter" size={16} />
+              {activeFilterCount > 0 && (
+                <span className="plaza-filter-badge">{activeFilterCount}</span>
+              )}
+            </button>
+          </div>
+
+          {filterOpen && <div className="plaza-filter-panel">{filterFields}</div>}
+        </>
+      ) : (
+        <div className="plaza-filter-panel">
+          {filterFields}
+          <span className="plaza-filter-panel-count">
+            {activeFilterCount > 0
+              ? t('plaza.filterSummaryActive', {
+                  count: activeFilterCount,
+                  results: filteredEntries.length,
+                })
+              : t('plaza.filterSummaryEmpty', { count: entries.length })}
+          </span>
+        </div>
+      )}
+
       <div className="plaza-tabs" role="tablist">
         <button
           type="button"
@@ -159,18 +311,44 @@ export function SharePlazaPanel() {
           {!loading && entries.length === 0 && (
             <p className="plaza-empty">{t('plaza.empty')}</p>
           )}
+          {!loading && entries.length > 0 && filteredEntries.length === 0 && (
+            <p className="plaza-empty">{t('plaza.filterEmpty')}</p>
+          )}
           {!loading &&
-            entries.map((entry) => {
+            filteredEntries.map((entry) => {
               const pulled = importedIds.has(entry.id);
               const isPulling = pullingId === entry.id;
+              /*
+                U16(모바일 UX 리포트 2026-09-13) — 카드에 작성자·날짜·
+                제목·전체 요약 문장(pinSummary, "1일차: 장소1, 장소2,
+                장소3 외 55곳 · 2일차: …")만 있어서, 며칠짜리인지 얼마나
+                빡빡한지(장소 수) 한눈에 판단하기 어려웠다. 이미 갖고
+                있는 데이터(totalDays·pinnedByDay·regions)로 구조화된
+                요약 칩 3종을 문장 요약 위에 얹는다 — 문장 요약 자체는
+                실제 장소 이름까지 보여줘 유용하니 그대로 둔다.
+              */
+              const totalPlaceCount = Object.values(entry.pinnedByDay).reduce(
+                (sum, list) => sum + (list?.length ?? 0),
+                0
+              );
+              const regionLabels = entry.regions
+                .map((code) => KOREA_REGIONS.find((r) => r.code === code))
+                .filter((r): r is KoreaRegion => !!r)
+                .slice(0, 2);
+              const extraRegionCount = entry.regions.length - regionLabels.length;
               return (
                 <article key={entry.id} id={`plaza-row-${entry.id}`} className="plaza-board-row">
                   <div className="plaza-board-meta">
+                    {/* F04(모바일 감사 보고서) — 작성자 이메일 원문을 비로그인
+                        방문자에게도 그대로 보여주고 있었다. 클릭도 안 되는
+                        평문이라 얻는 기능은 없이 스팸 수집 위험만 있어 아예
+                        없앴다(트립 데이터 자체가 안 실려 오도록 PLAZA_LIST_SELECT
+                        에서도 뺐다). 작성자 표시는 별명 하나로 충분하다. */}
                     <span className="plaza-board-author">
                       {entry.displayName?.trim() || t('plaza.anonymous')}
                     </span>
-                    {entry.contactEmail && (
-                      <span className="plaza-board-email">{entry.contactEmail}</span>
+                    {entry.isMock && (
+                      <span className="plaza-mock-badge">{t('plaza.demoBadge')}</span>
                     )}
                     <time
                       className="plaza-board-date"
@@ -188,6 +366,23 @@ export function SharePlazaPanel() {
                     </time>
                   </div>
                   <h2 className="plaza-board-trip-title">{entry.title}</h2>
+                  <div className="plaza-board-stats">
+                    <span className="plaza-stat-chip">
+                      <Icon name="calendar" size={12} />
+                      {t('plaza.statDays', { count: entry.totalDays })}
+                    </span>
+                    <span className="plaza-stat-chip">
+                      <Icon name="mapPin" size={12} />
+                      {t('plaza.statPlaces', { count: totalPlaceCount })}
+                    </span>
+                    {regionLabels.length > 0 && (
+                      <span className="plaza-stat-chip">
+                        <Icon name="navigate" size={12} />
+                        {regionLabels.map((r) => t(r.labelKey)).join(', ')}
+                        {extraRegionCount > 0 && ` +${extraRegionCount}`}
+                      </span>
+                    )}
+                  </div>
                   <p className="plaza-board-summary">{entry.pinSummary}</p>
                   <div className="plaza-board-actions">
                     <Link to={`/trip/${entry.slug}`} className="plaza-board-link">

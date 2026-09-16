@@ -8,6 +8,7 @@
 import { getSupabase, isSupabaseConfigured } from './supabase';
 
 export interface DashboardSummary {
+  users: { total: number; test: number };
   trips: { total: number; public: number; listed: number; owners: number; created_7d: number };
   reports: { open: number; total: number };
   guides: { published: number; draft: number; total: number };

@@ -10,9 +10,11 @@ import {
 } from '../lib/mapMarkers';
 import { GoogleMapView } from './GoogleMapView';
 import type { MapProvider } from '../lib/mapProvider';
-import { useLongPress } from '../hooks/useLongPress';
+import { useLongPress, type LongPressPoint } from '../hooks/useLongPress';
 import { mapCentersNear, searchResultFitPadding, shouldAnimateMapCenter, validMapPoints, type MapLatLng } from '../lib/mapCenterMotion';
 import i18n from '../lib/i18n';
+import { COMPARE_LINE_WEIGHT } from '../lib/routeCompare';
+import type { OptimizeBy } from '../types';
 
 interface Props {
   provider?: MapProvider;
@@ -34,13 +36,15 @@ interface Props {
   selectedOptimizeBy?: string;
   /** 좌측 패널이 지도를 가릴 때, 대상이 남은 영역 한가운데 오도록 미는 픽셀 */
   centerOffsetX?: number;
+  /** 모바일 상단바·하단시트가 지도를 가릴 때 미는 픽셀(위로 밀면 음수) */
+  centerOffsetY?: number;
   nearbySearchCenter?: { lat: number; lng: number } | null;
   pickingOriginFromMap?: boolean;
   pickingPinFromMap?: boolean;
   onOriginPicked?: (lat: number, lng: number, address: string) => void;
   onPinLocationPicked?: (lat: number, lng: number, address: string) => void;
-  /** 모바일 지도 롱프레스 — 좌표 없이 "핀 찍기 모드 진입" 신호만 전달 */
-  onMapLongPress?: () => void;
+  /** 모바일 지도 롱프레스 — 누른 지점(뷰포트 픽셀)을 함께 전달해 말풍선이 그 자리를 가리키게 한다 */
+  onMapLongPress?: (point: LongPressPoint) => void;
   draftPinLocation?: { lat: number; lng: number } | null;
   onSelectPlace?: (place: Place) => void;
   onPinnedMarkerClick?: (place: Place) => void;
@@ -92,6 +96,7 @@ export function MapView({
         compareRoutes={rest.compareRoutes}
         selectedOptimizeBy={rest.selectedOptimizeBy}
         centerOffsetX={rest.centerOffsetX}
+        centerOffsetY={rest.centerOffsetY}
         nearbySearchCenter={rest.nearbySearchCenter}
         pickingOriginFromMap={rest.pickingOriginFromMap}
         pickingPinFromMap={rest.pickingPinFromMap}
@@ -143,6 +148,7 @@ function KakaoMapView({
 
 
   centerOffsetX = 0,
+  centerOffsetY = 0,
   nearbySearchCenter = null,
   pickingOriginFromMap = false,
   pickingPinFromMap = false,
@@ -294,12 +300,12 @@ function KakaoMapView({
      * 이동량이 누적된다(실제로 4배까지 밀려 화면 밖으로 나갔다). 대신 대상을
      * 중앙에 놓은 뒤 투영으로 "offset만큼 왼쪽 지점"의 좌표를 구해 그것을
      * 중심으로 삼는다. 동기 계산이라 몇 번을 실행해도 결과가 같다. */
-    if (centerOffsetX) {
+    if (centerOffsetX || centerOffsetY) {
       mapRef.current.setCenter(latlng);
       const projection = mapRef.current.getProjection();
       if (projection) {
         const c = projection.containerPointFromCoords(latlng);
-        const shifted = new window.kakao.maps.Point(c.x - centerOffsetX, c.y);
+        const shifted = new window.kakao.maps.Point(c.x - centerOffsetX, c.y - centerOffsetY);
         mapRef.current.setCenter(projection.coordsFromContainerPoint(shifted));
       }
       return;
@@ -310,7 +316,7 @@ function KakaoMapView({
     } else if (!mapCentersNear(current, target)) {
       mapRef.current.setCenter(latlng);
     }
-  }, [center.lat, center.lng, fitSearchBounds, centerOffsetX, level]);
+  }, [center.lat, center.lng, fitSearchBounds, centerOffsetX, centerOffsetY, level]);
 
   useEffect(() => {
     if (!mapRef.current || fitSearchBounds) return;
@@ -807,13 +813,16 @@ function KakaoMapView({
     for (const r of compareRoutes) {
       if (r.path.length < 2) continue;
       const selected = r.optimizeBy === selectedOptimizeBy;
+      const baseWeight = COMPARE_LINE_WEIGHT[r.optimizeBy as OptimizeBy] ?? 4;
       const line = new window.kakao.maps.Polyline({
         path: r.path.map((p) => new window.kakao.maps.LatLng(p.lat, p.lng)),
-        strokeWeight: selected ? 6 : 4,
+        strokeWeight: selected ? 7 : baseWeight,
         strokeColor: r.color,
-        strokeOpacity: selected ? 0.9 : 0.4,
+        strokeOpacity: selected ? 0.9 : 0.6,
         strokeStyle: 'solid',
-        zIndex: selected ? 3 : 2,
+        // 선택된 것이 항상 맨 위, 미선택끼리는 얇은 쪽이 위 — 겹치는 구간에서
+        // 두꺼운 쪽 테두리가 옆으로 드러나 층이 보인다(§6-7).
+        zIndex: selected ? 10 : 10 - baseWeight,
       });
       line.setMap(mapRef.current);
       comparePolylinesRef.current.push(line);
@@ -865,7 +874,7 @@ function KakaoMapView({
     }
   }, [generatedRoute, fitRouteBounds]);
 
-  const longPress = useLongPress(() => onMapLongPress?.());
+  const longPress = useLongPress((point) => onMapLongPress?.(point));
 
   return (
     <div

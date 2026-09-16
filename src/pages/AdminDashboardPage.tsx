@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminHeader } from '../components/AdminHeader';
-import { isCurrentUserAdmin } from '../lib/admin';
 import {
   deriveAlerts,
   fetchDashboardSummary,
@@ -51,9 +51,8 @@ function MetricCard({
 }
 
 export default function AdminDashboardPage() {
-  const { configured, loading, user } = useAuth();
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { configured } = useAuth();
+  const access = useAdminAccess();
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -71,29 +70,9 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (!configured || loading || !user) {
-      setCheckingAdmin(false);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      setCheckingAdmin(true);
-      try {
-        const ok = await isCurrentUserAdmin();
-        if (!alive) return;
-        setIsAdmin(ok);
-        if (ok) await load();
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : '관리자 확인 실패');
-      } finally {
-        if (alive) setCheckingAdmin(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [configured, loading, user, load]);
+    if (access !== 'ok') return;
+    void load();
+  }, [access, load]);
 
   const alerts = useMemo(() => (summary ? deriveAlerts(summary) : []), [summary]);
 
@@ -107,8 +86,8 @@ export default function AdminDashboardPage() {
       </main>
     );
   }
-  if (!loading && !user) return <Navigate to="/login" replace />;
-  if (checkingAdmin) {
+  if (access === 'anon') return <Navigate to="/login" replace />;
+  if (access === 'loading') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -118,7 +97,7 @@ export default function AdminDashboardPage() {
       </main>
     );
   }
-  if (!isAdmin) {
+  if (access === 'denied') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -169,12 +148,14 @@ export default function AdminDashboardPage() {
             <h2>영역별 현황</h2>
             <div className="dash-grid">
               <MetricCard
-                title="여행 · 사용자"
+                title="여행 · 가입자"
                 to="/admin"
                 primary={summary.trips.total}
                 primaryLabel="여행"
                 details={[
-                  { label: '사용자', value: summary.trips.owners },
+                  { label: '가입자', value: summary.users.total },
+                  { label: '여행 소유자', value: summary.trips.owners },
+                  { label: '테스트 계정', value: summary.users.test },
                   { label: '공개', value: summary.trips.public },
                   { label: '최근 7일', value: summary.trips.created_7d },
                 ]}
