@@ -39,6 +39,9 @@ export const AUDIT_TABLE_LABEL: Record<string, string> = {
   content_reports: '신고 검수',
   /* 트리거가 아니라 신고 처리 함수가 직접 INSERT한다(20260904050000) — 드롭다운에 빠져 있었음(A4) */
   wayknit_trips: '여행(신고 조치)',
+  /* D3(2026-09-16) — UPDATE/DELETE만 감사(content_reports와 같은 이유:
+   * AI 초안 생성 INSERT 홍수를 걸러내고 사람의 승인·수정·게시·삭제만 남긴다) */
+  distribution_posts: '배포 게시물',
 };
 
 export const AUDIT_TABLES = Object.keys(AUDIT_TABLE_LABEL);
@@ -194,6 +197,8 @@ export function auditTargetHref(entry: AdminAuditEntry): string | null {
       return `/admin/reports?id=${id}`;
     case 'distribution_accounts':
       return `/admin/distribution?account=${id}`;
+    case 'distribution_posts':
+      return `/admin/distribution?post=${id}`;
     default:
       return null;
   }

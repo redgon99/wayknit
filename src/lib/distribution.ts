@@ -120,6 +120,7 @@ export async function updateDistributionPost(
     mediaUrls: string[];
     accountId: string | null;
     status: DistributionPostStatus;
+    scheduledAt: string | null;
   }>
 ): Promise<void> {
   const sb = requireSupabase();
@@ -129,12 +130,72 @@ export async function updateDistributionPost(
   if (patch.mediaUrls !== undefined) row.media_urls = patch.mediaUrls;
   if (patch.accountId !== undefined) row.account_id = patch.accountId;
   if (patch.status !== undefined) row.status = patch.status;
+  if (patch.scheduledAt !== undefined) row.scheduled_at = patch.scheduledAt;
   const { error } = await sb.from('distribution_posts').update(row).eq('id', id);
   if (error) throw error;
 }
 
+/** D2 — "게시" 클릭 한 번이 승인+게시를 같이 하던 것을 분리한 첫 단계 */
 export async function approveDistributionPost(id: string): Promise<void> {
   await updateDistributionPost(id, { status: 'approved' });
+}
+
+/**
+ * D2 — 예약. 실제로 그 시각에 자동 게시하는 크론은 아직 없다(별도 작업).
+ * 지금은 "이 시각에 게시할 예정"이라는 기록 + status='scheduled' 필터링
+ * 용도다 — 예약 시각이 지나도 관리자가 직접 "게시"를 눌러야 나간다.
+ */
+export async function scheduleDistributionPost(id: string, scheduledAtIso: string): Promise<void> {
+  await updateDistributionPost(id, { status: 'scheduled', scheduledAt: scheduledAtIso });
+}
+
+export async function unscheduleDistributionPost(id: string): Promise<void> {
+  await updateDistributionPost(id, { status: 'approved', scheduledAt: null });
+}
+
+/**
+ * D2 — 중복 게시 방지(생성 전). 고른 가이드가 이미 그 플랫폼×국가 조합으로
+ * 진행 중(실패 제외)인지 미리 안다. 어떤 가이드가 실제로 쓰일지는 AI가
+ * 골라 정확히 맞힐 수 없지만, "이미 있다"는 신호만으로 충분하다.
+ */
+export async function listActiveCombos(
+  guideIds: string[],
+  platforms: DistributionPlatform[],
+  countries: string[]
+): Promise<Set<string>> {
+  if (guideIds.length === 0 || platforms.length === 0 || countries.length === 0) return new Set();
+  const sb = requireSupabase();
+  const { data, error } = await sb
+    .from('distribution_posts')
+    .select('source_guide_id, platform, country')
+    .in('source_guide_id', guideIds)
+    .in('platform', platforms)
+    .in('country', countries)
+    .neq('status', 'failed');
+  if (error) throw error;
+  return new Set(
+    (data ?? []).map((r) => `${r.source_guide_id as string}|${r.platform as string}|${r.country as string}`)
+  );
+}
+
+/**
+ * D2 — 중복 게시 방지(게시 직전 마지막 확인). 같은 가이드×플랫폼×국가로
+ * 이미 게시된(posted) 다른 행이 있으면 진짜 중복이다 — 하드 차단.
+ */
+export async function hasPostedDuplicate(post: DistributionPost): Promise<boolean> {
+  if (!post.sourceGuideId) return false;
+  const sb = requireSupabase();
+  const { data, error } = await sb
+    .from('distribution_posts')
+    .select('id')
+    .eq('source_guide_id', post.sourceGuideId)
+    .eq('platform', post.platform)
+    .eq('country', post.country)
+    .eq('status', 'posted')
+    .neq('id', post.id)
+    .limit(1);
+  if (error) throw error;
+  return (data ?? []).length > 0;
 }
 
 export async function deleteDistributionPost(id: string): Promise<void> {

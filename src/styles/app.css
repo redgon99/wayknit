@@ -10199,6 +10199,32 @@ button {
   border: 1px solid var(--color-border);
 }
 
+/* D2(관리자 검토 2026-09-16) — 배포 게시 전 미리보기 카드.
+   픽셀 단위 SNS 재현이 아니라 "이대로 나가면 이렇게 보인다"를 빠르게
+   확인하는 용도라 플랫폼 실제 UI를 흉내 내지 않고 카드 하나로 통일한다. */
+.admin-distribution-preview {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 400;
+  background: var(--color-surface-subtle, rgba(0, 0, 0, 0.02));
+}
+
+.admin-distribution-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+/* 감사 로그 대상 링크(?account=)로 들어왔을 때 어떤 계정인지 눈에 띄게 */
+.admin-distribution-account-highlight {
+  outline: 2px solid var(--color-accent, #2563eb);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 /* =============================================
    Planner redesign chrome (PC 시안)
    ============================================= */
