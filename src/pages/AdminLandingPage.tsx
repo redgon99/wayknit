@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminHeader } from '../components/AdminHeader';
 import { Icon } from '../components/Icon';
 import { SortableContainer, SortableItem } from '../components/Sortable';
-import { isCurrentUserAdmin } from '../lib/admin';
 import {
   addChild,
   createLandingNode,
@@ -43,12 +42,15 @@ const DEFAULT_GALLERY = [
 ];
 
 export default function AdminLandingPage() {
-  const { configured, loading, user } = useAuth();
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const access = useAdminAccess();
   const [error, setError] = useState<string | null>(null);
-  const [locale, setLocale] = useState<AppLocale>('ko');
-  const [promo, setPromo] = useState<LandingPromo>(() => emptyLandingPromo('ko'));
+  /* 감사 로그의 대상 링크(`/admin/landing?locale=ja`)로 들어오면 그 언어를 바로 연다 */
+  const [searchParams] = useSearchParams();
+  const [locale, setLocale] = useState<AppLocale>(() => {
+    const q = searchParams.get('locale');
+    return q && (SUPPORTED_LOCALES as readonly string[]).includes(q) ? (q as AppLocale) : 'ko';
+  });
+  const [promo, setPromo] = useState<LandingPromo>(() => emptyLandingPromo(locale));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addType, setAddType] = useState<LandingNodeType>('text');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -58,10 +60,44 @@ export default function AdminLandingPage() {
   const [previewWidth, setPreviewWidth] = useState<'desktop' | 'mobile'>('desktop');
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  /*
+   * L2(관리자 검토 2026-09-16) — 이미지 삭제·교체, 영상 교체가 저장 버튼과
+   * 무관하게 클릭 즉시 Storage 파일을 지웠다. 편집을 취소하거나 업로드가
+   * 실패하면 이미 게시된 랜딩의 이미지·영상이 깨졌다(버킷이 public이라
+   * 깨진 URL이 그대로 노출). 이제 삭제는 예약만 해두고 저장이 성공한 뒤에
+   * 실행한다. 반대로 이번 편집에서 새로 올린 파일은 저장 없이 떠나면
+   * 고아 자산이 되므로 그때 지운다.
+   */
+  const pendingRemovalsRef = useRef<Set<string>>(new Set());
+  const pendingUploadsRef = useRef<Set<string>>(new Set());
+
+  /** 저장된 자산이면 삭제를 예약하고, 이번 편집에서 막 올린(미저장) 자산이면 바로 지운다 */
+  const queueRemoval = (path: string) => {
+    if (pendingUploadsRef.current.has(path)) {
+      pendingUploadsRef.current.delete(path);
+      void removeLandingAsset(path).catch(() => undefined);
+      return;
+    }
+    pendingRemovalsRef.current.add(path);
+  };
+
+  const discardPendingUploads = useCallback(async () => {
+    const paths = [...pendingUploadsRef.current];
+    pendingUploadsRef.current.clear();
+    pendingRemovalsRef.current.clear();
+    for (const p of paths) await removeLandingAsset(p).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      void discardPendingUploads();
+    };
+  }, [discardPendingUploads]);
 
   const load = useCallback(async (nextLocale: AppLocale) => {
     setRefreshing(true);
     setError(null);
+    await discardPendingUploads();
     try {
       const row = await fetchLandingPromo(nextLocale);
       const next = row ?? emptyLandingPromo(nextLocale);
@@ -89,32 +125,12 @@ export default function AdminLandingPage() {
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [discardPendingUploads]);
 
   useEffect(() => {
-    if (!configured || loading || !user) {
-      setCheckingAdmin(false);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      setCheckingAdmin(true);
-      try {
-        const ok = await isCurrentUserAdmin();
-        if (!alive) return;
-        setIsAdmin(ok);
-        if (ok) await load(locale);
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : '관리자 확인 실패');
-      } finally {
-        if (alive) setCheckingAdmin(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [configured, loading, user, load, locale]);
+    if (access !== 'ok') return;
+    void load(locale);
+  }, [access, load, locale]);
 
   const selected = selectedId ? findNode(promo.menu, selectedId) : null;
 
@@ -147,6 +163,14 @@ export default function AdminLandingPage() {
     try {
       const saved = await saveLandingPromo(next);
       setPromo(saved);
+      const removals = [...pendingRemovalsRef.current];
+      pendingRemovalsRef.current.clear();
+      pendingUploadsRef.current.clear();
+      for (const p of removals) {
+        await removeLandingAsset(p).catch((err) =>
+          console.warn('랜딩 자산 정리 실패(저장은 완료됨)', p, err)
+        );
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : '저장에 실패했습니다. 마이그레이션 적용 여부를 확인해 주세요.');
     } finally {
@@ -181,7 +205,9 @@ export default function AdminLandingPage() {
       const room = MAX_LANDING_IMAGES - selected.images.length;
       const uploaded = [];
       for (const file of Array.from(files).slice(0, room)) {
-        uploaded.push(await uploadLandingAsset(locale, file, 'image'));
+        const u = await uploadLandingAsset(locale, file, 'image');
+        pendingUploadsRef.current.add(u.path);
+        uploaded.push(u);
       }
       patchSelected({
         images: [
@@ -203,8 +229,9 @@ export default function AdminLandingPage() {
     setError(null);
     try {
       const uploaded = await uploadLandingAsset(locale, file, 'image');
+      pendingUploadsRef.current.add(uploaded.path);
       const prev = selected.images[index];
-      if (prev?.path) await removeLandingAsset(prev.path).catch(() => undefined);
+      if (prev?.path) queueRemoval(prev.path);
       const images = [...selected.images];
       images[index] = { id: prev?.id || crypto.randomUUID(), url: uploaded.url, path: uploaded.path, alt: prev?.alt };
       patchSelected({ images });
@@ -215,10 +242,10 @@ export default function AdminLandingPage() {
     }
   };
 
-  const handleRemoveImage = async (index: number) => {
+  const handleRemoveImage = (index: number) => {
     if (!selected) return;
     const prev = selected.images[index];
-    if (prev?.path) await removeLandingAsset(prev.path).catch(() => undefined);
+    if (prev?.path) queueRemoval(prev.path);
     patchSelected({ images: selected.images.filter((_, i) => i !== index) });
   };
 
@@ -227,8 +254,9 @@ export default function AdminLandingPage() {
     setUploading(true);
     setError(null);
     try {
-      if (selected.videoPath) await removeLandingAsset(selected.videoPath).catch(() => undefined);
       const uploaded = await uploadLandingAsset(locale, file, 'video');
+      pendingUploadsRef.current.add(uploaded.path);
+      if (selected.videoPath) queueRemoval(selected.videoPath);
       patchSelected({ videoKind: 'file', videoPath: uploaded.path, videoUrl: uploaded.url, enabled: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : '영상 업로드 실패');
@@ -238,15 +266,26 @@ export default function AdminLandingPage() {
     }
   };
 
-  if (!configured) return <Navigate to="/" replace />;
-  if (loading || checkingAdmin) {
+  if (access === 'anon') return <Navigate to="/login" replace />;
+  if (access === 'loading') {
     return (
       <main className="admin-page">
         <div className="admin-shell">관리자 확인 중...</div>
       </main>
     );
   }
-  if (!user || !isAdmin) return <Navigate to="/" replace />;
+  if (access === 'denied') {
+    return (
+      <main className="admin-page">
+        <div className="admin-shell">
+          <p>접근 권한이 없습니다.</p>
+          <Link to="/plan" className="admin-link-btn">
+            플래너로 이동
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   const visible = walkEnabled(promo.menu);
 

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminHeader } from '../components/AdminHeader';
-import { isCurrentUserAdmin } from '../lib/admin';
 import {
   addDistributionAccount,
   approveDistributionPost,
@@ -36,6 +36,17 @@ const PLATFORM_LABEL: Record<DistributionPlatform, string> = {
 
 const IMPLEMENTED_PLATFORMS: DistributionPlatform[] = ['x'];
 
+/**
+ * D1(관리자 검토 2026-09-16) — 게시 버튼이 미구현 플랫폼·계정 미지정에서도
+ * 늘 활성화돼 있어서, 클릭한 뒤에야 에러 문구로 이유를 알 수 있었다.
+ * handlePublish의 사전 검사와 같은 조건을 버튼에도 미리 반영한다.
+ */
+function publishBlockReason(post: DistributionPost): string | null {
+  if (!IMPLEMENTED_PLATFORMS.includes(post.platform)) return '자동 게시 미지원';
+  if (!post.accountId) return '계정 미연결';
+  return null;
+}
+
 const STATUS_LABEL: Record<DistributionPostStatus, string> = {
   draft: '초안',
   approved: '승인됨',
@@ -52,9 +63,8 @@ function formatDateTime(iso: string | null): string {
 }
 
 export default function AdminDistributionPage() {
-  const { configured, loading, user } = useAuth();
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { configured } = useAuth();
+  const access = useAdminAccess();
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'queue' | 'accounts'>('queue');
@@ -69,6 +79,7 @@ export default function AdminDistributionPage() {
   const [draftCountries, setDraftCountries] = useState('US, GB, JP');
   const [drafting, setDrafting] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const [editingPost, setEditingPost] = useState<DistributionPost | null>(null);
   const [savingPost, setSavingPost] = useState(false);
@@ -112,34 +123,14 @@ export default function AdminDistributionPage() {
   }, [loadAccounts, loadPosts]);
 
   useEffect(() => {
-    if (!configured || loading || !user) {
-      setCheckingAdmin(false);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      setCheckingAdmin(true);
-      try {
-        const ok = await isCurrentUserAdmin();
-        if (!alive) return;
-        setIsAdmin(ok);
-        if (ok) await loadAll();
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : '관리자 확인 실패');
-      } finally {
-        if (alive) setCheckingAdmin(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
+    if (access !== 'ok') return;
+    void loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configured, loading, user, loadAll]);
+  }, [access, loadAll]);
 
   useEffect(() => {
-    if (isAdmin) void loadPosts();
-  }, [isAdmin, loadPosts]);
+    if (access === 'ok') void loadPosts();
+  }, [access, loadPosts]);
 
   const accountsByPlatform = useMemo(() => {
     const map = new Map<DistributionPlatform, DistributionAccount[]>();
@@ -161,8 +152,8 @@ export default function AdminDistributionPage() {
       </main>
     );
   }
-  if (!loading && !user) return <Navigate to="/login" replace />;
-  if (checkingAdmin) {
+  if (access === 'anon') return <Navigate to="/login" replace />;
+  if (access === 'loading') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -172,7 +163,7 @@ export default function AdminDistributionPage() {
       </main>
     );
   }
-  if (!isAdmin) {
+  if (access === 'denied') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -467,16 +458,37 @@ export default function AdminDistributionPage() {
                             <button type="button" onClick={() => setEditingPost(post)}>
                               편집
                             </button>
-                            {post.status !== 'posted' && (
-                              <button
-                                type="button"
-                                className="admin-create-btn"
-                                disabled={publishingId === post.id}
-                                onClick={() => void handlePublish(post)}
-                              >
-                                {publishingId === post.id ? '게시 중…' : '게시'}
-                              </button>
-                            )}
+                            {post.status !== 'posted' &&
+                              (() => {
+                                const blocked = publishBlockReason(post);
+                                return (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="admin-create-btn"
+                                      disabled={publishingId === post.id || Boolean(blocked)}
+                                      title={blocked ?? undefined}
+                                      onClick={() => void handlePublish(post)}
+                                    >
+                                      {publishingId === post.id ? '게시 중…' : '게시'}
+                                    </button>
+                                    {blocked && <span className="admin-cell-sub">{blocked}</span>}
+                                    {blocked === '자동 게시 미지원' && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          void navigator.clipboard.writeText(post.body).then(() => {
+                                            setCopiedId(post.id);
+                                            setTimeout(() => setCopiedId((cur) => (cur === post.id ? null : cur)), 1500);
+                                          });
+                                        }}
+                                      >
+                                        {copiedId === post.id ? '복사됨' : '본문 복사'}
+                                      </button>
+                                    )}
+                                  </>
+                                );
+                              })()}
                             <button type="button" className="danger" onClick={() => void handleDeletePost(post)}>
                               삭제
                             </button>

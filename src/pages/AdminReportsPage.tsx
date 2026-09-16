@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminHeader } from '../components/AdminHeader';
-import { isCurrentUserAdmin } from '../lib/admin';
 import {
   bulkUpdateContentReports,
   fetchReportTargetStates,
@@ -50,9 +50,8 @@ function formatDateTime(iso: string | null): string {
 }
 
 export default function AdminReportsPage() {
-  const { configured, loading, user } = useAuth();
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { configured, user } = useAuth();
+  const access = useAdminAccess();
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<StatusFilter>('open');
@@ -82,29 +81,9 @@ export default function AdminReportsPage() {
   }, []);
 
   useEffect(() => {
-    if (!configured || loading || !user) {
-      setCheckingAdmin(false);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      setCheckingAdmin(true);
-      try {
-        const ok = await isCurrentUserAdmin();
-        if (!alive) return;
-        setIsAdmin(ok);
-        if (ok) await loadAll(filter);
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : '관리자 확인 실패');
-      } finally {
-        if (alive) setCheckingAdmin(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [configured, loading, user, loadAll, filter]);
+    if (access !== 'ok') return;
+    void loadAll(filter);
+  }, [access, loadAll, filter]);
 
   const openCount = useMemo(
     () => reports.filter((r) => r.status === 'open' || r.status === 'reviewing').length,
@@ -195,9 +174,9 @@ export default function AdminReportsPage() {
     );
   }
 
-  if (!loading && !user) return <Navigate to="/login" replace />;
+  if (access === 'anon') return <Navigate to="/login" replace />;
 
-  if (checkingAdmin) {
+  if (access === 'loading') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -208,7 +187,7 @@ export default function AdminReportsPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (access === 'denied') {
     return (
       <main className="admin-page">
         <div className="admin-shell">

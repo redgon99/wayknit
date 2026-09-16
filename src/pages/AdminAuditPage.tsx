@@ -1,15 +1,18 @@
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminHeader } from '../components/AdminHeader';
-import { isCurrentUserAdmin } from '../lib/admin';
 import {
   AUDIT_PAGE_SIZE,
   AUDIT_TABLES,
   OPERATION_LABEL,
   auditSubject,
   auditTableLabel,
+  auditTargetHref,
   describeAuditEntry,
+  isOmittedValue,
+  isRedactedValue,
   listAdminAuditLog,
   listAuditActors,
   restoreAuditEntry,
@@ -31,10 +34,29 @@ function formatDateTime(iso: string): string {
   return d.toLocaleString('ko-KR', { hour12: false });
 }
 
+/** 트리거가 남긴 마커 객체를 사람이 읽는 문구로 — 상세와 CSV 둘 다 이걸로 보여준다 */
+function displayableValues(value: Record<string, unknown> | null): Record<string, unknown> | null {
+  if (!value) return null;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value)) {
+    if (isRedactedValue(v)) out[k] = '🔒 비밀값(기록 안 함)';
+    else if (isOmittedValue(v)) {
+      const bytes = (v as { __audit_omitted_bytes__?: number }).__audit_omitted_bytes__;
+      out[k] = bytes ? `[생략됨 · ${bytes} bytes]` : v;
+    } else out[k] = v;
+  }
+  return out;
+}
+
+function stringifyValues(value: Record<string, unknown> | null, pretty: boolean): string {
+  const shown = displayableValues(value);
+  if (!shown) return pretty ? '(없음)' : '';
+  return pretty ? JSON.stringify(shown, null, 2) : JSON.stringify(shown);
+}
+
 export default function AdminAuditPage() {
-  const { configured, loading, user } = useAuth();
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { configured } = useAuth();
+  const access = useAdminAccess();
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -70,35 +92,16 @@ export default function AdminAuditPage() {
   }, [tableFilter, operationFilter, actorFilter]);
 
   useEffect(() => {
-    if (!configured || loading || !user) {
-      setCheckingAdmin(false);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      setCheckingAdmin(true);
-      try {
-        const ok = await isCurrentUserAdmin();
-        if (!alive) return;
-        setIsAdmin(ok);
-        if (ok) {
-          setActors(await listAuditActors().catch(() => []));
-        }
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : '관리자 확인 실패');
-      } finally {
-        if (alive) setCheckingAdmin(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [configured, loading, user]);
+    if (access !== 'ok') return;
+    setActors([]);
+    listAuditActors()
+      .then(setActors)
+      .catch((e) => setError(e instanceof Error ? e.message : '관리자 확인 실패'));
+  }, [access]);
 
   useEffect(() => {
-    if (isAdmin) void loadFirstPage();
-  }, [isAdmin, loadFirstPage]);
+    if (access === 'ok') void loadFirstPage();
+  }, [access, loadFirstPage]);
 
   const handleLoadMore = async () => {
     const last = entries[entries.length - 1];
@@ -158,8 +161,8 @@ export default function AdminAuditPage() {
         { header: '대상 ID', value: (r) => r.rowId ?? '' },
         { header: '변경 요약', value: (r) => describeAuditEntry(r) },
         { header: '변경 컬럼', value: (r) => r.changedFields.join(' ') },
-        { header: '이전', value: (r) => (r.before ? JSON.stringify(r.before) : '') },
-        { header: '이후', value: (r) => (r.after ? JSON.stringify(r.after) : '') },
+        { header: '이전', value: (r) => stringifyValues(r.before, false) },
+        { header: '이후', value: (r) => stringifyValues(r.after, false) },
       ]);
       downloadCsv(csvFilename('wayknit_감사로그'), csv);
     } catch (e) {
@@ -179,8 +182,8 @@ export default function AdminAuditPage() {
       </main>
     );
   }
-  if (!loading && !user) return <Navigate to="/login" replace />;
-  if (checkingAdmin) {
+  if (access === 'anon') return <Navigate to="/login" replace />;
+  if (access === 'loading') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -190,7 +193,7 @@ export default function AdminAuditPage() {
       </main>
     );
   }
-  if (!isAdmin) {
+  if (access === 'denied') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -295,7 +298,18 @@ export default function AdminAuditPage() {
                         {entry.actorEmail ?? <span className="admin-cell-sub">시스템</span>}
                       </td>
                       <td>{auditTableLabel(entry.tableName)}</td>
-                      <td>{auditSubject(entry)}</td>
+                      <td>
+                        {(() => {
+                          const href = auditTargetHref(entry);
+                          return href ? (
+                            <Link to={href} title="대상 화면으로 이동">
+                              {auditSubject(entry)}
+                            </Link>
+                          ) : (
+                            auditSubject(entry)
+                          );
+                        })()}
+                      </td>
                       <td>
                         <span className={`audit-op audit-op--${entry.operation.toLowerCase()}`}>
                           {OPERATION_LABEL[entry.operation]}
@@ -319,15 +333,11 @@ export default function AdminAuditPage() {
                           <div className="audit-detail">
                             <div>
                               <h4>이전</h4>
-                              <pre>
-                                {entry.before ? JSON.stringify(entry.before, null, 2) : '(없음)'}
-                              </pre>
+                              <pre>{stringifyValues(entry.before, true)}</pre>
                             </div>
                             <div>
                               <h4>이후</h4>
-                              <pre>
-                                {entry.after ? JSON.stringify(entry.after, null, 2) : '(없음)'}
-                              </pre>
+                              <pre>{stringifyValues(entry.after, true)}</pre>
                             </div>
                           </div>
                           {(() => {

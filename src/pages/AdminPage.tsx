@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminHeader } from '../components/AdminHeader';
 import {
   addAdminUserAccount,
@@ -8,7 +9,6 @@ import {
   deleteAdminNotice,
   fetchAdminShareStats,
   getEnvAdminEmails,
-  isCurrentUserAdmin,
   listAdminNotices,
   listAdminUserAccounts,
   listAdminUserRows,
@@ -75,9 +75,8 @@ function formatDateTime(iso: string | null): string {
 }
 
 export default function AdminPage() {
-  const { configured, loading, user } = useAuth();
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { configured, user } = useAuth();
+  const access = useAdminAccess();
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -215,43 +214,21 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (access !== 'ok') return;
     const timer = setTimeout(() => void loadUsers(userSearch, userPage), 250);
     return () => clearTimeout(timer);
-  }, [isAdmin, userSearch, userPage, loadUsers]);
+  }, [access, userSearch, userPage, loadUsers]);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (access !== 'ok') return;
     const timer = setTimeout(() => void loadPlaza(plazaSearch, plazaPage), 250);
     return () => clearTimeout(timer);
-  }, [isAdmin, plazaSearch, plazaPage, loadPlaza]);
+  }, [access, plazaSearch, plazaPage, loadPlaza]);
 
   useEffect(() => {
-    if (!configured || loading || !user) {
-      setCheckingAdmin(false);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      setCheckingAdmin(true);
-      try {
-        const ok = await isCurrentUserAdmin();
-        if (!alive) return;
-        setIsAdmin(ok);
-        if (ok) {
-          await loadAll();
-        }
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : '관리자 확인 실패');
-      } finally {
-        if (alive) setCheckingAdmin(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [configured, loading, user, loadAll]);
+    if (access !== 'ok') return;
+    void loadAll();
+  }, [access, loadAll]);
 
   const publishedCount = useMemo(
     () => notices.filter((n) => n.isPublished).length,
@@ -272,11 +249,11 @@ export default function AdminPage() {
     );
   }
 
-  if (!loading && !user) {
+  if (access === 'anon') {
     return <Navigate to="/login" replace />;
   }
 
-  if (checkingAdmin) {
+  if (access === 'loading') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -287,7 +264,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (access === 'denied') {
     return (
       <main className="admin-page">
         <div className="admin-shell">

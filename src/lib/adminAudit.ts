@@ -17,6 +17,8 @@ export interface AdminAuditEntry {
   tableName: string;
   operation: AuditOperation;
   rowId: string | null;
+  /** 트리거가 테이블별로 뽑은 대상 이름(제목·이메일·locale 등). 2026-09-16 이전 행은 null */
+  rowLabel: string | null;
   /** UPDATE에서 실제로 값이 달라진 컬럼 (INSERT/DELETE면 빈 배열) */
   changedFields: string[];
   before: Record<string, unknown> | null;
@@ -35,6 +37,8 @@ export const AUDIT_TABLE_LABEL: Record<string, string> = {
   distribution_accounts: '배포 계정',
   insight_keywords: '수집 키워드',
   content_reports: '신고 검수',
+  /* 트리거가 아니라 신고 처리 함수가 직접 INSERT한다(20260904050000) — 드롭다운에 빠져 있었음(A4) */
+  wayknit_trips: '여행(신고 조치)',
 };
 
 export const AUDIT_TABLES = Object.keys(AUDIT_TABLE_LABEL);
@@ -66,6 +70,7 @@ function mapRow(row: Record<string, unknown>): AdminAuditEntry {
     tableName: row.table_name as string,
     operation: row.operation as AuditOperation,
     rowId: (row.row_id as string | null) ?? null,
+    rowLabel: (row.row_label as string | null) ?? null,
     changedFields: (row.changed_fields as string[] | null) ?? [],
     before: (row.before as Record<string, unknown> | null) ?? null,
     after: (row.after as Record<string, unknown> | null) ?? null,
@@ -93,7 +98,7 @@ export async function listAdminAuditLog(filter: AuditFilter = {}): Promise<Admin
   const sb = requireSupabase();
   let query = sb
     .from('admin_audit_log')
-    .select('id, actor_email, actor_id, table_name, operation, row_id, changed_fields, before, after, created_at')
+    .select('id, actor_email, actor_id, table_name, operation, row_id, row_label, changed_fields, before, after, created_at')
     .order('id', { ascending: false })
     .limit(filter.limit ?? AUDIT_PAGE_SIZE);
 
@@ -141,13 +146,20 @@ export const RESTORABLE_TABLES = [
  * 값이 커서 기록되지 않은 필드. 이런 항목을 복원하면 원본 자리에 자리표시자가
  * 덮어써지므로 서버가 거부한다 — 버튼도 미리 막아 이유를 보여준다.
  */
+export function isOmittedValue(v: unknown): boolean {
+  if (v && typeof v === 'object' && '__audit_omitted_bytes__' in (v as object)) return true;
+  return typeof v === 'string' && v.startsWith('[생략됨 ');
+}
+
+/** 비밀값(토큰 등)이라 트리거가 기록 자체를 안 한 필드 — 20260916100000 이후 */
+export function isRedactedValue(v: unknown): boolean {
+  return Boolean(v && typeof v === 'object' && '__audit_redacted__' in (v as object));
+}
+
 function omittedFields(value: Record<string, unknown> | null): string[] {
   if (!value) return [];
   return Object.entries(value)
-    .filter(([, v]) => {
-      if (v && typeof v === 'object' && '__audit_omitted_bytes__' in (v as object)) return true;
-      return typeof v === 'string' && v.startsWith('[생략됨 ');
-    })
+    .filter(([, v]) => isOmittedValue(v) || isRedactedValue(v))
     .map(([k]) => k);
 }
 
@@ -155,10 +167,36 @@ function omittedFields(value: Record<string, unknown> | null): string[] {
 export function restoreBlockReason(entry: AdminAuditEntry): string | null {
   if (!RESTORABLE_TABLES.includes(entry.tableName)) return '이 영역은 되돌리기를 지원하지 않습니다';
   if (entry.operation === 'INSERT') return '추가는 되돌릴 수 없습니다';
+  if (entry.operation === 'UPDATE' && !entry.rowId) return '대상 키가 기록되지 않은 로그입니다';
   if (!entry.before || Object.keys(entry.before).length === 0) return '복원할 이전 값이 없습니다';
   const omitted = omittedFields(entry.before);
-  if (omitted.length > 0) return `값이 커서 기록되지 않은 필드가 있습니다: ${omitted.join(', ')}`;
+  if (omitted.length > 0) return `기록되지 않은(큰 값·비밀값) 필드가 있습니다: ${omitted.join(', ')}`;
   return null;
+}
+
+/**
+ * 로그 대상 화면으로 가는 링크. 대상 키가 없거나 전용 화면이 없으면 null.
+ * 쿼리 파라미터는 각 화면이 읽어 해당 항목을 여는 데 쓴다.
+ */
+export function auditTargetHref(entry: AdminAuditEntry): string | null {
+  if (!entry.rowId) return null;
+  const id = encodeURIComponent(entry.rowId);
+  switch (entry.tableName) {
+    case 'landing_promo':
+      return `/admin/landing?locale=${id}`;
+    case 'guide_articles':
+      return `/admin/guides?id=${id}`;
+    case 'admin_user_verifications':
+      return `/admin?user=${id}`;
+    case 'scenario_catalog':
+      return `/admin/scenarios?id=${id}`;
+    case 'content_reports':
+      return `/admin/reports?id=${id}`;
+    case 'distribution_accounts':
+      return `/admin/distribution?account=${id}`;
+    default:
+      return null;
+  }
 }
 
 /** 되돌리기. 되돌린 것 자체도 대상 테이블의 감사 트리거가 다시 기록한다. */
@@ -172,6 +210,7 @@ export async function restoreAuditEntry(auditId: number): Promise<void> {
 const SUBJECT_KEYS = ['email', 'title', 'slug', 'keyword', 'name', 'platform', 'label'];
 
 export function auditSubject(entry: AdminAuditEntry): string {
+  if (entry.rowLabel) return entry.rowLabel;
   const source = entry.after ?? entry.before ?? {};
   for (const key of SUBJECT_KEYS) {
     const value = source[key];

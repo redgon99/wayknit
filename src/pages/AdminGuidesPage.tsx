@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminHeader } from '../components/AdminHeader';
-import { isCurrentUserAdmin } from '../lib/admin';
 import { GUIDE_KIND_META, GUIDE_KINDS, type GuideKind } from '../lib/guideKinds';
 import {
   archiveGuide,
@@ -22,9 +22,8 @@ const STATUS_LABEL: Record<GuideStatus, string> = {
 };
 
 export default function AdminGuidesPage() {
-  const { configured, loading, user } = useAuth();
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { configured } = useAuth();
+  const access = useAdminAccess();
   const [error, setError] = useState<string | null>(null);
   const [guides, setGuides] = useState<GuideArticle[]>([]);
   const [statusFilter, setStatusFilter] = useState<GuideStatus | ''>('');
@@ -49,33 +48,8 @@ export default function AdminGuidesPage() {
   }, [statusFilter, kindFilter]);
 
   useEffect(() => {
-    if (!configured || loading || !user) {
-      setCheckingAdmin(false);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      setCheckingAdmin(true);
-      try {
-        const ok = await isCurrentUserAdmin();
-        if (!alive) return;
-        setIsAdmin(ok);
-        if (ok) await loadList();
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : '관리자 확인 실패');
-      } finally {
-        if (alive) setCheckingAdmin(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [configured, loading, user, loadList]);
-
-  useEffect(() => {
-    if (isAdmin) void loadList();
-  }, [isAdmin, loadList]);
+    if (access === 'ok') void loadList();
+  }, [access, loadList]);
 
   const openEdit = async (id: string) => {
     try {
@@ -124,8 +98,8 @@ export default function AdminGuidesPage() {
       </main>
     );
   }
-  if (!loading && !user) return <Navigate to="/login" replace />;
-  if (checkingAdmin) {
+  if (access === 'anon') return <Navigate to="/login" replace />;
+  if (access === 'loading') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -135,7 +109,7 @@ export default function AdminGuidesPage() {
       </main>
     );
   }
-  if (!isAdmin) {
+  if (access === 'denied') {
     return (
       <main className="admin-page">
         <div className="admin-shell">

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminHeader } from '../components/AdminHeader';
-import { isCurrentUserAdmin } from '../lib/admin';
 import {
   deleteScenarioCatalogEntry,
   generateScenarioCatalogEntry,
@@ -54,9 +54,8 @@ function formatDateTime(iso: string | null): string {
 }
 
 export default function AdminScenariosPage() {
-  const { configured, loading, user } = useAuth();
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { configured } = useAuth();
+  const access = useAdminAccess();
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -96,34 +95,8 @@ export default function AdminScenariosPage() {
   }, [themeFilter, statusFilter]);
 
   useEffect(() => {
-    if (!configured || loading || !user) {
-      setCheckingAdmin(false);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      setCheckingAdmin(true);
-      try {
-        const ok = await isCurrentUserAdmin();
-        if (!alive) return;
-        setIsAdmin(ok);
-        if (ok) await loadEntries();
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : '관리자 확인 실패');
-      } finally {
-        if (alive) setCheckingAdmin(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configured, loading, user]);
-
-  useEffect(() => {
-    if (isAdmin) void loadEntries();
-  }, [isAdmin, loadEntries]);
+    if (access === 'ok') void loadEntries();
+  }, [access, loadEntries]);
 
   const handleSelectGenTheme = (theme: ScenarioTheme) => {
     setGenTheme(theme);
@@ -252,8 +225,8 @@ export default function AdminScenariosPage() {
       </main>
     );
   }
-  if (!loading && !user) return <Navigate to="/login" replace />;
-  if (checkingAdmin) {
+  if (access === 'anon') return <Navigate to="/login" replace />;
+  if (access === 'loading') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -263,7 +236,7 @@ export default function AdminScenariosPage() {
       </main>
     );
   }
-  if (!isAdmin) {
+  if (access === 'denied') {
     return (
       <main className="admin-page">
         <div className="admin-shell">

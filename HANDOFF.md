@@ -5873,6 +5873,91 @@ RLS)·§30-2(여행/자료 캡 서버 트리거)·§30-3(죽은 코드 정리)·
 
 ---
 
+## 31. 관리자 페이지 검토 보고서 반영 — 묶음 1(작고 급한 것) (2026-09-16)
+
+사용자가 붙여넣은 관리자 모드 검토 보고서(`admin-review-2026-09-16.md`)의 P0 5건을
+코드·마이그레이션·실제 DB 정책까지 대조해 전부 사실임을 확인한 뒤(§30과 무관한
+별도 감사), "작업 크기" 기준으로 3묶음(계획 파일 참고)으로 재구성해 진행. 이번
+세션에서 묶음 1(L2·A1·A2·A3·L3·D1) 전부 완료.
+
+### 31-1. L2 — 랜딩 미디어를 저장 성공 뒤에만 지운다
+
+[AdminLandingPage.tsx](src/pages/AdminLandingPage.tsx)의 이미지 삭제·교체, 영상
+교체가 저장 버튼과 무관하게 클릭 즉시 Storage 파일을 지웠다(영상은 새 파일
+업로드 **전에** 기존 파일 삭제). 편집 취소·업로드 실패 시 이미 게시된 랜딩의
+이미지·영상이 깨졌다(버킷 `landing-promo`가 public이라 깨진 URL이 그대로 노출).
+
+`pendingRemovalsRef`(저장 성공 후 지울 경로)·`pendingUploadsRef`(이번 편집에서
+새로 올렸지만 미저장인 경로) 두 ref로 실제 삭제 시점을 저장 성공 이후로 미뤘다.
+언어 전환·언마운트 시엔 미저장 업로드를 고아 자산으로 남기지 않고 정리한다.
+
+**확인 방법:** `/admin/landing` → 이미지 하나 삭제 → 저장하지 말고 다른 언어
+탭으로 이동 → 실제 공개 랜딩(`wayknit.com`)의 그 이미지가 그대로인지. 저장
+후엔 지워지는지.
+
+### 31-2. A1·A3·A2(부분) — 감사 로그 대상 표시·시크릿 제거·복원 키 수정
+
+새 마이그레이션 `20260916100000_admin_audit_target.sql`(적용 완료):
+- `admin_audit_log`에 `row_label` 컬럼 추가. `log_admin_action()` 트리거가
+  테이블별 키(`landing_promo`→`locale`, `admin_user_verifications`→`user_id`,
+  나머지→`id`)와 사람이 읽을 이름(이메일·제목·`region · theme` 등)을 남긴다.
+  기존 `admin_user_verifications` 로그는 백필로 `row_id` 채워짐. `landing_promo`
+  로그 2건은 과거(이 마이그레이션 이전) 로그가 "바뀐 컬럼만" 저장해 `locale`
+  자체가 안 남아 있어 백필 불가 — 이후 로그부터는 트리거가 전체 행에서 키를
+  뽑으므로 정상 기록된다.
+- `audit_redact()`가 필드명 패턴(`credential|token|secret|password|api_key`)이면
+  크기와 무관하게 항상 `{"__audit_redacted__": true}`로 치환 — `distribution_accounts.
+  credentials`의 짧은 토큰이 평문으로 남던 문제(A3). 기존 로그도 스크럽했다
+  (현재 연결 계정 0개라 해당 행 없음).
+- `admin_restore_audit_entry()`가 테이블별 키 컬럼(`landing_promo`→`locale`)으로
+  찾도록 수정 — 예전엔 전부 `t.id`로 찾아 `landing_promo` 복원이 항상 실패했다
+  (A2 중 이 부분만; `menu_tree`/`body_md`가 1000바이트 넘어 생략되는 근본 문제는
+  묶음 2의 버전 테이블로 푼다).
+
+클라이언트: [adminAudit.ts](src/lib/adminAudit.ts)에 `rowLabel`·`auditTargetHref`·
+`isRedactedValue` 추가, [AdminAuditPage.tsx](src/pages/AdminAuditPage.tsx)에 대상
+링크·비밀값 표시(🔒) 반영. `wayknit_trips`(신고 조치로 직접 INSERT되는 감사
+대상)가 영역 드롭다운에 빠져 있던 것도 같이 채움(A4 일부).
+
+**확인 방법:** `/admin/landing`에서 값 수정·저장 → `/admin/audit`에서 그 로그의
+"대상"에 이름이 뜨고 클릭하면 해당 언어 편집 화면으로 가는지.
+
+### 31-3. L3 — 관리자 페이지 새로고침 시 `/`로 튕기는 문제
+
+원인: 관리자 페이지 10개가 전부 `checkingAdmin`/`isAdmin` 로컬 state를 따로 두고
+있었는데, 마운트 시 `loading=true`라 이펙트가 조기 리턴했다가 `loading`이
+false로 바뀐 첫 렌더에서 "확인 전"인데 `isAdmin=false`로 읽혀
+`AdminLandingPage.tsx`는 `/`로 리다이렉트, 나머지는 "접근 권한이 없습니다"가
+잠깐 번쩍였다.
+
+새 훅 `src/hooks/useAdminAccess.ts` — `'loading'|'anon'|'denied'|'ok'` 네
+상태로 그 틈을 없앴다. 관리자 페이지 10개(Landing·Audit·Dashboard·
+Distribution·Guides·Insights·Page·Reports·Scenarios·Search) 전부 이 훅으로
+교체.
+
+**확인 방법:** 관리자 계정으로 각 `/admin/*` URL 직접 진입 + 새로고침 반복 —
+`/`나 `/login`으로 안 튕기는지.
+
+### 31-4. D1 — 배포 게시 버튼에 불가 사유 표시
+
+[AdminDistributionPage.tsx](src/pages/AdminDistributionPage.tsx) — 미구현
+플랫폼(`IMPLEMENTED_PLATFORMS = ['x']`)·계정 미연결 행도 게시 버튼이 항상
+활성화돼 있어 클릭 후에야 에러 문구로 이유를 알았다. `publishBlockReason()`으로
+버튼을 미리 비활성화하고 사유를 표시, 미구현 플랫폼 행엔 "본문 복사" 버튼 추가
+(수동 게시 보조).
+
+**확인 방법:** `/admin/distribution` → 초안 9건(전부 미구현 플랫폼) 게시 버튼이
+비활성 + "자동 게시 미지원" 표시, "본문 복사" 클릭 시 클립보드 복사.
+
+**변경 파일:** `AdminLandingPage.tsx`, `AdminAuditPage.tsx`, `adminAudit.ts`,
+`AdminDistributionPage.tsx`, `useAdminAccess.ts`(신규) + 위 8개 관리자 페이지,
+마이그레이션 `20260916100000_admin_audit_target.sql`. `tsc -b`·`npm run build`
+클린. 아직 커밋 전.
+
+**다음:** 묶음 2(초안/버전 시스템 — L1·A2 나머지·C4·L4·L5)로 진행 중.
+
+---
+
 ## ▶ 다음 세션 시작점 (2026-09-15 기준, 갱신)
 
 **직전 상태:** §29-42~47, §30-1~30-4 전체 커밋·푸시·배포 완료

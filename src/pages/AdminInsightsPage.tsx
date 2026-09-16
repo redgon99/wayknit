@@ -25,7 +25,7 @@ import {
   type InsightPeriodPreset,
 } from '../lib/insightCollectPeriod';
 import { triggerGuideDraftFromTips } from '../lib/guides';
-import { isCurrentUserAdmin } from '../lib/admin';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import type {
   InsightCategory,
   InsightCategoryCount,
@@ -72,9 +72,8 @@ function formatDateTime(iso: string | null): string {
 }
 
 export default function AdminInsightsPage() {
-  const { configured, loading, user } = useAuth();
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { configured } = useAuth();
+  const access = useAdminAccess();
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [runningCollector, setRunningCollector] = useState<
@@ -172,37 +171,14 @@ export default function AdminInsightsPage() {
   }, [filterSource, filterCategory]);
 
   useEffect(() => {
-    if (!configured || loading || !user) {
-      setCheckingAdmin(false);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      setCheckingAdmin(true);
-      try {
-        const ok = await isCurrentUserAdmin();
-        if (!alive) return;
-        setIsAdmin(ok);
-        if (ok) {
-          await loadAll();
-          await loadItems();
-        }
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : '관리자 확인 실패');
-      } finally {
-        if (alive) setCheckingAdmin(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
+    if (access !== 'ok') return;
+    void loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configured, loading, user, loadAll]);
+  }, [access, loadAll]);
 
   useEffect(() => {
-    if (isAdmin) void loadItems();
-  }, [isAdmin, loadItems]);
+    if (access === 'ok') void loadItems();
+  }, [access, loadItems]);
 
   const keywordsBySource = useMemo(() => {
     const map = new Map<InsightSource, InsightKeyword[]>();
@@ -284,11 +260,11 @@ export default function AdminInsightsPage() {
     );
   }
 
-  if (!loading && !user) {
+  if (access === 'anon') {
     return <Navigate to="/login" replace />;
   }
 
-  if (checkingAdmin) {
+  if (access === 'loading') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -299,7 +275,7 @@ export default function AdminInsightsPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (access === 'denied') {
     return (
       <main className="admin-page">
         <div className="admin-shell">

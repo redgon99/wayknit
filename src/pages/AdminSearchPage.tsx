@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminHeader } from '../components/AdminHeader';
-import { isCurrentUserAdmin } from '../lib/admin';
 import {
   groupByKind,
   searchAdmin,
@@ -12,12 +12,11 @@ import {
 import '../styles/app.css';
 
 export default function AdminSearchPage() {
-  const { configured, loading, user } = useAuth();
+  const { configured } = useAuth();
+  const access = useAdminAccess();
   const [params] = useSearchParams();
   const query = params.get('q') ?? '';
 
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   const [hits, setHits] = useState<SearchHit[]>([]);
@@ -39,32 +38,8 @@ export default function AdminSearchPage() {
   }, []);
 
   useEffect(() => {
-    if (!configured || loading || !user) {
-      setCheckingAdmin(false);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      setCheckingAdmin(true);
-      try {
-        const ok = await isCurrentUserAdmin();
-        if (!alive) return;
-        setIsAdmin(ok);
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : '관리자 확인 실패');
-      } finally {
-        if (alive) setCheckingAdmin(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [configured, loading, user]);
-
-  useEffect(() => {
-    if (isAdmin) void runSearch(query);
-  }, [isAdmin, query, runSearch]);
+    if (access === 'ok') void runSearch(query);
+  }, [access, query, runSearch]);
 
   const groups = useMemo(() => groupByKind(hits), [hits]);
 
@@ -78,8 +53,8 @@ export default function AdminSearchPage() {
       </main>
     );
   }
-  if (!loading && !user) return <Navigate to="/login" replace />;
-  if (checkingAdmin) {
+  if (access === 'anon') return <Navigate to="/login" replace />;
+  if (access === 'loading') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
@@ -89,7 +64,7 @@ export default function AdminSearchPage() {
       </main>
     );
   }
-  if (!isAdmin) {
+  if (access === 'denied') {
     return (
       <main className="admin-page">
         <div className="admin-shell">
