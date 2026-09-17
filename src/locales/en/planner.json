@@ -714,7 +714,24 @@
     },
     "apply": "Add to pins",
     "applied": "Added {{count}} places to your trip.",
-    "newSearch": "Try another theme"
+    "newSearch": "Try another theme",
+    "ai": {
+      "modeLabel": "Ask AI",
+      "themeModeLabel": "Browse by theme",
+      "subtitle": "Describe your trip in one sentence — destination, dates, who's going, and the vibe you want.",
+      "placeholder": "e.g. 2 nights 3 days in Gangneung with my parents, not too much walking, focus on the beach and food",
+      "generateBtn": "Generate AI itinerary",
+      "stageIntent": "Analyzing your trip conditions…",
+      "stageCandidates": "Searching for places…",
+      "stagePlan": "Building your itinerary…",
+      "errorDestinationMissing": "We couldn't figure out your destination. Please be more specific.",
+      "errorGeneric": "Couldn't generate an itinerary. Please try again shortly.",
+      "noCandidates": "No matching places found. Try a different destination or wording.",
+      "emptyDaysWarning": "Not enough candidates for {{days}}, so it's left empty.",
+      "distanceNote": "Order is based on straight-line distance — actual road travel time may differ.",
+      "newAttempt": "Start over",
+      "intentSummary": "Got it — a {{days}}-day trip to \"{{destination}}\""
+    }
   },
   "chrome": {
     "appTitle": "Wayknit — Collect places. Knit your route.",

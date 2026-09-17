@@ -714,7 +714,24 @@
     },
     "apply": "Añadir a pines",
     "applied": "Se añadieron {{count}} lugares a tu viaje.",
-    "newSearch": "Probar otro tema"
+    "newSearch": "Probar otro tema",
+    "ai": {
+      "modeLabel": "Preguntar a la IA",
+      "themeModeLabel": "Buscar por tema",
+      "subtitle": "Describe tu viaje en una frase: destino, fechas, con quién vas y el ambiente que buscas.",
+      "placeholder": "ej. 2 noches 3 días en Gangneung con mis padres, sin caminar mucho, playa y comida",
+      "generateBtn": "Generar itinerario con IA",
+      "stageIntent": "Analizando las condiciones del viaje…",
+      "stageCandidates": "Buscando lugares…",
+      "stagePlan": "Creando el itinerario…",
+      "errorDestinationMissing": "No pudimos identificar el destino. Sé más específico.",
+      "errorGeneric": "No se pudo generar el itinerario. Intenta de nuevo en un momento.",
+      "noCandidates": "No se encontraron lugares que coincidan. Prueba con otro destino o descripción.",
+      "emptyDaysWarning": "No hay suficientes candidatos para {{days}}, así que queda vacío.",
+      "distanceNote": "El orden se basa en distancia en línea recta — el tiempo real de viaje puede variar.",
+      "newAttempt": "Empezar de nuevo",
+      "intentSummary": "Entendido: un viaje de {{days}} días a \"{{destination}}\""
+    }
   },
   "chrome": {
     "appTitle": "Wayknit — Reúne lugares. Une tu ruta.",

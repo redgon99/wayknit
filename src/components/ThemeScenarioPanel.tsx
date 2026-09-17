@@ -4,9 +4,12 @@ import { Icon, type IconName } from './Icon';
 import { normalizeLocale } from '../lib/locale';
 import { CATEGORY_MAP } from '../lib/categories';
 import type { Place, PinnedPlace } from '../types';
-import type { PinImportResult } from '../lib/importPins';
+import { applyImportRows, type PinImportResult } from '../lib/importPins';
 import { listPublishedScenarios, listPublishedScenarioCounts } from '../lib/scenarioCatalog';
 import { SCENARIO_THEMES, applyScenarioToTrip, scenarioStopToPlace, type ScenarioTheme, type TourScenario } from '../lib/tourScenario';
+import { isTripIntentConfigured, parseTripIntent, DestinationMissingError, type TripIntent } from '../lib/tripIntent';
+import { searchTripCandidates } from '../lib/tripCandidates';
+import { generateTripPlan, type GeneratedTripPlan } from '../lib/tripPlanner';
 
 const THEME_ICON: Record<ScenarioTheme, IconName> = {
   meditation: 'catCulture',
@@ -58,6 +61,15 @@ export function ThemeScenarioPanel({
   const [themeCounts, setThemeCounts] = useState<Partial<Record<ScenarioTheme, number>> | null>(null);
   const optionsRequestRef = useRef<ScenarioTheme | null>(null);
 
+  // AI 일정 생성(§31-22 Step 5) — 기존 테마 카탈로그 흐름과 별개 모드, 같은 onApply/onSelectPlace를 재사용
+  const [mode, setMode] = useState<'theme' | 'ai'>('theme');
+  const [aiText, setAiText] = useState('');
+  const [aiStage, setAiStage] = useState<'idle' | 'intent' | 'candidates' | 'plan'>('idle');
+  const [aiIntent, setAiIntent] = useState<TripIntent | null>(null);
+  const [aiPlan, setAiPlan] = useState<GeneratedTripPlan | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiAppliedCount, setAiAppliedCount] = useState<number | null>(null);
+
   useEffect(() => {
     let alive = true;
     void listPublishedScenarioCounts().then((counts) => {
@@ -98,8 +110,90 @@ export function ThemeScenarioPanel({
     setAppliedCount(null);
   };
 
+  const handleGenerateAi = async () => {
+    const text = aiText.trim();
+    if (!text) return;
+    setAiError(null);
+    setAiPlan(null);
+    setAiAppliedCount(null);
+    try {
+      setAiStage('intent');
+      const intent = await parseTripIntent(text);
+      setAiIntent(intent);
+
+      setAiStage('candidates');
+      const { candidates } = await searchTripCandidates(intent);
+      if (candidates.length === 0) {
+        setAiError(t('scenario.ai.noCandidates'));
+        setAiStage('idle');
+        return;
+      }
+
+      setAiStage('plan');
+      const plan = generateTripPlan(intent, candidates);
+      setAiPlan(plan);
+      setAiStage('idle');
+    } catch (e) {
+      setAiError(e instanceof DestinationMissingError ? t('scenario.ai.errorDestinationMissing') : t('scenario.ai.errorGeneric'));
+      setAiStage('idle');
+    }
+  };
+
+  const handleApplyAiPlan = () => {
+    if (!aiPlan) return;
+    const result = applyImportRows(aiPlan.rows, {
+      currentDay,
+      totalDays,
+      existingByDay: pinnedByDay,
+      scope: 'all',
+      mode: 'merge',
+    });
+    onApply(result);
+    setAiAppliedCount(result.importedCount);
+  };
+
+  const handleResetAi = () => {
+    setAiText('');
+    setAiIntent(null);
+    setAiPlan(null);
+    setAiError(null);
+    setAiAppliedCount(null);
+    setAiStage('idle');
+  };
+
+  const aiPlanByDay = aiPlan
+    ? aiPlan.rows.reduce<Record<number, typeof aiPlan.rows>>((acc, row) => {
+        (acc[row.day] ??= []).push(row);
+        return acc;
+      }, {})
+    : {};
+
   return (
     <div className="theme-scenario-panel">
+      {isTripIntentConfigured() && (
+        <div className="theme-scenario-mode-toggle" role="group">
+          <button
+            type="button"
+            className={`theme-scenario-mode-btn ${mode === 'theme' ? 'active' : ''}`}
+            aria-pressed={mode === 'theme'}
+            onClick={() => setMode('theme')}
+          >
+            {t('scenario.ai.themeModeLabel')}
+          </button>
+          <button
+            type="button"
+            className={`theme-scenario-mode-btn ${mode === 'ai' ? 'active' : ''}`}
+            aria-pressed={mode === 'ai'}
+            onClick={() => setMode('ai')}
+          >
+            <Icon name="sparkles" size={14} />
+            {t('scenario.ai.modeLabel')}
+          </button>
+        </div>
+      )}
+
+      {mode === 'theme' && (
+      <>
       {!scenario && (
         <>
           <p className="theme-scenario-subtitle">{t('scenario.subtitle')}</p>
@@ -304,6 +398,111 @@ export function ThemeScenarioPanel({
               <button type="button" className="theme-scenario-reset-btn" onClick={handleReset}>
                 {t('scenario.newSearch')}
               </button>
+            </div>
+          )}
+        </div>
+      )}
+      </>
+      )}
+
+      {mode === 'ai' && (
+        <div className="theme-scenario-ai">
+          {!aiPlan && (
+            <>
+              <p className="theme-scenario-subtitle">{t('scenario.ai.subtitle')}</p>
+              <textarea
+                className="theme-scenario-ai-textarea"
+                value={aiText}
+                onChange={(e) => setAiText(e.target.value)}
+                placeholder={t('scenario.ai.placeholder')}
+                maxLength={500}
+                rows={3}
+                disabled={aiStage !== 'idle'}
+              />
+              {aiError && <p className="theme-scenario-error">{aiError}</p>}
+              <button
+                type="button"
+                className="theme-scenario-apply-btn"
+                onClick={() => void handleGenerateAi()}
+                disabled={aiStage !== 'idle' || !aiText.trim()}
+              >
+                {aiStage === 'idle' && t('scenario.ai.generateBtn')}
+                {aiStage === 'intent' && t('scenario.ai.stageIntent')}
+                {aiStage === 'candidates' && t('scenario.ai.stageCandidates')}
+                {aiStage === 'plan' && t('scenario.ai.stagePlan')}
+              </button>
+            </>
+          )}
+
+          {aiPlan && (
+            <div className="theme-scenario-result">
+              {aiIntent && (
+                <div className="theme-scenario-region-badge">
+                  {t('scenario.ai.intentSummary', { destination: aiIntent.destination, days: aiIntent.days })}
+                </div>
+              )}
+              <h3 className="theme-scenario-result-title">{aiPlan.title}</h3>
+              <p className="theme-scenario-result-intro">{aiPlan.intro}</p>
+              <p className="theme-scenario-ai-distance-note">{t('scenario.ai.distanceNote')}</p>
+
+              {Array.from({ length: aiIntent?.days ?? 0 }, (_, i) => i + 1).map((day) => (
+                <div key={day} className="theme-scenario-day-block">
+                  <h4 className="theme-scenario-day-title">{t('scenario.dayTitle', { day })}</h4>
+                  {aiPlanByDay[day]?.length ? (
+                    <div className="theme-scenario-stop-list">
+                      {aiPlanByDay[day].map((row) => (
+                        <button
+                          key={`${row.day}-${row.order}-${row.name}`}
+                          type="button"
+                          className="theme-scenario-stop-card"
+                          onClick={() =>
+                            onSelectPlace?.({
+                              id: `${row.lat},${row.lng}`,
+                              name: row.name,
+                              category: 'tour',
+                              categoryCode: 'AT4',
+                              categoryLabel: row.categoryLabel,
+                              address: row.address,
+                              lat: row.lat,
+                              lng: row.lng,
+                            })
+                          }
+                        >
+                          <span className="theme-scenario-stop-thumb-placeholder" aria-hidden>
+                            <Icon name="mapPin" size={20} />
+                          </span>
+                          <span className="theme-scenario-stop-info">
+                            <span className="theme-scenario-stop-name">{row.name}</span>
+                            <span className="theme-scenario-stop-note">{row.note}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="theme-scenario-error">{t('scenario.ai.emptyDaysWarning', { days: t('scenario.dayTitle', { day }) })}</p>
+                  )}
+                </div>
+              ))}
+
+              {aiAppliedCount === null ? (
+                <div className="theme-scenario-result-actions">
+                  <button type="button" className="theme-scenario-apply-btn" onClick={handleApplyAiPlan}>
+                    {t('scenario.apply')}
+                  </button>
+                  <button type="button" className="theme-scenario-reset-btn" onClick={handleResetAi}>
+                    {t('scenario.ai.newAttempt')}
+                  </button>
+                </div>
+              ) : (
+                <div className="theme-scenario-applied-block">
+                  <p className="theme-scenario-applied-msg">
+                    {t('scenario.applied', { count: aiAppliedCount })}
+                  </p>
+                  <button type="button" className="theme-scenario-reset-btn" onClick={handleResetAi}>
+                    {t('scenario.ai.newAttempt')}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

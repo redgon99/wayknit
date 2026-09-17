@@ -714,7 +714,24 @@
     },
     "apply": "Ajouter aux épingles",
     "applied": "{{count}} lieux ajoutés à votre voyage.",
-    "newSearch": "Essayer un autre thème"
+    "newSearch": "Essayer un autre thème",
+    "ai": {
+      "modeLabel": "Demander à l'IA",
+      "themeModeLabel": "Parcourir par thème",
+      "subtitle": "Décrivez votre voyage en une phrase : destination, dates, avec qui, et l'ambiance souhaitée.",
+      "placeholder": "ex. 2 nuits 3 jours à Gangneung avec mes parents, sans trop marcher, plage et gastronomie",
+      "generateBtn": "Générer l'itinéraire IA",
+      "stageIntent": "Analyse des conditions du voyage…",
+      "stageCandidates": "Recherche de lieux…",
+      "stagePlan": "Construction de l'itinéraire…",
+      "errorDestinationMissing": "Impossible d'identifier la destination. Soyez plus précis.",
+      "errorGeneric": "Impossible de générer l'itinéraire. Réessayez dans un instant.",
+      "noCandidates": "Aucun lieu correspondant trouvé. Essayez une autre destination ou formulation.",
+      "emptyDaysWarning": "Pas assez de candidats pour {{days}}, donc c'est vide.",
+      "distanceNote": "L'ordre est basé sur la distance à vol d'oiseau — le temps de trajet réel peut différer.",
+      "newAttempt": "Recommencer",
+      "intentSummary": "Compris : un voyage de {{days}} jours à « {{destination}} »"
+    }
   },
   "chrome": {
     "appTitle": "Wayknit — Collectez des lieux. Assemblez votre itinéraire.",

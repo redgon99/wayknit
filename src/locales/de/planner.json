@@ -714,7 +714,24 @@
     },
     "apply": "Zu Pins hinzufügen",
     "applied": "{{count}} Orte zu Ihrer Reise hinzugefügt.",
-    "newSearch": "Anderes Thema versuchen"
+    "newSearch": "Anderes Thema versuchen",
+    "ai": {
+      "modeLabel": "KI fragen",
+      "themeModeLabel": "Nach Thema durchsuchen",
+      "subtitle": "Beschreibe deine Reise in einem Satz — Ziel, Zeitraum, Begleitung und gewünschte Stimmung.",
+      "placeholder": "z. B. 2 Nächte 3 Tage in Gangneung mit meinen Eltern, nicht zu viel Laufen, Strand und Essen im Fokus",
+      "generateBtn": "KI-Reiseplan erstellen",
+      "stageIntent": "Reisebedingungen werden analysiert…",
+      "stageCandidates": "Orte werden gesucht…",
+      "stagePlan": "Reiseplan wird erstellt…",
+      "errorDestinationMissing": "Das Reiseziel konnte nicht erkannt werden. Bitte genauer angeben.",
+      "errorGeneric": "Reiseplan konnte nicht erstellt werden. Bitte gleich noch einmal versuchen.",
+      "noCandidates": "Keine passenden Orte gefunden. Anderes Ziel oder andere Formulierung versuchen.",
+      "emptyDaysWarning": "Für {{days}} gibt es zu wenige Kandidaten, daher bleibt es leer.",
+      "distanceNote": "Reihenfolge basiert auf Luftlinie — die tatsächliche Fahrzeit kann abweichen.",
+      "newAttempt": "Neu erstellen",
+      "intentSummary": "Verstanden: eine {{days}}-tägige Reise nach „{{destination}}“"
+    }
   },
   "chrome": {
     "appTitle": "Wayknit — Orte sammeln. Route zusammenfügen.",

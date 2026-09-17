@@ -714,7 +714,24 @@
     },
     "apply": "핀에 반영",
     "applied": "{{count}}곳을 일정에 반영했습니다.",
-    "newSearch": "다른 테마로 다시 만들기"
+    "newSearch": "다른 테마로 다시 만들기",
+    "ai": {
+      "modeLabel": "AI에게 물어보기",
+      "themeModeLabel": "테마로 찾기",
+      "subtitle": "여행 조건을 한 문장으로 적어주세요. 목적지·기간·동행자·원하는 분위기를 자유롭게 써도 좋아요.",
+      "placeholder": "예: 부모님과 강릉으로 2박3일, 많이 걷지 않게 바다랑 맛집 위주로",
+      "generateBtn": "AI 일정 만들기",
+      "stageIntent": "여행 조건 분석 중…",
+      "stageCandidates": "후보 장소 검색 중…",
+      "stagePlan": "일정 구성 중…",
+      "errorDestinationMissing": "목적지를 파악하지 못했어요. 여행지를 조금 더 구체적으로 적어주세요.",
+      "errorGeneric": "일정을 만들지 못했어요. 잠시 후 다시 시도해주세요.",
+      "noCandidates": "조건에 맞는 후보를 찾지 못했어요. 다른 목적지나 표현으로 다시 시도해주세요.",
+      "emptyDaysWarning": "{{days}}에 넣을 후보가 부족해 비어있어요.",
+      "distanceNote": "직선거리 기준 순서예요 — 실제 도로 이동시간과 다를 수 있어요.",
+      "newAttempt": "다시 만들기",
+      "intentSummary": "\"{{destination}}\" · {{days}}일 여행으로 이해했어요"
+    }
   },
   "chrome": {
     "appTitle": "여로담 — 가고 싶은 곳을 담으면, 여행길이 됩니다",

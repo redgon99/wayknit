@@ -511,7 +511,24 @@
     },
     "apply": "添加到行程",
     "applied": "已将{{count}}个地点添加到行程。",
-    "newSearch": "换个主题重新生成"
+    "newSearch": "换个主题重新生成",
+    "ai": {
+      "modeLabel": "问问AI",
+      "themeModeLabel": "按主题浏览",
+      "subtitle": "用一句话描述你的旅行——目的地、日期、同行人和想要的氛围。",
+      "placeholder": "例如：和父母去江陵2晚3天，不想走太多路，主要想去海边和吃美食",
+      "generateBtn": "生成AI行程",
+      "stageIntent": "正在分析旅行条件…",
+      "stageCandidates": "正在搜索地点…",
+      "stagePlan": "正在生成行程…",
+      "errorDestinationMissing": "无法识别目的地，请说得更具体一些。",
+      "errorGeneric": "未能生成行程，请稍后重试。",
+      "noCandidates": "没有找到符合条件的地点，请换个目的地或说法再试一次。",
+      "emptyDaysWarning": "{{days}}候选地点不足，暂时留空。",
+      "distanceNote": "顺序按直线距离排列——实际路程时间可能不同。",
+      "newAttempt": "重新生成",
+      "intentSummary": "已理解：前往「{{destination}}」的{{days}}天行程"
+    }
   },
   "chrome": {
     "appTitle": "Wayknit — 收藏地点，串成路线",

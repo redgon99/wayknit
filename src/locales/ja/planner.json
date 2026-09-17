@@ -511,7 +511,24 @@
     },
     "apply": "ピンに反映",
     "applied": "{{count}}か所を旅程に反映しました。",
-    "newSearch": "別のテーマで作り直す"
+    "newSearch": "別のテーマで作り直す",
+    "ai": {
+      "modeLabel": "AIに相談する",
+      "themeModeLabel": "テーマから探す",
+      "subtitle": "旅行の条件を一文で書いてください。目的地・期間・同行者・雰囲気など自由に。",
+      "placeholder": "例: 両親と江陵へ2泊3日、あまり歩かず海とグルメ中心で",
+      "generateBtn": "AIで旅程を作る",
+      "stageIntent": "旅行条件を分析中…",
+      "stageCandidates": "候補地を検索中…",
+      "stagePlan": "旅程を作成中…",
+      "errorDestinationMissing": "目的地を特定できませんでした。もう少し具体的に書いてください。",
+      "errorGeneric": "旅程を作成できませんでした。しばらくしてからもう一度お試しください。",
+      "noCandidates": "条件に合う候補が見つかりませんでした。目的地や表現を変えてお試しください。",
+      "emptyDaysWarning": "{{days}}は候補が足りず空いています。",
+      "distanceNote": "直線距離基準の順番です — 実際の移動時間とは異なる場合があります。",
+      "newAttempt": "作り直す",
+      "intentSummary": "「{{destination}}」で{{days}}日間の旅行として理解しました"
+    }
   },
   "chrome": {
     "appTitle": "Wayknit — 行きたい場所を集めて、旅路にする",
