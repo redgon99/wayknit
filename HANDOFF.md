@@ -6697,6 +6697,76 @@ JSON을 파싱해 원래 값만 정확히 읽은 뒤 **텍스트 치환**(`"key"
 - "지금 매칭"(장소 매칭, `insight-place-match`)을 눌러 401/403 없이
   정상 동작하는지 — 첫 배포라 verify_jwt 설정이 맞는지 이걸로 확인됨.
 
+### 31-22. AI 일정 생성 기능 — 신규 프로젝트 착수, Step 1~2 (2026-09-17)
+
+사용자가 외부 PRD(`reports/trip_agent_prd.md`, TourAPI+AI 자연어 여행
+일정 생성)를 검토 요청 → 기존 코드와 대조 검토(보고만, 코드 변경 없음)
+→ "단계별로 순번 리스트업 후 단계마다 확인받고 진행"으로 착수. 전체
+계획은 7단계:
+
+1. 범위 확정 2. Intent Agent 3. 후보 검색 확장 4. Ranking+Planner
+5. `/plan` UI 연결 6. 사용량 캡·Plus 연동 7. 검증/에러 처리
+(대화형 수정은 범위 밖)
+
+**검토에서 확인한 것(구현 방향을 정한 근거):**
+- TourAPI 서버 프록시·Claude 큐레이션·`/plan` 통합까지 이미 상당수
+  존재(`tour-scenario*`, `scenarioGen.ts`, `ThemeScenarioPanel.tsx`).
+  PRD를 그대로 새로 구현하면 중복 — 기존 인프라 확장으로 스코프를 줄임.
+- `docs/monetization-strategy.md` 5절이 "「AI가 다 짜줌」만 유료
+  포인트로 걸지 말 것(Wanderly·ChatGPT와 직접 비교됨)"을 이미 명시 —
+  그래서 Step 6은 "기능 자체를 Plus 전용"이 아니라 기존
+  `FREE_DAILY_GOOGLE_SEARCHES` 패턴처럼 **호출량 캡**으로 설계 예정.
+- 지역명(예: "강릉")을 TourAPI 지역코드로 매핑하는 로직이 코드베이스
+  어디에도 없음을 확인 — 대신 기존 `tour-search`/`tour-scenario`가
+  전부 `searchKeyword2`(키워드 검색)만 쓰고 있어서, 지역코드 테이블을
+  새로 만들지 않고 "목적지+관심사 키워드"를 그대로 검색어로 결합하는
+  더 단순한 방식으로 가기로 함(Step 1에서 사용자 확인받음).
+
+**Step 1 — 범위 확정(사용자 확인 완료):**
+
+| 필드 | v1 범위 |
+|---|---|
+| 목적지 | 자유 텍스트 → 검색 키워드에 직접 결합 (지역코드 매핑 없음) |
+| 기간 | 일수만 1~7일 (정확한 날짜는 범위 밖) |
+| 동행자 | parents/kids/couple/solo/friends/unknown |
+| 페이스 | relaxed/normal/busy |
+| 회피조건 | "많이 안 걷기" 1개만 (v1) |
+| 관심사 | 기존 테마 10종(`SCENARIO_THEME_QUERIES`) 재사용 |
+| 무료 캡(안) | 하루 3회 — Step 6에서 실제 구현 시 확정 |
+
+**Step 2 — Intent Agent 구현:**
+- `supabase/functions/_shared/tripIntent.ts`(신규) — `TripIntent` 타입,
+  `buildIntentPrompt`(Claude haiku, 위 스키마로 JSON 강제), `parseIntentJson`
+  (필드별 clamp/폴백: days 1~7, companions/pace enum 검증, themes는
+  10종 화이트리스트만 통과), `parseTripIntent`(JSON 파싱 실패 시
+  `scenarioGen.ts`의 `callClaude`와 같은 1회 재시도 패턴). 목적지를
+  전혀 못 뽑으면 `DestinationMissingError`.
+- `supabase/functions/trip-intent-parse/index.ts`(신규) — POST
+  `{ text }` → `{ intent }`. 목적지 미검출은 422(`code:
+  'destination_missing'`), 문장 500자 초과는 400. **아직 배포
+  안 함**(사용자 승인 후 진행 — I2 때와 동일 원칙).
+- `src/lib/tripIntent.ts`(신규) — `parseTripIntent(text)` 클라이언트
+  래퍼(`tourScenario.ts`와 같은 `sb.functions.invoke` 패턴). 422 응답의
+  `code`를 읽어 `DestinationMissingError`로 다시 던짐 — `functions.invoke`가
+  4xx도 예외로 던지고 `data`에 본문을 안 실어주는 Supabase JS 특성 때문에
+  `error.context`(Response)를 다시 파싱해야 했다.
+- 아직 `/plan` UI에 연결 안 함(Step 5에서 진행) — 지금은 함수만 존재.
+
+**변경 파일:** `supabase/functions/_shared/tripIntent.ts`(신규),
+`supabase/functions/trip-intent-parse/index.ts`(신규),
+`src/lib/tripIntent.ts`(신규). 프런트 `npx tsc -b`·`npm run build`
+클린. Deno 쪽은 deno CLI 없어 괄호 균형 확인 + 육안 검토만 함(I2와
+동일한 한계).
+
+**확인 방법:** UI가 아직 없어 사용자가 직접 클릭해볼 수 있는 화면은
+없음. 배포하면 Supabase 대시보드에서 `trip-intent-parse` 함수를
+`{"text": "부모님과 강릉으로 2박3일, 많이 걷지 않게 바다랑 맛집
+위주로 가고 싶어"}`로 직접 호출해 `destination:"강릉"`,
+`days:2`(정확히는 "2박3일"→3일로 해석될 수도 있어 실제 응답 확인
+필요), `companions:"parents"`, `avoidLongWalk:true`,
+`themes`에 marine/food 계열이 들어오는지 확인하는 정도가 Step 2
+단독 검증. Step 5까지 끝나야 실제 화면에서 확인 가능.
+
 ---
 
 ## ▶ 다음 세션 시작점 (2026-09-17 기준, 갱신)
@@ -6721,6 +6791,17 @@ draft` v5→v6, `insight-place-match` 신규 v1 — 상세는 §31-21 참고).
 프런트 Netlify 배포와 Supabase 엣지 함수 배포는 서로 다른 대상이라
 "배포는 나중에" 규칙이 자동으로 엣지 함수까지 막지는 않는다는 걸
 이번에 확인함 — 각각 명시적 요청이 있을 때만 진행.
+
+**진행 중(현재 작업, §31-22): AI 일정 생성 기능 — 7단계 중 Step 2
+완료, 커밋 전.** 사용자가 "단계별로 진행하고 매 단계 확인받을 것"을
+명시적으로 요청한 프로젝트라 — **다음 세션에서도 이 패턴을 유지**:
+Step 3(후보 검색 확장) 시작 전 반드시 사용자에게 Step 2 결과를
+브리핑하고 확인받은 뒤에만 진행. 절대 여러 단계를 한 번에 몰아가지
+말 것(§31-20/§31-21처럼 "일괄 진행"이 아니라 "단계별 확인" 모드).
+Step 2 코드(`tripIntent.ts` 2곳, `trip-intent-parse/index.ts`)는 아직
+로컬에 커밋 안 됨 — 다음 세션 시작 시 사용자 확인 먼저, 확인되면 커밋
+후 Step 3으로. 엣지 함수는 아직 배포 안 함(Step 5에서 UI 붙을 때나
+그 전에 사용자가 테스트해보고 싶다고 하면 배포).
 
 **진행 방식 규칙(중요, 계속 지킬 것):** 2026-09-16부터 — 작업 후 자체
 검증(Playwright, DB에 테스트 데이터 넣고 SQL/REST API 직접 호출, 임시
