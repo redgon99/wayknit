@@ -16,7 +16,8 @@
   "limits": {
     "tripCount": "Free 方案最多保存 {{max}} 個行程。",
     "searchCap": "已達到今日搜索上限。Plus 可提高上限。",
-    "materialCount": "Free 方案每個行程最多上傳 {{max}} 個資料。Plus 無限制。"
+    "materialCount": "Free 方案每個行程最多上傳 {{max}} 個資料。Plus 無限制。",
+    "plazaImport": "Free 方案最多總共保存 {{max}} 個行程。Plus 可從共享廣場或分享連結無限匯入行程。"
   },
   "checkout": {
     "redirecting": "正在打開支付頁面…",
@@ -35,6 +36,8 @@
     "materialsFree": "每個行程{{n}}個",
     "offline": "資料離線保存",
     "offlinePlus": "支援",
+    "plazaImport": "共享廣場/分享連結匯入",
+    "plazaImportFree": "計入行程數上限",
     "unlimited": "無限制"
   }
 }

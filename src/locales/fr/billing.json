@@ -16,7 +16,8 @@
   "limits": {
     "tripCount": "L’offre gratuite permet jusqu’à {{max}} voyages.",
     "searchCap": "Limite quotidienne de recherches atteinte. Plus l’augmente.",
-    "materialCount": "L’offre gratuite permet jusqu’à {{max}} fichiers par voyage. Plus supprime cette limite."
+    "materialCount": "L’offre gratuite permet jusqu’à {{max}} fichiers par voyage. Plus supprime cette limite.",
+    "plazaImport": "L’offre gratuite permet {{max}} voyages au total. Plus permet d’importer un nombre illimité de voyages depuis la place ou des liens partagés."
   },
   "checkout": {
     "redirecting": "Ouverture du paiement…",
@@ -35,6 +36,8 @@
     "materialsFree": "{{n}} par voyage",
     "offline": "Enregistrement hors ligne des fichiers",
     "offlinePlus": "Disponible",
+    "plazaImport": "Import depuis la place / un lien",
+    "plazaImportFree": "Compte dans la limite de voyages",
     "unlimited": "Illimité"
   }
 }

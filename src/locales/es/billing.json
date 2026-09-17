@@ -16,7 +16,8 @@
   "limits": {
     "tripCount": "El plan gratuito permite hasta {{max}} viajes.",
     "searchCap": "Has alcanzado el límite diario de búsquedas. Plus lo aumenta.",
-    "materialCount": "El plan gratuito permite hasta {{max}} archivos por viaje. Plus elimina el límite."
+    "materialCount": "El plan gratuito permite hasta {{max}} archivos por viaje. Plus elimina el límite.",
+    "plazaImport": "El plan gratuito permite un máximo de {{max}} viajes en total. Plus te permite importar viajes ilimitados desde la plaza o enlaces compartidos."
   },
   "checkout": {
     "redirecting": "Abriendo el pago…",
@@ -35,6 +36,8 @@
     "materialsFree": "{{n}} por viaje",
     "offline": "Guardado de archivos sin conexión",
     "offlinePlus": "Disponible",
+    "plazaImport": "Importar desde plaza/enlace",
+    "plazaImportFree": "Cuenta para el límite de viajes",
     "unlimited": "Ilimitado"
   }
 }

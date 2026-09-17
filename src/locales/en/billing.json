@@ -16,7 +16,8 @@
   "limits": {
     "tripCount": "Free plan allows up to {{max}} trips.",
     "searchCap": "Daily search limit reached. Plus raises the limit.",
-    "materialCount": "Free plan allows up to {{max}} files per trip. Plus removes the limit."
+    "materialCount": "Free plan allows up to {{max}} files per trip. Plus removes the limit.",
+    "plazaImport": "Free plan allows up to {{max}} trips total. Plus lets you import unlimited trips from the plaza or share links."
   },
   "checkout": {
     "redirecting": "Opening checkout…",
@@ -35,6 +36,8 @@
     "materialsFree": "{{n}} per trip",
     "offline": "Offline material saving",
     "offlinePlus": "Available",
+    "plazaImport": "Plaza / share-link import",
+    "plazaImportFree": "Counts toward trip limit",
     "unlimited": "Unlimited"
   }
 }

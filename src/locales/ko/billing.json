@@ -16,7 +16,8 @@
   "limits": {
     "tripCount": "Free 플랜은 여행 {{max}}개까지 저장할 수 있습니다.",
     "searchCap": "오늘 검색 한도에 도달했습니다. Plus에서 더 많이 검색할 수 있습니다.",
-    "materialCount": "Free 플랜은 여행당 자료를 {{max}}개까지 올릴 수 있습니다. Plus에서 무제한으로 올릴 수 있습니다."
+    "materialCount": "Free 플랜은 여행당 자료를 {{max}}개까지 올릴 수 있습니다. Plus에서 무제한으로 올릴 수 있습니다.",
+    "plazaImport": "Free 플랜은 여행을 최대 {{max}}개까지 저장할 수 있어요. Plus는 공유마당·공유 링크에서 여행을 무제한으로 가져올 수 있습니다."
   },
   "checkout": {
     "processing": "결제를 진행하고 있습니다…",
@@ -44,6 +45,8 @@
     "materialsFree": "여행당 {{n}}개",
     "offline": "자료 오프라인 저장",
     "offlinePlus": "가능",
+    "plazaImport": "공유마당·공유 링크 가져오기",
+    "plazaImportFree": "여행 저장 캡에 포함",
     "unlimited": "무제한"
   }
 }

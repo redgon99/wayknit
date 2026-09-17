@@ -105,6 +105,16 @@ export function UpgradeModal({ open, onClose, plan, userId, onPlanChanged }: Pro
           한도가 바뀌어도 이 표만 따로 안 고쳐도 된다(가격 표시와 같은 원칙,
           위 F07 주석 참고).
         */}
+        {/*
+          2026-09-17 — "공유마당 가져오기" 행 추가. 별도 게이트가 아니라
+          `canCreateTrip`(여행 저장 캡)과 완전히 같은 메커니즘이다 — Plus는
+          이미 그 캡 자체가 무제한이라 마당 가져오기도 이미 무제한이었는데
+          이 사실이 어디에도 광고돼 있지 않았다. 마당을 써본 사용자에게
+          "여행 저장 무제한"보다 이 문구가 더 와닿을 거라 판단해 같은 값을
+          가리키는 행을 하나 더 뒀다(§29-43의 "실제로 게이트가 있는 것만
+          광고한다" 원칙은 지킨다 — 새 제한을 만든 게 아니라 이미 있던
+          동작에 이름을 붙인 것).
+        */}
         <table className="upgrade-compare">
           <thead>
             <tr>
@@ -140,6 +150,11 @@ export function UpgradeModal({ open, onClose, plan, userId, onPlanChanged }: Pro
               <th scope="row">{t('compare.offline')}</th>
               <td>{t('compare.no')}</td>
               <td className="upgrade-compare-plus-col">{t('compare.offlinePlus')}</td>
+            </tr>
+            <tr>
+              <th scope="row">{t('compare.plazaImport')}</th>
+              <td>{t('compare.plazaImportFree')}</td>
+              <td className="upgrade-compare-plus-col">{t('compare.unlimited')}</td>
             </tr>
           </tbody>
         </table>

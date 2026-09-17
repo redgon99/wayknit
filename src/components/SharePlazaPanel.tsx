@@ -138,7 +138,11 @@ export function SharePlazaPanel() {
       const userId = user?.id ?? null;
       const currentCount = (await tripsRepo.list(userId)).length;
       if (!canCreateTrip(plan, currentCount, isAdmin)) {
-        setToast(tb('limits.tripCount', { max: FREE_MAX_TRIPS }));
+        /* 2026-09-17 — 여기서 막히는 건 같은 여행 저장 캡인데, 마당에서
+           막히는 순간엔 "여행을 몇 개 저장할 수 있냐"보다 "왜 이 여행을
+           못 가져오냐"가 사용자 질문이라 문구를 마당 상황에 맞췄다
+           (UpgradeModal 비교표의 "공유마당 가져오기" 행과 짝). */
+        setToast(tb('limits.plazaImport', { max: FREE_MAX_TRIPS }));
         setTimeout(() => setToast(null), 3500);
         return;
       }

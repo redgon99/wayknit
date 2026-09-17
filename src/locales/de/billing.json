@@ -16,7 +16,8 @@
   "limits": {
     "tripCount": "Der Gratisplan erlaubt bis zu {{max}} Reisen.",
     "searchCap": "Tägliches Suchlimit erreicht. Plus erhöht das Limit.",
-    "materialCount": "Der Gratisplan erlaubt bis zu {{max}} Dateien pro Reise. Plus hebt das Limit auf."
+    "materialCount": "Der Gratisplan erlaubt bis zu {{max}} Dateien pro Reise. Plus hebt das Limit auf.",
+    "plazaImport": "Der Gratisplan erlaubt insgesamt bis zu {{max}} Reisen. Mit Plus können Sie unbegrenzt viele Reisen aus dem Marktplatz oder über geteilte Links importieren."
   },
   "checkout": {
     "redirecting": "Zahlung wird geöffnet…",
@@ -35,6 +36,8 @@
     "materialsFree": "{{n}} pro Reise",
     "offline": "Offline-Speichern von Unterlagen",
     "offlinePlus": "Verfügbar",
+    "plazaImport": "Import aus Marktplatz/Link",
+    "plazaImportFree": "Zählt zum Reiselimit",
     "unlimited": "Unbegrenzt"
   }
 }

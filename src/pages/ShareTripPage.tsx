@@ -114,7 +114,7 @@ export default function ShareTripPage() {
        */
       const currentCount = (await tripsRepo.list(userId)).length;
       if (!canCreateTrip(plan, currentCount, isAdmin)) {
-        setAddMessage(tb('limits.tripCount', { max: FREE_MAX_TRIPS }));
+        setAddMessage(tb('limits.plazaImport', { max: FREE_MAX_TRIPS }));
         setAdding(false);
         return;
       }

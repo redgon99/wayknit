@@ -16,7 +16,8 @@
   "limits": {
     "tripCount": "Freeプランは旅行{{max}}件までです。",
     "searchCap": "本日の検索上限に達しました。Plusで上限が上がります。",
-    "materialCount": "Freeプランは旅行1件につき資料{{max}}件までです。Plusでは上限がなくなります。"
+    "materialCount": "Freeプランは旅行1件につき資料{{max}}件までです。Plusでは上限がなくなります。",
+    "plazaImport": "Freeプランは旅行を合計{{max}}件まで保存できます。Plusでは共有広場・共有リンクから無制限に旅行を取り込めます。"
   },
   "checkout": {
     "redirecting": "決済ページへ移動します…",
@@ -35,6 +36,8 @@
     "materialsFree": "旅行ごとに{{n}}件",
     "offline": "資料のオフライン保存",
     "offlinePlus": "利用可能",
+    "plazaImport": "共有広場・共有リンクからの取り込み",
+    "plazaImportFree": "旅行保存件数に含まれる",
     "unlimited": "無制限"
   }
 }
