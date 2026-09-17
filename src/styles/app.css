@@ -619,6 +619,19 @@ button {
   max-width: min(420px, calc(100vw - 32px));
 }
 
+/*
+  2026-09-17 — 제목 칸에 `flex`/`min-width` 지정이 없어서, `.share-header-actions`
+  안의 안내 문구(`.share-add-error`)가 길어지자(Plus 업셀 문구) 그 칸이
+  내용 폭만큼 넓어지려 하고, 반대로 제목 칸은 남은 폭이 거의 0으로
+  눌려 "목포갓바위하루"가 한 글자씩 세로로 쌓이는 것처럼 깨졌다.
+  제목 칸은 `min-width: 0`으로 정상적으로 줄바꿈하게 하고, 액션 칸은
+  `max-width`로 상한을 둬서 안내 문구가 그 폭 안에서만 줄바꿈되게 한다.
+*/
+.share-header-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .share-header-actions {
   display: flex;
   flex-direction: column;
@@ -626,6 +639,7 @@ button {
   gap: 8px;
   flex-shrink: 0;
   min-width: 132px;
+  max-width: 168px;
 }
 
 .share-action-btn {
@@ -672,8 +686,11 @@ button {
 .share-add-error {
   margin: 0;
   font-size: 11px;
+  line-height: 1.4;
   color: var(--color-danger-text);
   text-align: center;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .share-badge {
@@ -8090,6 +8107,12 @@ button {
   color: #fff;
   font-size: 14px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  /* 2026-09-17 — Plus 업셀 문구처럼 길어진 메시지가 좁은 화면에서
+     가장자리를 넘어가지 않게 폭 상한 + 줄바꿈을 둔다. */
+  max-width: min(360px, calc(100vw - 32px));
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 /* ===== PWA 설치 ===== */

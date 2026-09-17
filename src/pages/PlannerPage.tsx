@@ -2827,6 +2827,7 @@ export default function PlannerPage() {
             tableViewMode={tableViewMode}
             onToggleTableView={handleToggleTableView}
             plazaNavVisible={plazaNavVisible}
+            onOpenAccount={() => setAccountOpen(true)}
           />
 
           <PlannerSidePanel

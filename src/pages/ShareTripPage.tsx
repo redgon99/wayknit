@@ -197,7 +197,7 @@ export default function ShareTripPage() {
       )}
 
       <header className="share-header">
-        <div>
+        <div className="share-header-title">
           <span className="share-badge">공유 보기</span>
           <h1 className="share-title">{trip.title}</h1>
         </div>

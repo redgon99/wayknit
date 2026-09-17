@@ -53,6 +53,14 @@ interface Props {
    * 양쪽에서 각각 열면 같은 여행에 채널이 두 개 열린다.
    */
   presenceViewers?: PresenceViewer[];
+  /**
+   * "계정" 메뉴 — 사용자 요청(2026-09-17)으로 추가. 데스크톱엔 지금까지
+   * `AuthBar`(로그아웃·관리자 링크 정도)만 있고, 모바일에만 있던
+   * `MobileAccountSheet`(플랜 배지·업그레이드·빌드 버전 확인)로 가는
+   * 길이 없었다. `PlannerPage`가 이미 갖고 있는 같은 시트 하나를 여기서도
+   * 열게만 한다 — 새 컴포넌트를 안 만든다.
+   */
+  onOpenAccount?: () => void;
 }
 
 export function PlannerAppBar({
@@ -80,6 +88,7 @@ export function PlannerAppBar({
   onToggleTableView,
   plazaNavVisible,
   presenceViewers = EMPTY_VIEWERS,
+  onOpenAccount,
 }: Props) {
   const { t } = useTranslation('planner');
   const { t: ts } = useTranslation('share');
@@ -296,6 +305,12 @@ export function PlannerAppBar({
               setHelpAirportFocus(false);
               setSheet('help');
             })}
+            {onOpenAccount && (
+              <>
+                <div className="planner-more-sep" aria-hidden />
+                {moreItem(t('chrome.tabAccount'), onOpenAccount)}
+              </>
+            )}
           </div>
         )}
       </div>
