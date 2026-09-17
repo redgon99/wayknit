@@ -524,6 +524,7 @@
       "errorDestinationMissing": "无法识别目的地，请说得更具体一些。",
       "errorGeneric": "未能生成行程，请稍后重试。",
       "noCandidates": "没有找到符合条件的地点，请换个目的地或说法再试一次。",
+      "dailyCapReached": "今天的免费AI行程生成次数({{max}}次)已用完。明天再试，或升级到Plus解锁无限次数。",
       "emptyDaysWarning": "{{days}}候选地点不足，暂时留空。",
       "distanceNote": "顺序按直线距离排列——实际路程时间可能不同。",
       "newAttempt": "重新生成",

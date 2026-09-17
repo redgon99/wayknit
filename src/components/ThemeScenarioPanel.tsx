@@ -8,7 +8,15 @@ import type { Place, PinnedPlace } from '../types';
 import { applyImportRows, type PinImportResult } from '../lib/importPins';
 import { listPublishedScenarios, listPublishedScenarioCounts } from '../lib/scenarioCatalog';
 import { SCENARIO_THEMES, applyScenarioToTrip, scenarioStopToPlace, type ScenarioTheme, type TourScenario } from '../lib/tourScenario';
-import { isTripIntentConfigured, parseTripIntent, DestinationMissingError, type TripIntent } from '../lib/tripIntent';
+import {
+  isTripIntentConfigured,
+  parseTripIntent,
+  canGenerateAiTripPlan,
+  recordAiTripPlanGeneration,
+  FREE_DAILY_AI_TRIP_PLANS,
+  DestinationMissingError,
+  type TripIntent,
+} from '../lib/tripIntent';
 import { searchTripCandidates } from '../lib/tripCandidates';
 import { generateTripPlan, type GeneratedTripPlan } from '../lib/tripPlanner';
 
@@ -119,6 +127,14 @@ export function ThemeScenarioPanel({
     setAiPlan(null);
     setAiAppliedCount(null);
     try {
+      // §31-22 Step 6 — Claude+TourAPI 호출 전에 하루 캡을 먼저 확인한다(실제 방어선은 서버 RPC)
+      const allowed = await canGenerateAiTripPlan();
+      if (!allowed) {
+        setAiError(t('scenario.ai.dailyCapReached', { max: FREE_DAILY_AI_TRIP_PLANS }));
+        return;
+      }
+      void recordAiTripPlanGeneration();
+
       setAiStage('intent');
       const intent = await parseTripIntent(text);
       setAiIntent(intent);

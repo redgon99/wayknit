@@ -727,6 +727,7 @@
       "errorDestinationMissing": "Impossible d'identifier la destination. Soyez plus précis.",
       "errorGeneric": "Impossible de générer l'itinéraire. Réessayez dans un instant.",
       "noCandidates": "Aucun lieu correspondant trouvé. Essayez une autre destination ou formulation.",
+      "dailyCapReached": "Vous avez utilisé vos générations d'itinéraire IA gratuites du jour ({{max}}). Réessayez demain ou passez à Plus pour un accès illimité.",
       "emptyDaysWarning": "Pas assez de candidats pour {{days}}, donc c'est vide.",
       "distanceNote": "L'ordre est basé sur la distance à vol d'oiseau — le temps de trajet réel peut différer.",
       "newAttempt": "Recommencer",

@@ -727,6 +727,7 @@
       "errorDestinationMissing": "We couldn't figure out your destination. Please be more specific.",
       "errorGeneric": "Couldn't generate an itinerary. Please try again shortly.",
       "noCandidates": "No matching places found. Try a different destination or wording.",
+      "dailyCapReached": "You've used today's free AI itinerary generations ({{max}}). Try again tomorrow, or upgrade to Plus for unlimited.",
       "emptyDaysWarning": "Not enough candidates for {{days}}, so it's left empty.",
       "distanceNote": "Order is based on straight-line distance — actual road travel time may differ.",
       "newAttempt": "Start over",

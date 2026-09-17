@@ -6982,6 +6982,54 @@ build` 클린, 9개 로케일 JSON 전부 `JSON.parse`로 문법 확인.
   때 코스성 제목이 사라졌는지, 나머지 후보들이 실제 장소로 보이는지
   확인 필요.
 
+### 31-23. AI 일정 생성 Step 6 — 사용량 캡 (2026-09-17)
+
+기존 `google_search_cap_server.sql`(§30-4)과 **완전히 같은 패턴** —
+테이블 + `can_*`/`record_*` SECURITY DEFINER 함수 쌍. `has_unlimited_
+access()`(이미 있던 함수, `is_admin()` OR plan in plus/team)를 그대로
+재사용해 Plus/Team/관리자는 무제한, Free는 하루 3회.
+
+- `supabase/migrations/20260917130000_ai_trip_plan_cap.sql`(신규,
+  적용 완료) — `ai_trip_plan_usage` 테이블, `can_generate_ai_trip_plan()`
+  `record_ai_trip_plan_generation()`. RLS만 켜고 클라이언트 직접
+  접근 정책은 안 둠(google_search_usage와 동일 — 카운트 조작 방지).
+- Google 검색 캡과 다른 점: 게스트용 localStorage 폴백이 필요 없다
+  — `trip-intent-parse`/`trip-candidates-search` 둘 다 `verify_jwt:
+  true`라 로그인 없인 애초에 호출 자체가 안 되기 때문에, RPC가
+  `auth.uid() is null`이면 그냥 `false`를 돌려주는 걸로 충분하다.
+- `src/lib/tripIntent.ts`에 `FREE_DAILY_AI_TRIP_PLANS = 3`,
+  `canGenerateAiTripPlan()`/`recordAiTripPlanGeneration()` 추가 —
+  `subscription.ts`의 `canRunGoogleSearch`/`recordGoogleSearch`와
+  같은 스타일(서버 조회 실패 시 막는 쪽으로 안전하게 처리: Google
+  검색 캡은 실패 시 로컬 폴백으로 열어주지만, 이건 게스트 폴백이
+  없으므로 서버 조회 실패 시 `false` — 더 보수적).
+- `ThemeScenarioPanel.tsx`의 `handleGenerateAi`: Claude·TourAPI를
+  실제로 부르기 **전에** `canGenerateAiTripPlan()`으로 먼저 확인,
+  막히면 `scenario.ai.dailyCapReached` 메시지 표시 후 중단. 통과하면
+  `recordAiTripPlanGeneration()`을 호출(응답 기다리지 않음, fire-
+  and-forget)한 뒤 바로 Step 2로 진행 — "결과가 안 나와도 시도
+  자체가 비용"이라는 원칙대로 성공 여부와 무관하게 시도 시점에 기록.
+- 9개 로케일 `planner.json`에 `scenario.ai.dailyCapReached` 번역 추가.
+
+**변경 파일:** `supabase/migrations/20260917130000_ai_trip_plan_cap.sql`
+(신규, DB 적용 완료), `src/lib/tripIntent.ts`, `ThemeScenarioPanel.tsx`,
+9개 로케일 `planner.json`. `npx tsc -b`·`npm run build` 클린, DB에서
+`can_generate_ai_trip_plan`/`record_ai_trip_plan_generation` 함수
+존재 확인(`execute_sql`로 조회만, 실행은 안 함).
+
+🔴 **아직 안 한 것 — `isAdmin` 게이트 제거 여부는 사용자에게 물어볼
+것.** Step 6 메커니즘 자체는 완성됐지만, `ThemeScenarioPanel.tsx`의
+AI 모드 토글은 여전히 `isAdmin`일 때만 보인다(§31-22 앞부분 참고).
+지금 상태에서 캡이 잘 작동하는지(관리자는 `has_unlimited_access()`로
+무제한이라 캡에 걸릴 일이 없어 **관리자 계정으로는 캡 동작 자체를
+확인할 방법이 없음**)까지 감안해서, `isAdmin` 조건을 지우고 일반
+사용자에게 공개할지는 별도로 확인받아야 한다. 캡이 실제로 작동하는지
+보려면 Plus가 아닌 일반 Free 계정으로 4번째 시도했을 때 막히는지
+확인하는 방법뿐 — 관리자 계정으로는 검증 불가능하다는 점을 사용자에게
+설명할 것.
+
+**Step 7(검증/에러 처리 보강)은 아직 미착수.**
+
 ---
 
 ## ▶ 다음 세션 시작점 (2026-09-17 기준, 갱신)
@@ -7007,24 +7055,30 @@ draft` v5→v6, `insight-place-match` 신규 v1 — 상세는 §31-21 참고).
 "배포는 나중에" 규칙이 자동으로 엣지 함수까지 막지는 않는다는 걸
 이번에 확인함 — 각각 명시적 요청이 있을 때만 진행.
 
-**진행 중(현재 작업, §31-22): AI 일정 생성 기능 — 7단계 중 Step 1~5
-완료 + 엣지 함수 배포 완료(관리자 전용 임시 게이트 상태).** 진행
-경위: 사용자가 "단계별로 진행하고 매 단계 확인받을 것"을 요청 →
-Step 4 이후 "지금까지 작업 확인할 방법"을 물어봄 → Step 5까지 마저
-진행하기로 선택 → Step 5 완료 시점에 "배포하면 사용량 캡 없이
-전체 공개된다"는 리스크를 사용자에게 확인 → **"관리자 전용으로
-임시 가려두고 배포"를 선택**해 `ThemeScenarioPanel.tsx`에 `isAdmin`
-게이트를 추가하고 `trip-intent-parse`·`trip-candidates-search`를
-실제로 배포함(둘 다 v1). **남은 건 Step 6(사용량 캡·Plus 연동) +
-`isAdmin` 게이트 제거, Step 7(검증/에러 처리 보강)뿐.**
+**진행 중(현재 작업, §31-22/§31-23): AI 일정 생성 기능 — 7단계 중
+Step 1~6 완료, Step 7만 남음.** 진행 경위: 사용자가 "단계별로 진행,
+매 단계 확인받을 것" 요청 → Step 5까지 진행 → 배포 → 관리자로
+실사용 테스트 → **버그 2개 발견·즉시 수정**(§31-22 후반: 후보 검색
+0건 버그 v2, 여행코스 콘텐츠 오염 버그 v3) → "다음 해야할 것?" 질문에
+Step 6/7 안내 → "진행해"로 Step 6(사용량 캡, §31-23) 완료.
 
-🔴 **다음 세션 시작 시 가장 먼저 할 것:** 사용자가 관리자 계정으로
-`/plan`에서 직접 AI 일정 생성을 테스트했는지, 실제로 동작하는지
-확인. 아직 안 했다면 §31-22의 "확인 방법(관리자 계정으로)"를
-안내할 것. 잘 되면 Step 6(사용량 캡)로, 문제가 있으면 그것부터
-고칠 것. **일반 사용자에게 공개하려면 반드시 Step 6을 먼저 끝내고
-`ThemeScenarioPanel.tsx`의 `isAdmin` 조건을 지워야 한다** — 이 순서를
-건너뛰지 말 것.
+**남은 건 Step 7(검증/에러 처리 보강) + `isAdmin` 게이트 제거뿐.**
+
+🔴 **다음 세션 시작 시 가장 먼저 할 것:**
+1. 사용자가 v3 재테스트를 했는지, 코스성 제목 없이 실제 장소가
+   잘 나왔는지 확인이 안 된 상태로 "진행해"를 받아 Step 6으로
+   넘어갔다 — **v3 재테스트 결과를 아직 못 받았으니 먼저 물어볼 것.**
+   문제가 있으면 그것부터 고친다.
+2. Step 6(사용량 캡)이 실제로 작동하는지는 **관리자 계정으로는
+   검증 불가능**(관리자는 무제한이라 캡에 안 걸림) — 사용자가
+   일반 Free 계정을 갖고 있다면 그걸로 4번째 시도가 막히는지
+   확인해달라고 요청할 것. 없으면 Plus 여부와 무관하게 로직
+   리뷰로 대신하고 넘어가는 것도 가능(사용자와 상의).
+3. 위 두 개가 정리되면 Step 7(검증/에러 처리 보강)로 진행 — 남은
+   범위는 주로 "candidates 0건일 때 다른 행동 제안"(기존 테마
+   카탈로그의 `onGoToSearch` 패턴처럼 검색 탭으로 유도) 정도.
+4. Step 7까지 끝나면 **일반 사용자 공개 여부**를 사용자에게 확인 —
+   확인되면 `ThemeScenarioPanel.tsx`의 `isAdmin` 조건 제거.
 
 **진행 방식 규칙(중요, 계속 지킬 것):** 2026-09-16부터 — 작업 후 자체
 검증(Playwright, DB에 테스트 데이터 넣고 SQL/REST API 직접 호출, 임시

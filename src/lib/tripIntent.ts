@@ -22,6 +22,44 @@ export function isTripIntentConfigured(): boolean {
   return isSupabaseConfigured;
 }
 
+/**
+ * §31-22 Step 6 — Free 플랜 하루 무료 생성 횟수. Plus/Team/관리자는
+ * `has_unlimited_access()`(서버)가 무제한으로 통과시킨다. 이 숫자는
+ * `supabase/migrations/20260917130000_ai_trip_plan_cap.sql`의 하드코딩된
+ * `3`과 반드시 같이 맞출 것 — 여긴 표시용, 실제 방어선은 서버 RPC다.
+ */
+export const FREE_DAILY_AI_TRIP_PLANS = 3;
+
+/**
+ * 로그인 필수 기능이라(trip-intent-parse/trip-candidates-search 둘 다
+ * verify_jwt=true) Google 검색 캡과 달리 게스트용 localStorage 폴백이
+ * 필요 없다 — RPC가 auth.uid() 없으면 그냥 false를 돌려준다.
+ */
+export async function canGenerateAiTripPlan(): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  try {
+    const { data, error } = await supabase.rpc('can_generate_ai_trip_plan');
+    if (error) throw error;
+    return data === true;
+  } catch (e) {
+    console.warn('AI 일정 생성 한도 서버 조회 실패', e);
+    return false;
+  }
+}
+
+export async function recordAiTripPlanGeneration(): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) return;
+  try {
+    const { error } = await supabase.rpc('record_ai_trip_plan_generation');
+    if (error) throw error;
+  } catch (e) {
+    // 이번 한 건이 서버에 안 찍힐 뿐, 생성 자체는 이미 진행 중 — 조용히 넘어간다
+    console.warn('AI 일정 생성 횟수 서버 기록 실패', e);
+  }
+}
+
 export class DestinationMissingError extends Error {
   constructor() {
     super('목적지를 파악하지 못했습니다. 여행지를 조금 더 구체적으로 적어주세요.');

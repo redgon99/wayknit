@@ -727,6 +727,7 @@
       "errorDestinationMissing": "Das Reiseziel konnte nicht erkannt werden. Bitte genauer angeben.",
       "errorGeneric": "Reiseplan konnte nicht erstellt werden. Bitte gleich noch einmal versuchen.",
       "noCandidates": "Keine passenden Orte gefunden. Anderes Ziel oder andere Formulierung versuchen.",
+      "dailyCapReached": "Du hast deine heutigen kostenlosen KI-Reiseplan-Generierungen ({{max}}) aufgebraucht. Versuche es morgen erneut oder upgrade auf Plus für unbegrenzte Nutzung.",
       "emptyDaysWarning": "Für {{days}} gibt es zu wenige Kandidaten, daher bleibt es leer.",
       "distanceNote": "Reihenfolge basiert auf Luftlinie — die tatsächliche Fahrzeit kann abweichen.",
       "newAttempt": "Neu erstellen",

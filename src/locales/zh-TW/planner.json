@@ -524,6 +524,7 @@
       "errorDestinationMissing": "無法辨識目的地，請說得更具體一些。",
       "errorGeneric": "未能產生行程，請稍後再試。",
       "noCandidates": "找不到符合條件的地點，請換個目的地或說法再試一次。",
+      "dailyCapReached": "今天的免費AI行程產生次數({{max}}次)已用完。明天再試，或升級到Plus解鎖無限次數。",
       "emptyDaysWarning": "{{days}}候選地點不足，暫時留空。",
       "distanceNote": "順序依直線距離排列——實際路程時間可能不同。",
       "newAttempt": "重新產生",
