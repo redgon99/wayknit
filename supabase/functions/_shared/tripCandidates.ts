@@ -28,6 +28,15 @@ import type { TripIntent } from './tripIntent.ts';
 /** 관심사(테마)를 하나도 안 골랐을 때 쓰는 기본 키워드 — 관광지/맛집/카페면 어떤 여행에도 무난히 맞음 */
 const BASELINE_KEYWORDS = ['관광지', '맛집', '카페'];
 
+/**
+ * contentTypeId 25(여행코스)는 개별 방문지가 아니라 "코스 전체"를 가리키는
+ * 항목이라 제목이 "신사임당과 허난설헌을 낳은 고장 강릉에 가다"처럼 기사·
+ * 블로그 형태라 실제 장소명이 아니다(사용자 실사용 테스트에서 발견, 2026-09-17).
+ * 기존 테마 카탈로그 흐름은 Claude가 이런 후보를 걸러내며 고르지만, 이
+ * Step 4 플래너는 의도적으로 AI를 안 쓰므로(PRD §17) 소스 단계에서 제외한다.
+ */
+const EXCLUDED_CONTENT_TYPES = new Set(['25']);
+
 /** API 호출량을 억제하기 위해 테마당 대표 키워드 1개만, 최대 3개 테마까지만 쓴다 */
 const MAX_THEME_KEYWORDS = 3;
 
@@ -86,6 +95,7 @@ export async function fetchDestinationCandidates(
 
   for (const { item, sourceKeyword } of results.flat()) {
     if (!item.contentid || seen.has(item.contentid)) continue;
+    if (item.contenttypeid && EXCLUDED_CONTENT_TYPES.has(item.contenttypeid.trim())) continue;
     const lat = parseFloat(item.mapy);
     const lng = parseFloat(item.mapx);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
