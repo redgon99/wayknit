@@ -65,8 +65,8 @@ export interface TourScenario {
   droppedStopContentIds: string[];
 }
 
-/** contentTypeId(TourAPI) → 기존 가져오기 파이프라인이 이해하는 한글 카테고리 라벨 */
-const CONTENT_TYPE_TO_CATEGORY_LABEL: Record<string, string> = {
+/** contentTypeId(TourAPI) → 기존 가져오기 파이프라인이 이해하는 한글 카테고리 라벨. tripPlanner.ts(§31-22 Step 4)도 재사용 */
+export const CONTENT_TYPE_TO_CATEGORY_LABEL: Record<string, string> = {
   '12': '관광지',
   '14': '문화',
   '15': '문화',
