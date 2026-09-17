@@ -6653,15 +6653,35 @@ JSON을 파싱해 원래 값만 정확히 읽은 뒤 **텍스트 치환**(`"key"
   추출, `insight-place-match`의 장소명 추출)도 디코딩 — 안 그러면 기존
   원문의 엔티티가 AI 입력을 왜곡한다.
 
-**배포 필요(중요):** 이번 수정은 Supabase Edge Function 5개
-(`insight-collect-naver`·`insight-collect-youtube`·
-`insight-collect-reddit`·`insight-guide-draft`·`insight-place-match`)와
-새 공유 파일(`_shared/htmlEntities.ts`)을 건드리는데, **아직 배포
-안 함** — 프런트 "배포는 나중에" 규칙과 같은 이유로 이번에도 명시적
-요청 없이는 안 함. 로컬 tsc/build로는 Deno 함수를 검증할 수 없어
-(deno CLI 없음) 괄호/중괄호 균형 확인 정도만 했고, 실제 검증은 배포 후
-"지금 수집" 버튼으로 한 번 돌려보는 것뿐이다 — **배포는 사용자 승인
-후 `deploy_edge_function`으로 진행할 것.**
+**배포 완료(2026-09-17, 사용자 요청으로 즉시 진행):** `deploy_edge_function`으로
+5개 전부 배포함 — `insight-collect-naver`(v7→v8), `insight-collect-youtube`
+(v7→v8), `insight-collect-reddit`(v7→v8), `insight-guide-draft`(v5→v6),
+`insight-place-match`(**신규 배포, v1**). 기존 verify_jwt 설정은 유지
+(collect-3종 true, guide-draft false). 로컬 tsc/build로는 Deno 함수를
+검증할 수 없어(deno CLI 없음) 괄호/중괄호 균형 확인 정도만 하고 배포함.
+
+**배포 중 발견한 것 두 가지(중요, 후속 논의 필요):**
+1. 🔴 **`insight-place-match`는 이번이 첫 배포였다** — 클라이언트
+   (`adminInsights.ts`의 `triggerInsightPlaceMatch`)는 계속 이 함수를
+   호출하고 있었는데 실제로는 Supabase에 존재한 적이 없어 "지금 매칭"
+   버튼이 지금까지 전부 실패했을 것이다(I2와 무관한 기존 결함, 이번
+   배포로 우연히 해소됨). verify_jwt는 기존 함수가 없어 기준으로 삼을
+   값이 없었고, `insight-collect-*`와 같은 `true`로 배포함 — 형제 함수인
+   `insight-guide-draft`(`false`)와 기준이 다르니, 실제로 안 불려지면
+   verify_jwt를 `false`로 낮춰야 할 수 있음(다음에 "지금 매칭"을 눌러
+   401이 뜨는지 확인 필요).
+2. **배포 전 운영 중이던 `insight-collect-naver`(v7)에는 로컬 저장소에
+   이미 있던 수집 기간 필터 기능(`insightPeriod.ts`, `periodDays`/
+   `from`/`to`)이 아예 없었다** — 즉 이번 배포로 I2 엔티티 수정과 함께,
+   전부터 로컬에만 있고 한 번도 배포된 적 없던 이 기능도 같이 처음
+   반영됐다. 의도한 기능이라면 문제 없지만, 언제 어떤 세션이 이 코드를
+   작성했는지 이번 세션에서 추적하지 않았으니 "지금 수집" 시 기간 필터
+   UI/동작이 예상과 다르면 알려달라.
+
+로컬 `insightDb.ts`가 `npm:@supabase/supabase-js@2`를 쓰는데 배포 전
+운영 버전은 `https://esm.sh/@supabase/supabase-js@2`였다 — 둘 다 Deno
+런타임이 지원하는 정상 지정자라 문제 없음(내가 바꾼 게 아니라 이전부터
+로컬과 운영이 이렇게 갈라져 있었다는 뜻일 뿐).
 
 **변경 파일:** `supabase/functions/_shared/htmlEntities.ts`(신규),
 `insight-collect-naver/index.ts`, `insight-collect-youtube/index.ts`,
@@ -6669,12 +6689,13 @@ JSON을 파싱해 원래 값만 정확히 읽은 뒤 **텍스트 치환**(`"key"
 `insight-place-match/index.ts`, `src/lib/adminInsights.ts`. 프런트
 부분(`adminInsights.ts`)만 `npx tsc -b`·`npm run build` 클린 확인.
 
-**확인 방법(사용자 직접, 배포 후):**
+**확인 방법(사용자 직접, 배포 완료됨):**
 - `/admin/insights` 목록에서 기존 원문 제목/내용에 `&#39;`·`&amp;`가
-  더 이상 안 보이는지(디코딩된 문자로 바로 보여야 함 — 이건 배포 없이도
-  프런트만으로 확인 가능).
-- 배포 후 "지금 수집"(유튜브·네이버·레딧 아무거나)을 눌러 새로 들어온
-  항목의 제목/내용에도 엔티티가 안 남아있는지.
+  더 이상 안 보이는지.
+- "지금 수집"(유튜브·네이버·레딧 아무거나)을 눌러 새로 들어온 항목의
+  제목/내용에도 엔티티가 안 남아있는지, 정상적으로 수집되는지(에러 없이).
+- "지금 매칭"(장소 매칭, `insight-place-match`)을 눌러 401/403 없이
+  정상 동작하는지 — 첫 배포라 verify_jwt 설정이 맞는지 이걸로 확인됨.
 
 ---
 
@@ -6687,16 +6708,19 @@ JSON을 파싱해 원래 값만 정확히 읽은 뒤 **텍스트 치환**(`"key"
 검증까지 함) + 공유마당 가져오기 Plus 혜택 광고(§31-17, 그 문구가 유발한
 레이아웃 버그 수정 §31-18) + 데스크톱 계정 메뉴 추가(§31-19) +
 P2 전부(N2 나머지·S1·S2, §31-20) + **I2 일부(HTML 엔티티 디코딩,
-§31-21) 진행**. 1~4단계·5단계는 커밋·푸시 완료(`c8777b5`·`d28e99d`).
-§31-17(`31fd406`)·§31-18~19(`c1c2432`)·§31-20(`724e789`)까지 커밋
-완료. **§31-21은 아직 로컬 커밋 전** — 다음 세션 시작 시 바로 커밋.
-프런트 부분만 `tsc -b`·`npm run build` 클린 확인(Deno 엣지 함수는
-로컬에 deno 없어 정적 검증 불가, 육안 검토만 함). **배포는 아직 안
-함** — 사용자가 "배포는 나중에"라고 명시. §31-21의 엣지 함수 5개는
-**프런트 배포와 별개로, Supabase `deploy_edge_function`도 사용자
-승인 후에만** 진행할 것 — 지금은 코드만 있고 실제 반영 안 됨(기존
-원문 디코딩은 프런트 배포만으로도 보이지만, 신규 수집 정상화는 엣지
-함수 배포가 있어야 함).
+§31-21) 진행 및 커밋**. 1~4단계·5단계는 커밋·푸시 완료(`c8777b5`·
+`d28e99d`). §31-17(`31fd406`)·§31-18~19(`c1c2432`)·§31-20(`724e789`)·
+§31-21(`c124d95`)까지 로컬 커밋 완료 — **원격 푸시는 아직 안 함**
+(4개 커밋 밀림). 프런트 부분만 `tsc -b`·`npm run build` 클린 확인
+(Deno 엣지 함수는 로컬에 deno 없어 정적 검증 불가, 육안 검토만 함).
+**프런트(Netlify) 배포는 아직 안 함** — 사용자가 "배포는 나중에"라고
+명시, 여전히 유효. **단, §31-21의 Supabase 엣지 함수 5개는 사용자가
+"엣지함수 배포해줘"라고 명시적으로 요청해 2026-09-17에 이미 배포
+완료함**(`insight-collect-naver/youtube/reddit` v7→v8, `insight-guide-
+draft` v5→v6, `insight-place-match` 신규 v1 — 상세는 §31-21 참고).
+프런트 Netlify 배포와 Supabase 엣지 함수 배포는 서로 다른 대상이라
+"배포는 나중에" 규칙이 자동으로 엣지 함수까지 막지는 않는다는 걸
+이번에 확인함 — 각각 명시적 요청이 있을 때만 진행.
 
 **진행 방식 규칙(중요, 계속 지킬 것):** 2026-09-16부터 — 작업 후 자체
 검증(Playwright, DB에 테스트 데이터 넣고 SQL/REST API 직접 호출, 임시
