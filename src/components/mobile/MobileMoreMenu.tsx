@@ -2,9 +2,23 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../Icon';
+import { AppSheetModal } from '../AppSheetModal';
+import { HelpContent } from '../HelpContent';
+import { KoreaSetupContent } from '../KoreaSetupContent';
+import { SharePlazaPanel } from '../SharePlazaPanel';
 import { normalizeLocale, pathWithLocale } from '../../lib/locale';
 import i18n from '../../lib/i18n';
 import type { PlanId } from '../../lib/subscription';
+
+/**
+ * 랜딩·플래너 내비게이션 5단계(2026-09-17) — 공유마당·한국 준비·도움말을
+ * 데스크톱은 시트로, 모바일은 별도 페이지 이동으로 열어서 같은 메뉴가
+ * 기기마다 다른 방식으로 동작했다(검토보고서 5번). 데스크톱 쪽(플래너를
+ * 안 떠나고 겹쳐보기)이 더 나은 경험이라, 모바일을 그쪽으로 맞춘다 —
+ * `PlannerAppBar.tsx`와 똑같은 패턴(AppSheetModal + 같은 콘텐츠 컴포넌트).
+ * 가이드("여행 팁")·한국여행정보는 원래부터 실제 페이지라 그대로 둔다.
+ */
+type AppSheet = 'plaza' | 'setup' | 'help';
 
 interface Props {
   onShare: () => void;
@@ -51,6 +65,8 @@ export function MobileMoreMenu({
   const navigate = useNavigate();
   const locale = normalizeLocale(i18n.language);
   const [open, setOpen] = useState(false);
+  const [sheet, setSheet] = useState<AppSheet | null>(null);
+  const [helpAirportFocus, setHelpAirportFocus] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -86,6 +102,7 @@ export function MobileMoreMenu({
   );
 
   return (
+    <>
     <div className="planner-bar-more mobile-more-menu" ref={rootRef}>
       <button
         type="button"
@@ -108,14 +125,14 @@ export function MobileMoreMenu({
             )}
           {onOpenPreferences && item(t('themes.label'), onOpenPreferences)}
           {onOpenTableView && item(t('view.table'), onOpenTableView)}
-          {plazaNavVisible && item(t('plazaNav'), () => navigate(pathWithLocale('/plaza', locale)))}
+          {plazaNavVisible && item(t('plazaNav'), () => setSheet('plaza'))}
           {/* 가이드·정보 링크는 이전엔 이 메뉴 어디에도 없었다(landing-planner
               -navigation-review §4) */}
           {item(tl('nav.tips'), () => navigate(pathWithLocale('/guides', locale)))}
           {item(tl('nav.info'), () => navigate(pathWithLocale('/info', locale)))}
           <div className="planner-more-sep" aria-hidden />
-          {item(t('nav.setup'), () => navigate(pathWithLocale('/setup', locale)))}
-          {item(t('nav.help'), () => navigate(pathWithLocale('/help', locale)))}
+          {item(t('nav.setup'), () => setSheet('setup'))}
+          {item(t('nav.help'), () => setSheet('help'))}
           <div className="planner-more-sep" aria-hidden />
           {item(
             t('chrome.tabAccount'),
@@ -128,5 +145,44 @@ export function MobileMoreMenu({
         </div>
       )}
     </div>
+
+    <AppSheetModal
+      open={sheet === 'plaza'}
+      title={t('plazaNav')}
+      subtitle={t('nav.plazaLead', {
+        defaultValue: '다른 여행자의 일정을 둘러보고 내 여행으로 끌어오세요.',
+      })}
+      onClose={() => setSheet(null)}
+      wide
+    >
+      <SharePlazaPanel />
+    </AppSheetModal>
+
+    <AppSheetModal
+      open={sheet === 'setup'}
+      title={t('setup.title')}
+      subtitle={t('setup.lead')}
+      onClose={() => setSheet(null)}
+    >
+      <KoreaSetupContent
+        onOpenAirportHelp={() => {
+          setHelpAirportFocus(true);
+          setSheet('help');
+        }}
+      />
+    </AppSheetModal>
+
+    <AppSheetModal
+      open={sheet === 'help'}
+      title={t('help.title')}
+      subtitle={t('help.lead')}
+      onClose={() => {
+        setSheet(null);
+        setHelpAirportFocus(false);
+      }}
+    >
+      <HelpContent airportFocus={helpAirportFocus} />
+    </AppSheetModal>
+    </>
   );
 }
