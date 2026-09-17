@@ -134,19 +134,27 @@ export async function submitContentReport(params: {
   }
 }
 
+export interface ContentReportPage {
+  rows: ContentReport[];
+  /** S1(관리자 검토 2026-09-16) — 200건 상한 뒤엔 더 볼 방법이 없었다 */
+  totalCount: number;
+}
+
 export async function listContentReports(
   status?: ReportStatus | 'all',
-): Promise<ContentReport[]> {
+  limit = 200,
+): Promise<ContentReportPage> {
   const sb = requireSupabase();
   let query = sb
     .from('content_reports')
-    .select(REPORT_SELECT)
+    .select(REPORT_SELECT, { count: 'exact' })
     .order('created_at', { ascending: false })
-    .limit(200);
+    .limit(limit);
   if (status && status !== 'all') query = query.eq('status', status);
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) throw error;
-  return (data as ReportRow[] | null)?.map(rowToReport) ?? [];
+  const rows = (data as ReportRow[] | null)?.map(rowToReport) ?? [];
+  return { rows, totalCount: count ?? rows.length };
 }
 
 export async function updateContentReport(

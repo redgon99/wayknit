@@ -178,11 +178,16 @@ export default function AdminPage() {
   const handleExportUsers = async () => {
     setExporting('users');
     try {
-      const { rows } = await listAdminUserRows({
+      const { rows, totalCount } = await listAdminUserRows({
         search: userSearch,
         limit: EXPORT_LIMIT,
         includeTest: includeTestUsers,
       });
+      /* S1(관리자 검토 2026-09-16) — 상한(5000건)에 걸려도 조용히 잘려서
+         내보내졌다. 실제로 잘렸을 때만 알려준다(오류가 아니라 안내). */
+      if (totalCount > rows.length) {
+        setError(`전체 ${totalCount}건 중 최근 ${rows.length}건만 내보냈습니다(내보내기 상한 ${EXPORT_LIMIT}건). 검색으로 좁혀서 다시 시도하세요.`);
+      }
       const csv = toCsv(rows, [
         { header: '이메일', value: (r) => r.email ?? '' },
         { header: '사용자 ID', value: (r) => r.userId },
@@ -208,7 +213,10 @@ export default function AdminPage() {
   const handleExportPlaza = async () => {
     setExporting('plaza');
     try {
-      const { rows } = await listPlazaListings({ search: plazaSearch, limit: EXPORT_LIMIT });
+      const { rows, totalCount } = await listPlazaListings({ search: plazaSearch, limit: EXPORT_LIMIT });
+      if (totalCount > rows.length) {
+        setError(`전체 ${totalCount}건 중 최근 ${rows.length}건만 내보냈습니다(내보내기 상한 ${EXPORT_LIMIT}건). 검색으로 좁혀서 다시 시도하세요.`);
+      }
       const csv = toCsv(rows, [
         { header: '제목', value: (r) => r.title },
         { header: '여행 ID', value: (r) => r.id },

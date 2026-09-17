@@ -89,7 +89,10 @@ export function deriveAlerts(s: DashboardSummary): DashboardAlert[] {
       id: 'distribution-no-account',
       level: 'warn',
       message: `배포 초안 ${s.distribution.draft}건이 있지만 연결된 계정이 없어 게시할 수 없습니다`,
-      to: '/admin/distribution',
+      /* N2(관리자 검토 2026-09-16) — "계정 연결"을 눌러도 큐 탭(기본값)
+         으로만 갔다. AdminDistributionPage.tsx가 ?tab=accounts를 읽어
+         계정 탭으로 바로 연다. */
+      to: '/admin/distribution?tab=accounts',
       actionLabel: '계정 연결',
     });
   }

@@ -30,6 +30,14 @@ export const SEARCH_KIND_LABEL: Record<SearchKind, string> = {
 /** 결과를 묶어서 보여줄 순서 */
 export const SEARCH_KIND_ORDER: SearchKind[] = ['user', 'trip', 'scenario', 'guide', 'notice'];
 
+/** S2(관리자 검토 2026-09-16) — guide/scenario 모두 draft/published/archived만 쓴다
+ *  (admin_global_search가 status를 넘기는 건 이 둘뿐). 원본 영문이 그대로 보이던 것을 한글로 */
+export const SEARCH_STATUS_LABEL: Record<string, string> = {
+  draft: '초안',
+  published: '게시됨',
+  archived: '보관됨',
+};
+
 export async function searchAdmin(query: string, perKind = 10): Promise<SearchHit[]> {
   if (!isSupabaseConfigured) throw new Error('Supabase가 설정되어야 검색할 수 있습니다.');
   const sb = getSupabase();

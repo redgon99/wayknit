@@ -6538,6 +6538,95 @@ JSON을 파싱해 원래 값만 정확히 읽은 뒤 **텍스트 치환**(`"key"
 원래 물어보셨던 "PC에서 버전 확인" 방법이 됩니다.
 
 
+### 31-20. 관리자 검토 P2 — N2 나머지 · S1(목록 확장성) · S2(표시 일관성) (2026-09-17)
+
+`admin-review-2026-09-16.md`의 P2 세 항목을 한 번에 처리.
+
+**N2(나머지) · 대시보드 "계정 연결" 알림이 큐 탭으로만 갔다.**
+[adminDashboard.ts](src/lib/adminDashboard.ts) 알림의 `to`를
+`/admin/distribution?tab=accounts`로 바꾸고, [AdminDistributionPage.tsx](src/pages/AdminDistributionPage.tsx)에
+`?tab=accounts` 쿼리를 읽어 계정 탭을 바로 여는 처리를 기존 딥링크
+`useEffect`(`focusAccountId`/`focusPostId`) 위에 추가했다(처리 후 쿼리
+파라미터는 지움). D2에서 이미 고친 게 배포 관련 알림뿐이었고, 이 대시보드
+알림은 별개 코드 경로라 남아 있었다.
+
+**S1 · 목록이 상한(100~5000건)에 걸리면 조용히 잘렸다.**
+같은 패턴을 4곳에 적용 — Supabase `.select(cols, { count: 'exact' })`로
+필터 적용 후의 실제 전체 건수를 같이 받아, 화면엔 "총 N건 중 M건 표시" +
+"더 보기"(상한을 늘려 재조회)를 보여준다.
+- [distribution.ts](src/lib/distribution.ts) `listDistributionPosts` →
+  `{ rows, totalCount }` 반환(기존 `DistributionPost[]`에서 변경).
+  [AdminDistributionPage.tsx](src/pages/AdminDistributionPage.tsx)가
+  유일한 호출부 — `postsLimit` state(기본 100, "더 보기"로 +100)로 반영.
+- [contentReports.ts](src/lib/contentReports.ts) `listContentReports` →
+  같은 방식으로 `{ rows, totalCount }` 반환.
+  [AdminReportsPage.tsx](src/pages/AdminReportsPage.tsx)가 유일한
+  호출부 — `reportsLimit` state(기본 200, "더 보기"로 +200), 5개 호출
+  지점(`loadAll`) 전부 새 시그니처로 갱신.
+- [AdminPage.tsx](src/pages/AdminPage.tsx) CSV 내보내기 2곳
+  (`handleExportUsers`·`handleExportPlaza`) — 상한(`EXPORT_LIMIT`)에
+  걸려 잘렸을 때만 안내 문구를 띄운다(에러가 아니라 안내). `totalCount`는
+  두 함수(`listAdminUserRows`·`listPlazaListings`)가 이미 반환하고
+  있던 값이라 호출부만 고쳤다.
+- 부수적으로 [guides.ts](src/lib/guides.ts)의 `listAdminGuides`도 손봤다
+  — 목록 화면은 제목·요약·상태만 쓰는데 `select('*')`로 본문
+  (`body_md`, 글마다 수 KB)까지 매번 받아오고 있었다. 목록 전용
+  컬럼셋(`GUIDE_LIST_SELECT`)으로 줄이고, 편집창을 여는
+  `getAdminGuide(id)`만 그대로 `select('*')` 전체를 받는다. 이건 상한
+  문제는 아니지만 같은 "목록 화면이 불필요하게 무겁다" 계열이라 같이
+  묶었다.
+
+**S2 · 상태값·필드명 원문이 그대로 보이거나 문구가 겹쳤다.**
+- 🔴 [AdminAuditPage.tsx](src/pages/AdminAuditPage.tsx)의 변경 이력
+  줄이 "작업" 배지(추가/수정/삭제) 옆에
+  [describeAuditEntry](src/lib/adminAudit.ts#L297)를 이어 붙이는데,
+  이 함수가 INSERT/DELETE엔 그대로 '추가'/'삭제'를, 변경 필드가 없는
+  UPDATE엔 '수정'을 반환해 **"추가 추가"/"수정 수정"처럼 겹쳐
+  보였다**(보고서가 지적한 "수정 수정" 버그). 배지가 이미 같은 말을
+  보여주므로 이 경우들은 빈 문자열을 반환하게 고쳤다. 곁들여
+  - `status`가 아닌 값 전환에서 `상태 → resolved`처럼 원본 영문 enum이
+    그대로 보이던 것을, 테이블별 상태값 한글 맵(`AUDIT_STATUS_LABEL`
+    — content_reports/distribution_posts/guide_articles)으로 치환.
+  - 변경된 컬럼 목록(`(status, menu_tree)`처럼 컬럼명 원문)도
+    `AUDIT_FIELD_LABEL` 맵으로 한글 치환(모르는 컬럼은 원문 그대로 —
+    안전한 폴백).
+  - CSV 내보내기의 "변경 컬럼" 열은 원본 컬럼명 그대로 남겨뒀다(기술
+    원문은 상세/내보내기에 두고 화면 요약만 한글로 — 보고서 방향과 일치).
+- [adminSearch.ts](src/lib/adminSearch.ts) 전역 검색 결과의 상태 배지가
+  guide/scenario의 `draft`/`published`/`archived` 원문을 그대로
+  보여주고 있었다 — `SEARCH_STATUS_LABEL` 추가해
+  [AdminSearchPage.tsx](src/pages/AdminSearchPage.tsx)에서 치환(모르는
+  값은 원문 폴백).
+- [AdminInsightsPage.tsx](src/pages/AdminInsightsPage.tsx) 수집 실행
+  현황표가 `InsightRunStatus`(`running`/`success`/`error`) 원문을 그대로
+  보여주고 있었다 — `RUN_STATUS_LABEL`로 치환(보고서가 예로 든
+  "success"가 바로 이 화면).
+- `AdminReportsPage.tsx`의 `<select value={r.status}>`는 값 자체(영문)를
+  DOM에 넘기는 정상적인 용법이라 손대지 않음(보이는 `<option>` 라벨은
+  이미 `STATUS_LABEL`로 한글).
+
+**변경 파일:** `adminDashboard.ts`, `AdminDistributionPage.tsx`,
+`distribution.ts`, `contentReports.ts`, `AdminReportsPage.tsx`,
+`AdminPage.tsx`, `guides.ts`, `adminAudit.ts`, `AdminSearchPage.tsx`,
+`adminSearch.ts`, `AdminInsightsPage.tsx`. DB 변경 없음. `npx tsc -b`·
+`npm run build` 클린. 세션 규칙대로 브라우저 자체 검증은 안 함.
+
+**확인 방법(사용자 직접):**
+- 관리자로 `/admin/distribution` 진입, 대시보드에서 "계정 연결" 알림
+  클릭 → 큐 탭이 아니라 계정 탭이 바로 열리는지.
+- 배포 게시물이 100건 넘거나(현재는 안 될 수 있음), 신고가 200건
+  넘으면 "총 N건 중 M건 표시" + "더 보기"가 뜨는지 — 지금 데이터량이
+  적으면 이 배너 자체가 안 보이는 게 정상(임계값 미도달).
+- CSV 내보내기(회원·공유마당)가 상한(문서화된 값, 예: 5000건)에 걸릴
+  만큼 데이터가 없으면 안내 문구도 안 보이는 게 정상.
+- `/admin/audit`에서 아무 UPDATE 행이나 펼쳐서 "작업" 칸이 "수정
+  (제목, 상태)"처럼 한 번만 나오는지("수정 수정"이 아닌지), 신고 처리
+  로그의 상태 전환이 "상태 → 조치 완료"처럼 한글로 보이는지.
+- `/admin/search`에서 가이드나 시나리오를 검색해 상태 배지가 "초안"/
+  "게시됨"/"보관됨"으로 보이는지.
+- `/admin/insights`의 "마지막 실행" 표에서 상태가 "성공"/"오류"/"실행
+  중"으로 보이는지.
+
 ---
 
 ## ▶ 다음 세션 시작점 (2026-09-17 기준, 갱신)
@@ -6547,10 +6636,12 @@ JSON을 파싱해 원래 값만 정확히 읽은 뒤 **텍스트 치환**(`"key"
 해소) + 랜딩·플래너 내비게이션 1~5단계 **전부**(§31-14~31-16, 6개 지적
 전부 완료, 5단계는 이번 건에 한해 사용자 요청으로 Playwright 직접
 검증까지 함) + 공유마당 가져오기 Plus 혜택 광고(§31-17, 그 문구가 유발한
-레이아웃 버그 수정 §31-18) + 데스크톱 계정 메뉴 추가(§31-19) 진행.
-1~4단계·5단계는 커밋·푸시 완료(`c8777b5`·`d28e99d`). **§31-17(`31fd406`)
-까지는 커밋됐고, §31-18·31-19는 아직 로컬 커밋 전** — 다음 세션 시작
-시 바로 커밋. **배포는 아직 안 함** — 사용자가 "배포는 나중에"라고 명시.
+레이아웃 버그 수정 §31-18) + 데스크톱 계정 메뉴 추가(§31-19) +
+**P2 전부(N2 나머지·S1·S2, §31-20) 진행**. 1~4단계·5단계는 커밋·푸시
+완료(`c8777b5`·`d28e99d`). §31-17(`31fd406`)·§31-18~19(`c1c2432`)까지
+커밋 완료. **§31-20은 아직 로컬 커밋 전** — 다음 세션 시작 시 바로
+커밋(`tsc -b`·`npm run build` 클린 확인됨). **배포는 아직 안 함** —
+사용자가 "배포는 나중에"라고 명시.
 
 **진행 방식 규칙(중요, 계속 지킬 것):** 2026-09-16부터 — 작업 후 자체
 검증(Playwright, DB에 테스트 데이터 넣고 SQL/REST API 직접 호출, 임시
@@ -6563,8 +6654,7 @@ dev 서버 기동 등) **전부 금지**. `tsc --noEmit`·`npm run build` 같은
 **남은 것(관리자 검토 보고서, `reports/admin-review-2026-09-16.md`):**
 - P1: C1~C3(시나리오 편집기·콘텐츠 품질·가이드 새로 작성), I1~I2(수집
   운영·인사이트 품질)
-- P2: S1~S2(목록 확장성·표시 일관성), N2(대시보드 바로가기 — distribution
-  부분은 §31-8에서 고쳐짐, 나머지 남음)
+- P2는 §31-20으로 전부 완료(N2 나머지·S1·S2)
 - N1(메뉴 재구성)·U3(권한 분리)는 관리자가 한 명인 지금은 의도적으로 보류
 - D2에서 미룬 것: 실제 자동 예약 발행 크론(계정 0개인 지금 우선순위 낮음)
 - R1에서 범위 밖으로 남긴 것: trip/plaza_listing 제재(비공개 전환) 복구

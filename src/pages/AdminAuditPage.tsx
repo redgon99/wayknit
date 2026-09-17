@@ -374,8 +374,8 @@ export default function AdminAuditPage() {
                       <td>
                         <span className={`audit-op audit-op--${entry.operation.toLowerCase()}`}>
                           {OPERATION_LABEL[entry.operation]}
-                        </span>{' '}
-                        {describeAuditEntry(entry)}
+                        </span>
+                        {describeAuditEntry(entry) && <> {describeAuditEntry(entry)}</>}
                       </td>
                       <td>
                         <button

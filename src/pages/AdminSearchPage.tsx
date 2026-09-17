@@ -7,6 +7,7 @@ import {
   groupByKind,
   searchAdmin,
   SEARCH_KIND_LABEL,
+  SEARCH_STATUS_LABEL,
   type SearchHit,
 } from '../lib/adminSearch';
 import '../styles/app.css';
@@ -119,7 +120,11 @@ export default function AdminSearchPage() {
                         <span className="search-hit-sub">{hit.subtitle}</span>
                       )}
                     </span>
-                    {hit.status && <span className="search-hit-status">{hit.status}</span>}
+                    {hit.status && (
+                      <span className="search-hit-status">
+                        {SEARCH_STATUS_LABEL[hit.status] ?? hit.status}
+                      </span>
+                    )}
                     {hit.url ? (
                       hit.url.startsWith('/trip/') ? (
                         <a

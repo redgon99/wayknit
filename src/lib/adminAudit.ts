@@ -240,14 +240,61 @@ export function auditSubject(entry: AdminAuditEntry): string {
   return entry.rowId ? `#${entry.rowId.slice(0, 8)}` : '-';
 }
 
+/** S2(관리자 검토 2026-09-16) — 테이블별 status 원본값 → 한글. 화면(AdminReportsPage 등)의
+ *  STATUS_LABEL과 값이 겹치지만, 이 파일은 lib라 컴포넌트를 import하지 않고 독립적으로 둔다. */
+const AUDIT_STATUS_LABEL: Record<string, Record<string, string>> = {
+  content_reports: { open: '접수', reviewing: '검토 중', resolved: '조치 완료', rejected: '반려' },
+  distribution_posts: { draft: '초안', approved: '승인됨', scheduled: '예약됨', posted: '게시됨', failed: '실패' },
+  guide_articles: { draft: '초안', published: '게시됨', archived: '보관됨' },
+};
+
+/** S2 — `menu_tree`처럼 컬럼명 원문이 그대로 보이던 것을 한글로 */
+const AUDIT_FIELD_LABEL: Record<string, string> = {
+  status: '상태',
+  title: '제목',
+  body: '본문',
+  body_md: '본문',
+  summary: '요약',
+  hero_title: '메인 문구',
+  is_published: '게시 여부',
+  is_active: '활성 여부',
+  handle: '계정 핸들',
+  label: '이름',
+  credentials: '인증정보',
+  scheduled_at: '예약 시각',
+  account_id: '연결 계정',
+  admin_note: '관리 메모',
+  reviewed_at: '검토 시각',
+  reviewed_by_email: '검토자',
+  note: '메모',
+  is_test: '테스트 계정 여부',
+  menu_tree: '메뉴 구조',
+  media_urls: '첨부 이미지',
+  topic_tags: '태그',
+  slug: '슬러그',
+  kind: '유형',
+  content: '내용',
+  keyword: '키워드',
+  video_path: '영상',
+};
+
+function auditFieldLabel(field: string): string {
+  return AUDIT_FIELD_LABEL[field] ?? field;
+}
+
 /**
  * 로그 한 줄을 요약 문구로. status 전환은 관리자가 실제로 인지하는 행위
  * (게시/게시중지)로 바꿔 보여준다 — 원본 컬럼명만 보여주면 무슨 일이
  * 있었는지 읽어내기 어렵다.
+ *
+ * S2(관리자 검토 2026-09-16) — 예전엔 INSERT/DELETE에서 각각 '추가'/'삭제'를,
+ * 변경 필드가 없는 UPDATE에서 '수정'을 반환해, 이미 작업 배지가 같은 말을
+ * 보여주는 화면(AdminAuditPage)에서 "추가 추가"/"수정 수정"처럼 겹쳐 보였다.
+ * 배지와 겹치지 않도록 그런 경우는 빈 문자열을 반환한다. status가 아닌
+ * 다른 원본 enum 값('상태 → resolved' 같은)과 컬럼명도 한글로 바꾼다.
  */
 export function describeAuditEntry(entry: AdminAuditEntry): string {
-  if (entry.operation === 'INSERT') return '추가';
-  if (entry.operation === 'DELETE') return '삭제';
+  if (entry.operation === 'INSERT' || entry.operation === 'DELETE') return '';
 
   if (entry.changedFields.includes('status')) {
     const from = entry.before?.status;
@@ -255,9 +302,12 @@ export function describeAuditEntry(entry: AdminAuditEntry): string {
     if (to === 'published') return '게시';
     if (from === 'published' && to === 'draft') return '게시중지';
     if (to === 'archived') return '보관';
-    if (typeof to === 'string') return `상태 → ${to}`;
+    if (typeof to === 'string') {
+      const label = AUDIT_STATUS_LABEL[entry.tableName]?.[to] ?? to;
+      return `상태 → ${label}`;
+    }
   }
 
-  if (entry.changedFields.length === 0) return '수정';
-  return `수정 (${entry.changedFields.join(', ')})`;
+  if (entry.changedFields.length === 0) return '';
+  return `(${entry.changedFields.map(auditFieldLabel).join(', ')})`;
 }

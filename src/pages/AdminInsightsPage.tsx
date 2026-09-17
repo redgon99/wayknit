@@ -32,6 +32,7 @@ import type {
   InsightCollectionRun,
   InsightItemWithAnalysis,
   InsightKeyword,
+  InsightRunStatus,
   InsightSource,
 } from '../types/insights';
 import '../styles/app.css';
@@ -41,6 +42,13 @@ const SOURCE_LABEL: Record<InsightSource, string> = {
   naver_blog: '네이버 블로그',
   naver_kin: '네이버 지식인',
   reddit: 'Reddit',
+};
+
+/** S2(관리자 검토 2026-09-16) — 'success' 같은 원본 영문이 그대로 보이던 것을 한글로 */
+const RUN_STATUS_LABEL: Record<InsightRunStatus, string> = {
+  running: '실행 중',
+  success: '성공',
+  error: '오류',
 };
 
 const CATEGORY_LABEL: Record<InsightCategory, string> = {
@@ -601,7 +609,7 @@ export default function AdminInsightsPage() {
                       <td>
                         {run && (
                           <span className={`admin-pill ${run.status === 'success' ? 'ok' : ''}`}>
-                            {run.status}
+                            {RUN_STATUS_LABEL[run.status]}
                           </span>
                         )}
                       </td>

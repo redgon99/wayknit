@@ -56,21 +56,24 @@ export default function AdminReportsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<StatusFilter>('open');
   const [reports, setReports] = useState<ContentReport[]>([]);
+  const [reportsTotal, setReportsTotal] = useState(0);
+  const [reportsLimit, setReportsLimit] = useState(200);
   const [targetStates, setTargetStates] = useState<Map<string, ReportTargetState>>(new Map());
   const [moderatingId, setModeratingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
 
-  const loadAll = useCallback(async (status: StatusFilter) => {
+  const loadAll = useCallback(async (status: StatusFilter, limit: number) => {
     setRefreshing(true);
     setError(null);
     try {
-      const [rows, states] = await Promise.all([
-        listContentReports(status),
+      const [{ rows, totalCount }, states] = await Promise.all([
+        listContentReports(status, limit),
         // 대상 상태 조회가 실패해도 목록 자체는 보여준다
         fetchReportTargetStates().catch(() => new Map<string, ReportTargetState>()),
       ]);
       setReports(rows);
+      setReportsTotal(totalCount);
       setTargetStates(states);
       setSelectedIds(new Set());
     } catch (e) {
@@ -82,8 +85,8 @@ export default function AdminReportsPage() {
 
   useEffect(() => {
     if (access !== 'ok') return;
-    void loadAll(filter);
-  }, [access, loadAll, filter]);
+    void loadAll(filter, reportsLimit);
+  }, [access, loadAll, filter, reportsLimit]);
 
   const openCount = useMemo(
     () => reports.filter((r) => r.status === 'open' || r.status === 'reviewing').length,
@@ -107,7 +110,7 @@ export default function AdminReportsPage() {
     }
     try {
       await updateContentReport(report.id, { status }, user?.id ?? null, user?.email ?? null);
-      await loadAll(filter);
+      await loadAll(filter, reportsLimit);
     } catch (e) {
       setError(e instanceof Error ? e.message : '상태 변경 실패');
     }
@@ -123,7 +126,7 @@ export default function AdminReportsPage() {
     setError(null);
     try {
       await moderateReport(report.id);
-      await loadAll(filter);
+      await loadAll(filter, reportsLimit);
     } catch (e) {
       setError(e instanceof Error ? e.message : '제재 처리 실패');
     } finally {
@@ -175,7 +178,7 @@ export default function AdminReportsPage() {
     try {
       await bulkUpdateContentReports([...selectedIds], { status }, user?.id ?? null, user?.email ?? null);
       setSelectedIds(new Set());
-      await loadAll(filter);
+      await loadAll(filter, reportsLimit);
     } catch (e) {
       setError(e instanceof Error ? e.message : '일괄 처리 실패');
     } finally {
@@ -231,7 +234,7 @@ export default function AdminReportsPage() {
           subtitle="이용자 신고 접수 · 검수 큐"
           current="reports"
           refreshing={refreshing}
-          onRefresh={() => void loadAll(filter)}
+          onRefresh={() => void loadAll(filter, reportsLimit)}
         />
 
         {error && <div className="admin-error">{error}</div>}
@@ -424,6 +427,17 @@ export default function AdminReportsPage() {
               </tbody>
             </table>
           </div>
+          {/* S1(관리자 검토 2026-09-16) — 200건 상한 뒤엔 더 볼 방법이 없었다 */}
+          {reportsTotal > reports.length && (
+            <div className="admin-action-row">
+              <span className="admin-cell-sub">
+                총 {reportsTotal}건 중 {reports.length}건 표시
+              </span>
+              <button type="button" className="admin-link-btn" onClick={() => setReportsLimit((n) => n + 200)}>
+                더 보기
+              </button>
+            </div>
+          )}
         </section>
       </div>
     </main>

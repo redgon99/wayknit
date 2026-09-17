@@ -89,6 +89,8 @@ export default function AdminDistributionPage() {
 
   const [accounts, setAccounts] = useState<DistributionAccount[]>([]);
   const [posts, setPosts] = useState<DistributionPost[]>([]);
+  const [postsTotal, setPostsTotal] = useState(0);
+  const [postsLimit, setPostsLimit] = useState(100);
 
   const [platformFilter, setPlatformFilter] = useState<DistributionPlatform | ''>('');
   const [statusFilter, setStatusFilter] = useState<DistributionPostStatus | ''>('');
@@ -111,6 +113,10 @@ export default function AdminDistributionPage() {
    * 행으로 스크롤 + (게시물이면) 편집창까지 자동으로 연다. */
   const focusAccountId = searchParams.get('account');
   const focusPostId = searchParams.get('post');
+  /* N2(관리자 검토 2026-09-16) — 대시보드 "계정 연결" 알림이 큐 탭으로만
+     보냈다. 강조할 특정 계정이 없어도(계정이 아예 0개인 게 이 알림의
+     전제) 탭만 바로 열게 한다. */
+  const focusTab = searchParams.get('tab');
 
   const [newPlatform, setNewPlatform] = useState<DistributionPlatform>('x');
   const [newCountry, setNewCountry] = useState('');
@@ -130,15 +136,17 @@ export default function AdminDistributionPage() {
 
   const loadPosts = useCallback(async () => {
     try {
-      const rows = await listDistributionPosts({
+      const { rows, totalCount } = await listDistributionPosts({
         platform: platformFilter || undefined,
         status: statusFilter || undefined,
+        limit: postsLimit,
       });
       setPosts(rows);
+      setPostsTotal(totalCount);
     } catch (e) {
       setError(e instanceof Error ? e.message : '게시 목록을 불러오지 못했습니다.');
     }
-  }, [platformFilter, statusFilter]);
+  }, [platformFilter, statusFilter, postsLimit]);
 
   /* D2 — "발행된 가이드 중 최근 5개를 알아서" 대신 관리자가 소스를 직접 고른다 */
   const loadGuides = useCallback(async () => {
@@ -177,6 +185,18 @@ export default function AdminDistributionPage() {
    * 다른 행을 보기 불편하다. */
   useEffect(() => {
     if (access !== 'ok') return;
+    if (focusTab === 'accounts') {
+      setActiveTab('accounts');
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete('tab');
+          return next;
+        },
+        { replace: true }
+      );
+      return;
+    }
     if (focusAccountId) {
       setActiveTab('accounts');
       setHighlightAccountId(focusAccountId);
@@ -205,7 +225,7 @@ export default function AdminDistributionPage() {
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [access, focusAccountId, focusPostId, posts]);
+  }, [access, focusTab, focusAccountId, focusPostId, posts]);
 
   const accountsByPlatform = useMemo(() => {
     const map = new Map<DistributionPlatform, DistributionAccount[]>();
@@ -732,6 +752,17 @@ export default function AdminDistributionPage() {
                 </tbody>
               </table>
             </div>
+            {/* S1(관리자 검토 2026-09-16) — 100건 상한 뒤엔 더 볼 방법이 없었다 */}
+            {postsTotal > posts.length && (
+              <div className="admin-action-row">
+                <span className="admin-cell-sub">
+                  총 {postsTotal}건 중 {posts.length}건 표시
+                </span>
+                <button type="button" className="admin-link-btn" onClick={() => setPostsLimit((n) => n + 100)}>
+                  더 보기
+                </button>
+              </div>
+            )}
           </section>
         )}
 

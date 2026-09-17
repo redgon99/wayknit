@@ -72,12 +72,24 @@ export async function getPublishedGuideBySlug(slug: string): Promise<GuideArticl
   return data ? mapRow(data as Record<string, unknown>) : null;
 }
 
+/*
+ * S1(관리자 검토 2026-09-16) — 목록 화면은 제목·요약·상태 정도만
+ * 보여주는데 `select('*')`로 본문(body_md, 글마다 수 KB)까지 매번
+ * 전부 받아왔다. 목록엔 안 쓰는 컬럼은 빼고, 편집창을 열 때만
+ * `getAdminGuide()`가 `select('*')`로 전체를 받는다.
+ */
+const GUIDE_LIST_SELECT =
+  'id, slug, title, summary, kind, status, topic_tags, locale, created_by, published_at, created_at, updated_at';
+
 export async function listAdminGuides(options?: {
   status?: GuideStatus;
   kind?: GuideKind;
 }): Promise<GuideArticle[]> {
   const sb = requireSupabase();
-  let query = sb.from('guide_articles').select('*').order('updated_at', { ascending: false });
+  let query = sb
+    .from('guide_articles')
+    .select(GUIDE_LIST_SELECT)
+    .order('updated_at', { ascending: false });
   if (options?.status) query = query.eq('status', options.status);
   if (options?.kind) query = query.eq('kind', options.kind);
   const { data, error } = await query;

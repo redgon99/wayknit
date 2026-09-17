@@ -90,26 +90,37 @@ export async function deleteDistributionAccount(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export interface DistributionPostPage {
+  rows: DistributionPost[];
+  /** 필터 적용 후 실제 전체 건수 — S1(관리자 검토 2026-09-16): 100건 상한 뒤엔
+   *  더 볼 방법이 없었다. 화면에서 "총 N건 중 M건 표시"를 보여줄 수 있게 준다. */
+  totalCount: number;
+}
+
 export async function listDistributionPosts(filter: {
   platform?: DistributionPlatform;
   status?: DistributionPostStatus;
   country?: string;
   limit?: number;
-} = {}): Promise<DistributionPost[]> {
+} = {}): Promise<DistributionPostPage> {
   const sb = requireSupabase();
   let query = sb
     .from('distribution_posts')
     .select(
-      'id, platform, country, locale, account_id, source_guide_id, title, body, media_urls, status, scheduled_at, posted_at, external_post_id, external_url, error_message, created_at, updated_at'
+      'id, platform, country, locale, account_id, source_guide_id, title, body, media_urls, status, scheduled_at, posted_at, external_post_id, external_url, error_message, created_at, updated_at',
+      { count: 'exact' }
     )
     .order('created_at', { ascending: false })
     .limit(filter.limit ?? 100);
   if (filter.platform) query = query.eq('platform', filter.platform);
   if (filter.status) query = query.eq('status', filter.status);
   if (filter.country) query = query.eq('country', filter.country);
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) throw error;
-  return (data ?? []).map((row) => mapPostRow(row as Record<string, unknown>));
+  return {
+    rows: (data ?? []).map((row) => mapPostRow(row as Record<string, unknown>)),
+    totalCount: count ?? (data ?? []).length,
+  };
 }
 
 export async function updateDistributionPost(
