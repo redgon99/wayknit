@@ -11,6 +11,7 @@ import { plannerPath } from '../lib/routes';
 import i18n from '../lib/i18n';
 import { getPublishedGuideBySlug, isGuidesConfigured } from '../lib/guides';
 import { renderGuideMarkdown } from '../lib/guideMarkdown';
+import { GuideCourseMap } from '../components/GuideCourseMap';
 import type { GuideArticle } from '../types/guides';
 import '../styles/app.css';
 
@@ -120,6 +121,9 @@ export default function GuideDetailPage() {
             </div>
             <h1>{guide.title}</h1>
             {summaryText && <p className="guides-detail-summary">{summaryText}</p>}
+            {guide.kind === 'course' && guide.coursePins.length > 0 && (
+              <GuideCourseMap pins={guide.coursePins} />
+            )}
             <div className="guides-body">{renderGuideMarkdown(guide.bodyMd)}</div>
             <p className="guides-disclaimer">{t('detail.disclaimer')}</p>
             {guide.sourceUrls.length > 0 && (

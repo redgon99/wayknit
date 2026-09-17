@@ -1,6 +1,16 @@
 import type { ReactNode } from 'react';
 
-/** Minimal markdown for guide bodies (headings, lists, paragraphs, bold/italic, links). */
+function splitTableRow(line: string): string[] {
+  const trimmed = line.trim().replace(/^\|/, '').replace(/\|$/, '');
+  return trimmed.split('|').map((c) => c.trim());
+}
+
+function isTableSeparator(line: string): boolean {
+  const cells = splitTableRow(line);
+  return cells.length > 0 && cells.every((c) => /^:?-{3,}:?$/.test(c));
+}
+
+/** Minimal markdown for guide bodies (headings, lists, tables, paragraphs, bold/italic, links). */
 export function renderGuideMarkdown(md: string): ReactNode[] {
   const lines = md.replace(/\r\n/g, '\n').split('\n');
   const nodes: ReactNode[] = [];
@@ -47,13 +57,56 @@ export function renderGuideMarkdown(md: string): ReactNode[] {
     return parts.length === 1 ? parts[0] : <>{parts}</>;
   };
 
-  for (const raw of lines) {
-    const line = raw.trimEnd();
+  for (let idx = 0; idx < lines.length; idx++) {
+    const line = lines[idx].trimEnd();
     const trimmed = line.trim();
     if (!trimmed) {
       flushList();
       continue;
     }
+
+    // GFM-style table: header | sep | rows…
+    if (
+      trimmed.includes('|') &&
+      idx + 1 < lines.length &&
+      isTableSeparator(lines[idx + 1].trim())
+    ) {
+      flushList();
+      const headers = splitTableRow(trimmed);
+      idx += 2; // skip separator
+      const rows: string[][] = [];
+      while (idx < lines.length) {
+        const rowLine = lines[idx].trim();
+        if (!rowLine.includes('|')) break;
+        rows.push(splitTableRow(rowLine));
+        idx++;
+      }
+      idx--; // outer loop will ++
+      nodes.push(
+        <div key={`table-wrap-${key}`} className="guide-md-table-wrap">
+          <table key={`table-${key++}`} className="guide-md-table">
+            <thead>
+              <tr>
+                {headers.map((h, i) => (
+                  <th key={i}>{inline(h)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, ri) => (
+                <tr key={ri}>
+                  {headers.map((_, ci) => (
+                    <td key={ci}>{inline(row[ci] ?? '')}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
     const ol = trimmed.match(/^\d+\.\s+(.*)$/);
     const ul = trimmed.match(/^[-*]\s+(.*)$/);
     if (ol) {

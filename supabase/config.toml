@@ -11,6 +11,9 @@ verify_jwt = false
 [functions.link-places-extract]
 verify_jwt = false
 
+[functions.guide-course-from-share]
+verify_jwt = false
+
 [functions.insight-guide-draft]
 verify_jwt = false
 

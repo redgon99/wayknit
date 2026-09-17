@@ -1,6 +1,7 @@
+import type { GuideArticle, GuideArticleInput, GuideCoursePin, GuideKind, GuideStatus } from '../types/guides';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { getSupabase, isSupabaseConfigured } from './supabase';
 import { normalizeGuideKind } from './guideKinds';
-import type { GuideArticle, GuideArticleInput, GuideKind, GuideStatus } from '../types/guides';
 
 function requireSupabase() {
   if (!isSupabaseConfigured) {
@@ -9,6 +10,44 @@ function requireSupabase() {
   const sb = getSupabase();
   if (!sb) throw new Error('Supabase 클라이언트를 초기화할 수 없습니다.');
   return sb;
+}
+
+async function describeFunctionError(error: unknown): Promise<string> {
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const body = (await error.context.json()) as { error?: string };
+      if (body?.error) return body.error;
+    } catch {
+      /* ignore */
+    }
+    const status = error.context?.status;
+    if (status === 504 || status === 546) {
+      return '공유 페이지 조회가 시간 초과되었습니다. 잠시 후 다시 시도하거나 「본문 붙여넣기」 탭을 사용하세요.';
+    }
+  }
+  return error instanceof Error ? error.message : String(error);
+}
+
+function mapCoursePins(raw: unknown): GuideCoursePin[] {
+  if (!Array.isArray(raw)) return [];
+  const out: GuideCoursePin[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const o = item as Record<string, unknown>;
+    const lat = Number(o.lat);
+    const lng = Number(o.lng);
+    const name = typeof o.name === 'string' ? o.name.trim() : '';
+    if (!name || !Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+    out.push({
+      order: typeof o.order === 'number' ? o.order : out.length + 1,
+      name,
+      time: typeof o.time === 'string' ? o.time : undefined,
+      lat,
+      lng,
+      label: typeof o.label === 'string' ? o.label : undefined,
+    });
+  }
+  return out;
 }
 
 function mapRow(row: Record<string, unknown>): GuideArticle {
@@ -24,6 +63,7 @@ function mapRow(row: Record<string, unknown>): GuideArticle {
     status: row.status as GuideStatus,
     sourceAnalysisIds: (row.source_analysis_ids as string[] | null) ?? [],
     sourceUrls: (row.source_urls as string[] | null) ?? [],
+    coursePins: mapCoursePins(row.course_pins),
     locale: (row.locale as string) ?? 'ko',
     createdBy: (row.created_by as string | null) ?? null,
     publishedAt: (row.published_at as string | null) ?? null,
@@ -121,6 +161,7 @@ export function buildGuideRow(
   if (patch.topicTags !== undefined) row.topic_tags = patch.topicTags;
   if (patch.sourceUrls !== undefined) row.source_urls = patch.sourceUrls;
   if (patch.sourceAnalysisIds !== undefined) row.source_analysis_ids = patch.sourceAnalysisIds;
+  if (patch.coursePins !== undefined) row.course_pins = patch.coursePins;
   if (patch.locale !== undefined) row.locale = patch.locale;
   if (patch.slug !== undefined) row.slug = patch.slug;
   if (patch.status !== undefined) row.status = patch.status;
@@ -137,6 +178,36 @@ export async function updateGuide(
 
   const { error } = await sb.from('guide_articles').update(row).eq('id', id);
   if (error) throw error;
+}
+
+/** 관리자: 추천 코스 매크로 등으로 새 가이드 행 생성 */
+export async function createGuide(
+  input: GuideArticleInput & { status?: GuideStatus; publishedAt?: string | null }
+): Promise<GuideArticle> {
+  const sb = requireSupabase();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  const slug = input.slug?.trim() || slugifyGuideTitle(input.title);
+  const status: GuideStatus = input.status ?? 'draft';
+  const row = {
+    ...buildGuideRow({
+      ...input,
+      slug,
+      kind: input.kind ?? 'course',
+      status,
+      publishedAt:
+        input.publishedAt !== undefined
+          ? input.publishedAt
+          : status === 'published'
+            ? new Date().toISOString()
+            : null,
+    }),
+    created_by: user?.id ?? null,
+  };
+  const { data, error } = await sb.from('guide_articles').insert(row).select('*').single();
+  if (error) throw error;
+  return mapRow(data as Record<string, unknown>);
 }
 
 export async function publishGuide(id: string): Promise<void> {
@@ -173,6 +244,63 @@ export async function triggerGuideDraftFromTips(options?: {
   return {
     created: (data?.created as number) ?? 0,
     ids: (data?.ids as string[]) ?? [],
+  };
+}
+
+/** ChatGPT 공개 공유 링크 → 일정 본문 추출 (AI 토큰 없음) */
+export async function fetchCourseTextFromGptShare(url: string): Promise<{
+  sourceUrl: string;
+  titleHint: string | null;
+  cleanedText: string;
+}> {
+  const { extractCourseTextFromShareHtml, isChatGptShareUrl } = await import('./chatgptShareParse');
+  if (!isChatGptShareUrl(url)) {
+    throw new Error('chatgpt.com/share/… 형식의 공개 공유 링크만 지원합니다.');
+  }
+  const normalized = (url.includes('://') ? url.trim() : `https://${url.trim()}`).split('?')[0];
+
+  // 1) 브라우저 → Jina Reader (Edge 데이터센터 IP는 ChatGPT/Jina에서 막히는 경우가 많음)
+  try {
+    const jina = await fetch(`https://r.jina.ai/${normalized}`, {
+      headers: {
+        Accept: 'text/plain',
+        'X-Retain-Images': 'none',
+      },
+    });
+    if (jina.ok) {
+      const text = await jina.text();
+      const { cleanedText, titleHint } = extractCourseTextFromShareHtml(text);
+      return {
+        sourceUrl: normalized,
+        titleHint: titleHint ?? null,
+        cleanedText,
+      };
+    }
+  } catch {
+    /* fall through to Edge */
+  }
+
+  // 2) Edge 폴백 (JINA_API_KEY 등이 있으면 서버에서도 가능)
+  const sb = requireSupabase();
+  const { data, error } = await sb.functions.invoke<{
+    sourceUrl?: string;
+    titleHint?: string | null;
+    cleanedText?: string;
+    error?: string;
+  }>('guide-course-from-share', { body: { url: normalized } });
+  if (error) throw new Error(await describeFunctionError(error));
+  if (data && typeof data === 'object' && data.error) {
+    throw new Error(String(data.error));
+  }
+  if (!data?.cleanedText?.trim()) {
+    throw new Error(
+      '공유 링크에서 일정 본문을 받지 못했습니다. 「본문 붙여넣기」 탭을 사용해 주세요.'
+    );
+  }
+  return {
+    sourceUrl: data.sourceUrl ?? normalized,
+    titleHint: data.titleHint ?? null,
+    cleanedText: data.cleanedText,
   };
 }
 
