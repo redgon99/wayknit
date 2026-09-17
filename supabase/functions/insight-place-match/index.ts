@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { decodeHtmlEntities } from '../_shared/htmlEntities.ts';
 import { finishRun, getServiceClient, startRun } from '../_shared/insightDb.ts';
 import { placeKey } from '../_shared/placeKey.ts';
 
@@ -169,8 +170,10 @@ Deno.serve(async (req) => {
       .map((row) => ({
         analysis_id: row.id,
         raw_item_id: row.raw_item_id,
-        title: row.insight_raw_items?.title ?? null,
-        content: row.insight_raw_items?.content ?? null,
+        /* I2 — 기존 원문의 미디코딩 HTML 엔티티가 장소명 추출 프롬프트를
+         * 왜곡하지 않도록 여기서도 디코딩한다 */
+        title: decodeHtmlEntities(row.insight_raw_items?.title ?? null),
+        content: decodeHtmlEntities(row.insight_raw_items?.content ?? null),
         url: row.insight_raw_items?.url ?? null,
       }))
       .filter((row) => (row.title ?? '').length + (row.content ?? '').length >= 40)

@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { decodeHtmlEntities } from '../_shared/htmlEntities.ts';
 import {
   finishRun,
   getServiceClient,
@@ -31,7 +32,8 @@ interface NaverKinItem {
 
 function stripHtml(text: string | undefined | null): string | null {
   if (!text) return null;
-  return text.replace(/<\/?[a-zA-Z0-9]+>/g, '').trim() || null;
+  const withoutTags = text.replace(/<\/?[a-zA-Z0-9]+>/g, '');
+  return decodeHtmlEntities(withoutTags)?.trim() || null;
 }
 
 function parseNaverDate(postdate: string | undefined): string | null {

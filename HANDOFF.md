@@ -6627,6 +6627,55 @@ JSON을 파싱해 원래 값만 정확히 읽은 뒤 **텍스트 치환**(`"key"
 - `/admin/insights`의 "마지막 실행" 표에서 상태가 "성공"/"오류"/"실행
   중"으로 보이는지.
 
+### 31-21. I2(일부) — 인사이트 원문의 HTML 엔티티 디코딩 (2026-09-17)
+
+🔴 보고서가 예로 든 `&#39;`·`&amp;` 문제. 네이버(`description`에 검색어
+하이라이트용 `<b>` 태그가 섞여 있어 `stripHtml`로 태그만 제거)·유튜브
+(Data API v3가 `snippet.title`/`description`/댓글 `textDisplay`를 HTML
+이스케이프해서 돌려줌)·레딧(`raw_json=1` 없이 호출하면 legacy JSON이
+`&`·`<`·`>`를 엔티티로 인코딩)이 원인. 지금까지 35일치 수집 원문 전부에
+디코딩 안 된 엔티티가 남아있다.
+
+**수정:**
+- `supabase/functions/_shared/htmlEntities.ts`(신규) — 이름 있는 엔티티
+  (`&amp;` 등 6종) + 숫자/16진 엔티티(`&#39;`, `&#x27;`)를 디코딩하는
+  `decodeHtmlEntities()`.
+- 수집 시점에 디코딩(향후 데이터가 깨끗하게 저장됨):
+  `insight-collect-naver`(`stripHtml`에 디코딩 추가), `insight-collect-
+  youtube`(video title/description/channelTitle, 댓글 textDisplay/
+  authorDisplayName), `insight-collect-reddit`(호출 URL에 `raw_json=1`
+  추가 + title/selftext 디코딩 이중 안전장치).
+- 이미 쌓인 기존 원문은 DB 백필 없이 **읽을 때** 디코딩:
+  `src/lib/adminInsights.ts`의 `listInsightItems` — Deno 함수와 파일을
+  공유할 수 없어 같은 로직을 독립적으로 재구현. `/admin/insights` 목록이
+  바로 깨끗하게 보인다.
+- AI 프롬프트에 원문을 그대로 넣는 두 함수(`insight-guide-draft`의 팁
+  추출, `insight-place-match`의 장소명 추출)도 디코딩 — 안 그러면 기존
+  원문의 엔티티가 AI 입력을 왜곡한다.
+
+**배포 필요(중요):** 이번 수정은 Supabase Edge Function 5개
+(`insight-collect-naver`·`insight-collect-youtube`·
+`insight-collect-reddit`·`insight-guide-draft`·`insight-place-match`)와
+새 공유 파일(`_shared/htmlEntities.ts`)을 건드리는데, **아직 배포
+안 함** — 프런트 "배포는 나중에" 규칙과 같은 이유로 이번에도 명시적
+요청 없이는 안 함. 로컬 tsc/build로는 Deno 함수를 검증할 수 없어
+(deno CLI 없음) 괄호/중괄호 균형 확인 정도만 했고, 실제 검증은 배포 후
+"지금 수집" 버튼으로 한 번 돌려보는 것뿐이다 — **배포는 사용자 승인
+후 `deploy_edge_function`으로 진행할 것.**
+
+**변경 파일:** `supabase/functions/_shared/htmlEntities.ts`(신규),
+`insight-collect-naver/index.ts`, `insight-collect-youtube/index.ts`,
+`insight-collect-reddit/index.ts`, `insight-guide-draft/index.ts`,
+`insight-place-match/index.ts`, `src/lib/adminInsights.ts`. 프런트
+부분(`adminInsights.ts`)만 `npx tsc -b`·`npm run build` 클린 확인.
+
+**확인 방법(사용자 직접, 배포 후):**
+- `/admin/insights` 목록에서 기존 원문 제목/내용에 `&#39;`·`&amp;`가
+  더 이상 안 보이는지(디코딩된 문자로 바로 보여야 함 — 이건 배포 없이도
+  프런트만으로 확인 가능).
+- 배포 후 "지금 수집"(유튜브·네이버·레딧 아무거나)을 눌러 새로 들어온
+  항목의 제목/내용에도 엔티티가 안 남아있는지.
+
 ---
 
 ## ▶ 다음 세션 시작점 (2026-09-17 기준, 갱신)
@@ -6637,11 +6686,17 @@ JSON을 파싱해 원래 값만 정확히 읽은 뒤 **텍스트 치환**(`"key"
 전부 완료, 5단계는 이번 건에 한해 사용자 요청으로 Playwright 직접
 검증까지 함) + 공유마당 가져오기 Plus 혜택 광고(§31-17, 그 문구가 유발한
 레이아웃 버그 수정 §31-18) + 데스크톱 계정 메뉴 추가(§31-19) +
-**P2 전부(N2 나머지·S1·S2, §31-20) 진행**. 1~4단계·5단계는 커밋·푸시
-완료(`c8777b5`·`d28e99d`). §31-17(`31fd406`)·§31-18~19(`c1c2432`)까지
-커밋 완료. **§31-20은 아직 로컬 커밋 전** — 다음 세션 시작 시 바로
-커밋(`tsc -b`·`npm run build` 클린 확인됨). **배포는 아직 안 함** —
-사용자가 "배포는 나중에"라고 명시.
+P2 전부(N2 나머지·S1·S2, §31-20) + **I2 일부(HTML 엔티티 디코딩,
+§31-21) 진행**. 1~4단계·5단계는 커밋·푸시 완료(`c8777b5`·`d28e99d`).
+§31-17(`31fd406`)·§31-18~19(`c1c2432`)·§31-20(`724e789`)까지 커밋
+완료. **§31-21은 아직 로컬 커밋 전** — 다음 세션 시작 시 바로 커밋.
+프런트 부분만 `tsc -b`·`npm run build` 클린 확인(Deno 엣지 함수는
+로컬에 deno 없어 정적 검증 불가, 육안 검토만 함). **배포는 아직 안
+함** — 사용자가 "배포는 나중에"라고 명시. §31-21의 엣지 함수 5개는
+**프런트 배포와 별개로, Supabase `deploy_edge_function`도 사용자
+승인 후에만** 진행할 것 — 지금은 코드만 있고 실제 반영 안 됨(기존
+원문 디코딩은 프런트 배포만으로도 보이지만, 신규 수집 정상화는 엣지
+함수 배포가 있어야 함).
 
 **진행 방식 규칙(중요, 계속 지킬 것):** 2026-09-16부터 — 작업 후 자체
 검증(Playwright, DB에 테스트 데이터 넣고 SQL/REST API 직접 호출, 임시
@@ -6652,8 +6707,10 @@ dev 서버 기동 등) **전부 금지**. `tsc --noEmit`·`npm run build` 같은
 사용자가 매번 직접 확인해줌.
 
 **남은 것(관리자 검토 보고서, `reports/admin-review-2026-09-16.md`):**
-- P1: C1~C3(시나리오 편집기·콘텐츠 품질·가이드 새로 작성), I1~I2(수집
-  운영·인사이트 품질)
+- P1: C1~C4(시나리오 편집기·콘텐츠 품질·가이드 새로 작성·운영본 버전관리
+  — 전부 화면/스키마를 새로 설계해야 해서 사용자와 방향부터 논의 필요),
+  I1(수집 운영 대시보드), I2 나머지(관련도·중복·광고 필터 — 엔티티
+  디코딩만 §31-21로 끝남)
 - P2는 §31-20으로 전부 완료(N2 나머지·S1·S2)
 - N1(메뉴 재구성)·U3(권한 분리)는 관리자가 한 명인 지금은 의도적으로 보류
 - D2에서 미룬 것: 실제 자동 예약 발행 크론(계정 0개인 지금 우선순위 낮음)

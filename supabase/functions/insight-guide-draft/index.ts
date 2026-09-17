@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { decodeHtmlEntities } from '../_shared/htmlEntities.ts';
 import { getServiceClient } from '../_shared/insightDb.ts';
 
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
@@ -222,8 +223,11 @@ Deno.serve(async (req) => {
       return {
         analysisId: row.id as string,
         summary: (row.summary as string | null) ?? null,
-        title: r.title ?? null,
-        content: r.content ?? null,
+        /* I2 — 지난 35일치 원문엔 아직 디코딩 전 수집 함수가 남긴 HTML
+         * 엔티티가 남아 있을 수 있다. AI 프롬프트에 그대로 넣으면 의미가
+         * 왜곡되니 여기서도 디코딩한다. */
+        title: decodeHtmlEntities(r.title ?? null),
+        content: decodeHtmlEntities(r.content ?? null),
         url: r.url ?? null,
       };
     });

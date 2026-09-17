@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { decodeHtmlEntities } from '../_shared/htmlEntities.ts';
 import {
   finishRun,
   getServiceClient,
@@ -45,7 +46,9 @@ async function getAccessToken(clientId: string, clientSecret: string): Promise<s
 }
 
 async function fetchSubredditNew(subreddit: string, token: string): Promise<RedditPostData[]> {
-  const url = `https://oauth.reddit.com/r/${encodeURIComponent(subreddit)}/new?limit=${POSTS_PER_SUBREDDIT}`;
+  /* I2(관리자 검토 2026-09-16) — raw_json=1 없이는 Reddit이 title·selftext의
+   * &·<·>를 HTML 엔티티로 인코딩해 돌려준다. */
+  const url = `https://oauth.reddit.com/r/${encodeURIComponent(subreddit)}/new?limit=${POSTS_PER_SUBREDDIT}&raw_json=1`;
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -101,8 +104,8 @@ Deno.serve(async (req) => {
         items.set(post.id, {
           source: 'reddit',
           externalId: post.id,
-          title: post.title ?? null,
-          content: post.selftext || null,
+          title: decodeHtmlEntities(post.title ?? null),
+          content: decodeHtmlEntities(post.selftext || null),
           author: post.author ?? null,
           url: post.permalink ? `https://www.reddit.com${post.permalink}` : null,
           sourceCreatedAt: createdMs != null ? new Date(createdMs).toISOString() : null,

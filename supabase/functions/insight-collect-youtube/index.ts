@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { decodeHtmlEntities } from '../_shared/htmlEntities.ts';
 import {
   finishRun,
   getServiceClient,
@@ -120,9 +121,9 @@ Deno.serve(async (req) => {
         items.set(`video:${videoId}`, {
           source: 'youtube',
           externalId: `video:${videoId}`,
-          title: video.snippet?.title ?? null,
-          content: video.snippet?.description ?? null,
-          author: video.snippet?.channelTitle ?? null,
+          title: decodeHtmlEntities(video.snippet?.title ?? null),
+          content: decodeHtmlEntities(video.snippet?.description ?? null),
+          author: decodeHtmlEntities(video.snippet?.channelTitle ?? null),
           url: `https://www.youtube.com/watch?v=${videoId}`,
           sourceCreatedAt: publishedAt,
           rawPayload: { keyword, kind: 'video', period: period.label },
@@ -138,9 +139,9 @@ Deno.serve(async (req) => {
           items.set(`comment:${threadId}`, {
             source: 'youtube',
             externalId: `comment:${threadId}`,
-            title: video.snippet?.title ?? null,
-            content: snippet.textDisplay,
-            author: snippet.authorDisplayName ?? null,
+            title: decodeHtmlEntities(video.snippet?.title ?? null),
+            content: decodeHtmlEntities(snippet.textDisplay),
+            author: decodeHtmlEntities(snippet.authorDisplayName ?? null),
             url: `https://www.youtube.com/watch?v=${videoId}&lc=${threadId}`,
             sourceCreatedAt: commentAt,
             rawPayload: { keyword, kind: 'comment', videoId, period: period.label },

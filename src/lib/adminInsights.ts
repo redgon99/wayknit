@@ -14,6 +14,36 @@ import type {
 /** 관리자 UI에서 "지금 수집" 버튼이 호출하는 Edge Function 그룹 (naver_blog/naver_kin은 함수 하나로 처리) */
 export type InsightCollector = 'youtube' | 'naver' | 'reddit';
 
+/**
+ * I2(관리자 검토 2026-09-16) — 수집 함수(edge function)는 이번에 디코딩하도록
+ * 고쳤지만, 이미 쌓인 지난 35일치 원문엔 `&#39;`·`&amp;` 같은 HTML 엔티티가
+ * 그대로 저장돼 있다. DB를 백필하는 대신 화면에서 읽을 때 디코딩해
+ * 기존 데이터도 바로 깨끗하게 보이게 한다(edge function의 htmlEntities.ts와
+ * 같은 로직 — 프런트/Deno 함수가 파일을 공유하지 않아 중복 구현).
+ */
+const NAMED_HTML_ENTITIES: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: ' ',
+};
+
+function decodeHtmlEntities(text: string | null): string | null {
+  if (!text) return text;
+  return text.replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/g, (match, entity: string) => {
+    if (entity[0] === '#') {
+      const code =
+        entity[1] === 'x' || entity[1] === 'X'
+          ? parseInt(entity.slice(2), 16)
+          : parseInt(entity.slice(1), 10);
+      return Number.isNaN(code) ? match : String.fromCodePoint(code);
+    }
+    return NAMED_HTML_ENTITIES[entity] ?? match;
+  });
+}
+
 const COLLECTOR_FUNCTION: Record<InsightCollector, string> = {
   youtube: 'insight-collect-youtube',
   naver: 'insight-collect-naver',
@@ -141,9 +171,9 @@ export async function listInsightItems(filter: {
       id: row.id as string,
       source: row.source as InsightSource,
       externalId: row.external_id as string,
-      title: (row.title as string | null) ?? null,
-      content: (row.content as string | null) ?? null,
-      author: (row.author as string | null) ?? null,
+      title: decodeHtmlEntities((row.title as string | null) ?? null),
+      content: decodeHtmlEntities((row.content as string | null) ?? null),
+      author: decodeHtmlEntities((row.author as string | null) ?? null),
       url: (row.url as string | null) ?? null,
       sourceCreatedAt: (row.source_created_at as string | null) ?? null,
       collectedAt: row.collected_at as string,
