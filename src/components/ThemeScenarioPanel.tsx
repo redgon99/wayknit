@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../hooks/useAuth';
 import { Icon, type IconName } from './Icon';
 import { normalizeLocale } from '../lib/locale';
 import { CATEGORY_MAP } from '../lib/categories';
@@ -53,6 +54,7 @@ export function ThemeScenarioPanel({
   onGoToSearch,
 }: Props) {
   const { t, i18n } = useTranslation('planner');
+  const { isAdmin } = useAuth();
   const [theme, setTheme] = useState<ScenarioTheme | null>(null);
   const [options, setOptions] = useState<ScenarioOption[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
@@ -170,7 +172,12 @@ export function ThemeScenarioPanel({
 
   return (
     <div className="theme-scenario-panel">
-      {isTripIntentConfigured() && (
+      {/*
+        §31-22 Step 6(사용량 캡) 전까지 임시로 관리자 전용 — 캡 없이 배포하면
+        로그인 사용자 누구나 Claude+TourAPI를 무제한 호출할 수 있어서다.
+        Step 6 완료 후 이 isAdmin 조건을 지운다.
+      */}
+      {isTripIntentConfigured() && isAdmin && (
         <div className="theme-scenario-mode-toggle" role="group">
           <button
             type="button"
