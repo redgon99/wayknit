@@ -6767,6 +6767,45 @@ JSON을 파싱해 원래 값만 정확히 읽은 뒤 **텍스트 치환**(`"key"
 `themes`에 marine/food 계열이 들어오는지 확인하는 정도가 Step 2
 단독 검증. Step 5까지 끝나야 실제 화면에서 확인 가능.
 
+**Step 3 — 후보 검색 확장:** Step 2에서 배포 없이 Step 3까지 만들고
+나중에 한 번에 배포하기로 사용자가 확인.
+
+- `supabase/functions/_shared/tourScenario.ts` — `RawItem` 인터페이스와
+  `fetchItems()`를 `export`로 바꿈(로직 변경 없음, Step 3에서 재사용
+  하려고 가시성만 높임). 기존 `fetchThemeRegionClusters` 동작은 그대로.
+- `supabase/functions/_shared/tripCandidates.ts`(신규) —
+  `fetchDestinationCandidates(intent, serviceKey)`. tour-scenario의
+  "테마로 전국에서 지역을 찾는" 방향과 반대로, 이미 정해진 목적지에
+  "목적지+키워드" 조합(`관광지`/`맛집`/`카페` 기본 3개 + 선택한 관심사
+  테마당 대표 키워드 1개, 최대 3개 테마)으로 바로 `searchKeyword2`를
+  호출. 결과는 주소/제목에 목적지 토큰이 하나라도 포함된 것만 통과시켜
+  (`matchesDestination`) 무관한 전국구 인기 결과가 섞이는 걸 막음.
+  중복 제거(contentId)·다양화(`diversifyBySourceKeyword`)·개수 상한
+  (`candidatesPerRegionCap`)은 기존 `scenarioGen.ts` 헬퍼 재사용 —
+  새로 안 만듦.
+- `supabase/functions/trip-candidates-search/index.ts`(신규) — POST
+  `{ intent: TripIntent }` → `{ candidates, totalCandidates,
+  rawCountsByQuery, filteredOutCount }`. Step 2와 별도 함수로 둬서
+  intent를 직접 넘기면 Step 2 없이도 독립 테스트 가능(`tour-scenario-
+  candidates`가 `{theme}`만 받는 것과 같은 설계). intent 형태를
+  최소 검증(`isValidIntent`) — destination 비어있음/days 범위 밖이면 400.
+- `src/lib/tripCandidates.ts`(신규) — `TripCandidate` 타입(서버
+  `ScenarioCandidate`와 필드 동일, 로직 없이 타입만 복제) +
+  `searchTripCandidates(intent)` 클라이언트 래퍼.
+- 아직 미배포, `/plan` UI 미연결(Step 5).
+
+**변경 파일(Step 3):** `tourScenario.ts`(export 2곳만 변경),
+`tripCandidates.ts`(신규, 서버), `trip-candidates-search/index.ts`
+(신규), `src/lib/tripCandidates.ts`(신규). 프런트 `tsc -b`·`npm run
+build` 클린, Deno 쪽은 괄호 균형 확인 + 육안 검토만.
+
+**확인 방법(Step 3, 배포 후):** `trip-candidates-search`를
+`{"intent": {"destination":"강릉","days":2,"companions":"parents",
+"pace":"relaxed","avoidLongWalk":true,"themes":["marine"]}}`로 직접
+호출 — `candidates`에 강릉 지역 주소를 가진 장소들이 나오는지,
+`filteredOutCount`가 비정상적으로 크면(대부분 걸러짐) 목적지 필터나
+검색어 조합을 다시 봐야 함.
+
 ---
 
 ## ▶ 다음 세션 시작점 (2026-09-17 기준, 갱신)
@@ -6792,16 +6831,17 @@ draft` v5→v6, `insight-place-match` 신규 v1 — 상세는 §31-21 참고).
 "배포는 나중에" 규칙이 자동으로 엣지 함수까지 막지는 않는다는 걸
 이번에 확인함 — 각각 명시적 요청이 있을 때만 진행.
 
-**진행 중(현재 작업, §31-22): AI 일정 생성 기능 — 7단계 중 Step 2
-완료, 커밋 전.** 사용자가 "단계별로 진행하고 매 단계 확인받을 것"을
-명시적으로 요청한 프로젝트라 — **다음 세션에서도 이 패턴을 유지**:
-Step 3(후보 검색 확장) 시작 전 반드시 사용자에게 Step 2 결과를
-브리핑하고 확인받은 뒤에만 진행. 절대 여러 단계를 한 번에 몰아가지
-말 것(§31-20/§31-21처럼 "일괄 진행"이 아니라 "단계별 확인" 모드).
-Step 2 코드(`tripIntent.ts` 2곳, `trip-intent-parse/index.ts`)는 아직
-로컬에 커밋 안 됨 — 다음 세션 시작 시 사용자 확인 먼저, 확인되면 커밋
-후 Step 3으로. 엣지 함수는 아직 배포 안 함(Step 5에서 UI 붙을 때나
-그 전에 사용자가 테스트해보고 싶다고 하면 배포).
+**진행 중(현재 작업, §31-22): AI 일정 생성 기능 — 7단계 중 Step 1~3
+완료, Step 3까지 커밋 완료.** 사용자가 "단계별로 진행하고 매 단계
+확인받을 것"을 명시적으로 요청한 프로젝트라 — **다음 세션에서도 이
+패턴을 유지**: Step 4(Ranking+Planner) 시작 전 반드시 사용자에게
+Step 3 결과를 브리핑하고 확인받은 뒤에만 진행. 절대 여러 단계를 한
+번에 몰아가지 말 것(§31-20/§31-21처럼 "일괄 진행"이 아니라 "단계별
+확인" 모드). Step 2(`trip-intent-parse`)·Step 3(`trip-candidates-
+search`) 엣지 함수는 아직 배포 안 함 — 사용자가 "Step 3까지 만들고
+나중에 한 번에 배포"를 선택함. Step 4~5 진행하면서 계속 미룰지,
+중간에 사용자가 테스트해보고 싶다고 하면 그때 배포할지는 다음
+세션에서 다시 물어볼 것.
 
 **진행 방식 규칙(중요, 계속 지킬 것):** 2026-09-16부터 — 작업 후 자체
 검증(Playwright, DB에 테스트 데이터 넣고 SQL/REST API 직접 호출, 임시

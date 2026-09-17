@@ -129,7 +129,7 @@ export function regionPrefixOf(address: string | undefined | null): string | und
   return first || undefined;
 }
 
-interface RawItem {
+export interface RawItem {
   contentid: string;
   contenttypeid?: string;
   title: string;
@@ -163,7 +163,8 @@ export interface ScenarioRegionCluster {
   candidates: ScenarioCandidate[];
 }
 
-async function fetchItems(url: string): Promise<RawItem[]> {
+/** trip-scenario-generate(§31-22 Step 3)도 재사용 — 검색어 하나에 대한 원본 결과 목록 */
+export async function fetchItems(url: string): Promise<RawItem[]> {
   const res = await fetch(url, { headers: { Accept: 'application/json' } });
   if (!res.ok) return [];
   const json = (await res.json()) as {
