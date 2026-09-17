@@ -1,9 +1,18 @@
 /**
  * AI 일정 생성 Step 3 — TripIntent(목적지+관심사)로 TourAPI 후보를 모은다.
- * tour-scenario의 "테마로 전국에서 지역을 찾는" 방향과 반대로, 여기는
- * 사용자가 이미 목적지를 정했으므로 "목적지+키워드" 조합으로 바로 검색한다.
- * 지역코드 매핑 테이블은 만들지 않는다 — searchKeyword2가 이미 지명을
- * 포함한 키워드를 알아서 처리하고, 주소 substring 필터로 결과를 한 번 더 거른다.
+ *
+ * 🔴(2026-09-17, 사용자 실사용 테스트에서 발견) 처음엔 "목적지+키워드"를
+ * 한 문자열로 합쳐(예: "강릉 카페") searchKeyword2에 넘겼는데, 이 API는
+ * 그 문자열을 제목/개요에 대한 리터럴 부분일치로 처리한다. "강릉 카페"라는
+ * 글자가 그대로 들어간 상호는 사실상 없어서(실제 업체명은 그냥 "OO카페")
+ * 거의 항상 0건이 돌아왔다 — 화면에서 "조건에 맞는 후보를 찾지 못했어요"로
+ * 나타난 버그.
+ *
+ * 고침: tour-scenario(테마 카탈로그)와 같은 패턴으로 되돌린다 — 키워드는
+ * 단독으로 전국 검색하고(제목에 그 단어가 실제로 들어간 업체를 찾음),
+ * 주소/제목에 목적지 토큰이 있는지로 사후 필터링한다. 추가로 목적지
+ * 이름 자체도 검색어로 한 번 더 넣는다 — "경포대"처럼 지명이 상호에
+ * 직접 들어간 관광지를 놓치지 않기 위해서다.
  */
 import {
   buildScenarioKeywordUrl,
@@ -22,13 +31,14 @@ const BASELINE_KEYWORDS = ['관광지', '맛집', '카페'];
 /** API 호출량을 억제하기 위해 테마당 대표 키워드 1개만, 최대 3개 테마까지만 쓴다 */
 const MAX_THEME_KEYWORDS = 3;
 
-function buildSearchKeywords(intent: TripIntent): string[] {
+/** 목적지 이름 자체 + 단독 관심사 키워드 — 절대 destination과 합쳐서 검색하지 않는다(위 주석 참고) */
+function buildSearchTerms(intent: TripIntent): string[] {
   const base = [...BASELINE_KEYWORDS];
   const themeKeywords = intent.themes
     .slice(0, MAX_THEME_KEYWORDS)
     .map((theme: ScenarioTheme) => SCENARIO_THEME_QUERIES[theme]?.keywords[0])
     .filter((kw): kw is string => Boolean(kw));
-  return [...new Set([...base, ...themeKeywords])];
+  return [...new Set([intent.destination, ...base, ...themeKeywords])];
 }
 
 /**
@@ -59,15 +69,14 @@ export async function fetchDestinationCandidates(
     .map((t) => t.trim())
     .filter((t) => t.length >= 2); // "강릉" 통과, 조사만 남은 1글자 토큰은 제외
 
-  const keywords = buildSearchKeywords(intent);
+  const terms = buildSearchTerms(intent);
   const rawCountsByQuery: Record<string, number> = {};
 
   const results = await Promise.all(
-    keywords.map(async (kw) => {
-      const combined = `${intent.destination} ${kw}`.trim();
-      const items = await fetchItems(buildScenarioKeywordUrl(combined, serviceKey));
-      rawCountsByQuery[kw] = items.length;
-      return items.map((item) => ({ item, sourceKeyword: kw }));
+    terms.map(async (term) => {
+      const items = await fetchItems(buildScenarioKeywordUrl(term, serviceKey));
+      rawCountsByQuery[term] = items.length;
+      return items.map((item) => ({ item, sourceKeyword: term }));
     })
   );
 
