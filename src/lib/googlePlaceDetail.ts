@@ -70,7 +70,15 @@ function extractGooglePlaceId(placeId: string): string {
 }
 
 function createPlacesService(): any {
-  const container = document.createElement('div');
+  let container = document.getElementById('wk-places-attr');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'wk-places-attr';
+    container.setAttribute('aria-hidden', 'true');
+    container.style.cssText =
+      'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);';
+    document.body.appendChild(container);
+  }
   return new window.google.maps.places.PlacesService(container);
 }
 
@@ -209,6 +217,9 @@ async function fetchGooglePlaceDetailLegacy(
         ?.overview,
       priceLevel,
       priceLevelLabel: formatGooglePriceLevel(priceLevel),
+      categoryLabel: Array.isArray(detail.types)
+        ? String((detail.types as string[])[0] ?? '').replace(/_/g, ' ') || undefined
+        : undefined,
     },
     serviceOptions,
     reviews: mapLegacyReviews(detail),
@@ -336,7 +347,12 @@ export async function fetchGooglePlaceDetail(place: Place): Promise<GooglePlaceD
   const googlePlaceId = extractGooglePlaceId(place.id);
   let detail: GooglePlaceDetail;
   try {
-    detail = await fetchGooglePlaceDetailNew(place, googlePlaceId);
+    detail = await Promise.race([
+      fetchGooglePlaceDetailNew(place, googlePlaceId),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Places API (New) timeout')), 5000)
+      ),
+    ]);
   } catch (err) {
     console.warn('[Wayknit] Places API (New) unavailable, using legacy PlacesService', err);
     detail = await fetchGooglePlaceDetailLegacy(place, googlePlaceId);

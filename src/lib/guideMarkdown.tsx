@@ -1,4 +1,12 @@
 import type { ReactNode } from 'react';
+import {
+  cleanSourceUrl,
+  isFaviconUrl,
+  isHttpUrl,
+  labelFromCiteAlt,
+  labelFromCiteCaption,
+  labelFromUrl,
+} from './guideSources';
 
 function splitTableRow(line: string): string[] {
   const trimmed = line.trim().replace(/^\|/, '').replace(/\|$/, '');
@@ -10,6 +18,28 @@ function isTableSeparator(line: string): boolean {
   return cells.length > 0 && cells.every((c) => /^:?-{3,}:?$/.test(c));
 }
 
+function SourceChip({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      className="guide-source-chip"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {label}
+    </a>
+  );
+}
+
+function sourceLabel(alt: string, href: string, image: boolean): string {
+  if (image) return labelFromCiteAlt(alt) || labelFromUrl(href);
+  const named = alt.trim();
+  if (named && !/^https?:/i.test(named) && named.length <= 40) {
+    return labelFromCiteAlt(named) || named;
+  }
+  return labelFromUrl(href);
+}
+
 /** Minimal markdown for guide bodies (headings, lists, tables, paragraphs, bold/italic, links). */
 export function renderGuideMarkdown(md: string): ReactNode[] {
   const lines = md.replace(/\r\n/g, '\n').split('\n');
@@ -17,6 +47,70 @@ export function renderGuideMarkdown(md: string): ReactNode[] {
   let listItems: string[] = [];
   let listOrdered = false;
   let key = 0;
+
+  const inline = (text: string): ReactNode => {
+    const parts: ReactNode[] = [];
+    const re =
+      /(\*\*[^*]+\*\*|\*[^*]+\*|\[!\[[^\]]*\]\([^)]+\)[^\]]*\]\([^)]+\)|!?\[[^\]]*\]\([^)]+\))/g;
+    let last = 0;
+    let m: RegExpExecArray | null;
+    let i = 0;
+    while ((m = re.exec(text)) !== null) {
+      let start = m.index;
+      let end = m.index + m[0].length;
+      if (start > 0 && text[start - 1] === '(' && text[end] === ')') {
+        start -= 1;
+        end += 1;
+      }
+      if (start > last) parts.push(text.slice(last, start));
+      const token = m[0];
+      if (token.startsWith('**')) {
+        parts.push(<strong key={`b-${i++}`}>{token.slice(2, -2)}</strong>);
+      } else if (token.startsWith('*') && !token.startsWith('*[')) {
+        parts.push(<em key={`e-${i++}`}>{token.slice(1, -1)}</em>);
+      } else {
+        const nested = token.match(
+          /^\[!\[([^\]]*)\]\(([^)]+)\)([^\]]*)\]\(([^)]+)\)$/
+        );
+        if (nested) {
+          const href = nested[4].trim();
+          if (isHttpUrl(href)) {
+            parts.push(
+              <SourceChip
+                key={`s-${i++}`}
+                href={cleanSourceUrl(href)}
+                label={labelFromCiteCaption(nested[3], href)}
+              />
+            );
+          }
+        } else {
+          const simple = token.match(/^!?\[([^\]]*)\]\(([^)]+)\)$/);
+          if (simple) {
+            const href = simple[2].trim();
+            const image = token.startsWith('![');
+            if (isHttpUrl(href) && !isFaviconUrl(href)) {
+              parts.push(
+                <SourceChip
+                  key={`s-${i++}`}
+                  href={cleanSourceUrl(href)}
+                  label={sourceLabel(simple[1], href, image)}
+                />
+              );
+            } else if (!isFaviconUrl(href)) {
+              parts.push(
+                <a key={`a-${i++}`} href={href} target="_blank" rel="noopener noreferrer">
+                  {simple[1] || href}
+                </a>
+              );
+            }
+          }
+        }
+      }
+      last = end;
+    }
+    if (last < text.length) parts.push(text.slice(last));
+    return parts.length === 1 ? parts[0] : <>{parts}</>;
+  };
 
   const flushList = () => {
     if (listItems.length === 0) return;
@@ -31,32 +125,6 @@ export function renderGuideMarkdown(md: string): ReactNode[] {
     listItems = [];
   };
 
-  const inline = (text: string): ReactNode => {
-    const parts: ReactNode[] = [];
-    const re = /(\*\*[^*]+\*\*|\*[^*]+\*|\[([^\]]+)\]\(([^)]+)\))/g;
-    let last = 0;
-    let m: RegExpExecArray | null;
-    let i = 0;
-    while ((m = re.exec(text)) !== null) {
-      if (m.index > last) parts.push(text.slice(last, m.index));
-      const token = m[0];
-      if (token.startsWith('**')) {
-        parts.push(<strong key={`b-${i++}`}>{token.slice(2, -2)}</strong>);
-      } else if (token.startsWith('*')) {
-        parts.push(<em key={`e-${i++}`}>{token.slice(1, -1)}</em>);
-      } else if (m[2] && m[3]) {
-        parts.push(
-          <a key={`a-${i++}`} href={m[3]} target="_blank" rel="noopener noreferrer">
-            {m[2]}
-          </a>
-        );
-      }
-      last = m.index + token.length;
-    }
-    if (last < text.length) parts.push(text.slice(last));
-    return parts.length === 1 ? parts[0] : <>{parts}</>;
-  };
-
   for (let idx = 0; idx < lines.length; idx++) {
     const line = lines[idx].trimEnd();
     const trimmed = line.trim();
@@ -65,7 +133,6 @@ export function renderGuideMarkdown(md: string): ReactNode[] {
       continue;
     }
 
-    // GFM-style table: header | sep | rows…
     if (
       trimmed.includes('|') &&
       idx + 1 < lines.length &&
@@ -73,7 +140,7 @@ export function renderGuideMarkdown(md: string): ReactNode[] {
     ) {
       flushList();
       const headers = splitTableRow(trimmed);
-      idx += 2; // skip separator
+      idx += 2;
       const rows: string[][] = [];
       while (idx < lines.length) {
         const rowLine = lines[idx].trim();
@@ -81,7 +148,7 @@ export function renderGuideMarkdown(md: string): ReactNode[] {
         rows.push(splitTableRow(rowLine));
         idx++;
       }
-      idx--; // outer loop will ++
+      idx--;
       nodes.push(
         <div key={`table-wrap-${key}`} className="guide-md-table-wrap">
           <table key={`table-${key++}`} className="guide-md-table">

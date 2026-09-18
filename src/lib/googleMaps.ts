@@ -61,10 +61,19 @@ export function loadGoogleMapsSdk(
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      if (window.google?.maps) resolve(window.google);
-      else reject(new Error('Google Maps SDK load failed'));
+      if (window.google?.maps) {
+        resolve(window.google);
+        return;
+      }
+      googleSdkPromise = null;
+      loadedSdkLanguage = null;
+      reject(new Error('Google Maps SDK load failed'));
     };
-    script.onerror = (e) => reject(e);
+    script.onerror = () => {
+      googleSdkPromise = null;
+      loadedSdkLanguage = null;
+      reject(new Error('Google Maps SDK를 불러오지 못했습니다. API 키·HTTP 리퍼러를 확인하세요.'));
+    };
     document.head.appendChild(script);
   });
 
@@ -79,6 +88,105 @@ export async function reverseGeocodeWithGoogle(lat: number, lng: number): Promis
   const result = await geocoder.geocode({ location: { lat, lng } });
   const first = result?.results?.[0];
   return first?.formatted_address ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+}
+
+function haversineMeters(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number }
+): number {
+  const R = 6371000;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+}
+
+function placeFromSearchRow(
+  first: { geometry?: { location?: unknown }; place_id?: string; name?: string; formatted_address?: string },
+  fallbackLabel: string
+): { lat: number; lng: number; label: string; placeId?: string } | null {
+  const loc = first?.geometry?.location as
+    | { lat: () => number; lng: () => number }
+    | { lat: number; lng: number }
+    | undefined;
+  if (!loc) return null;
+  const lat = typeof loc.lat === 'function' ? loc.lat() : Number(loc.lat);
+  const lng = typeof loc.lng === 'function' ? loc.lng() : Number(loc.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return {
+    lat,
+    lng,
+    label: String(first.name || first.formatted_address || fallbackLabel),
+    placeId: first.place_id ? String(first.place_id) : undefined,
+  };
+}
+
+/** 장소명 → 좌표 (가이드 코스 핀용). Places textSearch 우선, Geocoder 폴백. */
+export async function resolvePlaceQueryWithGoogle(
+  query: string,
+  near?: { lat: number; lng: number }
+): Promise<{ lat: number; lng: number; label: string; placeId?: string } | null> {
+  const q = query.trim();
+  if (!q) return null;
+  if (!window.google?.maps) return null;
+
+  if (window.google.maps.places) {
+    try {
+      const req: Record<string, unknown> = {
+        query: q,
+        language: googleRequestLanguage(),
+        region: 'kr',
+      };
+      if (near) {
+        req.location = new window.google.maps.LatLng(near.lat, near.lng);
+        req.radius = 5000;
+      }
+      const raw = await textSearchOnce(req);
+      const mapped = (raw.results ?? [])
+        .map((row: { geometry?: { location?: unknown }; place_id?: string; name?: string; formatted_address?: string }) =>
+          placeFromSearchRow(row, q)
+        )
+        .filter(
+          (p: { lat: number; lng: number; label: string; placeId?: string } | null): p is {
+            lat: number;
+            lng: number;
+            label: string;
+            placeId?: string;
+          } => p != null
+        );
+      if (near && mapped.length > 0) {
+        mapped.sort(
+          (a: { lat: number; lng: number }, b: { lat: number; lng: number }) =>
+            haversineMeters(near, a) - haversineMeters(near, b)
+        );
+        const closest = mapped[0];
+        if (closest && haversineMeters(near, closest) <= 8000) return closest;
+      } else if (mapped[0]) {
+        return mapped[0];
+      }
+    } catch {
+      /* geocode fallback */
+    }
+  }
+
+  if (!window.google.maps.Geocoder) return null;
+  try {
+    const geocoder = new window.google.maps.Geocoder();
+    const result = await geocoder.geocode({ address: q, region: 'kr', language: googleRequestLanguage() });
+    const first = result?.results?.[0];
+    const loc = first?.geometry?.location;
+    if (!loc) return null;
+    const lat = typeof loc.lat === 'function' ? loc.lat() : Number(loc.lat);
+    const lng = typeof loc.lng === 'function' ? loc.lng() : Number(loc.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    const hit = { lat, lng, label: first.formatted_address || q, placeId: first.place_id ? String(first.place_id) : undefined };
+    if (near && haversineMeters(near, hit) > 8000) return null;
+    return hit;
+  } catch {
+    return null;
+  }
 }
 
 export interface GoogleUnifiedSearchParams {
@@ -157,29 +265,55 @@ function normalizeGooglePlace(row: any): Place | null {
 }
 
 function createPlacesService(): any {
-  const container = document.createElement('div');
+  let container = document.getElementById('wk-places-attr');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'wk-places-attr';
+    container.setAttribute('aria-hidden', 'true');
+    container.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);';
+    document.body.appendChild(container);
+  }
   return new window.google.maps.places.PlacesService(container);
 }
 
-function textSearchOnce(req: any): Promise<{ results: any[]; hasMore: boolean; pagination?: any }> {
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise((resolve, reject) => {
-    const service = createPlacesService();
-    service.textSearch(req, (results: any[], status: string, pagination: any) => {
-      if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-        resolve({
-          results: Array.isArray(results) ? results : [],
-          hasMore: Boolean(pagination?.hasNextPage),
-          pagination,
-        });
-        return;
+    const t = window.setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (v) => {
+        window.clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        window.clearTimeout(t);
+        reject(e);
       }
-      if (status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-        resolve({ results: [], hasMore: false, pagination: undefined });
-        return;
-      }
-      reject(new Error(`Google textSearch failed: ${status}`));
-    });
+    );
   });
+}
+
+function textSearchOnce(req: any): Promise<{ results: any[]; hasMore: boolean; pagination?: any }> {
+  const search = new Promise<{ results: any[]; hasMore: boolean; pagination?: any }>(
+    (resolve, reject) => {
+      const service = createPlacesService();
+      service.textSearch(req, (results: any[], status: string, pagination: any) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+          resolve({
+            results: Array.isArray(results) ? results : [],
+            hasMore: Boolean(pagination?.hasNextPage),
+            pagination,
+          });
+          return;
+        }
+        if (status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+          resolve({ results: [], hasMore: false, pagination: undefined });
+          return;
+        }
+        reject(new Error(`Google textSearch failed: ${status}`));
+      });
+    }
+  );
+  return withTimeout(search, 8000, 'textSearch');
 }
 
 function nearbySearchOnce(req: any): Promise<{ results: any[]; hasMore: boolean; pagination?: any }> {

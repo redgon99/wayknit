@@ -1,6 +1,8 @@
 /**
- * Deno Edge용 — src/lib/chatgptShareParse.ts 와 동일 로직 유지.
+ * ChatGPT 공개 공유(share) 페이지 HTML → 일정 본문 텍스트 추출.
+ * Deno Edge / Node 공용 (브라우저 CORS 회피용은 Edge에서 fetch).
  */
+
 export function isChatGptShareUrl(raw: string): boolean {
   try {
     const u = new URL(raw.trim().includes('://') ? raw.trim() : `https://${raw.trim()}`);
@@ -12,12 +14,17 @@ export function isChatGptShareUrl(raw: string): boolean {
   }
 }
 
+/** ChatGPT 특수 토큰·엔티티·cite 제거 */
 export function cleanChatGptMarkup(text: string): string {
   return text
     .replace(/genui[\s\S]*?/g, '')
     .replace(/image_group[\s\S]*?/g, '')
     .replace(/entity\[[^\]]*,\s*"([^"]+)"\]/g, '$1')
     .replace(/cite[\s\S]*?/g, '')
+    .replace(/\uE200genui\uE202[\s\S]*?\uE201/g, '')
+    .replace(/\uE200image_group\uE202[\s\S]*?\uE201/g, '')
+    .replace(/\uE200entity\uE202\[[^\]]*,\s*"([^"]+)"\]\uE201/g, '$1')
+    .replace(/\uE200cite\uE202[\s\S]*?\uE201/g, '')
     .replace(/\*\*/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
@@ -114,7 +121,7 @@ function extractFromFlightHtml(html: string): string | null {
       collectStrings(data, strings);
       candidates.push(...strings);
     } catch {
-      /* ignore */
+      /* ignore one chunk */
     }
   }
   if (candidates.length === 0) return null;
@@ -123,15 +130,22 @@ function extractFromFlightHtml(html: string): string | null {
 }
 
 function extractTitleHint(html: string, body: string): string | undefined {
+  const h = body.match(/^#{1,3}\s+(.+)$/m);
+  if (h) {
+    const t = h[1].replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim();
+    if (t.length >= 2 && t.length <= 80) return t;
+  }
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   if (m) {
     const t = m[1].replace(/\s*[|·\-].*$/, '').replace(/^ChatGPT\s*-\s*/i, '').trim();
-    if (t && t.length >= 2 && t.length <= 80) return t;
+    if (t && t.length >= 2 && t.length <= 80 && !/확인해 보세요/.test(t)) return t;
   }
-  const h = body.match(/^#\s+(.+)$/m);
-  return h?.[1]?.trim();
+  return undefined;
 }
 
+/**
+ * 공유 페이지 HTML에서 일정 본문·제목 힌트를 뽑는다.
+ */
 export function extractCourseTextFromShareHtml(html: string): {
   cleanedText: string;
   titleHint?: string;
@@ -158,6 +172,7 @@ export function extractCourseTextFromShareHtml(html: string): {
   const flight = extractFromFlightHtml(html);
   let raw = flight;
   if (!raw) {
+    // fallback: largest hangul block
     const blocks = html.match(/[\uac00-\ud7a3][^<]{80,}/g) ?? [];
     raw = blocks.sort((a, b) => b.length - a.length)[0] ?? '';
   }
@@ -166,6 +181,7 @@ export function extractCourseTextFromShareHtml(html: string): {
   }
   let cleaned = cleanChatGptMarkup(raw);
   cleaned = cleaned.replace(/If you want[\s\S]*$/i, '').trim();
+  // drop trailing English CTA lists sometimes left
   cleaned = cleaned.replace(/\n-\s*[가-힣].*제안해줘[\s\S]*$/m, '').trim();
   if (!/\d{1,2}:\d{2}/.test(cleaned)) {
     throw new Error('시간표(예: 09:00~10:00)를 찾지 못했습니다. 일정 표가 있는 공유인지 확인하세요.');

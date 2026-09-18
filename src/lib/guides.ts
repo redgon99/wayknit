@@ -28,6 +28,15 @@ async function describeFunctionError(error: unknown): Promise<string> {
   return error instanceof Error ? error.message : String(error);
 }
 
+function mapStringArray(raw: unknown, max = 8): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out = raw
+    .filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+    .map((s) => s.trim())
+    .slice(0, max);
+  return out.length > 0 ? out : undefined;
+}
+
 function mapCoursePins(raw: unknown): GuideCoursePin[] {
   if (!Array.isArray(raw)) return [];
   const out: GuideCoursePin[] = [];
@@ -38,6 +47,13 @@ function mapCoursePins(raw: unknown): GuideCoursePin[] {
     const lng = Number(o.lng);
     const name = typeof o.name === 'string' ? o.name.trim() : '';
     if (!name || !Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+    const rating = typeof o.rating === 'number' ? o.rating : Number(o.rating);
+    const reviewCount =
+      typeof o.reviewCount === 'number'
+        ? o.reviewCount
+        : typeof o.review_count === 'number'
+          ? o.review_count
+          : Number(o.reviewCount ?? o.review_count);
     out.push({
       order: typeof o.order === 'number' ? o.order : out.length + 1,
       name,
@@ -45,6 +61,48 @@ function mapCoursePins(raw: unknown): GuideCoursePin[] {
       lat,
       lng,
       label: typeof o.label === 'string' ? o.label : undefined,
+      googlePlaceId:
+        typeof o.googlePlaceId === 'string'
+          ? o.googlePlaceId
+          : typeof o.google_place_id === 'string'
+            ? o.google_place_id
+            : undefined,
+      rating: Number.isFinite(rating) ? rating : undefined,
+      reviewCount: Number.isFinite(reviewCount) ? reviewCount : undefined,
+      categoryLabel:
+        typeof o.categoryLabel === 'string'
+          ? o.categoryLabel
+          : typeof o.category_label === 'string'
+            ? o.category_label
+            : undefined,
+      priceLevelLabel:
+        typeof o.priceLevelLabel === 'string'
+          ? o.priceLevelLabel
+          : typeof o.price_level_label === 'string'
+            ? o.price_level_label
+            : undefined,
+      photoUrls: mapStringArray(o.photoUrls ?? o.photo_urls, 6),
+      address: typeof o.address === 'string' ? o.address : undefined,
+      phone: typeof o.phone === 'string' ? o.phone : undefined,
+      openingText:
+        typeof o.openingText === 'string'
+          ? o.openingText
+          : typeof o.opening_text === 'string'
+            ? o.opening_text
+            : undefined,
+      editorialSummary:
+        typeof o.editorialSummary === 'string'
+          ? o.editorialSummary
+          : typeof o.editorial_summary === 'string'
+            ? o.editorial_summary
+            : undefined,
+      reviewHighlights: mapStringArray(o.reviewHighlights ?? o.review_highlights, 5),
+      dayLabel:
+        typeof o.dayLabel === 'string'
+          ? o.dayLabel
+          : typeof o.day_label === 'string'
+            ? o.day_label
+            : undefined,
     });
   }
   return out;
@@ -225,6 +283,16 @@ export async function archiveGuide(id: string): Promise<void> {
   await updateGuide(id, { status: 'archived' });
 }
 
+export async function deleteGuide(id: string): Promise<void> {
+  const sb = requireSupabase();
+  const { error } = await sb.from('guide_articles').delete().eq('id', id);
+  if (error) throw error;
+  await Promise.all([
+    sb.from('admin_content_drafts').delete().eq('table_name', 'guide_articles').eq('row_key', id),
+    sb.from('admin_content_versions').delete().eq('table_name', 'guide_articles').eq('row_key', id),
+  ]).catch(() => undefined);
+}
+
 export async function triggerGuideDraftFromTips(options?: {
   analysisIds?: string[];
 }): Promise<{ created: number; ids: string[] }> {
@@ -259,16 +327,13 @@ export async function fetchCourseTextFromGptShare(url: string): Promise<{
   }
   const normalized = (url.includes('://') ? url.trim() : `https://${url.trim()}`).split('?')[0];
 
-  // 1) 브라우저 → Jina Reader (Edge 데이터센터 IP는 ChatGPT/Jina에서 막히는 경우가 많음)
+  // 1) 브라우저 → Jina (커스텀 헤더 없이 GET → CORS preflight 회피)
+  let jinaError: string | null = null;
   try {
-    const jina = await fetch(`https://r.jina.ai/${normalized}`, {
-      headers: {
-        Accept: 'text/plain',
-        'X-Retain-Images': 'none',
-      },
-    });
+    const jina = await fetch(`https://r.jina.ai/${normalized}`);
     if (jina.ok) {
       const text = await jina.text();
+      if (!text.trim()) throw new Error('공유 본문이 비어 있습니다.');
       const { cleanedText, titleHint } = extractCourseTextFromShareHtml(text);
       return {
         sourceUrl: normalized,
@@ -276,32 +341,38 @@ export async function fetchCourseTextFromGptShare(url: string): Promise<{
         cleanedText,
       };
     }
-  } catch {
-    /* fall through to Edge */
+    jinaError = `Jina 응답 ${jina.status}`;
+  } catch (e) {
+    jinaError = e instanceof Error ? e.message : String(e);
   }
 
-  // 2) Edge 폴백 (JINA_API_KEY 등이 있으면 서버에서도 가능)
-  const sb = requireSupabase();
-  const { data, error } = await sb.functions.invoke<{
-    sourceUrl?: string;
-    titleHint?: string | null;
-    cleanedText?: string;
-    error?: string;
-  }>('guide-course-from-share', { body: { url: normalized } });
-  if (error) throw new Error(await describeFunctionError(error));
-  if (data && typeof data === 'object' && data.error) {
-    throw new Error(String(data.error));
-  }
-  if (!data?.cleanedText?.trim()) {
+  // 2) Edge 폴백
+  try {
+    const sb = requireSupabase();
+    const { data, error } = await sb.functions.invoke<{
+      sourceUrl?: string;
+      titleHint?: string | null;
+      cleanedText?: string;
+      error?: string;
+    }>('guide-course-from-share', { body: { url: normalized } });
+    if (error) throw new Error(await describeFunctionError(error));
+    if (data && typeof data === 'object' && data.error) {
+      throw new Error(String(data.error));
+    }
+    if (!data?.cleanedText?.trim()) {
+      throw new Error('공유 링크에서 일정 본문을 받지 못했습니다.');
+    }
+    return {
+      sourceUrl: data.sourceUrl ?? normalized,
+      titleHint: data.titleHint ?? null,
+      cleanedText: data.cleanedText,
+    };
+  } catch (e) {
+    const edgeMsg = e instanceof Error ? e.message : String(e);
     throw new Error(
-      '공유 링크에서 일정 본문을 받지 못했습니다. 「본문 붙여넣기」 탭을 사용해 주세요.'
+      `링크 추출 실패 (${jinaError ?? 'jina'} / ${edgeMsg}). 「본문 붙여넣기」 탭을 사용하거나 잠시 후 다시 시도하세요.`
     );
   }
-  return {
-    sourceUrl: data.sourceUrl ?? normalized,
-    titleHint: data.titleHint ?? null,
-    cleanedText: data.cleanedText,
-  };
 }
 
 export function isGuidesConfigured(): boolean {

@@ -6,11 +6,13 @@ import { LocaleSwitcher } from '../components/LocaleSwitcher';
 import { ReportButton } from '../components/ReportButton';
 import { useSeoMeta } from '../hooks/useSeoMeta';
 import { GUIDE_KIND_META } from '../lib/guideKinds';
+import { displayCourseTags } from '../lib/courseGuideTaxonomy';
 import { normalizeLocale, pathWithLocale } from '../lib/locale';
 import { plannerPath } from '../lib/routes';
 import i18n from '../lib/i18n';
 import { getPublishedGuideBySlug, isGuidesConfigured } from '../lib/guides';
 import { renderGuideMarkdown } from '../lib/guideMarkdown';
+import { collectGuideSources } from '../lib/guideSources';
 import { GuideCourseMap } from '../components/GuideCourseMap';
 import type { GuideArticle } from '../types/guides';
 import '../styles/app.css';
@@ -55,6 +57,7 @@ export default function GuideDetailPage() {
 
   const summaryText =
     locale === 'en' && guide?.summaryEn ? guide.summaryEn : guide?.summary;
+  const sources = guide ? collectGuideSources(guide.bodyMd, guide.sourceUrls) : [];
 
   useSeoMeta(
     guide
@@ -113,7 +116,7 @@ export default function GuideDetailPage() {
           <>
             <div className="guides-card-tags">
               <span className="guides-tag guides-tag-kind">{t(`kinds.${guide.kind}`)}</span>
-              {guide.topicTags.map((tag) => (
+              {displayCourseTags(guide.topicTags, locale, 8).map((tag) => (
                 <span key={tag} className="guides-tag">
                   {tag}
                 </span>
@@ -126,15 +129,23 @@ export default function GuideDetailPage() {
             )}
             <div className="guides-body">{renderGuideMarkdown(guide.bodyMd)}</div>
             <p className="guides-disclaimer">{t('detail.disclaimer')}</p>
-            {guide.sourceUrls.length > 0 && (
+            {sources.length > 0 && (
               <section className="guides-sources">
                 <h2>{t('detail.sources')}</h2>
                 <ul>
-                  {guide.sourceUrls.map((url) => (
-                    <li key={url}>
-                      <a href={url} target="_blank" rel="noopener noreferrer">
-                        {url}
+                  {sources.map((src) => (
+                    <li key={src.url}>
+                      <a
+                        className="guide-source-chip"
+                        href={src.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {src.label}
                       </a>
+                      {src.host && (
+                        <span className="guides-source-host">{src.host}</span>
+                      )}
                     </li>
                   ))}
                 </ul>

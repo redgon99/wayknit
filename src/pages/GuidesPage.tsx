@@ -6,6 +6,13 @@ import { SegmentedTabs } from '../components/SegmentedTabs';
 import { useSeoMeta } from '../hooks/useSeoMeta';
 import { useLandingNoticeTexts } from '../hooks/useLandingNoticeTexts';
 import { GUIDE_KINDS, type GuideKind } from '../lib/guideKinds';
+import { CourseTaxonomyChips } from '../components/CourseTaxonomyChips';
+import {
+  displayCourseTags,
+  guideMatchesCourseFilters,
+  inferCourseTaxonomyTags,
+  resolveCourseTag,
+} from '../lib/courseGuideTaxonomy';
 import { normalizeLocale, pathWithLocale } from '../lib/locale';
 import i18n from '../lib/i18n';
 import { isGuidesConfigured, listPublishedGuides } from '../lib/guides';
@@ -18,6 +25,7 @@ export default function GuidesPage() {
   const noticeTexts = useLandingNoticeTexts();
   const [guides, setGuides] = useState<GuideArticle[]>([]);
   const [kindFilter, setKindFilter] = useState<GuideKind | ''>('');
+  const [courseFilters, setCourseFilters] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +41,10 @@ export default function GuidesPage() {
     (async () => {
       setLoading(true);
       try {
-        const rows = await listPublishedGuides(48, kindFilter || undefined);
+        const rows = await listPublishedGuides(
+          kindFilter === 'course' || courseFilters.length > 0 ? 80 : 48,
+          kindFilter || undefined
+        );
         if (alive) setGuides(rows);
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : t('errors.loadFailed'));
@@ -44,11 +55,36 @@ export default function GuidesPage() {
     return () => {
       alive = false;
     };
-  }, [t, kindFilter]);
+  }, [t, kindFilter, courseFilters.length]);
 
   const kindChips = useMemo(
     () => [{ id: '' as const, label: t('kinds.all') }, ...GUIDE_KINDS.map((k) => ({ id: k, label: t(`kinds.${k}`) }))],
     [t]
+  );
+
+  const showCourseFilters = kindFilter === '' || kindFilter === 'course';
+
+  const availableTagIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const g of guides) {
+      if (g.kind !== 'course' && kindFilter === 'course') continue;
+      for (const raw of g.topicTags) {
+        const tag = resolveCourseTag(raw);
+        if (tag) ids.add(tag.id);
+      }
+      for (const id of inferCourseTaxonomyTags([g.title, g.summary, ...g.topicTags], 16)) {
+        ids.add(id);
+      }
+    }
+    return [...ids];
+  }, [guides, kindFilter]);
+
+  const visibleGuides = useMemo(
+    () =>
+      guides.filter((g) =>
+        guideMatchesCourseFilters(g.topicTags, g.title, g.summary, courseFilters)
+      ),
+    [guides, courseFilters]
   );
 
   return (
@@ -65,16 +101,30 @@ export default function GuidesPage() {
           ariaLabel={t('list.kindFilter')}
           items={kindChips.map((c) => ({ id: c.id || 'all', label: c.label }))}
           value={kindFilter || 'all'}
-          onChange={(id) => setKindFilter(id === 'all' ? '' : (id as GuideKind))}
+          onChange={(id) => {
+            const next = id === 'all' ? '' : (id as GuideKind);
+            setKindFilter(next);
+            if (next && next !== 'course') setCourseFilters([]);
+          }}
         />
+
+        {showCourseFilters && (
+          <CourseTaxonomyChips
+            mode="filter"
+            selected={courseFilters}
+            onChange={setCourseFilters}
+            availableIds={availableTagIds}
+            locale={locale}
+          />
+        )}
 
         {loading && <p className="guides-muted">{t('list.loading')}</p>}
         {error && <p className="guides-error">{error}</p>}
-        {!loading && !error && guides.length === 0 && (
+        {!loading && !error && visibleGuides.length === 0 && (
           <p className="guides-muted">{t('list.empty')}</p>
         )}
         <div className="guides-grid">
-          {guides.map((g) => (
+          {visibleGuides.map((g) => (
             <Link
               key={g.id}
               to={pathWithLocale(`/guides/${g.slug}`, locale)}
@@ -82,7 +132,7 @@ export default function GuidesPage() {
             >
               <div className="guides-card-tags">
                 <span className="guides-tag guides-tag-kind">{t(`kinds.${g.kind}`)}</span>
-                {g.topicTags.slice(0, 2).map((tag) => (
+                {displayCourseTags(g.topicTags, locale, 3).map((tag) => (
                   <span key={tag} className="guides-tag">
                     {tag}
                   </span>

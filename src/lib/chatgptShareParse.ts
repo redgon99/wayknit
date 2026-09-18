@@ -130,13 +130,17 @@ function extractFromFlightHtml(html: string): string | null {
 }
 
 function extractTitleHint(html: string, body: string): string | undefined {
+  const h = body.match(/^#{1,3}\s+(.+)$/m);
+  if (h) {
+    const t = h[1].replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim();
+    if (t.length >= 2 && t.length <= 80) return t;
+  }
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   if (m) {
     const t = m[1].replace(/\s*[|·\-].*$/, '').replace(/^ChatGPT\s*-\s*/i, '').trim();
-    if (t && t.length >= 2 && t.length <= 80) return t;
+    if (t && t.length >= 2 && t.length <= 80 && !/확인해 보세요/.test(t)) return t;
   }
-  const h = body.match(/^#\s+(.+)$/m);
-  return h?.[1]?.trim();
+  return undefined;
 }
 
 /**

@@ -57,6 +57,8 @@ import { trackEvent } from '../lib/analytics';
 import { isHoursProblem } from '../lib/openingHours';
 import type { LinkPlacesExtractResult } from '../lib/linkPlaces';
 import { consumeShareHandoff } from '../lib/shareTarget';
+import { getPublishedGuideBySlug, isGuidesConfigured } from '../lib/guides';
+import { importGuideCoursePins } from '../lib/guideCourseImport';
 import { isValidHHMM } from '../lib/timeOfDay';
 import { fetchLegs } from '../lib/mobility';
 import { resolveOriginForRoute } from '../lib/resolveOrigin';
@@ -579,34 +581,111 @@ export default function PlannerPage() {
     }));
   }, [location.search]);
 
-  // 가이드「추천 여행코스」→ 자동 동선 옵션 패널 연동
+  // 가이드「추천 여행코스」→ 코스 핀을 담은 뒤 자동 동선 패널
+  const guideImportKeyRef = useRef<string | null>(null);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('autoRoute') !== '1') return;
-    const guideTitle = params.get('guideTitle')?.trim();
-    setMaterialsPanelOpen(false);
-    setTrip((prev) => {
-      const opts = {
-        ...getRouteOptionsForDay(prev, prev.currentDay ?? 1),
-        autoOrder: true,
-      };
-      const withOpts = patchRouteOptionsForDay(prev, prev.currentDay ?? 1, opts);
-      if (!guideTitle) return withOpts;
-      return {
-        ...withOpts,
-        title: guideTitle.slice(0, 80),
-        updatedAt: Date.now(),
-      };
-    });
-    setRouteOptionsOpen(true);
-    setPanelTab('route');
-    setPanelOpen(true);
-    showToast(
-      guideTitle
-        ? i18n.t('toast.guideRouteHint', { ns: 'planner', title: guideTitle })
-        : i18n.t('toast.autoRouteHint', { ns: 'planner' })
-    );
-  }, [location.search]);
+    if (!hydrated) return;
+    const guideTitle = params.get('guideTitle')?.trim() ?? '';
+    const fromGuide = params.get('fromGuide')?.trim() ?? '';
+    const importKey = `${fromGuide}::${guideTitle}`;
+    if (guideImportKeyRef.current === importKey) return;
+
+    let cancelled = false;
+    (async () => {
+      let imported = 0;
+      let title = guideTitle;
+      if (fromGuide && isGuidesConfigured()) {
+        try {
+          const guide = await getPublishedGuideBySlug(fromGuide);
+          if (cancelled) return;
+          title = (guideTitle || guide?.title || '').trim();
+          if (guide?.coursePins?.length) {
+            const result = importGuideCoursePins(guide.coursePins, {
+              currentDay: 1,
+              totalDays: trip.totalDays,
+              existingByDay: trip.pinnedByDay,
+              scope: 'all',
+              mode: 'merge',
+            });
+            imported = result.importedCount;
+            const next = normalizeTrip({
+              ...patchRouteOptionsForDay(
+                {
+                  ...trip,
+                  title: (title || trip.title).slice(0, 80),
+                  pinnedByDay: result.pinnedByDay,
+                  totalDays: result.totalDays,
+                  currentDay: 1,
+                  updatedAt: Date.now(),
+                },
+                1,
+                { ...getRouteOptionsForDay(trip, 1), autoOrder: true }
+              ),
+            });
+            setTrip(next);
+            focusMapOnTrip(next);
+          } else {
+            setTrip((prev) => {
+              const withOpts = patchRouteOptionsForDay(prev, prev.currentDay ?? 1, {
+                ...getRouteOptionsForDay(prev, prev.currentDay ?? 1),
+                autoOrder: true,
+              });
+              if (!title) return withOpts;
+              return { ...withOpts, title: title.slice(0, 80), updatedAt: Date.now() };
+            });
+          }
+        } catch (e) {
+          console.warn('[planner] guide pin import failed', e);
+          if (!cancelled) {
+            showToast(i18n.t('toast.guideRouteFailed', { ns: 'planner' }));
+          }
+        }
+      } else {
+        setTrip((prev) => {
+          const withOpts = patchRouteOptionsForDay(prev, prev.currentDay ?? 1, {
+            ...getRouteOptionsForDay(prev, prev.currentDay ?? 1),
+            autoOrder: true,
+          });
+          if (!title) return withOpts;
+          return { ...withOpts, title: title.slice(0, 80), updatedAt: Date.now() };
+        });
+      }
+      if (cancelled) return;
+      guideImportKeyRef.current = importKey;
+      navigate({ pathname: location.pathname, search: '', hash: location.hash }, { replace: true });
+      setMaterialsPanelOpen(false);
+      setRouteOptionsOpen(true);
+      setPanelTab(imported > 0 ? 'pins' : 'route');
+      setPanelOpen(true);
+      if (imported > 0) {
+        showToast(
+          i18n.t('toast.guideRouteImported', {
+            ns: 'planner',
+            title: title || guideTitle,
+            count: imported,
+          })
+        );
+      } else if (fromGuide) {
+        showToast(
+          i18n.t('toast.guideRouteEmpty', { ns: 'planner', title: title || guideTitle })
+        );
+      } else {
+        showToast(
+          title
+            ? i18n.t('toast.guideRouteHint', { ns: 'planner', title })
+            : i18n.t('toast.autoRouteHint', { ns: 'planner' })
+        );
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // trip is the hydrated snapshot; do not re-run on later pin edits
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, location.search]);
 
   // 랜딩페이지「AI 시나리오」소개 → 시나리오 탭 자동 오픈
   useEffect(() => {

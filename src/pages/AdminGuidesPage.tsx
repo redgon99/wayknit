@@ -8,6 +8,7 @@ import {
   archiveGuide,
   buildGuideRow,
   createGuide,
+  deleteGuide,
   fetchCourseTextFromGptShare,
   getAdminGuide,
   listAdminGuides,
@@ -18,7 +19,8 @@ import {
 } from '../lib/guides';
 import { parseCourseGuideText, resolveCoursePins, type CourseGuideDraft } from '../lib/courseGuideMacro';
 import { isChatGptShareUrl } from '../lib/chatgptShareParse';
-import { loadKakaoSdk } from '../lib/kakao';
+import { loadGoogleMapsSdk, getGoogleMapsApiKey } from '../lib/googleMaps';
+import { renderGuideMarkdown } from '../lib/guideMarkdown';
 import {
   discardDraft as discardContentDraft,
   listDraftKeys,
@@ -32,7 +34,21 @@ import {
 import { normalizeGuideKind } from '../lib/guideKinds';
 import type { GuideArticle, GuideCoursePin, GuideStatus } from '../types/guides';
 import { GuideCourseMap } from '../components/GuideCourseMap';
+import { CourseTaxonomyPicker } from '../components/CourseTaxonomyChips';
+import { displayCourseTags } from '../lib/courseGuideTaxonomy';
 import '../styles/app.css';
+
+function formatUnknownError(e: unknown, fallback: string): string {
+  if (e instanceof Error && e.message.trim()) return e.message;
+  if (typeof e === 'string' && e.trim()) return e;
+  if (e && typeof e === 'object' && 'message' in e && typeof (e as { message: unknown }).message === 'string') {
+    return (e as { message: string }).message;
+  }
+  if (typeof Event !== 'undefined' && e instanceof Event) {
+    return `${fallback} (이벤트: ${e.type})`;
+  }
+  return fallback;
+}
 
 /** 초안(admin_content_drafts)에 저장된 snake_case 행 일부를 편집 상태(camelCase)에 얹는다 */
 function applyGuideDraftRow(base: GuideArticle, row: Record<string, unknown>): GuideArticle {
@@ -75,10 +91,10 @@ export default function AdminGuidesPage() {
   const [versions, setVersions] = useState<ContentVersion[]>([]);
   const [showVersions, setShowVersions] = useState(false);
   const [restoringVersionId, setRestoringVersionId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   /* 추천 여행코스 붙여넣기 매크로 */
   const [macroOpen, setMacroOpen] = useState(false);
-  const [macroTab, setMacroTab] = useState<'paste' | 'link'>('paste');
   const [macroRaw, setMacroRaw] = useState('');
   const [macroTitle, setMacroTitle] = useState('');
   const [macroSourceUrl, setMacroSourceUrl] = useState('');
@@ -86,6 +102,7 @@ export default function AdminGuidesPage() {
   const [macroPins, setMacroPins] = useState<GuideCoursePin[]>([]);
   const [macroMissed, setMacroMissed] = useState<string[]>([]);
   const [macroBusy, setMacroBusy] = useState(false);
+  const macroCanRun = Boolean(macroSourceUrl.trim() || macroRaw.trim());
 
   const loadList = useCallback(async () => {
     setRefreshing(true);
@@ -171,10 +188,10 @@ export default function AdminGuidesPage() {
     };
   }
 
-  async function ensureKakaoReady() {
-    const key = import.meta.env.VITE_KAKAO_JS_KEY as string | undefined;
-    if (!key) throw new Error('VITE_KAKAO_JS_KEY가 없어 지도 핀을 만들 수 없습니다.');
-    await loadKakaoSdk(key);
+  async function ensureMapsReady() {
+    const key = getGoogleMapsApiKey();
+    if (!key) throw new Error('VITE_GOOGLE_MAPS_API_KEY가 없어 지도 핀을 만들 수 없습니다.');
+    await loadGoogleMapsSdk(key);
   }
 
   /** draft/archived 글 — 예전처럼 바로 라이브 행을 고친다(운영본 개념이 없음) */
@@ -262,60 +279,63 @@ export default function AdminGuidesPage() {
     }
   };
 
-  const handleMacroPreview = async () => {
-    setError(null);
-    setMacroBusy(true);
+  async function applyMacroDraft(draft: CourseGuideDraft, doneLabel: string) {
+    setMacroPreview(draft);
     try {
-      const draft = parseCourseGuideText(macroRaw, {
-        title: macroTitle || undefined,
-        sourceUrl: macroSourceUrl || undefined,
-      });
-      setMacroPreview(draft);
-      await ensureKakaoReady();
+      await ensureMapsReady();
       const { pins, missed } = await resolveCoursePins(draft.scheduleRows, {
         topicTags: draft.topicTags,
       });
       setMacroPins(pins);
       setMacroMissed(missed);
-    } catch (e) {
-      setMacroPreview(null);
-      setMacroPins([]);
-      setMacroMissed([]);
-      setError(e instanceof Error ? e.message : '미리보기 변환 실패');
-    } finally {
-      setMacroBusy(false);
-    }
-  };
-
-  /** 탭2: GPT 공유 링크만으로 본문 추출 → 미리보기·핀 */
-  const handleMacroExtractFromLink = async () => {
-    setError(null);
-    setMacroBusy(true);
-    try {
-      const url = macroSourceUrl.trim();
-      if (!isChatGptShareUrl(url)) {
-        throw new Error('chatgpt.com/share/… 공개 공유 링크를 입력하세요.');
+      if (missed.length > 0) {
+        setError(
+          `${doneLabel} 일부 좌표 미매칭: ${missed.slice(0, 6).join(', ')}${missed.length > 6 ? '…' : ''}`
+        );
       }
-      const { cleanedText, titleHint, sourceUrl } = await fetchCourseTextFromGptShare(url);
-      setMacroRaw(cleanedText);
-      setMacroSourceUrl(sourceUrl);
-      if (!macroTitle.trim() && titleHint) setMacroTitle(titleHint);
-      const draft = parseCourseGuideText(cleanedText, {
-        title: macroTitle.trim() || titleHint || undefined,
-        sourceUrl,
+    } catch (pinErr) {
+      setMacroPins([]);
+      setMacroMissed(draft.scheduleRows.map((r) => r.place));
+      setError(
+        `일정 변환은 완료됐습니다. 지도 핀만 실패: ${formatUnknownError(pinErr, 'Google Maps SDK/검색 오류')}`
+      );
+    }
+  }
+
+  const handleMacroRun = async () => {
+    setError(null);
+    setMacroBusy(true);
+    try {
+      const fromUrl = macroSourceUrl.trim();
+      const fromBody = macroRaw.trim();
+      const shareUrl = isChatGptShareUrl(fromUrl)
+        ? fromUrl
+        : isChatGptShareUrl(fromBody)
+          ? fromBody
+          : '';
+      if (shareUrl) {
+        const { cleanedText, titleHint, sourceUrl } = await fetchCourseTextFromGptShare(shareUrl);
+        setMacroRaw(cleanedText);
+        setMacroSourceUrl(sourceUrl);
+        const title = macroTitle.trim() || titleHint || undefined;
+        if (!macroTitle.trim() && titleHint) setMacroTitle(titleHint);
+        const draft = parseCourseGuideText(cleanedText, { title, sourceUrl });
+        await applyMacroDraft(draft, '일정 추출 완료.');
+        return;
+      }
+      if (!fromBody) {
+        throw new Error('일정 본문을 붙여넣거나 ChatGPT 공유 링크를 입력하세요.');
+      }
+      const draft = parseCourseGuideText(fromBody, {
+        title: macroTitle || undefined,
+        sourceUrl: fromUrl || undefined,
       });
-      setMacroPreview(draft);
-      await ensureKakaoReady();
-      const { pins, missed } = await resolveCoursePins(draft.scheduleRows, {
-        topicTags: draft.topicTags,
-      });
-      setMacroPins(pins);
-      setMacroMissed(missed);
+      await applyMacroDraft(draft, '일정 변환 완료.');
     } catch (e) {
       setMacroPreview(null);
       setMacroPins([]);
       setMacroMissed([]);
-      setError(e instanceof Error ? e.message : '링크 추출 실패');
+      setError(formatUnknownError(e, '실행 실패'));
     } finally {
       setMacroBusy(false);
     }
@@ -333,7 +353,7 @@ export default function AdminGuidesPage() {
         });
       let pins = macroPins;
       if (!macroPreview || pins.length === 0) {
-        await ensureKakaoReady();
+        await ensureMapsReady();
         const resolved = await resolveCoursePins(draft.scheduleRows, {
           topicTags: draft.topicTags,
         });
@@ -367,6 +387,28 @@ export default function AdminGuidesPage() {
     }
   };
 
+  const handleDeleteGuide = async (g: GuideArticle) => {
+    const publishedNote = g.status === 'published' ? ' 공개 목록에서도 바로 사라집니다.' : '';
+    if (!window.confirm(`「${g.title}」을(를) 삭제할까요?${publishedNote} 이 작업은 되돌릴 수 없습니다.`)) {
+      return;
+    }
+    setDeletingId(g.id);
+    setError(null);
+    try {
+      await deleteGuide(g.id);
+      if (editing?.id === g.id) {
+        setEditing(null);
+        setHasDraft(false);
+        setVersions([]);
+      }
+      await loadList();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '삭제 실패');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleRefreshCoursePins = async () => {
     if (!editing) return;
     setSaving(true);
@@ -375,7 +417,7 @@ export default function AdminGuidesPage() {
       const { extractScheduleRowsFromBody } = await import('../lib/courseGuideMacro');
       const rows = extractScheduleRowsFromBody(editing.bodyMd);
       if (rows.length < 1) throw new Error('본문에서 일정 장소를 찾지 못했습니다.');
-      await ensureKakaoReady();
+      await ensureMapsReady();
       const { pins, missed } = await resolveCoursePins(rows, { topicTags: editing.topicTags });
       setEditing({ ...editing, coursePins: pins });
       if (missed.length > 0) {
@@ -449,158 +491,148 @@ export default function AdminGuidesPage() {
         {macroOpen && (
           <section className="admin-section admin-guide-editor">
             <h2>추천 여행코스 · 붙여넣기 매크로</h2>
-            <div className="admin-tab-bar" style={{ marginBottom: 12 }}>
-              <button
-                type="button"
-                className={`admin-tab-btn${macroTab === 'paste' ? ' active' : ''}`}
-                onClick={() => setMacroTab('paste')}
-              >
-                1. 본문 붙여넣기
-              </button>
-              <button
-                type="button"
-                className={`admin-tab-btn${macroTab === 'link' ? ' active' : ''}`}
-                onClick={() => setMacroTab('link')}
-              >
-                2. GPT 링크로 추출
-              </button>
-            </div>
-
-            {macroTab === 'paste' ? (
-              <>
-                <p className="admin-cell-sub" style={{ marginTop: 0 }}>
-                  ChatGPT·메모에서 복사한 하루 일정을 붙여넣으면{' '}
-                  <strong>시간 | 일정 | 포인트</strong> 표 형식의 추천 여행코스 초안을 만듭니다.
-                </p>
-                <label className="admin-guide-field">
-                  제목 (비우면 자동)
-                  <input
-                    value={macroTitle}
-                    onChange={(e) => setMacroTitle(e.currentTarget.value)}
-                    placeholder="춘천 하루 여행 코스 추천"
-                  />
-                </label>
-                <label className="admin-guide-field">
-                  출처 URL (선택)
-                  <input
-                    value={macroSourceUrl}
-                    onChange={(e) => setMacroSourceUrl(e.currentTarget.value)}
-                    placeholder="https://…"
-                  />
-                </label>
-                <label className="admin-guide-field">
-                  일정 본문 붙여넣기
-                  <textarea
-                    rows={14}
-                    value={macroRaw}
-                    onChange={(e) => {
-                      setMacroRaw(e.currentTarget.value);
-                      setMacroPreview(null);
-                      setMacroPins([]);
-                      setMacroMissed([]);
-                    }}
-                    placeholder={`소양강스카이워크 → 닭갈비 → 호수케이블카 → 구봉산 순서로…
+            <p className="admin-cell-sub" style={{ marginTop: 0 }}>
+              ChatGPT 공유 링크(<code>chatgpt.com/share/…</code>)나 일정 본문을 넣으면{' '}
+              <strong>시간 | 일정 | 포인트</strong> 표 형식의 추천 여행코스 초안을 만듭니다.
+            </p>
+            <label className="admin-guide-field">
+              제목 (비우면 자동)
+              <input
+                value={macroTitle}
+                onChange={(e) => setMacroTitle(e.currentTarget.value)}
+                placeholder="춘천 하루 여행 코스 추천"
+              />
+            </label>
+            <label className="admin-guide-field">
+              출처 URL
+              <input
+                value={macroSourceUrl}
+                onChange={(e) => {
+                  setMacroSourceUrl(e.currentTarget.value);
+                  setMacroPreview(null);
+                  setMacroPins([]);
+                  setMacroMissed([]);
+                }}
+                placeholder="https://chatgpt.com/share/…"
+              />
+            </label>
+            <label className="admin-guide-field">
+              일정 본문
+              <textarea
+                rows={14}
+                value={macroRaw}
+                onChange={(e) => {
+                  setMacroRaw(e.currentTarget.value);
+                  setMacroPreview(null);
+                  setMacroPins([]);
+                  setMacroMissed([]);
+                }}
+                placeholder={`소양강스카이워크 → 닭갈비 → 호수케이블카 → 구봉산 순서로…
 
 10:00–11:00	소양강스카이워크	유리 전망대에서 소양강 위를 걷기
 11:20–12:40	춘천 명동 닭갈비골목	대표 먹거리 닭갈비 + 볶음밥
 …`}
-                  />
-                </label>
-                <div className="admin-landing-actions">
-                  <button
-                    type="button"
-                    onClick={() => void handleMacroPreview()}
-                    disabled={!macroRaw.trim() || macroBusy}
-                  >
-                    {macroBusy ? '변환·지도 검색 중…' : '미리보기·지도 핀'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleMacroCreate(false)}
-                    disabled={!macroRaw.trim() || macroBusy}
-                  >
-                    {macroBusy ? '처리 중…' : '초안으로 저장'}
-                  </button>
-                  <button
-                    type="button"
-                    className="admin-create-btn"
-                    onClick={() => void handleMacroCreate(true)}
-                    disabled={!macroRaw.trim() || macroBusy}
-                  >
-                    {macroBusy ? '처리 중…' : '바로 발행'}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="admin-cell-sub" style={{ marginTop: 0 }}>
-                  <code>chatgpt.com/share/…</code> 공개 공유 링크만 넣으면 일정 표를 추출하고 지도 핀까지
-                  구성합니다. (AI 토큰 없음 · 브라우저에서 페이지 조회)
-                </p>
-                <label className="admin-guide-field">
-                  제목 (비우면 공유 제목·본문에서 자동)
-                  <input
-                    value={macroTitle}
-                    onChange={(e) => setMacroTitle(e.currentTarget.value)}
-                    placeholder="충주 하루 여행 코스 추천"
-                  />
-                </label>
-                <label className="admin-guide-field">
-                  GPT 공유 링크
-                  <input
-                    value={macroSourceUrl}
-                    onChange={(e) => {
-                      setMacroSourceUrl(e.currentTarget.value);
-                      setMacroPreview(null);
-                      setMacroPins([]);
-                      setMacroMissed([]);
-                    }}
-                    placeholder="https://chatgpt.com/share/…"
-                  />
-                </label>
-                <div className="admin-landing-actions">
-                  <button
-                    type="button"
-                    className="admin-create-btn"
-                    onClick={() => void handleMacroExtractFromLink()}
-                    disabled={!macroSourceUrl.trim() || macroBusy}
-                  >
-                    {macroBusy ? '링크 추출·지도 검색 중…' : '링크로 구성하기'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleMacroCreate(false)}
-                    disabled={!macroPreview || macroBusy}
-                  >
-                    {macroBusy ? '처리 중…' : '초안으로 저장'}
-                  </button>
-                  <button
-                    type="button"
-                    className="admin-create-btn"
-                    onClick={() => void handleMacroCreate(true)}
-                    disabled={!macroPreview || macroBusy}
-                  >
-                    {macroBusy ? '처리 중…' : '바로 발행'}
-                  </button>
-                </div>
-              </>
-            )}
+              />
+            </label>
+            <div className="admin-landing-actions">
+              <button
+                type="button"
+                className="admin-create-btn"
+                onClick={() => void handleMacroRun()}
+                disabled={!macroCanRun || macroBusy}
+              >
+                {macroBusy ? '실행 중…' : '실행'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleMacroCreate(false)}
+                disabled={!macroPreview || macroBusy}
+              >
+                {macroBusy ? '처리 중…' : '초안으로 저장'}
+              </button>
+              <button
+                type="button"
+                className="admin-create-btn"
+                onClick={() => void handleMacroCreate(true)}
+                disabled={!macroPreview || macroBusy}
+              >
+                {macroBusy ? '처리 중…' : '바로 발행'}
+              </button>
+            </div>
 
             {macroPreview && (
-              <div className="admin-guide-field" style={{ marginTop: 16 }}>
+              <div className="admin-guide-macro-preview" style={{ marginTop: 16 }}>
                 <strong>미리보기</strong>
                 <p className="admin-cell-sub">
-                  {macroPreview.title} · 태그: {macroPreview.topicTags.join(', ') || '(없음)'} · 핀{' '}
-                  {macroPins.length}개
+                  핀 {macroPins.length}개
+                  {macroMissed.length > 0 ? ` · 미매칭 ${macroMissed.length}곳` : ''}
                 </p>
-                <p className="admin-cell-sub">{macroPreview.summary}</p>
-                {macroMissed.length > 0 && (
-                  <p className="admin-cell-sub" style={{ color: '#b45309' }}>
-                    좌표 미매칭: {macroMissed.join(', ')}
-                  </p>
-                )}
-                {macroPins.length > 0 && <GuideCourseMap pins={macroPins} />}
-                <textarea rows={12} readOnly value={macroPreview.bodyMd} />
+                <div className="admin-guide-macro-split">
+                  <div className="admin-guide-macro-pane">
+                    <div className="admin-guide-macro-pane-label">좌측 · 편집본</div>
+                    <label className="admin-guide-field">
+                      제목
+                      <input
+                        value={macroPreview.title}
+                        onChange={(e) =>
+                          setMacroPreview({ ...macroPreview, title: e.currentTarget.value })
+                        }
+                      />
+                    </label>
+                    <label className="admin-guide-field">
+                      요약
+                      <textarea
+                        rows={3}
+                        value={macroPreview.summary}
+                        onChange={(e) =>
+                          setMacroPreview({ ...macroPreview, summary: e.currentTarget.value })
+                        }
+                      />
+                    </label>
+                    <label className="admin-guide-field">
+                      본문 (Markdown)
+                      <textarea
+                        rows={18}
+                        value={macroPreview.bodyMd}
+                        onChange={(e) =>
+                          setMacroPreview({ ...macroPreview, bodyMd: e.currentTarget.value })
+                        }
+                      />
+                    </label>
+                    <div className="admin-guide-field">
+                      추천코스 태그
+                      <CourseTaxonomyPicker
+                        tags={macroPreview.topicTags}
+                        onChange={(topicTags) => setMacroPreview({ ...macroPreview, topicTags })}
+                      />
+                    </div>
+                  </div>
+                  <div className="admin-guide-macro-pane admin-guide-macro-live">
+                    <div className="admin-guide-macro-pane-label">우측 · 실행본 (공개 가이드와 동일)</div>
+                    <article className="guides-detail admin-guide-macro-live-inner">
+                      <div className="guides-card-tags">
+                        <span className="guides-tag guides-tag-kind">추천 여행코스</span>
+                        {displayCourseTags(macroPreview.topicTags, 'ko', 8).map((tag) => (
+                          <span key={tag} className="guides-tag">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <h1>{macroPreview.title}</h1>
+                      {macroPreview.summary && (
+                        <p className="guides-detail-summary">{macroPreview.summary}</p>
+                      )}
+                      {macroPins.length > 0 ? (
+                        <GuideCourseMap pins={macroPins} />
+                      ) : (
+                        <p className="guides-muted">
+                          지도 핀이 없습니다. Google Maps API 키를 확인한 뒤 다시 구성하세요.
+                        </p>
+                      )}
+                      <div className="guides-body">{renderGuideMarkdown(macroPreview.bodyMd)}</div>
+                    </article>
+                  </div>
+                </div>
               </div>
             )}
           </section>
@@ -658,7 +690,7 @@ export default function AdminGuidesPage() {
                       </span>
                       {draftKeys.has(g.id) && <span className="admin-pill">수정 초안 있음</span>}
                     </td>
-                    <td>{g.topicTags.join(', ') || '-'}</td>
+                    <td>{displayCourseTags(g.topicTags, 'ko', 6).join(', ') || '-'}</td>
                     <td>{new Date(g.updatedAt).toLocaleString('ko-KR', { hour12: false })}</td>
                     <td>
                       <div className="admin-action-row">
@@ -705,6 +737,14 @@ export default function AdminGuidesPage() {
                           }
                         >
                           보관
+                        </button>
+                        <button
+                          type="button"
+                          className="danger"
+                          disabled={deletingId === g.id}
+                          onClick={() => void handleDeleteGuide(g)}
+                        >
+                          {deletingId === g.id ? '삭제 중…' : '삭제'}
                         </button>
                       </div>
                     </td>
@@ -814,25 +854,35 @@ export default function AdminGuidesPage() {
                 {(editing.coursePins?.length ?? 0) > 0 ? (
                   <GuideCourseMap pins={editing.coursePins} />
                 ) : (
-                  <p className="admin-cell-sub">저장된 핀이 없습니다. 위 버튼으로 카카오 검색 후 저장하세요.</p>
+                  <p className="admin-cell-sub">저장된 핀이 없습니다. 위 버튼으로 Google 검색 후 저장하세요.</p>
                 )}
               </div>
             )}
-            <label className="admin-guide-field">
-              보조 태그 (쉼표 구분)
-              <input
-                value={editing.topicTags.join(', ')}
-                onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    topicTags: e.currentTarget.value
-                      .split(',')
-                      .map((s) => s.trim())
-                      .filter(Boolean),
-                  })
-                }
-              />
-            </label>
+            {editing.kind === 'course' ? (
+              <div className="admin-guide-field">
+                추천코스 태그
+                <CourseTaxonomyPicker
+                  tags={editing.topicTags}
+                  onChange={(topicTags) => setEditing({ ...editing, topicTags })}
+                />
+              </div>
+            ) : (
+              <label className="admin-guide-field">
+                보조 태그 (쉼표 구분)
+                <input
+                  value={editing.topicTags.join(', ')}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      topicTags: e.currentTarget.value
+                        .split(',')
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    })
+                  }
+                />
+              </label>
+            )}
             <label className="admin-guide-field">
               출처 URL (줄바꿈)
               <textarea
@@ -881,6 +931,14 @@ export default function AdminGuidesPage() {
               )}
               <button type="button" onClick={() => setEditing(null)}>
                 취소
+              </button>
+              <button
+                type="button"
+                className="danger"
+                disabled={saving || deletingId === editing.id}
+                onClick={() => void handleDeleteGuide(editing)}
+              >
+                {deletingId === editing.id ? '삭제 중…' : '삭제'}
               </button>
             </div>
           </section>

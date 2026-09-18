@@ -34,6 +34,22 @@ export interface GuideCoursePin {
   lat: number;
   lng: number;
   label?: string;
+  /** Google place_id (g: 접두 없이) */
+  googlePlaceId?: string;
+  rating?: number;
+  reviewCount?: number;
+  categoryLabel?: string;
+  priceLevelLabel?: string;
+  /** 발행 시 스냅샷한 사진 URL (최대 6) */
+  photoUrls?: string[];
+  address?: string;
+  phone?: string;
+  openingText?: string;
+  editorialSummary?: string;
+  /** 리뷰에서 뽑은 짧은 하이라이트 */
+  reviewHighlights?: string[];
+  /** 예: 1일차 */
+  dayLabel?: string;
 }
 
 export interface GuideArticleInput {
