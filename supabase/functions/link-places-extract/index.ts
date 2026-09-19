@@ -1,5 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { checkAndRecordIpUsage } from '../_shared/linkExtractCap.ts';
+import { assertSafeExternalUrl, UnsafeUrlError } from '../_shared/ssrfGuard.ts';
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
@@ -447,18 +448,37 @@ async function extractYoutube(
   };
 }
 
+const MAX_REDIRECTS = 5;
+
+/**
+ * 리다이렉트를 직접 따라가며 매 hop마다 SSRF 검사를 다시 한다 — `redirect:
+ * 'follow'`는 최종 응답만 보여줘서 중간에 내부 주소로 리다이렉트돼도 코드에서
+ * 알아챌 수 없다(전형적인 우회 경로라 검증 시점을 매 hop으로 옮겼다).
+ */
+async function fetchSafely(startUrl: string, headers: HeadersInit): Promise<Response> {
+  let currentUrl = startUrl;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    await assertSafeExternalUrl(currentUrl);
+    const res = await fetch(currentUrl, { redirect: 'manual', headers });
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get('location');
+      if (!location) return res;
+      currentUrl = new URL(location, currentUrl).toString();
+      continue;
+    }
+    return res;
+  }
+  throw new Error('리다이렉트가 너무 많습니다.');
+}
+
 async function extractWeb(
   href: string,
   anthropicKey: string | undefined
 ): Promise<ExtractResponse> {
-  const res = await fetch(href, {
-    redirect: 'follow',
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (compatible; WayknitBot/1.0; +https://wayknit.app; place-extract)',
-      Accept: 'text/html,application/xhtml+xml',
-      'Accept-Language': 'ko,en;q=0.8',
-    },
+  const res = await fetchSafely(href, {
+    'User-Agent': 'Mozilla/5.0 (compatible; WayknitBot/1.0; +https://wayknit.app; place-extract)',
+    Accept: 'text/html,application/xhtml+xml',
+    'Accept-Language': 'ko,en;q=0.8',
   });
   if (!res.ok) {
     throw new Error(`페이지를 가져오지 못했습니다. (${res.status})`);
@@ -566,6 +586,12 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
+    if (e instanceof UnsafeUrlError) {
+      return new Response(JSON.stringify({ error: e.message }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const message = e instanceof Error ? e.message : String(e);
     console.error('link-places-extract failed', message);
     return new Response(JSON.stringify({ error: message }), {
