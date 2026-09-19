@@ -7196,35 +7196,88 @@ com`으로 엄격히 제한하지만 이건 없음). `http://169.254.169.254/`�
 `127.0.0.0/8` 거부)을 다음에 검토할 것 — 이번엔 범위 밖이라 보고만
 하고 안 고쳤다.
 
+### 31-27. AI 일정 생성 캡 우회 문제 수정 (2026-09-20)
+
+사용자가 §31-26 말미의 "추가 발견"(AI 일정 생성도 같은 우회 문제가
+있음)을 "1번 적용"으로 지시해 바로 조치.
+
+**문제:** `ThemeScenarioPanel.tsx`가 `trip-intent-parse` 호출 *전에*
+`canGenerateAiTripPlan()`으로 캡을 확인하는 구조였다 — 이 함수를
+호출 안 하고 `trip-intent-parse`/`trip-candidates-search`를 직접
+호출하면(anon 키만으로, §31-26에서 확인했듯 verify_jwt는 이걸
+못 막음) 캡 확인 자체를 건너뛸 수 있었다.
+
+**고침 — 서버 쪽에서 직접 확인:**
+- `supabase/functions/_shared/tripPlanAuth.ts`(신규) — 호출자의
+  Authorization 헤더를 그대로 쓰는(service role 아님) Supabase
+  클라이언트로 `auth.getUser()`를 호출해 진짜 로그인 여부를 확인.
+  `requireTripPlanQuota()`는 로그인 확인 후 `can_generate_ai_trip_
+  plan()`/`record_ai_trip_plan_generation()`도 같은 스코프 클라이언트로
+  호출 — 이 RPC들이 내부에서 `auth.uid()`를 직접 읽으므로(SECURITY
+  DEFINER) 호출자 본인의 JWT로 불러야 정확하다.
+- `trip-intent-parse`: 맨 앞에서 `requireTripPlanQuota(req)` — 로그인
+  안 됐으면 401(`code: 'auth_required'`), 캡 초과면 429(`code:
+  'cap_reached'`).
+- `trip-candidates-search`: `requireAuthenticatedUser(req)`만(캡
+  확인·기록은 안 함) — 이 함수는 원래 설계부터 Step 2 없이 독립
+  호출 가능하게 열어뒀기 때문에(재사용성 목적) 최소한 로그인은
+  막아야 하지만, 캡 카운트는 "생성 1회 시작" 시점인 trip-intent-
+  parse에서만 세는 게 맞다(안 그러면 정상 흐름에서 한 번 생성에
+  캡이 2번 깎인다).
+- 클라이언트(`ThemeScenarioPanel.tsx`): `recordAiTripPlanGeneration()`
+  호출 제거 — 이제 서버(trip-intent-parse)가 기록하므로 클라이언트도
+  기록하면 이중 차감된다. `canGenerateAiTripPlan()` 사전 확인은
+  그대로 남김(순수 조회라 이중 차감 위험 없음, 빠른 UX 피드백용 —
+  실제 방어선은 서버).
+- `src/lib/tripIntent.ts`·`tripCandidates.ts`: 서버가 새로 주는
+  `auth_required`/`cap_reached` code를 해석해 각각
+  `AuthRequiredError`/`DailyCapReachedError`로 던지도록 확장. 9개
+  로케일에 `scenario.ai.authRequired` 번역 추가(`dailyCapReached`는
+  이미 있었음).
+
+**배포:** `trip-intent-parse` v2, `trip-candidates-search` v4.
+로컬 파일도 실제 배포 내용과 동기화 확인 완료(§31-26에서 겪었던
+"인라인 배포 후 로컬 파일 안 맞음" 실수를 이번엔 안 함 — Edit로
+로컬을 먼저 고치고 그 내용을 그대로 배포에 씀).
+
+**아직 남은 것(경미, 의도적으로 범위 밖):** 로그인은 된 Free 계정이
+`trip-candidates-search`를 반복 직접 호출하면(Step2 안 거치고)
+TOUR_API_KEY 공유 쿼터를 소모할 수 있다 — 계정이 있어야 하고
+추적 가능하다는 점에서 익명 남용보다는 훨씬 낮은 위험이라 이번엔
+손대지 않았다. 나중에 필요하면 `trip-candidates-search`에도 같은
+캡을 걸거나 더 낮은 별도 한도를 두는 걸 검토.
+
+**확인 방법:** 관리자 계정으로 `/plan`에서 AI 일정 생성이 평소처럼
+동작하는지(로그인된 상태라 영향 없어야 함). 직접 curl로
+`trip-intent-parse`를 Authorization 헤더 없이 호출하면 401이
+뜨는지(관리자 계정 없이는 이 부분 재현이 어려우니 급하지 않으면
+생략 가능).
+
 ---
 
 ## ▶ 다음 세션 시작점 (2026-09-20 기준, 갱신)
 
-**직전 상태:** §31-25 리포트의 보안 권장사항 ①②를 사용자가 "1번실행"
-으로 지시해 §31-26에서 실제 조치 완료. `mock-email-login`(완전
-비활성화)·`guide-course-from-share`(관리자 검증 추가)·`link-places-
-extract`(IP 하루 20회 캡)까지 배포·커밋 완료(`6cd2738`). **작업 중
+**직전 상태:** §31-25 리포트의 보안 권장사항을 사용자가 순서대로
+지시해 전부 조치 완료. §31-26: `mock-email-login`(완전 비활성화)·
+`guide-course-from-share`(관리자 검증 추가)·`link-places-extract`
+(IP 하루 20회 캡). §31-27: AI 일정 생성의 캡 우회 문제(클라이언트
+전용 확인이라 직접 호출 시 우회 가능했던 것)도 서버 쪽 강제로 수정.
+전부 배포·커밋 완료(`6cd2738`, `ac27be8`). **작업 중
 `verify_jwt: true`가 "로그인 필수"가 아니라는 걸 발견해 정정했다 —
 공개 anon 키도 통과시킨다(§31-26 상세). 이 정정은 앞으로도 계속
 적용할 것: 이 저장소에서 "로그인 필수"가 필요한 새 엣지 함수는
 `verify_jwt: true`만으로 끝내지 말고 반드시 코드 안에서
-`requireAdminCaller`(관리자용, `_shared/adminAuth.ts`) 같은 실제
-검증을 추가할 것.**
+`requireAdminCaller`(관리자용)나 `requireAuthenticatedUser`(일반
+로그인용, 둘 다 §31-26·31-27에서 만든 패턴) 같은 실제 검증을 추가할 것.**
 
 🔴 **다음 세션 시작 시 먼저 물어볼 것 — 사용자 답을 못 받은 질문 1개
-(리포트 우선순위 ③):**
+(리포트 우선순위 ③, 기술적 장애물은 이제 없음):**
 - **AI 일정 생성을 일반 사용자에게 공개할지**(`ThemeScenarioPanel.tsx`의
-  `isAdmin` 조건 제거 여부). Step 6(사용량 캡)까지 기술적으로는
-  완성됐지만, **§31-26에서 발견한 것과 같은 문제가 여기도 있다** —
-  캡 확인이 클라이언트에서만 이루어져서 `trip-intent-parse`/`trip-
-  candidates-search`를 직접 호출하면 우회된다. **공개하기 전에 이것도
-  같이 고쳐야 한다**(함수 코드 안에서 `auth.getUser()`로 실제 로그인
-  확인 + 캡 확인·기록을 서버 쪽으로 옮기기, `link-places-extract`의
-  IP 캡처럼). 이 얘기를 사용자에게 하고 "지금 그것부터 고칠지, 공개는
-  더 미룰지" 확인할 것.
+  `isAdmin` 조건 제거 여부). §31-27로 캡 우회 문제까지 고쳤으니
+  기술적으로는 완전히 공개 준비가 끝났다 — 이제 순수하게 "공개할지
+  말지"만 사용자 결정 사항.
 
 **그 다음 남은 것(우선순위 순):**
-- AI 일정 생성 캡 우회 문제 수정(위 참고) — 공개 전 필수
 - Step 7(AI 일정 생성 검증/에러 처리 보강 — candidates 0건일 때 검색
   탭으로 유도하는 정도로 범위가 작음)
 - `link-places-extract`의 `extractWeb`이 사용자가 준 URL을 호스트
