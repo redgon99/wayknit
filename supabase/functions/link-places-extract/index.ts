@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { checkAndRecordIpUsage } from '../_shared/linkExtractCap.ts';
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
@@ -6,6 +7,8 @@ const MAX_PLACES = 20;
 const MAX_SOURCE_CHARS = 12000;
 const MAX_COMMENTS = 15;
 const MAX_HTML_CHARS = 500_000;
+/** ⚠️ migration 20260920100000_link_extract_ip_cap.sql과 반드시 같이 맞출 것 */
+const LINK_EXTRACT_DAILY_LIMIT = 20;
 
 type Platform = 'youtube' | 'web' | 'instagram' | 'tiktok' | 'unsupported';
 
@@ -502,6 +505,14 @@ Deno.serve(async (req) => {
       status: 405,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+  }
+
+  const allowed = await checkAndRecordIpUsage(req, LINK_EXTRACT_DAILY_LIMIT);
+  if (!allowed) {
+    return new Response(
+      JSON.stringify({ error: '오늘 링크 추출 사용량을 다 썼습니다. 내일 다시 시도해주세요.' }),
+      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 
   let body: { url?: string };

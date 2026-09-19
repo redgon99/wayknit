@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { requireAdminCaller } from '../_shared/adminAuth.ts';
 import {
   extractCourseTextFromShareHtml,
   isChatGptShareUrl,
@@ -84,6 +85,8 @@ Deno.serve(async (req) => {
   }
 
   try {
+    await requireAdminCaller(req);
+
     const body = (await req.json()) as { url?: string };
     const url = (body.url ?? '').trim();
     if (!url) throw new Error('url이 필요합니다.');
