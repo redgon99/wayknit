@@ -728,6 +728,7 @@
       "errorGeneric": "No se pudo generar el itinerario. Intenta de nuevo en un momento.",
       "noCandidates": "No se encontraron lugares que coincidan. Prueba con otro destino o descripción.",
       "dailyCapReached": "Has usado tus generaciones gratuitas de itinerario con IA de hoy ({{max}}). Vuelve a intentarlo mañana o mejora a Plus para generaciones ilimitadas.",
+      "authRequired": "Necesitas iniciar sesión. Inicia sesión y vuelve a intentarlo.",
       "emptyDaysWarning": "No hay suficientes candidatos para {{days}}, así que queda vacío.",
       "distanceNote": "El orden se basa en distancia en línea recta — el tiempo real de viaje puede variar.",
       "newAttempt": "Empezar de nuevo",

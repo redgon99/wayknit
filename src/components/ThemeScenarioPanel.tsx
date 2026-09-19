@@ -12,9 +12,10 @@ import {
   isTripIntentConfigured,
   parseTripIntent,
   canGenerateAiTripPlan,
-  recordAiTripPlanGeneration,
   FREE_DAILY_AI_TRIP_PLANS,
   DestinationMissingError,
+  AuthRequiredError,
+  DailyCapReachedError,
   type TripIntent,
 } from '../lib/tripIntent';
 import { searchTripCandidates } from '../lib/tripCandidates';
@@ -127,13 +128,14 @@ export function ThemeScenarioPanel({
     setAiPlan(null);
     setAiAppliedCount(null);
     try {
-      // §31-22 Step 6 — Claude+TourAPI 호출 전에 하루 캡을 먼저 확인한다(실제 방어선은 서버 RPC)
+      // §31-22 Step 6 — Claude+TourAPI 호출 전에 하루 캡을 먼저 확인한다(빠른 피드백용).
+      // 🔴(§31-27) 실제 방어선은 이제 서버(trip-intent-parse 안의 requireTripPlanQuota)다 —
+      // 여기선 읽기만 하고 기록은 안 한다(기록은 서버가 함, 안 그러면 한 번에 캡이 2번 깎임).
       const allowed = await canGenerateAiTripPlan();
       if (!allowed) {
         setAiError(t('scenario.ai.dailyCapReached', { max: FREE_DAILY_AI_TRIP_PLANS }));
         return;
       }
-      void recordAiTripPlanGeneration();
 
       setAiStage('intent');
       const intent = await parseTripIntent(text);
@@ -152,7 +154,15 @@ export function ThemeScenarioPanel({
       setAiPlan(plan);
       setAiStage('idle');
     } catch (e) {
-      setAiError(e instanceof DestinationMissingError ? t('scenario.ai.errorDestinationMissing') : t('scenario.ai.errorGeneric'));
+      if (e instanceof DestinationMissingError) {
+        setAiError(t('scenario.ai.errorDestinationMissing'));
+      } else if (e instanceof DailyCapReachedError) {
+        setAiError(t('scenario.ai.dailyCapReached', { max: FREE_DAILY_AI_TRIP_PLANS }));
+      } else if (e instanceof AuthRequiredError) {
+        setAiError(t('scenario.ai.authRequired'));
+      } else {
+        setAiError(t('scenario.ai.errorGeneric'));
+      }
       setAiStage('idle');
     }
   };

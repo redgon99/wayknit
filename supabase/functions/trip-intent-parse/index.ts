@@ -1,5 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { DestinationMissingError, parseTripIntent } from '../_shared/tripIntent.ts';
+import { AuthRequiredError, DailyCapReachedError, requireTripPlanQuota } from '../_shared/tripPlanAuth.ts';
 
 /**
  * AI 일정 생성 Step 2 — 자연어 문장을 TripIntent로 구조화한다.
@@ -20,6 +21,29 @@ Deno.serve(async (req) => {
   if (!apiKey) {
     return new Response(JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured' }), {
       status: 503,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
+    await requireTripPlanQuota(req);
+  } catch (e) {
+    if (e instanceof AuthRequiredError) {
+      return new Response(JSON.stringify({ error: e.message, code: 'auth_required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (e instanceof DailyCapReachedError) {
+      return new Response(JSON.stringify({ error: e.message, code: 'cap_reached' }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const message = e instanceof Error ? e.message : String(e);
+    console.error('trip-intent-parse quota check failed', message);
+    return new Response(JSON.stringify({ error: message }), {
+      status: 502,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

@@ -728,6 +728,7 @@
       "errorGeneric": "일정을 만들지 못했어요. 잠시 후 다시 시도해주세요.",
       "noCandidates": "조건에 맞는 후보를 찾지 못했어요. 다른 목적지나 표현으로 다시 시도해주세요.",
       "dailyCapReached": "오늘 무료 AI 일정 생성 횟수({{max}}회)를 다 썼어요. 내일 다시 시도하거나 Plus로 업그레이드하면 무제한이에요.",
+      "authRequired": "로그인이 필요해요. 로그인 후 다시 시도해주세요.",
       "emptyDaysWarning": "{{days}}에 넣을 후보가 부족해 비어있어요.",
       "distanceNote": "직선거리 기준 순서예요 — 실제 도로 이동시간과 다를 수 있어요.",
       "newAttempt": "다시 만들기",

@@ -31,9 +31,15 @@ export function isTripIntentConfigured(): boolean {
 export const FREE_DAILY_AI_TRIP_PLANS = 3;
 
 /**
- * 로그인 필수 기능이라(trip-intent-parse/trip-candidates-search 둘 다
- * verify_jwt=true) Google 검색 캡과 달리 게스트용 localStorage 폴백이
- * 필요 없다 — RPC가 auth.uid() 없으면 그냥 false를 돌려준다.
+ * 즉각적인 UX 피드백용 사전 확인(읽기 전용, 부작용 없음) — 진짜 방어선은
+ * 서버(엣지 함수 안의 `requireTripPlanQuota`, §31-27)라 여기서 막지
+ * 못해도 서버가 다시 막는다. 로그인 필수 기능이라 게스트용 localStorage
+ * 폴백은 필요 없다 — RPC가 auth.uid() 없으면 그냥 false를 돌려준다.
+ *
+ * 🔴(2026-09-20) 예전엔 여기서 `recordAiTripPlanGeneration()`도 호출했는데,
+ * 이제 서버(trip-intent-parse)가 자체적으로 기록해서 그걸 그대로 두면
+ * 한 번 생성에 캡이 2번 차감된다 — 그래서 기록 함수는 지웠다. 이 함수는
+ * 순수 조회만 한다.
  */
 export async function canGenerateAiTripPlan(): Promise<boolean> {
   const supabase = getSupabase();
@@ -48,23 +54,48 @@ export async function canGenerateAiTripPlan(): Promise<boolean> {
   }
 }
 
-export async function recordAiTripPlanGeneration(): Promise<void> {
-  const supabase = getSupabase();
-  if (!supabase) return;
-  try {
-    const { error } = await supabase.rpc('record_ai_trip_plan_generation');
-    if (error) throw error;
-  } catch (e) {
-    // 이번 한 건이 서버에 안 찍힐 뿐, 생성 자체는 이미 진행 중 — 조용히 넘어간다
-    console.warn('AI 일정 생성 횟수 서버 기록 실패', e);
-  }
-}
-
 export class DestinationMissingError extends Error {
   constructor() {
     super('목적지를 파악하지 못했습니다. 여행지를 조금 더 구체적으로 적어주세요.');
     this.name = 'DestinationMissingError';
   }
+}
+
+export class AuthRequiredError extends Error {
+  constructor() {
+    super('로그인이 필요합니다.');
+    this.name = 'AuthRequiredError';
+  }
+}
+
+export class DailyCapReachedError extends Error {
+  constructor() {
+    super('오늘 무료 AI 일정 생성 횟수를 다 썼습니다.');
+    this.name = 'DailyCapReachedError';
+  }
+}
+
+/** trip-intent-parse/trip-candidates-search가 공통으로 쓰는 { error, code } 응답을 해석 */
+async function throwFromFunctionsError(error: unknown): Promise<never> {
+  const context = (error as { context?: Response }).context;
+  if (context) {
+    try {
+      const body = (await context.clone().json()) as { error?: string; code?: string };
+      if (body.code === 'destination_missing') throw new DestinationMissingError();
+      if (body.code === 'auth_required') throw new AuthRequiredError();
+      if (body.code === 'cap_reached') throw new DailyCapReachedError();
+      if (body.error) throw new Error(body.error);
+    } catch (parseErr) {
+      if (
+        parseErr instanceof DestinationMissingError ||
+        parseErr instanceof AuthRequiredError ||
+        parseErr instanceof DailyCapReachedError
+      ) {
+        throw parseErr;
+      }
+    }
+  }
+  throw error;
 }
 
 export async function parseTripIntent(text: string): Promise<TripIntent> {
@@ -77,21 +108,9 @@ export async function parseTripIntent(text: string): Promise<TripIntent> {
     code?: string;
   }>('trip-intent-parse', { body: { text } });
 
-  if (error) {
-    // functions.invoke는 4xx/5xx도 FunctionsHttpError로 던지고 data엔 응답 본문이 안 실린다 —
-    // trip-intent-parse가 422로 돌려주는 code를 읽으려면 context에서 다시 파싱해야 한다.
-    const context = (error as { context?: Response }).context;
-    if (context) {
-      try {
-        const body = (await context.clone().json()) as { error?: string; code?: string };
-        if (body.code === 'destination_missing') throw new DestinationMissingError();
-        if (body.error) throw new Error(body.error);
-      } catch (parseErr) {
-        if (parseErr instanceof DestinationMissingError) throw parseErr;
-      }
-    }
-    throw error;
-  }
+  // functions.invoke는 4xx/5xx도 FunctionsHttpError로 던지고 data엔 응답 본문이 안 실린다 —
+  // 서버가 돌려주는 code를 읽으려면 context에서 다시 파싱해야 한다.
+  if (error) await throwFromFunctionsError(error);
   if (!data?.intent) throw new Error('여행 조건을 분석하지 못했습니다.');
   return data.intent;
 }

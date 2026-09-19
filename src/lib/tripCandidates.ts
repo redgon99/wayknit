@@ -1,5 +1,5 @@
 import { getSupabase } from './supabase';
-import type { TripIntent } from './tripIntent';
+import { AuthRequiredError, type TripIntent } from './tripIntent';
 
 /**
  * AI 일정 생성 Step 3 — TripIntent로 TourAPI 후보를 모은다.
@@ -33,7 +33,18 @@ export async function searchTripCandidates(intent: TripIntent): Promise<TripCand
     'trip-candidates-search',
     { body: { intent } }
   );
-  if (error) throw error;
+  if (error) {
+    const context = (error as { context?: Response }).context;
+    if (context) {
+      try {
+        const body = (await context.clone().json()) as { error?: string; code?: string };
+        if (body.code === 'auth_required') throw new AuthRequiredError();
+      } catch (parseErr) {
+        if (parseErr instanceof AuthRequiredError) throw parseErr;
+      }
+    }
+    throw error;
+  }
   if (!data) throw new Error('후보 장소를 찾지 못했습니다.');
   return data;
 }

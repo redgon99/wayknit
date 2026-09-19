@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { fetchDestinationCandidates } from '../_shared/tripCandidates.ts';
 import type { Companions, Pace, TripIntent } from '../_shared/tripIntent.ts';
+import { AuthRequiredError, requireAuthenticatedUser } from '../_shared/tripPlanAuth.ts';
 
 /**
  * AI 일정 생성 Step 3 — TripIntent를 받아 TourAPI 후보를 모은다.
@@ -42,6 +43,22 @@ Deno.serve(async (req) => {
   if (!serviceKey) {
     return new Response(JSON.stringify({ error: 'TOUR_API_KEY not configured' }), {
       status: 503,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
+    await requireAuthenticatedUser(req);
+  } catch (e) {
+    if (e instanceof AuthRequiredError) {
+      return new Response(JSON.stringify({ error: e.message, code: 'auth_required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const message = e instanceof Error ? e.message : String(e);
+    return new Response(JSON.stringify({ error: message }), {
+      status: 502,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
