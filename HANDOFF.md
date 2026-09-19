@@ -7102,35 +7102,134 @@ git 로그·diff만 보고 사후 정리한 것 — **코드를 깊이 리뷰하
 호출제한 추가 ③ AI 일정 생성 isAdmin 게이트 제거 여부 결정 ④ 카카오
 키 서버 프록시 전환 검토.
 
+### 31-26. 인증 우회 3건 실제 조치 + 중요한 정정 발견 (2026-09-20)
+
+사용자가 "1번실행"(§31-25 우선순위 ①②)으로 진행 지시. **작업 도중
+`verify_jwt` 동작을 잘못 이해하고 있었다는 걸 발견해 정정했다** —
+Supabase 공식 문서(`search_docs`로 확인, "Authorization headers" 가이드):
+
+> `verify_jwt`는 "유효한 Supabase JWT가 있는가"만 검사한다. **공개
+> anon 키 자체가 유효한 JWT라 이 검사를 통과한다.** 로그인 여부와는
+> 무관 — 진짜 "로그인한 사용자만" 걸러내려면 함수 코드 안에서
+> `is_admin()` RPC나 `auth.getUser()` 같은 별도 검증이 필요하다.
+
+즉 이전에(§31-22~23) 여러 함수에 `verify_jwt: true`만 걸고 "로그인
+필수"라고 적어둔 것들은 **전부 실제로는 anon 키만 있으면 통과되는
+불완전한 방어**였다는 뜻 — `trip-intent-parse`·`trip-candidates-
+search`도 마찬가지다(아래 "추가 발견" 참고).
+
+**처치한 3건 — 각각 성격에 맞게 다르게 고침(단순히 flag만 바꾸는
+걸로는 부족했음):**
+
+1. 🔴 **`mock-email-login`** — **완전 비활성화.** 처음엔 `verify_jwt:
+   true`만 걸었다가(불완전), 이 함수 본연의 목적이 "세션이 아예
+   없는 사람이 로그인하는 것"이라 "로그인된 사용자만 허용"이라는
+   조건 자체를 걸 수 없다는 걸 깨닫고, 함수 본문을 통째로 "무조건
+   410 에러"로 바꿨다. 호출자가 누구든 무슨 값을 보내든 안 먹힌다
+   — JWT 종류와 무관하게 확실한 차단. `user1~30@mail.com` 30개
+   목업 계정은 DB에 그대로 있음(삭제는 안 함, `delete_waymeld_
+   mock_mail_users()` RPC로 관리자가 원할 때 별도 처리 가능).
+2. **`guide-course-from-share`** — 함수 코드에
+   `requireAdminCaller(req)` 추가. 이미 `distribution-draft`·
+   `distribution-publish`·`tour-scenario-catalog-generate` 3곳에서
+   쓰던 검증된 패턴(`_shared/adminAuth.ts`, 호출자 JWT로 `is_admin()`
+   RPC 확인)을 그대로 재사용 — 새 코드를 만들지 않음. 이 함수는
+   `AdminGuidesPage.tsx`에서만 호출되는 진짜 관리자 전용 기능이라
+   "로그인+관리자 확인"이 정확히 맞는 조치.
+3. **`link-places-extract`** — 로그인 요구가 아니라 **IP 기준 하루
+   20회 사용량 캡**을 새로 만들어 걸었다. 이유: `/plan`은 로그인
+   없이 쓰는 게스트 기능이라(로그인 벽 없음을 코드로 확인) 로그인을
+   강제하면 실제 기능이 깨진다. 새 마이그레이션
+   `20260920100000_link_extract_ip_cap.sql`:
+   - `link_extract_usage`(ip_hash, usage_date, request_count) 테이블
+   - `check_and_record_link_extract(p_ip_hash, p_daily_limit)` —
+     원자적 증가+확인을 한 번에(기존 두 캡처럼 read-then-write가
+     아니라 `insert ... on conflict do update ... returning`으로
+     레이스 컨디션 없앰). **`service_role`에게만 grant**(기존
+     두 캡은 `authenticated`에게 grant해 클라이언트가 직접 호출 —
+     이번엔 클라이언트가 부를 필요가 없어서 서비스 롤 전용으로 더
+     좁힘, 클라이언트가 직접 호출해 우회할 방법 자체가 없음).
+   - `supabase/functions/_shared/linkExtractCap.ts`(신규) —
+     `x-forwarded-for` 헤더에서 IP를 뽑아 SHA-256 해시(원문 IP를
+     저장하지 않음), 위 RPC 호출. 설정 오류 시엔 막지 않고 통과
+     (가용성 우선 — 캡이 주 방어선이 아니라 보조 장치).
+   - `link-places-extract/index.ts`에 `LINK_EXTRACT_DAILY_LIMIT = 20`
+     상수 + 핸들러 맨 앞에서 확인, 막히면 429.
+
+**배포 완료:** `mock-email-login`(v4)·`guide-course-from-share`(v5)·
+`link-places-extract`(v4) 전부 재배포함. 로컬 파일도 실제 배포한
+내용과 동기화했다(처음에 `deploy_edge_function`에 인라인으로 넣고
+로컬 파일 수정을 깜빡했던 실수를 커밋 전에 발견해 바로잡음 —
+다음에도 인라인 배포 후 반드시 로컬 파일이 일치하는지 `git status`로
+확인할 것).
+
+**확인 방법:** `mock-email-login`은 프론트에서 `user5@mail.com`으로
+로그인 시도 시 에러가 뜨는지(정상 — 의도된 동작). `guide-course-
+from-share`는 관리자 계정으로 `/admin/guides`에서 ChatGPT 공유 링크
+추출이 여전히 되는지(관리자는 영향 없어야 함), 비로그인 상태로
+직접 curl하면(또는 로그아웃 후 시도) 막히는지. `link-places-extract`
+는 평소처럼(로그인 없이도) 링크 추출이 되는지 — 하루 20회 넘겨서
+막히는 케이스는 실제로 20번 호출해야 재현되니 급하게 확인 안 해도 됨.
+
+**🔴 추가 발견 — 별도 사안, 사용자에게 이미 1차 보고함:** 같은
+`verify_jwt` 문제가 AI 일정 생성(§31-22~23)의 `trip-intent-parse`·
+`trip-candidates-search`에도 있다. 클라이언트(`ThemeScenarioPanel.
+tsx`)가 호출 전에 `canGenerateAiTripPlan()` RPC로 캡을 확인하는
+구조인데, 이 RPC를 안 부르고 두 엣지 함수를 직접 호출하면(anon
+키로) 캡 확인 자체를 건너뛸 수 있다. 지금은 `isAdmin` 게이트로
+전체가 비공개라 당장 위험하진 않지만, **나중에 일반 공개할 때는
+이것도 같이 고쳐야 한다** — 함수 코드 안에서 직접 `auth.getUser()`로
+실제 로그인 여부를 확인하고, 캡 확인·기록도 클라이언트가 아니라
+함수 내부에서 하는 구조로 바꾸는 게 맞다(지금의 `link-places-
+extract` IP 캡처럼 "서버 쪽에서 원자적으로 확인+기록"하는 패턴).
+Step 7이나 공개 시점 작업에 포함시킬 것.
+
+**아직 손 안 댄 것 — `extractWeb`의 SSRF 성격 (이번에 코드 읽다가
+발견, 원래 범위 밖이라 조치 안 함):** `link-places-extract`의
+`extractWeb(href)`가 사용자가 준 URL을 **호스트 제한 없이** 그대로
+`fetch()`한다(`guide-course-from-share`는 `chatgpt.com`/`chat.openai.
+com`으로 엄격히 제한하지만 이건 없음). `http://169.254.169.254/`나
+내부망 주소를 넣으면 서버가 대신 요청해서 응답 일부(제목·설명·본문)를
+그대로 돌려준다 — 전형적인 SSRF 패턴. IP 캡은 호출 빈도만 제한할
+뿐 이 문제와는 무관하다. 사설/링크로컬 IP 대역 차단(또는 최소한
+`169.254.0.0/16`·`10.0.0.0/8`·`172.16.0.0/12`·`192.168.0.0/16`·
+`127.0.0.0/8` 거부)을 다음에 검토할 것 — 이번엔 범위 밖이라 보고만
+하고 안 고쳤다.
 
 ---
 
 ## ▶ 다음 세션 시작점 (2026-09-20 기준, 갱신)
 
-**직전 상태:** 관리자 검토 보고서·랜딩플래너 내비게이션 계획서는 이
-Claude 세션이 §31-8~§31-21까지 진행. 그 이후 **AI 일정 생성 기능**
-(§31-22·31-23, Step 1~6 완료·Step 7 및 공개 여부만 남음)과 **가이드
-코스 매크로 기능**(§31-24, Cursor라는 다른 AI 도구가 만들어서 이
-세션은 사후 정리만 함 — 코드 리뷰 안 함)이 같은 저장소에 이어서
-쌓였다. 09-19에 이 세션이 프로젝트 전체를 다시 훑어 개선안 리포트
-2건(§31-25)을 썼다. **작업 트리는 지금 이 HANDOFF 갱신 커밋 직전까지
-깨끗했고, §31-8 이후 전부 커밋·푸시 완료 상태.**
+**직전 상태:** §31-25 리포트의 보안 권장사항 ①②를 사용자가 "1번실행"
+으로 지시해 §31-26에서 실제 조치 완료. `mock-email-login`(완전
+비활성화)·`guide-course-from-share`(관리자 검증 추가)·`link-places-
+extract`(IP 하루 20회 캡)까지 배포·커밋 완료(`6cd2738`). **작업 중
+`verify_jwt: true`가 "로그인 필수"가 아니라는 걸 발견해 정정했다 —
+공개 anon 키도 통과시킨다(§31-26 상세). 이 정정은 앞으로도 계속
+적용할 것: 이 저장소에서 "로그인 필수"가 필요한 새 엣지 함수는
+`verify_jwt: true`만으로 끝내지 말고 반드시 코드 안에서
+`requireAdminCaller`(관리자용, `_shared/adminAuth.ts`) 같은 실제
+검증을 추가할 것.**
 
-🔴 **다음 세션 시작 시 먼저 물어볼 것 — 사용자 답을 못 받은 질문 2개:**
-1. **AI 일정 생성을 일반 사용자에게 공개할지**(`ThemeScenarioPanel.tsx:196`의
-   `isAdmin` 조건 제거 여부). Step 6(사용량 캡)까지 기술적으로는 완성됐다.
-   관리자 계정은 무제한이라 캡 동작 자체를 검증할 수 없다는 점도
-   설명하고 물어볼 것(§31-23·31-25).
-2. **`mock-email-login`·`link-places-extract`(+ 이번에 찾은
-   `guide-course-from-share`)를 프로덕션에 계속 열어둘지** — 셋 다
-   `verify_jwt: false`로 실제 ACTIVE 배포 중임을 확인했다(§31-25).
-   목업 로그인은 인증 우회이고 가장 급함.
+🔴 **다음 세션 시작 시 먼저 물어볼 것 — 사용자 답을 못 받은 질문 1개
+(리포트 우선순위 ③):**
+- **AI 일정 생성을 일반 사용자에게 공개할지**(`ThemeScenarioPanel.tsx`의
+  `isAdmin` 조건 제거 여부). Step 6(사용량 캡)까지 기술적으로는
+  완성됐지만, **§31-26에서 발견한 것과 같은 문제가 여기도 있다** —
+  캡 확인이 클라이언트에서만 이루어져서 `trip-intent-parse`/`trip-
+  candidates-search`를 직접 호출하면 우회된다. **공개하기 전에 이것도
+  같이 고쳐야 한다**(함수 코드 안에서 `auth.getUser()`로 실제 로그인
+  확인 + 캡 확인·기록을 서버 쪽으로 옮기기, `link-places-extract`의
+  IP 캡처럼). 이 얘기를 사용자에게 하고 "지금 그것부터 고칠지, 공개는
+  더 미룰지" 확인할 것.
 
 **그 다음 남은 것(우선순위 순):**
+- AI 일정 생성 캡 우회 문제 수정(위 참고) — 공개 전 필수
 - Step 7(AI 일정 생성 검증/에러 처리 보강 — candidates 0건일 때 검색
   탭으로 유도하는 정도로 범위가 작음)
-- `guide-course-from-share`의 SSRF·인증 여부 점검(§31-24) — 임의
-  URL을 서버가 대신 fetch하는 구조
+- `link-places-extract`의 `extractWeb`이 사용자가 준 URL을 호스트
+  제한 없이 그대로 fetch하는 SSRF 성격 문제(§31-26 말미, 이번엔 범위
+  밖이라 안 고침) — 사설/링크로컬 IP 대역 차단 검토
 - 카카오 REST 키 서버 프록시 전환 검토(§31-25, Codex 리포트 §5.3와 동일)
 - 관리자 검토 보고서 P1 나머지: C1~C4(시나리오 편집기·콘텐츠 품질·가이드
   새로 작성·운영본 버전관리 — 화면/스키마 새로 설계 필요, 사용자와
