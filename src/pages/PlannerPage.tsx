@@ -55,7 +55,7 @@ import {
 } from '../lib/planner';
 import { trackEvent } from '../lib/analytics';
 import { isHoursProblem } from '../lib/openingHours';
-import type { LinkPlacesExtractResult } from '../lib/linkPlaces';
+import { EMPTY_LINK_EXTRACT_STATE, type LinkExtractUiState, type LinkPlacesExtractResult } from '../lib/linkPlaces';
 import { consumeShareHandoff } from '../lib/shareTarget';
 import { getPublishedGuideBySlug, isGuidesConfigured } from '../lib/guides';
 import { importGuideCoursePins } from '../lib/guideCourseImport';
@@ -360,6 +360,15 @@ export default function PlannerPage() {
   const toastTimerRef = useRef<number | null>(null);
   // /share 에서 넘어온 링크 추출 결과 — 검색 패널이 붙여넣기 흐름처럼 이어받는다
   const [sharedExtract, setSharedExtract] = useState<LinkPlacesExtractResult | null>(null);
+  /**
+   * 링크 추출 결과 화면 상태 — 원래 SearchPanel의 로컬 useState였다. 모바일
+   * 하단시트가 탭을 바꾸면(동선·핀 등) SearchPanel이 통째로 unmount돼
+   * 로컬 state가 사라지고, 검색 탭으로 돌아오면 추출 결과가 사라져 있었다
+   * (사용자 신고, 2026-09-20). query/searchScope처럼 여기(PlannerPage,
+   * 탭을 바꿔도 안 사라짐)로 끌어올려 SearchPanel에 컨트롤드로 넘긴다.
+   */
+  const [linkExtractState, setLinkExtractState] =
+    useState<LinkExtractUiState>(EMPTY_LINK_EXTRACT_STATE);
 
   useEffect(() => {
     setSharedExtract(consumeShareHandoff());
@@ -1650,6 +1659,51 @@ export default function PlannerPage() {
       }
     },
     [trip.pinnedByDay, currentDay, tp]
+  );
+
+  /**
+   * 링크 추출 결과 일괄 핀업(2026-09-20 사용자 요청) — SearchPanel이 이름을
+   * 실제 장소로 찾아 넘겨주면, 여기서 한 번에 담는다. `handleTogglePin`을
+   * 후보 개수만큼 반복 호출하면 안 된다 — 그 함수는 렌더 시점의
+   * `trip.pinnedByDay`를 클로저로 들고 있어서, 같은 틱에서 여러 번 부르면
+   * 매번 "그 전 호출 결과가 반영 안 된" 오래된 배열에 이어붙이게 되고,
+   * 마지막 호출의 `setPinnedForDay`만 남아 앞선 것들이 사라진다. 여기서는
+   * 배열을 한 번만 만들어 `setPinnedForDay`를 한 번만 부른다.
+   * 반환값은 실제로 새로 추가된 개수(이미 핀된 것은 건너뜀 — 토글이
+   * 아니라 순수 추가라서 중복 클릭으로 빼지는 일이 없다).
+   */
+  const handleBulkAddPlaces = useCallback(
+    (places: Place[]) => {
+      if (trip.collaboratorRole === 'viewer') {
+        showToast(ts('collab.readOnlyBanner'));
+        return 0;
+      }
+      const current = trip.pinnedByDay[currentDay] ?? [];
+      const existingIds = new Set(current.map((p) => p.id));
+      const toAdd: Place[] = [];
+      const seen = new Set<string>();
+      for (const place of places) {
+        if (existingIds.has(place.id) || seen.has(place.id)) continue;
+        seen.add(place.id);
+        toAdd.push(place);
+      }
+      if (toAdd.length === 0) return 0;
+      const next = [
+        ...current,
+        ...toAdd.map((place, i) => ({
+          ...place,
+          nameKo: place.nameKo ?? place.name,
+          pinnedAt: Date.now(),
+          order: current.length + i + 1,
+          stayMinutes: suggestStayMinutes(place.category).minutes,
+          day: currentDay,
+        })),
+      ];
+      setPinnedForDay(currentDay, next);
+      showToast(tp('toast.bulkPinned', { n: toAdd.length }));
+      return toAdd.length;
+    },
+    [trip.pinnedByDay, trip.collaboratorRole, currentDay, tp, ts]
   );
 
   const handleTogglePinFromInfo = useCallback(
@@ -2954,6 +3008,9 @@ export default function PlannerPage() {
                 recentPlaces={recentPlaces}
                 onRemoveRecentPlace={(id) => setRecentPlaces(removeRecentPlace(id))}
                 initialExtract={sharedExtract}
+                linkExtractState={linkExtractState}
+                onLinkExtractStateChange={setLinkExtractState}
+                onBulkAddPlaces={handleBulkAddPlaces}
                 foodRestrictions={trip.foodRestrictions ?? []}
                 onFoodRestrictionsChange={handleFoodRestrictionsChange}
                 categorySubFilters={categorySubFilters}
@@ -3383,6 +3440,9 @@ export default function PlannerPage() {
                   recentPlaces={recentPlaces}
                   onRemoveRecentPlace={(id) => setRecentPlaces(removeRecentPlace(id))}
                   initialExtract={sharedExtract}
+                  linkExtractState={linkExtractState}
+                  onLinkExtractStateChange={setLinkExtractState}
+                  onBulkAddPlaces={handleBulkAddPlaces}
                   foodRestrictions={trip.foodRestrictions ?? []}
                   onFoodRestrictionsChange={handleFoodRestrictionsChange}
                   categorySubFilters={categorySubFilters}

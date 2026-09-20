@@ -9546,6 +9546,32 @@ button {
   opacity: 0.6;
   cursor: default;
 }
+
+/* 링크 추출 결과 일괄 핀업 — 개별 칩(검색만 함)과 구분되는 강조 버튼.
+   2026-09-20 사용자 신고: 추출 결과가 탭 전환 시 사라지는 문제와 함께
+   요청됨(상태 지속은 SearchPanel의 lifted state로 해결). */
+.link-extract-bulk-pin-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+}
+.link-extract-bulk-pin-btn:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+.link-extract-bulk-pin-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .static-page {
   max-width: 720px;
   margin: 0 auto;

@@ -458,6 +458,10 @@
     "linkSnsInstagram": "인스타그램은 URL만으로 자동 추출이 어렵습니다. 원문을 연 뒤 장소명을 복사해 검색하거나, 공개 웹·유튜브 링크를 이용해 주세요.",
     "linkSnsTiktok": "틱톡은 URL만으로 자동 추출이 어렵습니다. 원문을 연 뒤 장소명을 복사해 검색하거나, 공개 웹·유튜브 링크를 이용해 주세요.",
     "linkSnsUnsupported": "이 SNS는 자동 장소 추출을 지원하지 않습니다. 원문을 연 뒤 장소명을 검색창에 붙여 넣어 주세요.",
+    "bulkPinAll": "장소 {{count}}개 한번에 핀업",
+    "bulkPinning": "핀업 중…",
+    "bulkPinMissed": "{{count}}곳을 찾지 못했습니다: {{names}}",
+    "bulkPinAllExisting": "이미 전부 핀에 담겨 있습니다.",
     "linkPreview": {
       "youtube": "YouTube 미리보기 · 클릭하여 열기",
       "web": "웹 미리보기 · 클릭하여 열기",
@@ -805,6 +809,7 @@
     "guideRouteFailed": "가이드 장소를 불러오지 못했습니다. 잠시 후 다시 시도하세요",
     "importedTrip": "「{{title}}」을 내 여행에 추가했습니다",
     "pinned": "{{name}} 핀업 ({{n}}번째)",
+    "bulkPinned": "{{n}}곳 한번에 핀업",
     "unpinned": "{{name}} 핀업 해제",
     "clearedPins": "{{day}}일차 핀을 모두 해제했습니다",
     "deletedTrip": "「{{title}}」 여행을 삭제했습니다",

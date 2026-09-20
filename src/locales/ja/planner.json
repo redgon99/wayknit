@@ -602,6 +602,7 @@
     "guideRouteFailed": "ガイドの場所を読み込めませんでした。しばらくして再試行してください",
     "importedTrip": "「{{title}}」を旅行に追加しました",
     "pinned": "{{name}} をピン（{{n}}件目）",
+    "bulkPinned": "{{n}}件をまとめてピン留め",
     "unpinned": "{{name}} のピンを外しました",
     "clearedPins": "{{day}}日目のピンをすべて外しました",
     "deletedTrip": "「{{title}}」を削除しました",
@@ -778,5 +779,11 @@
     "step2": "移動手段を選んで動線を作る",
     "step2Cta": "動線を作る",
     "step3": "完成！時間割を確認しましょう"
+  },
+  "collect": {
+    "bulkPinAll": "{{count}}件をまとめてピン留め",
+    "bulkPinning": "ピン留め中…",
+    "bulkPinMissed": "{{count}}件見つかりませんでした: {{names}}",
+    "bulkPinAllExisting": "すべてすでにピン留め済みです。"
   }
 }

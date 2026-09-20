@@ -458,6 +458,10 @@
     "linkSnsInstagram": "Instagram cannot be auto-extracted from a URL alone. Open the post and copy place names, or use a public web/YouTube link.",
     "linkSnsTiktok": "TikTok cannot be auto-extracted from a URL alone. Open the post and copy place names, or use a public web/YouTube link.",
     "linkSnsUnsupported": "This social link does not support auto place extraction. Open it and paste place names into search.",
+    "bulkPinAll": "Pin all {{count}} places",
+    "bulkPinning": "Pinning…",
+    "bulkPinMissed": "Couldn’t find {{count}}: {{names}}",
+    "bulkPinAllExisting": "All places are already pinned.",
     "linkPreview": {
       "youtube": "YouTube preview · click to open",
       "web": "Web preview · click to open",
@@ -805,6 +809,7 @@
     "guideRouteFailed": "Couldn’t load the guide places. Try again shortly.",
     "importedTrip": "Added 「{{title}}」 to your trips",
     "pinned": "Pinned {{name}} ({{n}})",
+    "bulkPinned": "{{n}} places pinned",
     "unpinned": "Unpinned {{name}}",
     "clearedPins": "Cleared all pins on day {{day}}",
     "deletedTrip": "Deleted 「{{title}}」",

@@ -458,6 +458,10 @@
     "linkSnsInstagram": "Instagram kann allein aus einer URL nicht automatisch extrahiert werden. Öffnen Sie den Beitrag und kopieren Sie Ortsnamen, oder nutzen Sie einen öffentlichen Web-/YouTube-Link.",
     "linkSnsTiktok": "TikTok kann allein aus einer URL nicht automatisch extrahiert werden. Öffnen Sie den Beitrag und kopieren Sie Ortsnamen, oder nutzen Sie einen öffentlichen Web-/YouTube-Link.",
     "linkSnsUnsupported": "Dieser Social-Link unterstützt keine automatische Ortextraktion. Öffnen Sie ihn und fügen Sie Ortsnamen in die Suche ein.",
+    "bulkPinAll": "Alle {{count}} Orte anpinnen",
+    "bulkPinning": "Wird angepinnt…",
+    "bulkPinMissed": "{{count}} nicht gefunden: {{names}}",
+    "bulkPinAllExisting": "Alle Orte sind bereits angepinnt.",
     "linkPreview": {
       "youtube": "YouTube-Vorschau · antippen zum Öffnen",
       "web": "Web-Vorschau · antippen zum Öffnen",
@@ -805,6 +809,7 @@
     "guideRouteFailed": "Guide-Orte konnten nicht geladen werden. Bitte später erneut versuchen.",
     "importedTrip": "「{{title}}」 zu Ihren Reisen hinzugefügt",
     "pinned": "{{name}} angepinnt ({{n}})",
+    "bulkPinned": "{{n}} Orte angepinnt",
     "unpinned": "{{name}} entfernt",
     "clearedPins": "Alle Pins von Tag {{day}} entfernt",
     "deletedTrip": "「{{title}}」 gelöscht",

@@ -602,6 +602,7 @@
     "guideRouteFailed": "未能加载指南地点，请稍后重试。",
     "importedTrip": "已将「{{title}}」加入行程",
     "pinned": "已固定 {{name}}（第 {{n}} 个）",
+    "bulkPinned": "已一键收藏{{n}}个地点",
     "unpinned": "已取消 {{name}}",
     "clearedPins": "已清除第 {{day}} 天的全部图钉",
     "deletedTrip": "已删除「{{title}}」",
@@ -778,5 +779,11 @@
     "step2": "选择交通方式并生成路线",
     "step2Cta": "生成路线",
     "step3": "完成！看看你的时间表吧"
+  },
+  "collect": {
+    "bulkPinAll": "一键收藏全部{{count}}个地点",
+    "bulkPinning": "收藏中…",
+    "bulkPinMissed": "未找到{{count}}个: {{names}}",
+    "bulkPinAllExisting": "全部地点已收藏。"
   }
 }

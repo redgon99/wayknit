@@ -18,6 +18,9 @@ interface Props {
   extracting: boolean;
   snsMessage: string | null;
   onSearchCandidate: (query: string) => void;
+  /** 없으면(호출부가 안 넘겨주면) 일괄 핀업 버튼 자체를 숨긴다 */
+  onBulkPin?: (places: LinkPlaceCandidate[]) => void;
+  bulkPinning?: boolean;
   disabled?: boolean;
 }
 
@@ -34,6 +37,8 @@ export function LinkExtractResults({
   extracting,
   snsMessage,
   onSearchCandidate,
+  onBulkPin,
+  bulkPinning = false,
   disabled,
 }: Props) {
   const { t } = useTranslation('planner');
@@ -158,6 +163,20 @@ export function LinkExtractResults({
               {resultsExpanded ? t('collect.youtubeCollapse') : t('collect.youtubeExpand')}
             </span>
           </button>
+          {resultsExpanded && onBulkPin && (
+            <button
+              type="button"
+              className="link-extract-bulk-pin-btn"
+              onClick={() => onBulkPin(places)}
+              disabled={disabled || extracting || bulkPinning}
+            >
+              {bulkPinning ? (
+                <span>{t('collect.bulkPinning')}</span>
+              ) : (
+                <span>{t('collect.bulkPinAll', { count: places.length })}</span>
+              )}
+            </button>
+          )}
           {resultsExpanded && (
             <div className="youtube-places-buttons" role="list">
               {places.map((place) => {

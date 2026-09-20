@@ -3,9 +3,45 @@ import {
   normalizeYoutubePlaces,
   type YoutubePlaceCandidate,
 } from './youtubePlaceCategory';
-import type { LinkPlatform } from './linkPlatform';
+import type { DetectedLink, LinkPlatform } from './linkPlatform';
 
 export type { YoutubePlaceCandidate as LinkPlaceCandidate } from './youtubePlaceCategory';
+
+/**
+ * 링크 추출 결과 화면 상태 — 원래 `SearchPanel`의 로컬 `useState` 10개였다.
+ * 모바일 하단시트가 탭을 바꾸면(`동선`·`핀` 등) `SearchPanel`이 통째로
+ * unmount돼 로컬 state가 날아가고, 다시 검색 탭으로 돌아오면 추출 결과가
+ * 사라져 있었다(사용자 신고, 2026-09-20). `query`/`searchScope`처럼 이미
+ * 상위(`PlannerPage`)로 끌어올려 둔 다른 검색 상태와 같은 패턴으로 맞춘다
+ * — PlannerPage는 탭을 바꿔도 계속 떠 있으니 여기 두면 살아남는다.
+ */
+export interface LinkExtractUiState {
+  extracting: boolean;
+  places: YoutubePlaceCandidate[];
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  error: string | null;
+  snsMessage: string | null;
+  previewKey: string | null;
+  previewPlatform: DetectedLink['platform'] | null;
+  previewHref: string | null;
+  pasteHint: string | null;
+}
+
+export const EMPTY_LINK_EXTRACT_STATE: LinkExtractUiState = {
+  extracting: false,
+  places: [],
+  title: null,
+  description: null,
+  imageUrl: null,
+  error: null,
+  snsMessage: null,
+  previewKey: null,
+  previewPlatform: null,
+  previewHref: null,
+  pasteHint: null,
+};
 
 export interface LinkPlacesExtractResult {
   platform: LinkPlatform;

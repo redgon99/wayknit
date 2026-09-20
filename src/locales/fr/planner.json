@@ -458,6 +458,10 @@
     "linkSnsInstagram": "Instagram ne peut pas être extrait automatiquement à partir d’une URL seule. Ouvrez la publication et copiez les noms de lieux, ou utilisez un lien web/YouTube public.",
     "linkSnsTiktok": "TikTok ne peut pas être extrait automatiquement à partir d’une URL seule. Ouvrez la publication et copiez les noms de lieux, ou utilisez un lien web/YouTube public.",
     "linkSnsUnsupported": "Ce lien social ne prend pas en charge l’extraction automatique de noms. Ouvrez-le et collez les noms de lieux dans la recherche.",
+    "bulkPinAll": "Épingler les {{count}} lieux",
+    "bulkPinning": "Épinglage…",
+    "bulkPinMissed": "{{count}} introuvables : {{names}}",
+    "bulkPinAllExisting": "Tous les lieux sont déjà épinglés.",
     "linkPreview": {
       "youtube": "Aperçu YouTube · cliquez pour ouvrir",
       "web": "Aperçu web · cliquez pour ouvrir",
@@ -805,6 +809,7 @@
     "guideRouteFailed": "Impossible de charger les lieux du guide. Réessayez.",
     "importedTrip": "「{{title}}」 ajouté à vos voyages",
     "pinned": "{{name}} épinglé ({{n}})",
+    "bulkPinned": "{{n}} lieux épinglés",
     "unpinned": "{{name}} retiré",
     "clearedPins": "Épingles du jour {{day}} effacées",
     "deletedTrip": "「{{title}}」 supprimé",

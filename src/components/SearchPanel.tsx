@@ -17,12 +17,16 @@ import { formatNumber } from '../lib/format';
 import { normalizeLocale } from '../lib/locale';
 import i18n from '../lib/i18n';
 import {
+  EMPTY_LINK_EXTRACT_STATE,
   extractPlacesFromLink,
   isLinkPlacesExtractConfigured,
+  type LinkExtractUiState,
   type LinkPlaceCandidate,
   type LinkPlacesExtractResult,
 } from '../lib/linkPlaces';
 import { detectLinkInput, type DetectedLink } from '../lib/linkPlatform';
+import { searchPlacesUnified } from '../lib/kakao';
+import { searchPlacesUnifiedWithGoogle } from '../lib/googleMaps';
 import {
   getPlaceReaction,
   isPlaceReactionsConfigured,
@@ -109,6 +113,24 @@ interface Props {
   preferences?: TripTheme[];
   /** PWA 공유 시트에서 넘어온 링크 추출 결과 (없으면 평소대로 빈 상태) */
   initialExtract?: LinkPlacesExtractResult | null;
+  /**
+   * 링크 추출 결과 화면 상태 — PlannerPage가 들고 있다가 넘겨준다(컨트롤드
+   * 컴포넌트). 모바일 하단시트가 탭을 바꾸면 이 컴포넌트 자체는 unmount
+   * 되지만, 상태의 진짜 주인은 계속 떠 있는 PlannerPage라 탭을 오가도
+   * 살아남는다. 없으면(데스크톱 일부 경로 등) 내부 기본값으로 대체.
+   */
+  linkExtractState?: LinkExtractUiState;
+  onLinkExtractStateChange?: (
+    updater: LinkExtractUiState | ((prev: LinkExtractUiState) => LinkExtractUiState)
+  ) => void;
+  /**
+   * 일괄 핀업 — 추출된 장소 이름들을 실제 좌표로 찾아 한 번에 담는다.
+   * 이름→장소 검색은 이 컴포넌트가 하고(mapProvider를 이미 알고 있음),
+   * 실제로 pinnedByDay에 추가하는 건 PlannerPage에 맡긴다(중복 확인·
+   * order 계산이 이미 거기 있음). 반환값은 실제로 새로 추가된 개수
+   * (이미 핀된 것은 건너뜀).
+   */
+  onBulkAddPlaces?: (places: Place[]) => number;
   variant?: 'default' | 'compact';
   /** 입력을 잠깐 멈추면 자동으로 검색한다. 돋보기 버튼을 따로 누르기 번거로운 모바일에서만 켠다. */
   autoSearch?: boolean;
@@ -192,6 +214,9 @@ export function SearchPanel({
   onCategorySubFiltersChange,
   preferences = [],
   initialExtract = null,
+  linkExtractState: linkExtractStateProp,
+  onLinkExtractStateChange,
+  onBulkAddPlaces,
   variant = 'default',
   autoSearch = false,
   collapsibleTools = false,
@@ -207,19 +232,29 @@ export function SearchPanel({
   const subFilterGroup = getSearchSubFilterGroup(categoryFilter);
   const activeSubFilters =
     categoryFilter === 'FD6' ? foodRestrictions : categorySubFilters;
-  const [linkExtracting, setLinkExtracting] = useState(false);
-  const [linkPlaces, setLinkPlaces] = useState<LinkPlaceCandidate[]>([]);
-  const [linkTitle, setLinkTitle] = useState<string | null>(null);
-  const [linkDescription, setLinkDescription] = useState<string | null>(null);
-  const [linkImageUrl, setLinkImageUrl] = useState<string | null>(null);
-  const [linkError, setLinkError] = useState<string | null>(null);
-  const [linkSnsMessage, setLinkSnsMessage] = useState<string | null>(null);
-  const [linkPreviewKey, setLinkPreviewKey] = useState<string | null>(null);
-  const [linkPreviewPlatform, setLinkPreviewPlatform] = useState<
-    DetectedLink['platform'] | null
-  >(null);
-  const [linkPreviewHref, setLinkPreviewHref] = useState<string | null>(null);
-  const [pasteHint, setPasteHint] = useState<string | null>(null);
+  // 링크 추출 결과 화면 상태 — PlannerPage가 안 넘겨주는 호출부(없을 것으로
+  // 예상되지만 옵셔널 prop이라 대비)를 위한 로컬 폴백. prop이 있으면 그걸
+  // 진짜 소스로 쓰고, 이 로컬 state는 안 쓰인다.
+  const [localLinkExtractState, setLocalLinkExtractState] =
+    useState<LinkExtractUiState>(EMPTY_LINK_EXTRACT_STATE);
+  const linkExtractState = linkExtractStateProp ?? localLinkExtractState;
+  const setLinkExtractState = onLinkExtractStateChange ?? setLocalLinkExtractState;
+  const {
+    extracting: linkExtracting,
+    places: linkPlaces,
+    title: linkTitle,
+    description: linkDescription,
+    imageUrl: linkImageUrl,
+    error: linkError,
+    snsMessage: linkSnsMessage,
+    previewKey: linkPreviewKey,
+    previewPlatform: linkPreviewPlatform,
+    previewHref: linkPreviewHref,
+    pasteHint,
+  } = linkExtractState;
+  const patchLink = (patch: Partial<LinkExtractUiState>) =>
+    setLinkExtractState((prev) => ({ ...prev, ...patch }));
+  const [bulkPinning, setBulkPinning] = useState(false);
   // 조회가 끝났을 때만 배지를 그리기 위한 리렌더 트리거
   const [reactionsLoaded, setReactionsLoaded] = useState(0);
   const resultListRef = useRef<HTMLUListElement>(null);
@@ -253,49 +288,56 @@ export function SearchPanel({
   useEffect(() => {
     if (detectedLink?.extractable) {
       if (linkPreviewKey && linkPreviewKey !== detectedLink.sourceKey) {
-        setLinkPlaces([]);
-        setLinkTitle(null);
-        setLinkDescription(null);
-        setLinkImageUrl(null);
-        setLinkError(null);
-        setLinkSnsMessage(null);
-        setLinkPreviewKey(null);
-        setLinkPreviewPlatform(null);
-        setLinkPreviewHref(null);
+        patchLink({
+          places: [],
+          title: null,
+          description: null,
+          imageUrl: null,
+          error: null,
+          snsMessage: null,
+          previewKey: null,
+          previewPlatform: null,
+          previewHref: null,
+        });
+      } else {
+        patchLink({ snsMessage: null });
       }
-      setLinkSnsMessage(null);
       return;
     }
     if (detectedLink && !detectedLink.extractable) {
-      setLinkPlaces([]);
-      setLinkTitle(null);
-      setLinkDescription(null);
-      setLinkImageUrl(null);
-      setLinkError(null);
-      setLinkPreviewKey(detectedLink.sourceKey);
-      setLinkPreviewPlatform(detectedLink.platform);
-      setLinkPreviewHref(detectedLink.href);
-      setLinkSnsMessage(
-        detectedLink.platform === 'instagram'
-          ? t('collect.linkSnsInstagram')
-          : detectedLink.platform === 'tiktok'
-            ? t('collect.linkSnsTiktok')
-            : t('collect.linkSnsUnsupported')
-      );
+      patchLink({
+        places: [],
+        title: null,
+        description: null,
+        imageUrl: null,
+        error: null,
+        previewKey: detectedLink.sourceKey,
+        previewPlatform: detectedLink.platform,
+        previewHref: detectedLink.href,
+        snsMessage:
+          detectedLink.platform === 'instagram'
+            ? t('collect.linkSnsInstagram')
+            : detectedLink.platform === 'tiktok'
+              ? t('collect.linkSnsTiktok')
+              : t('collect.linkSnsUnsupported'),
+      });
       return;
     }
     if (!query.trim()) {
-      setLinkPlaces([]);
-      setLinkTitle(null);
-      setLinkDescription(null);
-      setLinkImageUrl(null);
-      setLinkError(null);
-      setLinkSnsMessage(null);
-      setLinkPreviewKey(null);
-      setLinkPreviewPlatform(null);
-      setLinkPreviewHref(null);
-      setPasteHint(null);
+      patchLink({
+        places: [],
+        title: null,
+        description: null,
+        imageUrl: null,
+        error: null,
+        snsMessage: null,
+        previewKey: null,
+        previewPlatform: null,
+        previewHref: null,
+        pasteHint: null,
+      });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detectedLink, linkPreviewKey, query, t]);
 
   // 공유 시트(/share)에서 넘어온 추출 결과를 붙여넣기 흐름과 동일하게 되살린다.
@@ -307,16 +349,19 @@ export function SearchPanel({
     seededExtractUrl.current = url;
 
     const detected = detectLinkInput(url);
-    setLinkPlaces(initialExtract?.places ?? []);
-    setLinkTitle(initialExtract?.title ?? null);
-    setLinkDescription(initialExtract?.description ?? null);
-    setLinkImageUrl(initialExtract?.imageUrl ?? null);
-    setLinkError(null);
-    setLinkSnsMessage(null);
-    setLinkPreviewKey(detected?.sourceKey ?? url);
-    setLinkPreviewPlatform(detected?.platform ?? 'web');
-    setLinkPreviewHref(detected?.href ?? url);
+    patchLink({
+      places: initialExtract?.places ?? [],
+      title: initialExtract?.title ?? null,
+      description: initialExtract?.description ?? null,
+      imageUrl: initialExtract?.imageUrl ?? null,
+      error: null,
+      snsMessage: null,
+      previewKey: detected?.sourceKey ?? url,
+      previewPlatform: detected?.platform ?? 'web',
+      previewHref: detected?.href ?? url,
+    });
     onQueryChange(url);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialExtract, onQueryChange]);
 
   useEffect(() => {
@@ -372,43 +417,47 @@ export function SearchPanel({
 
   const handleLinkExtract = async () => {
     if (!detectedLink?.extractable || !onSearchCandidate || linkExtracting) return;
-    setLinkExtracting(true);
-    setLinkError(null);
-    setLinkPlaces([]);
-    setLinkTitle(null);
-    setLinkDescription(null);
-    setLinkImageUrl(null);
-    setLinkSnsMessage(null);
+    patchLink({
+      extracting: true,
+      error: null,
+      places: [],
+      title: null,
+      description: null,
+      imageUrl: null,
+      snsMessage: null,
+    });
     try {
       const result = await extractPlacesFromLink(detectedLink.href);
       if (!result.extractable) {
-        setLinkSnsMessage(result.message ?? t('collect.linkSnsUnsupported'));
-        setLinkPreviewKey(result.sourceKey);
-        setLinkPreviewPlatform(result.platform);
-        setLinkPreviewHref(result.sourceUrl);
+        patchLink({
+          snsMessage: result.message ?? t('collect.linkSnsUnsupported'),
+          previewKey: result.sourceKey,
+          previewPlatform: result.platform,
+          previewHref: result.sourceUrl,
+        });
         return;
       }
-      setLinkPlaces(result.places);
-      setLinkTitle(result.title);
-      setLinkDescription(result.description);
-      setLinkImageUrl(result.imageUrl);
-      setLinkPreviewKey(result.sourceKey);
-      setLinkPreviewPlatform(result.platform);
-      setLinkPreviewHref(result.sourceUrl);
-      if (result.places.length === 0) {
-        setLinkError(t('collect.youtubeEmpty'));
-      }
+      patchLink({
+        places: result.places,
+        title: result.title,
+        description: result.description,
+        imageUrl: result.imageUrl,
+        previewKey: result.sourceKey,
+        previewPlatform: result.platform,
+        previewHref: result.sourceUrl,
+        error: result.places.length === 0 ? t('collect.youtubeEmpty') : null,
+      });
     } catch (e) {
-      setLinkError(e instanceof Error ? e.message : t('collect.youtubeError'));
+      patchLink({ error: e instanceof Error ? e.message : t('collect.youtubeError') });
     } finally {
-      setLinkExtracting(false);
+      patchLink({ extracting: false });
     }
   };
 
   const normalizePasteIntoQuery = (raw: string) => {
     const parts = splitSearchQueries(raw);
     if (parts.length <= 1) return raw.trim();
-    setPasteHint(t('search.pasteExtracted', { count: parts.length }));
+    patchLink({ pasteHint: t('search.pasteExtracted', { count: parts.length }) });
     return parts.join(', ');
   };
 
@@ -467,21 +516,47 @@ export function SearchPanel({
   };
 
   const handleClear = () => {
-    setLinkPlaces([]);
-    setLinkTitle(null);
-    setLinkDescription(null);
-    setLinkImageUrl(null);
-    setLinkError(null);
-    setLinkSnsMessage(null);
-    setLinkPreviewKey(null);
-    setLinkPreviewPlatform(null);
-    setLinkPreviewHref(null);
-    setPasteHint(null);
+    setLinkExtractState(EMPTY_LINK_EXTRACT_STATE);
     onClear();
   };
 
   const handleSearchCandidate = (name: string) => {
     onSearchCandidate?.(name);
+  };
+
+  /**
+   * 일괄 핀업 — 추출된 이름들을 실제 장소로 찾아 한 번에 담는다. 이름→좌표
+   * 검색은 여기서 하고(현재 mapProvider를 알고 있으므로), 실제로
+   * pinnedByDay에 넣는 건 PlannerPage(onBulkAddPlaces)에 맡긴다.
+   */
+  const handleBulkPin = async (candidates: LinkPlaceCandidate[]) => {
+    if (!onBulkAddPlaces || candidates.length === 0 || bulkPinning) return;
+    setBulkPinning(true);
+    patchLink({ error: null });
+    const resolved: Place[] = [];
+    const missed: string[] = [];
+    for (const candidate of candidates) {
+      try {
+        const found =
+          mapProvider === 'google'
+            ? await searchPlacesUnifiedWithGoogle({ keyword: candidate.name, scope: 'nationwide', size: 1, page: 1 })
+            : await searchPlacesUnified({ keyword: candidate.name, scope: 'nationwide', size: 1, page: 1 });
+        const place = found.places[0];
+        if (place) resolved.push(place);
+        else missed.push(candidate.name);
+      } catch {
+        missed.push(candidate.name);
+      }
+    }
+    const added = onBulkAddPlaces(resolved);
+    setBulkPinning(false);
+    if (missed.length > 0) {
+      patchLink({
+        error: t('collect.bulkPinMissed', { count: missed.length, names: missed.join(', ') }),
+      });
+    } else if (added === 0 && resolved.length > 0) {
+      patchLink({ error: t('collect.bulkPinAllExisting') });
+    }
   };
 
   const toggleSubFilter = (id: SearchSubFilterId) => {
@@ -621,7 +696,7 @@ export function SearchPanel({
           type="text"
           value={query}
           onChange={(e) => {
-            setPasteHint(null);
+            patchLink({ pasteHint: null });
             onQueryChange(e.target.value);
           }}
           onPaste={handlePaste}
@@ -704,6 +779,8 @@ export function SearchPanel({
           extracting={linkExtracting}
           snsMessage={linkSnsMessage}
           onSearchCandidate={handleSearchCandidate}
+          onBulkPin={onBulkAddPlaces ? handleBulkPin : undefined}
+          bulkPinning={bulkPinning}
           disabled={loading}
         />
       )}

@@ -7588,9 +7588,86 @@ Claude 재호출로 검증하진 않았다(토큰 비용 발생 항목이라 사
 시도 — 이번엔 시간표가 파싱돼 미리보기가 뜨는지, 점심/저녁 행이
 지도 핀 목록에서 안 보이는지(정상), 나머지 장소는 핀이 찍히는지.
 
+### 32-11. ✅ 검색 패널 링크 추출 — 탭 전환 시 결과 소실 수정 + 일괄 핀업 추가 (2026-09-20)
+
+사용자 신고(스크린샷): 유튜브 등 소셜 링크에서 장소를 추출하면 그 순간엔
+보이는데, 동선탭으로 갔다가 돌아오거나 나갔다 들어오면 사라져 있다.
++ "일괄 핀업 기능 추가" 요청.
+
+**원인:** `linkPlaces`·`linkTitle` 등 추출 결과 관련 state 10개가
+전부 `SearchPanel.tsx`의 로컬 `useState`였다. 모바일 하단시트는
+`mobileSheetTab === 'search' ? <SearchPanel/> : ...` 삼항으로 탭을
+그리는데, 다른 탭으로 가면 `SearchPanel`이 **통째로 unmount**되고
+로컬 state가 사라진다 — 검색 탭으로 돌아오면 새 `SearchPanel`이
+빈 상태로 다시 만들어진다.
+
+**수정 — 이미 있던 패턴을 그대로 따름:** `query`/`searchScope`처럼
+이미 `PlannerPage`(탭을 바꿔도 안 사라짐)로 끌어올려 둔 다른 검색
+상태와 같은 방식으로 통일했다.
+- `src/lib/linkPlaces.ts`에 `LinkExtractUiState`(10개 필드 묶음)·
+  `EMPTY_LINK_EXTRACT_STATE` 신설.
+- `PlannerPage.tsx`가 `const [linkExtractState, setLinkExtractState] =
+  useState(EMPTY_LINK_EXTRACT_STATE)`로 소유, 데스크톱·모바일
+  `<SearchPanel>` 양쪽에 컨트롤드로 넘김(`sharedExtract`/
+  `initialExtract`와 같은 자리).
+- `SearchPanel.tsx`: 10개 `useState`를 없애고 prop에서 구조분해 +
+  `patchLink(patch)` 헬퍼(부분 갱신)로 교체. prop이 없는 호출부를
+  위해 로컬 폴백은 남겨둠(옵셔널이라 안전).
+- **부수 효과로 잡은 것:** 원래 `handleLinkExtract` 성공 분기는
+  `linkError`를 명시적으로 안 지워서, 이전 시도의 에러 메시지가 다음
+  성공 이후에도 화면에 남아 있을 수 있었다(잠재 버그). `patchLink`로
+  묶으며 매번 `error: ... 0건일 때만 메시지, 아니면 null`로 명시했다.
+
+**일괄 핀업 — 새 기능:** 지금까지 추출된 장소 칩은 클릭하면 "그 이름으로
+검색"만 했다(직접 핀업 아님, `onSearchCandidate` 확인). 이름만 있고
+좌표가 없어서 그냥은 못 담는다.
+- `SearchPanel.tsx`의 `handleBulkPin` — 후보 이름마다 `mapProvider`에
+  맞춰 `searchPlacesUnified`(카카오)/`searchPlacesUnifiedWithGoogle`
+  (구글)로 키워드 1건 검색, 첫 결과를 채택. 실패한 이름은 "못 찾음"
+  목록에 모은다.
+- `PlannerPage.tsx`의 `handleBulkAddPlaces` — 실제로 `pinnedByDay`에
+  담는 부분. **주의해서 만든 부분**: `handleTogglePin`을 후보 개수만큼
+  반복 호출하면 안 된다 — 그 함수가 렌더 시점의 `trip.pinnedByDay`를
+  클로저로 들고 있어서, 같은 틱에서 여러 번 부르면 매번 "그 전 호출이
+  반영 안 된" 오래된 배열에 이어붙이다가 마지막 호출의
+  `setPinnedForDay`만 남아 앞선 것들이 사라진다. 배열을 한 번에 만들어
+  `setPinnedForDay`를 딱 한 번만 부르는 것으로 이 함정을 피했다.
+  이미 핀된 장소는 조용히 건너뛴다(토글이 아니라 순수 추가라 중복
+  클릭으로 빠지지 않음). `collaboratorRole === 'viewer'` 가드도
+  `handleTogglePin`과 동일하게 넣음.
+- `LinkExtractResults.tsx`에 "장소 N개 한번에 핀업" 버튼 추가(결과
+  펼쳤을 때만 보임), 진행 중 문구·못 찾은 개수 안내.
+
+**변경 파일:** `linkPlaces.ts`, `SearchPanel.tsx`, `LinkExtractResults.tsx`,
+`PlannerPage.tsx`, `app.css`, 9개 `planner.json`(`collect.bulkPin*` 4키,
+`toast.bulkPinned` 1키). `tsc -b`·`npm run build` 클린.
+
+**🔴 작업 중 발견한 별개 문제 — 3개 로케일에 `collect` 섹션 자체가
+없었다:** `ja`·`zh-CN`·`zh-TW`의 `planner.json`은 애초에 `collect`
+키가 통째로 없다(pasteLabel·youtubeLabel 등 링크/붙여넣기 추출 관련
+20여 개 키 전부). 이 세 언어 사용자는 링크 추출 UI 문구가 지금도
+계속 깨져 보이거나 키 이름 그대로 뜨고 있을 가능성이 높다 — 이번
+작업과 무관한 기존 결함이라 범위 밖으로 두고, 딱 이번에 추가한 5개
+키(bulkPin* 4개 + bulkPinned 1개)만 그 세 언어에도 새로 만들어 넣었다.
+**나머지 20여 개 키를 세 언어에 번역해 채우는 건 별도 작업으로 필요.**
+
+**확인 방법:** 검색 탭에서 유튜브/웹 링크로 장소 추출 → 동선 또는
+핀 탭으로 이동 → 검색 탭으로 복귀 → 추출 결과(제목·장소 칩)가 그대로
+있는지. 결과 펼친 상태에서 "장소 N개 한번에 핀업" 버튼 클릭 → 핀
+탭에서 여러 개가 한 번에 담겼는지, 이미 핀돼 있던 것과 못 찾은 이름은
+건너뛰고 나머지만 추가됐는지.
+
+
 ---
 
 ## ▶ 다음 세션 시작점 (2026-09-20 기준, 갱신)
+
+**+ §32-11 완료(커밋 전):** 검색 패널 링크 추출 결과가 탭 전환 시
+사라지던 버그 수정(query/searchScope처럼 PlannerPage로 상태를
+끌어올림) + 일괄 핀업 기능 추가. 작업 중 `ja`·`zh-CN`·`zh-TW`
+`planner.json`에 `collect` 섹션(링크/붙여넣기 추출 UI 문구 20여 개)이
+통째로 없던 기존 결함을 발견함 — 번역 채워 넣는 건 별도 작업 필요
+(아래 "남은 것"에 추가).
 
 **직전 상태:** §31 아크(보안 권장사항 전부 + AI 일정 생성 7단계)는
 지난 세션에 완료. **이번 세션은 관리자 페이지 종합 개편(§32) —**
@@ -7622,6 +7699,8 @@ v2 재배포. 상세는 위 §32-1~10 참고.
   (코드에 위치·주석 남겨둠).
 
 **그 다음 남은 것(우선순위 순):**
+- `ja`·`zh-CN`·`zh-TW` `planner.json`의 `collect` 섹션(링크/붙여넣기
+  추출 UI, 20여 개 키) 번역 채우기 — §32-11에서 발견한 기존 결함
 - 카카오 REST 키 서버 프록시 전환 검토(§31-25, Codex 리포트 §5.3와 동일)
 - 관리자 검토 보고서 P1 나머지: C1~C4(시나리오 편집기·콘텐츠 품질·가이드
   새로 작성·운영본 버전관리 — 화면/스키마 새로 설계 필요, 사용자와
