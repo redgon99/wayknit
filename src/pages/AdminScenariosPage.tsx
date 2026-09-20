@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
-import { AdminHeader } from '../components/AdminHeader';
+import { AdminShell } from '../components/AdminShell';
+import { AdminPreviewModal } from '../components/AdminPreviewModal';
 import {
   deleteScenarioCatalogEntry,
   generateScenarioCatalogEntry,
@@ -248,17 +249,14 @@ export default function AdminScenariosPage() {
   }
 
   return (
-    <main className="admin-page">
-      <div className="admin-shell">
-        <AdminHeader
-          title="시나리오 카탈로그"
-          subtitle="테마여행 시나리오를 미리 생성·게시해 플래너가 라이브 AI 호출 없이 바로 보여주게 합니다"
-          current="scenarios"
-          refreshing={refreshing}
-          onRefresh={() => void loadEntries()}
-        />
-
-        {error && <div className="admin-error">{error}</div>}
+    <AdminShell
+      subtitle="테마여행 시나리오를 미리 생성·게시해 플래너가 라이브 AI 호출 없이 바로 보여주게 합니다"
+      current="scenarios"
+      refreshing={refreshing}
+      onRefresh={() => void loadEntries()}
+      wide
+    >
+      {error && <div className="admin-error">{error}</div>}
 
         <section className="admin-section">
           <h2>새 시나리오 생성</h2>
@@ -464,13 +462,16 @@ export default function AdminScenariosPage() {
           </div>
         </section>
 
-        {previewEntry && (
-          <section className="admin-section admin-guide-editor">
-            <h2>
-              미리보기 — {THEME_LABEL[previewEntry.theme as ScenarioTheme] ?? previewEntry.theme} ·{' '}
-              {previewEntry.days}일 · {previewEntry.region}
-            </h2>
-            <div className="admin-tab-bar" role="tablist" aria-label="미리보기 언어" style={{ marginBottom: 12 }}>
+        <AdminPreviewModal
+          open={Boolean(previewEntry)}
+          onClose={() => setPreviewId(null)}
+          title={
+            previewEntry
+              ? `${THEME_LABEL[previewEntry.theme as ScenarioTheme] ?? previewEntry.theme} · ${previewEntry.days}일 · ${previewEntry.region}`
+              : ''
+          }
+          headerExtra={
+            <div className="admin-tab-bar" role="tablist" aria-label="미리보기 언어" style={{ marginTop: 10 }}>
               {PREVIEW_LOCALES.map((locale) => (
                 <button
                   key={locale}
@@ -484,52 +485,47 @@ export default function AdminScenariosPage() {
                 </button>
               ))}
             </div>
-            {previewContent ? (
-              <div>
-                <h3 style={{ margin: '0 0 6px' }}>{previewContent.title}</h3>
-                <p className="admin-cell-sub" style={{ marginBottom: 14 }}>
-                  {previewContent.intro}
-                </p>
-                {previewContent.days.map((day) => (
-                  <div key={day.day} style={{ marginBottom: 14 }}>
-                    <strong style={{ fontSize: 13 }}>
-                      {day.day}일차{day.dayTitle ? ` · ${day.dayTitle}` : ''}
-                    </strong>
-                    <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
-                      {day.stops.map((stop) => (
-                        <li key={stop.placeId} style={{ marginBottom: 4 }}>
-                          <span>{stop.title}</span>
-                          {(stop.petFriendly || stop.accessible) && (
-                            <span className="admin-cell-sub">
-                              {' '}
-                              {[stop.petFriendly && '반려동반', stop.accessible && '무장애']
-                                .filter(Boolean)
-                                .join(' · ')}
-                            </span>
-                          )}
-                          {stop.reason && (
-                            <div className="admin-cell-sub" style={{ fontWeight: 700, color: '#b45309' }}>
-                              {stop.reason}
-                            </div>
-                          )}
-                          {stop.note && <div className="admin-cell-sub">{stop.note}</div>}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="admin-cell-sub">이 언어의 콘텐츠가 없습니다.</p>
-            )}
-            <div className="admin-action-row">
-              <button type="button" onClick={() => setPreviewId(null)}>
-                닫기
-              </button>
+          }
+        >
+          {previewContent ? (
+            <div>
+              <h3 style={{ margin: '0 0 6px' }}>{previewContent.title}</h3>
+              <p className="admin-cell-sub" style={{ marginBottom: 14 }}>
+                {previewContent.intro}
+              </p>
+              {previewContent.days.map((day) => (
+                <div key={day.day} style={{ marginBottom: 14 }}>
+                  <strong style={{ fontSize: 13 }}>
+                    {day.day}일차{day.dayTitle ? ` · ${day.dayTitle}` : ''}
+                  </strong>
+                  <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                    {day.stops.map((stop) => (
+                      <li key={stop.placeId} style={{ marginBottom: 4 }}>
+                        <span>{stop.title}</span>
+                        {(stop.petFriendly || stop.accessible) && (
+                          <span className="admin-cell-sub">
+                            {' '}
+                            {[stop.petFriendly && '반려동반', stop.accessible && '무장애']
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </span>
+                        )}
+                        {stop.reason && (
+                          <div className="admin-cell-sub" style={{ fontWeight: 700, color: '#b45309' }}>
+                            {stop.reason}
+                          </div>
+                        )}
+                        {stop.note && <div className="admin-cell-sub">{stop.note}</div>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
-          </section>
-        )}
-      </div>
-    </main>
+          ) : (
+            <p className="admin-cell-sub">이 언어의 콘텐츠가 없습니다.</p>
+          )}
+        </AdminPreviewModal>
+    </AdminShell>
   );
 }

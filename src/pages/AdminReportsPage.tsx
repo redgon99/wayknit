@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
-import { AdminHeader } from '../components/AdminHeader';
+import { AdminShell } from '../components/AdminShell';
 import {
   bulkUpdateContentReports,
   fetchReportTargetStates,
@@ -228,16 +228,14 @@ export default function AdminReportsPage() {
   }
 
   return (
-    <main className="admin-page">
-      <div className="admin-shell">
-        <AdminHeader
-          subtitle="이용자 신고 접수 · 검수 큐"
-          current="reports"
-          refreshing={refreshing}
-          onRefresh={() => void loadAll(filter, reportsLimit)}
-        />
-
-        {error && <div className="admin-error">{error}</div>}
+    <AdminShell
+      subtitle="이용자 신고 접수 · 검수 큐"
+      current="reports"
+      refreshing={refreshing}
+      onRefresh={() => void loadAll(filter, reportsLimit)}
+      wide
+    >
+      {error && <div className="admin-error">{error}</div>}
 
         <section className="admin-section">
           <h2>신고 검수 큐 (미처리 {openCount}건)</h2>
@@ -439,7 +437,6 @@ export default function AdminReportsPage() {
             </div>
           )}
         </section>
-      </div>
-    </main>
+    </AdminShell>
   );
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useAdminAccess } from '../hooks/useAdminAccess';
-import { AdminHeader } from '../components/AdminHeader';
+import { AdminShell } from '../components/AdminShell';
 import { Icon } from '../components/Icon';
 import { SortableContainer, SortableItem } from '../components/Sortable';
 import {
@@ -402,21 +402,19 @@ export default function AdminLandingPage() {
   }
 
   return (
-    <main className="admin-page">
-      <div className="admin-shell admin-shell-wide">
-        <AdminHeader
-          subtitle="왼쪽 트리에서 메뉴를 추가하고, 가운데에서 내용을 편집합니다. 오른쪽이 랜딩 미리보기입니다."
-          current="landing"
-          refreshing={refreshing}
-          onRefresh={() => void load(locale)}
-          extraActions={
-            <Link to="/" className="admin-link-btn">
-              랜딩 보기
-            </Link>
-          }
-        />
-
-        {error && <div className="admin-error">{error}</div>}
+    <AdminShell
+      subtitle="왼쪽 트리에서 메뉴를 추가하고, 가운데에서 내용을 편집합니다. 오른쪽이 랜딩 미리보기입니다."
+      current="landing"
+      refreshing={refreshing}
+      onRefresh={() => void load(locale)}
+      extraActions={
+        <Link to="/" className="admin-link-btn">
+          랜딩 보기
+        </Link>
+      }
+      wide
+    >
+      {error && <div className="admin-error">{error}</div>}
 
         <div className="admin-landing-toolbar">
           <div className="admin-landing-locales" role="tablist" aria-label="언어">
@@ -741,8 +739,7 @@ export default function AdminLandingPage() {
             </div>
           </aside>
         </div>
-      </div>
-    </main>
+    </AdminShell>
   );
 }
 

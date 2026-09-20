@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
-import { AdminHeader } from '../components/AdminHeader';
+import { AdminShell } from '../components/AdminShell';
 import {
   deriveAlerts,
   fetchDashboardSummary,
@@ -112,16 +112,13 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <main className="admin-page">
-      <div className="admin-shell">
-        <AdminHeader
-          subtitle="전 영역 지표를 한눈에 — 조치가 필요한 것부터"
-          current="dashboard"
-          refreshing={refreshing}
-          onRefresh={() => void load()}
-        />
-
-        {error && <div className="admin-error">{error}</div>}
+    <AdminShell
+      subtitle="전 영역 지표를 한눈에 — 조치가 필요한 것부터"
+      current="dashboard"
+      refreshing={refreshing}
+      onRefresh={() => void load()}
+    >
+      {error && <div className="admin-error">{error}</div>}
 
         <section className="admin-section">
           <h2>조치가 필요한 것 ({alerts.length})</h2>
@@ -228,7 +225,6 @@ export default function AdminDashboardPage() {
             </div>
           </section>
         )}
-      </div>
-    </main>
+    </AdminShell>
   );
 }

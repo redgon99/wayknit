@@ -2,7 +2,7 @@ import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
-import { AdminHeader } from '../components/AdminHeader';
+import { AdminShell } from '../components/AdminShell';
 import {
   AUDIT_PAGE_SIZE,
   AUDIT_TABLES,
@@ -229,16 +229,14 @@ export default function AdminAuditPage() {
   }
 
   return (
-    <main className="admin-page">
-      <div className="admin-shell">
-        <AdminHeader
-          subtitle="관리자 변경 이력 — 누가·언제·무엇을 바꿨는지"
-          current="audit"
-          refreshing={refreshing}
-          onRefresh={() => void loadFirstPage()}
-        />
-
-        {error && <div className="admin-error">{error}</div>}
+    <AdminShell
+      subtitle="관리자 변경 이력 — 누가·언제·무엇을 바꿨는지"
+      current="audit"
+      refreshing={refreshing}
+      onRefresh={() => void loadFirstPage()}
+      wide
+    >
+      {error && <div className="admin-error">{error}</div>}
 
         <section className="admin-section">
           <h2>변경 이력</h2>
@@ -456,7 +454,6 @@ export default function AdminAuditPage() {
             </div>
           )}
         </section>
-      </div>
-    </main>
+    </AdminShell>
   );
 }

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
-import { AdminHeader } from '../components/AdminHeader';
+import { AdminShell } from '../components/AdminShell';
+import { AdminPreviewModal } from '../components/AdminPreviewModal';
 import {
   addDistributionAccount,
   approveDistributionPost,
@@ -103,6 +104,7 @@ export default function AdminDistributionPage() {
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [previewPost, setPreviewPost] = useState<DistributionPost | null>(null);
 
   const [editingPost, setEditingPost] = useState<DistributionPost | null>(null);
   const [savingPost, setSavingPost] = useState(false);
@@ -515,17 +517,14 @@ export default function AdminDistributionPage() {
     : [];
 
   return (
-    <main className="admin-page">
-      <div className="admin-shell">
-        <AdminHeader
-          title="배포관리"
-          subtitle="가이드 콘텐츠를 국가·SNS별로 재작성해 검토 후 게시합니다 (관리자 전용)"
-          current="distribution"
-          refreshing={refreshing}
-          onRefresh={() => void loadAll()}
-        />
-
-        {error && <div className="admin-error">{error}</div>}
+    <AdminShell
+      subtitle="가이드 콘텐츠를 국가·SNS별로 재작성해 검토 후 게시합니다 (관리자 전용)"
+      current="distribution"
+      refreshing={refreshing}
+      onRefresh={() => void loadAll()}
+      wide
+    >
+      {error && <div className="admin-error">{error}</div>}
 
         <div className="admin-tab-bar" role="tablist" aria-label="배포관리 영역">
           {(
@@ -678,6 +677,9 @@ export default function AdminDistributionPage() {
                         <td>{formatDateTime(post.updatedAt)}</td>
                         <td>
                           <div className="admin-action-row">
+                            <button type="button" onClick={() => setPreviewPost(post)}>
+                              미리보기
+                            </button>
                             <button
                               type="button"
                               onClick={() => {
@@ -978,7 +980,32 @@ export default function AdminDistributionPage() {
             ))}
           </section>
         )}
-      </div>
-    </main>
+
+        <AdminPreviewModal
+          open={Boolean(previewPost)}
+          onClose={() => setPreviewPost(null)}
+          title={previewPost ? `${PLATFORM_LABEL[previewPost.platform]} · ${previewPost.country}` : ''}
+          subtitle={
+            previewPost && (
+              <>
+                {(accounts.find((a) => a.id === previewPost.accountId)?.label ?? '계정 미지정') + ' · '}
+                {STATUS_LABEL[previewPost.status]}
+              </>
+            )
+          }
+        >
+          {previewPost && (
+            <>
+              {previewPost.title && <h3 style={{ margin: '0 0 8px' }}>{previewPost.title}</h3>}
+              <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{previewPost.body || '(본문 없음)'}</p>
+              {previewPost.status === 'failed' && previewPost.errorMessage && (
+                <p className="admin-cell-sub" style={{ color: '#b91c1c', marginTop: 12 }}>
+                  {previewPost.errorMessage}
+                </p>
+              )}
+            </>
+          )}
+        </AdminPreviewModal>
+    </AdminShell>
   );
 }

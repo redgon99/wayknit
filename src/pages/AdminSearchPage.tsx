@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
-import { AdminHeader } from '../components/AdminHeader';
+import { AdminShell } from '../components/AdminShell';
 import {
   groupByKind,
   searchAdmin,
@@ -80,16 +80,13 @@ export default function AdminSearchPage() {
   }
 
   return (
-    <main className="admin-page">
-      <div className="admin-shell">
-        <AdminHeader
-          subtitle="사용자 · 여행 · 시나리오 · 가이드 · 공지를 한 번에"
-          current="search"
-          refreshing={searching}
-          onRefresh={() => void runSearch(query)}
-        />
-
-        {error && <div className="admin-error">{error}</div>}
+    <AdminShell
+      subtitle="사용자 · 여행 · 시나리오 · 가이드 · 공지를 한 번에"
+      current="search"
+      refreshing={searching}
+      onRefresh={() => void runSearch(query)}
+    >
+      {error && <div className="admin-error">{error}</div>}
 
         <section className="admin-section">
           <h2>
@@ -149,7 +146,6 @@ export default function AdminSearchPage() {
             </div>
           ))}
         </section>
-      </div>
-    </main>
+    </AdminShell>
   );
 }

@@ -3,8 +3,10 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type { ClientRequest } from 'http';
+import type { ServerOptions as HttpsServerOptions } from 'node:https';
 import fs from 'node:fs';
 import path from 'node:path';
+import tls from 'node:tls';
 import { execSync } from 'node:child_process';
 
 /**
@@ -32,24 +34,51 @@ function appVersion(): string {
   }
 }
 
+type CertPair = { cert: Buffer; key: Buffer };
+
+function readCertPair(certDir: string, baseName: string): CertPair | undefined {
+  const crtPath = path.join(certDir, `${baseName}.crt`);
+  const keyPath = path.join(certDir, `${baseName}.key`);
+  if (!fs.existsSync(crtPath) || !fs.existsSync(keyPath)) return undefined;
+  return { cert: fs.readFileSync(crtPath), key: fs.readFileSync(keyPath) };
+}
+
 /**
- * Tailscale HTTPS 인증서(있으면) — `tailscale cert <이 기기의 MagicDNS 이름>`으로
- * 발급해 .certs/에 둔다(gitignore됨, 재발급 가능). 있으면 https로, 없으면 그냥 http로
- * 뜬다 — 인증서가 없는 다른 머신에서도 npm run dev가 그대로 동작해야 하므로.
+ * HTTPS 인증서 — .certs/(gitignore됨)에서 두 종류를 찾는다.
+ * ① `tailscale cert <이 기기의 MagicDNS 이름>`으로 발급한 태일스케일 인증서 —
+ *    다른 기기(휴대폰 등)에서 태일넷 호스트명으로 접속할 때 경고 없이 신뢰됨.
+ * ② `.certs/localhost.crt`/`.key` — openssl로 만든 자체서명 인증서(SAN에 localhost·
+ *    127.0.0.1·::1). 태일스케일 인증서는 그 호스트명에만 유효해서 예전엔 localhost로
+ *    접속하면 인증서 이름 불일치로 막혔다(§32) — 이 로컬 인증서가 그 구멍을 메운다.
+ * 하나만 있으면 그걸로 전부 서빙(기존 동작 그대로), 없으면 그냥 http로 뜬다 —
+ * 인증서가 없는 다른 머신에서도 npm run dev가 그대로 동작해야 하므로.
  * GPS·PWA 설치처럼 보안 컨텍스트가 필요한 기능은 http로는 절대 테스트할 수 없다(§6-8/§9-4/§27-3).
  */
-function loadTailscaleCert(): { cert: Buffer; key: Buffer } | undefined {
+function loadHttpsOptions(): HttpsServerOptions | undefined {
   const certDir = path.resolve(process.cwd(), '.certs');
   if (!fs.existsSync(certDir)) return undefined;
-  const crtFile = fs.readdirSync(certDir).find((f) => f.endsWith('.crt'));
-  if (!crtFile) return undefined;
-  const keyFile = crtFile.replace(/\.crt$/, '.key');
-  const keyPath = path.join(certDir, keyFile);
-  if (!fs.existsSync(keyPath)) return undefined;
-  return {
-    cert: fs.readFileSync(path.join(certDir, crtFile)),
-    key: fs.readFileSync(keyPath),
-  };
+
+  const localhostPair = readCertPair(certDir, 'localhost');
+  const tailscaleCrtFile = fs
+    .readdirSync(certDir)
+    .find((f) => f.endsWith('.crt') && f !== 'localhost.crt');
+  const tailscalePair = tailscaleCrtFile
+    ? readCertPair(certDir, tailscaleCrtFile.replace(/\.crt$/, ''))
+    : undefined;
+
+  if (tailscalePair && localhostPair) {
+    const tailscaleCtx = tls.createSecureContext(tailscalePair);
+    const localhostCtx = tls.createSecureContext(localhostPair);
+    return {
+      ...tailscalePair, // SNI를 안 보내는 클라이언트를 위한 기본값
+      SNICallback: (servername, cb) => {
+        const isLocalhost = servername === 'localhost' || servername === '127.0.0.1';
+        cb(null, isLocalhost ? localhostCtx : tailscaleCtx);
+      },
+    };
+  }
+
+  return tailscalePair ?? localhostPair;
 }
 
 function kakaoProxyHeaders(proxyReq: ClientRequest, _req: IncomingMessage) {
@@ -511,7 +540,7 @@ export default defineConfig(({ mode }) => {
   server: {
     port: 5173,
     host: true,
-    https: loadTailscaleCert(),
+    https: loadHttpsOptions(),
     proxy: {
       '/api/kakao-place': {
         target: 'https://place-api.map.kakao.com/places',

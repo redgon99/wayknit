@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { AdminHeader } from '../components/AdminHeader';
+import { AdminShell } from '../components/AdminShell';
+import { AdminPreviewModal } from '../components/AdminPreviewModal';
 import {
   addInsightKeyword,
   deleteInsightKeyword,
@@ -98,6 +99,7 @@ export default function AdminInsightsPage() {
   const [runs, setRuns] = useState<InsightCollectionRun[]>([]);
   const [counts, setCounts] = useState<InsightCategoryCount[]>([]);
   const [items, setItems] = useState<InsightItemWithAnalysis[]>([]);
+  const [previewItem, setPreviewItem] = useState<InsightItemWithAnalysis | null>(null);
 
   const [newSource, setNewSource] = useState<InsightSource>('youtube');
   const [newKeyword, setNewKeyword] = useState('');
@@ -465,15 +467,13 @@ export default function AdminInsightsPage() {
   };
 
   return (
-    <main className="admin-page">
-      <div className="admin-shell">
-        <AdminHeader
-          title="시장 인사이트"
-          subtitle="한국여행 계획자·경험자의 니즈/불편함을 외부 플랫폼에서 수집·분석 (관리자 전용)"
-          current="insights"
-          refreshing={refreshing}
-          onRefresh={() => void loadAll()}
-        />
+    <AdminShell
+      subtitle="한국여행 계획자·경험자의 니즈/불편함을 외부 플랫폼에서 수집·분석 (관리자 전용)"
+      current="insights"
+      refreshing={refreshing}
+      onRefresh={() => void loadAll()}
+      wide
+    >
 
         {error && <div className="admin-error">{error}</div>}
 
@@ -905,11 +905,16 @@ export default function AdminInsightsPage() {
                       <td>{item.analysis?.mentionedServices?.join(', ') || '-'}</td>
                       <td>{formatDateTime(item.collectedAt)}</td>
                       <td>
-                        {item.url && (
-                          <a href={item.url} target="_blank" rel="noreferrer">
-                            링크
-                          </a>
-                        )}
+                        <div className="admin-action-row">
+                          <button type="button" onClick={() => setPreviewItem(item)}>
+                            미리보기
+                          </button>
+                          {item.url && (
+                            <a href={item.url} target="_blank" rel="noreferrer">
+                              링크
+                            </a>
+                          )}
+                        </div>
                       </td>
                       <td>
                         {canDraft ? (
@@ -950,7 +955,44 @@ export default function AdminInsightsPage() {
           </div>
         </section>
         )}
-      </div>
-    </main>
+
+        <AdminPreviewModal
+          open={Boolean(previewItem)}
+          onClose={() => setPreviewItem(null)}
+          title={previewItem?.title || '(제목 없음)'}
+          subtitle={
+            previewItem && (
+              <>
+                {SOURCE_LABEL[previewItem.source]} · {formatDateTime(previewItem.collectedAt)}
+                {previewItem.author ? ` · ${previewItem.author}` : ''}
+              </>
+            )
+          }
+          headerExtra={
+            previewItem?.analysis && (
+              <div style={{ marginTop: 8 }}>
+                <span className="admin-pill">{CATEGORY_LABEL[previewItem.analysis.category]}</span>
+                {previewItem.analysis.mentionedServices.map((s) => (
+                  <span key={s} className="admin-pill">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            )
+          }
+        >
+          {previewItem?.analysis?.summary && (
+            <p style={{ fontWeight: 600, marginBottom: 12 }}>{previewItem.analysis.summary}</p>
+          )}
+          <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{previewItem?.content || '(원문 없음)'}</p>
+          {previewItem?.url && (
+            <p style={{ marginTop: 14 }}>
+              <a href={previewItem.url} target="_blank" rel="noreferrer">
+                원문 링크 열기 ↗
+              </a>
+            </p>
+          )}
+        </AdminPreviewModal>
+    </AdminShell>
   );
 }

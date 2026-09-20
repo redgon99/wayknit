@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
-import { AdminHeader } from '../components/AdminHeader';
+import { AdminShell } from '../components/AdminShell';
+import { AdminPreviewModal } from '../components/AdminPreviewModal';
 import { GUIDE_KIND_META, GUIDE_KINDS, type GuideKind } from '../lib/guideKinds';
 import {
   archiveGuide,
@@ -18,6 +19,12 @@ import {
   updateGuide,
 } from '../lib/guides';
 import { parseCourseGuideText, resolveCoursePins, type CourseGuideDraft } from '../lib/courseGuideMacro';
+import {
+  buildCourseFromSelection,
+  parseCourseOptions,
+  proposeCourseOptions,
+  type CourseOption,
+} from '../lib/aiCourseGuide';
 import { isChatGptShareUrl } from '../lib/chatgptShareParse';
 import { loadGoogleMapsSdk, getGoogleMapsApiKey } from '../lib/googleMaps';
 import { renderGuideMarkdown } from '../lib/guideMarkdown';
@@ -74,6 +81,15 @@ const STATUS_LABEL: Record<GuideStatus, string> = {
   archived: '보관',
 };
 
+/** 압축 표 갱신 열 — "2026.09.20 08:29" 형태로 짧게 */
+function formatCompactDateTime(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+const GUIDES_PAGE_SIZE = 8;
+
 export default function AdminGuidesPage() {
   const { configured } = useAuth();
   const access = useAdminAccess();
@@ -82,6 +98,8 @@ export default function AdminGuidesPage() {
   const [guides, setGuides] = useState<GuideArticle[]>([]);
   const [statusFilter, setStatusFilter] = useState<GuideStatus | ''>('');
   const [kindFilter, setKindFilter] = useState<GuideKind | ''>('');
+  const [titleSearch, setTitleSearch] = useState('');
+  const [page, setPage] = useState(0);
   const [editing, setEditing] = useState<GuideArticle | null>(null);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -92,6 +110,8 @@ export default function AdminGuidesPage() {
   const [showVersions, setShowVersions] = useState(false);
   const [restoringVersionId, setRestoringVersionId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [previewGuide, setPreviewGuide] = useState<GuideArticle | null>(null);
+  const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null);
 
   /* 추천 여행코스 붙여넣기 매크로 */
   const [macroOpen, setMacroOpen] = useState(false);
@@ -103,6 +123,16 @@ export default function AdminGuidesPage() {
   const [macroMissed, setMacroMissed] = useState<string[]>([]);
   const [macroBusy, setMacroBusy] = useState(false);
   const macroCanRun = Boolean(macroSourceUrl.trim() || macroRaw.trim());
+
+  /* AI 자동 생성 — 커스텀 GPT 프롬프트를 옮긴 course-guide-generate 함수 호출 (§34) */
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiRegion, setAiRegion] = useState('');
+  const [aiExtra, setAiExtra] = useState('');
+  const [aiOptionsText, setAiOptionsText] = useState('');
+  const [aiOptions, setAiOptions] = useState<CourseOption[]>([]);
+  const [aiSelection, setAiSelection] = useState('');
+  const [aiProposing, setAiProposing] = useState(false);
+  const [aiBuilding, setAiBuilding] = useState(false);
 
   const loadList = useCallback(async () => {
     setRefreshing(true);
@@ -127,6 +157,25 @@ export default function AdminGuidesPage() {
     if (access === 'ok') void loadList();
   }, [access, loadList]);
 
+  useEffect(() => {
+    setPage(0);
+  }, [statusFilter, kindFilter, titleSearch]);
+
+  const filteredGuides = guides.filter((g) => {
+    const term = titleSearch.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      g.title.toLowerCase().includes(term) ||
+      g.topicTags.some((tag) => tag.toLowerCase().includes(term))
+    );
+  });
+  const guidesPageCount = Math.max(1, Math.ceil(filteredGuides.length / GUIDES_PAGE_SIZE));
+  const guidesPage = Math.min(page, guidesPageCount - 1);
+  const pagedGuides = filteredGuides.slice(
+    guidesPage * GUIDES_PAGE_SIZE,
+    guidesPage * GUIDES_PAGE_SIZE + GUIDES_PAGE_SIZE
+  );
+
   const openEdit = async (id: string) => {
     setShowVersions(false);
     try {
@@ -150,6 +199,23 @@ export default function AdminGuidesPage() {
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : '가이드를 열 수 없습니다.');
+    }
+  };
+
+  /** 목록은 본문(body_md)을 안 받아오므로(S1) 미리보기를 열 때만 전체 행을 조회한다 */
+  const openPreview = async (id: string) => {
+    setPreviewLoadingId(id);
+    try {
+      const g = await getAdminGuide(id);
+      if (!g) {
+        setError('가이드를 찾을 수 없습니다.');
+        return;
+      }
+      setPreviewGuide(g);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '미리보기를 불러오지 못했습니다.');
+    } finally {
+      setPreviewLoadingId(null);
     }
   };
 
@@ -341,6 +407,45 @@ export default function AdminGuidesPage() {
     }
   };
 
+  const handleAiPropose = async () => {
+    if (!aiRegion.trim()) return;
+    setAiProposing(true);
+    setError(null);
+    try {
+      const text = await proposeCourseOptions(aiRegion, aiExtra || undefined);
+      setAiOptionsText(text);
+      setAiOptions(parseCourseOptions(text));
+      setAiSelection('');
+    } catch (e) {
+      setAiOptionsText('');
+      setAiOptions([]);
+      setError(formatUnknownError(e, '여행안 생성 실패'));
+    } finally {
+      setAiProposing(false);
+    }
+  };
+
+  const handleAiBuild = async () => {
+    if (!aiOptionsText.trim() || !aiSelection.trim()) return;
+    setAiBuilding(true);
+    setError(null);
+    try {
+      const text = await buildCourseFromSelection(aiRegion, aiOptionsText, aiSelection, aiExtra || undefined);
+      setMacroRaw(text);
+      setMacroTitle('');
+      setMacroSourceUrl('');
+      const draft = parseCourseGuideText(text, {});
+      await applyMacroDraft(draft, 'AI 일정 생성 완료.');
+    } catch (e) {
+      setMacroPreview(null);
+      setMacroPins([]);
+      setMacroMissed([]);
+      setError(formatUnknownError(e, 'AI 일정 생성 실패'));
+    } finally {
+      setAiBuilding(false);
+    }
+  };
+
   const handleMacroCreate = async (publishNow: boolean) => {
     setMacroBusy(true);
     setError(null);
@@ -466,27 +571,27 @@ export default function AdminGuidesPage() {
   }
 
   return (
-    <main className="admin-page">
-      <div className="admin-shell">
-        <AdminHeader
-          title="가이드 카드"
-          subtitle="종류별 초안을 검수·발행합니다. 추천 여행코스는 플래너 자동 동선과 연동됩니다."
-          current="guides"
-          refreshing={refreshing}
-          onRefresh={() => void loadList()}
-          extraActions={
-            <>
-              <button type="button" className="admin-create-btn" onClick={() => setMacroOpen((v) => !v)}>
-                {macroOpen ? '코스 매크로 닫기' : '코스 붙여넣기 매크로'}
-              </button>
-              <Link to="/guides" className="admin-link-btn">
-                공개 가이드 보기
-              </Link>
-            </>
-          }
-        />
-
-        {error && <div className="admin-error">{error}</div>}
+    <AdminShell
+      subtitle="종류별 초안을 검수·발행합니다. 추천 여행코스는 플래너 자동 동선과 연동됩니다."
+      current="guides"
+      refreshing={refreshing}
+      onRefresh={() => void loadList()}
+      extraActions={
+        <>
+          <button type="button" className="admin-create-btn" onClick={() => setAiOpen((v) => !v)}>
+            {aiOpen ? 'AI 자동 생성 닫기' : 'AI 자동 생성'}
+          </button>
+          <button type="button" className="admin-create-btn" onClick={() => setMacroOpen((v) => !v)}>
+            {macroOpen ? '코스 매크로 닫기' : '코스 붙여넣기 매크로'}
+          </button>
+          <Link to="/guides" className="admin-link-btn">
+            공개 가이드 보기
+          </Link>
+        </>
+      }
+      wide
+    >
+      {error && <div className="admin-error">{error}</div>}
 
         {macroOpen && (
           <section className="admin-section admin-guide-editor">
@@ -543,10 +648,98 @@ export default function AdminGuidesPage() {
               >
                 {macroBusy ? '실행 중…' : '실행'}
               </button>
+            </div>
+          </section>
+        )}
+
+        {aiOpen && (
+          <section className="admin-section admin-guide-editor">
+            <h2>AI 자동 생성</h2>
+            <p className="admin-cell-sub" style={{ marginTop: 0 }}>
+              지역만 넣으면 조건이 다른 여행안 5개를 먼저 제안하고, 그중 하나를 고르면(또는 조건을 바꿔
+              고르면) 상세 일정을 만듭니다. 관리자 커스텀 GPT에 넣어 쓰던 지시문을 그대로 옮겼습니다.
+            </p>
+            <label className="admin-guide-field">
+              지역
+              <input
+                value={aiRegion}
+                onChange={(e) => setAiRegion(e.currentTarget.value)}
+                placeholder="춘천"
+              />
+            </label>
+            <label className="admin-guide-field">
+              추가 조건 (선택)
+              <input
+                value={aiExtra}
+                onChange={(e) => setAiExtra(e.currentTarget.value)}
+                placeholder="예: 반려견 동반 가능한 곳 위주로"
+              />
+            </label>
+            <div className="admin-landing-actions">
+              <button
+                type="button"
+                className="admin-create-btn"
+                disabled={!aiRegion.trim() || aiProposing}
+                onClick={() => void handleAiPropose()}
+              >
+                {aiProposing ? '여행안 만드는 중…' : aiOptionsText ? '여행안 5개 다시 만들기' : '여행안 5개 만들기'}
+              </button>
+            </div>
+
+            {aiOptionsText && (
+              <div style={{ marginTop: 16 }}>
+                <strong>여행안 중 하나를 고르거나, 조건을 바꿔 적어주세요</strong>
+                {aiOptions.length > 0 ? (
+                  <div className="admin-ai-option-list" role="group" aria-label="여행안 선택" style={{ marginTop: 8 }}>
+                    {aiOptions.map((opt) => (
+                      <button
+                        key={opt.index}
+                        type="button"
+                        className={`admin-ai-option-btn ${aiSelection === `${opt.index}번` ? 'selected' : ''}`}
+                        onClick={() => setAiSelection(`${opt.index}번`)}
+                      >
+                        <span className="admin-ai-option-title">
+                          {opt.index}. {opt.title}
+                        </span>
+                        <span className="admin-cell-sub">{opt.conditions}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <pre className="admin-cell-sub" style={{ whiteSpace: 'pre-wrap', marginTop: 8 }}>
+                    {aiOptionsText}
+                  </pre>
+                )}
+                <label className="admin-guide-field" style={{ marginTop: 10 }}>
+                  선택 / 수정 (예: "2번", "2번, 자가용으로", "알아서 바로 짜줘")
+                  <input
+                    value={aiSelection}
+                    onChange={(e) => setAiSelection(e.currentTarget.value)}
+                    placeholder="2번, 자가용으로"
+                  />
+                </label>
+                <div className="admin-landing-actions">
+                  <button
+                    type="button"
+                    className="admin-create-btn"
+                    disabled={!aiSelection.trim() || aiBuilding}
+                    onClick={() => void handleAiBuild()}
+                  >
+                    {aiBuilding ? '일정 만드는 중…' : '이 조건으로 일정 만들기'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {macroPreview && (
+          <section className="admin-section admin-guide-editor">
+            <div className="admin-landing-actions">
               <button
                 type="button"
                 onClick={() => void handleMacroCreate(false)}
-                disabled={!macroPreview || macroBusy}
+                disabled={macroBusy}
               >
                 {macroBusy ? '처리 중…' : '초안으로 저장'}
               </button>
@@ -554,92 +747,90 @@ export default function AdminGuidesPage() {
                 type="button"
                 className="admin-create-btn"
                 onClick={() => void handleMacroCreate(true)}
-                disabled={!macroPreview || macroBusy}
+                disabled={macroBusy}
               >
                 {macroBusy ? '처리 중…' : '바로 발행'}
               </button>
             </div>
 
-            {macroPreview && (
-              <div className="admin-guide-macro-preview" style={{ marginTop: 16 }}>
-                <strong>미리보기</strong>
-                <p className="admin-cell-sub">
-                  핀 {macroPins.length}개
-                  {macroMissed.length > 0 ? ` · 미매칭 ${macroMissed.length}곳` : ''}
-                </p>
-                <div className="admin-guide-macro-split">
-                  <div className="admin-guide-macro-pane">
-                    <div className="admin-guide-macro-pane-label">좌측 · 편집본</div>
-                    <label className="admin-guide-field">
-                      제목
-                      <input
-                        value={macroPreview.title}
-                        onChange={(e) =>
-                          setMacroPreview({ ...macroPreview, title: e.currentTarget.value })
-                        }
-                      />
-                    </label>
-                    <label className="admin-guide-field">
-                      요약
-                      <textarea
-                        rows={3}
-                        value={macroPreview.summary}
-                        onChange={(e) =>
-                          setMacroPreview({ ...macroPreview, summary: e.currentTarget.value })
-                        }
-                      />
-                    </label>
-                    <label className="admin-guide-field">
-                      본문 (Markdown)
-                      <textarea
-                        rows={18}
-                        value={macroPreview.bodyMd}
-                        onChange={(e) =>
-                          setMacroPreview({ ...macroPreview, bodyMd: e.currentTarget.value })
-                        }
-                      />
-                    </label>
-                    <div className="admin-guide-field">
-                      추천코스 태그
-                      <CourseTaxonomyPicker
-                        tags={macroPreview.topicTags}
-                        onChange={(topicTags) => setMacroPreview({ ...macroPreview, topicTags })}
-                      />
-                    </div>
-                  </div>
-                  <div className="admin-guide-macro-pane admin-guide-macro-live">
-                    <div className="admin-guide-macro-pane-label">우측 · 실행본 (공개 가이드와 동일)</div>
-                    <article className="guides-detail admin-guide-macro-live-inner">
-                      <div className="guides-card-tags">
-                        <span className="guides-tag guides-tag-kind">추천 여행코스</span>
-                        {displayCourseTags(macroPreview.topicTags, 'ko', 8).map((tag) => (
-                          <span key={tag} className="guides-tag">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      <h1>{macroPreview.title}</h1>
-                      {macroPreview.summary && (
-                        <p className="guides-detail-summary">{macroPreview.summary}</p>
-                      )}
-                      {macroPins.length > 0 ? (
-                        <GuideCourseMap pins={macroPins} />
-                      ) : (
-                        <p className="guides-muted">
-                          지도 핀이 없습니다. Google Maps API 키를 확인한 뒤 다시 구성하세요.
-                        </p>
-                      )}
-                      <div className="guides-body">{renderGuideMarkdown(macroPreview.bodyMd)}</div>
-                    </article>
+            <div className="admin-guide-macro-preview" style={{ marginTop: 16 }}>
+              <strong>미리보기</strong>
+              <p className="admin-cell-sub">
+                핀 {macroPins.length}개
+                {macroMissed.length > 0 ? ` · 미매칭 ${macroMissed.length}곳` : ''}
+              </p>
+              <div className="admin-guide-macro-split">
+                <div className="admin-guide-macro-pane">
+                  <div className="admin-guide-macro-pane-label">좌측 · 편집본</div>
+                  <label className="admin-guide-field">
+                    제목
+                    <input
+                      value={macroPreview.title}
+                      onChange={(e) =>
+                        setMacroPreview({ ...macroPreview, title: e.currentTarget.value })
+                      }
+                    />
+                  </label>
+                  <label className="admin-guide-field">
+                    요약
+                    <textarea
+                      rows={3}
+                      value={macroPreview.summary}
+                      onChange={(e) =>
+                        setMacroPreview({ ...macroPreview, summary: e.currentTarget.value })
+                      }
+                    />
+                  </label>
+                  <label className="admin-guide-field">
+                    본문 (Markdown)
+                    <textarea
+                      rows={18}
+                      value={macroPreview.bodyMd}
+                      onChange={(e) =>
+                        setMacroPreview({ ...macroPreview, bodyMd: e.currentTarget.value })
+                      }
+                    />
+                  </label>
+                  <div className="admin-guide-field">
+                    추천코스 태그
+                    <CourseTaxonomyPicker
+                      tags={macroPreview.topicTags}
+                      onChange={(topicTags) => setMacroPreview({ ...macroPreview, topicTags })}
+                    />
                   </div>
                 </div>
+                <div className="admin-guide-macro-pane admin-guide-macro-live">
+                  <div className="admin-guide-macro-pane-label">우측 · 실행본 (공개 가이드와 동일)</div>
+                  <article className="guides-detail admin-guide-macro-live-inner">
+                    <div className="guides-card-tags">
+                      <span className="guides-tag guides-tag-kind">추천 여행코스</span>
+                      {displayCourseTags(macroPreview.topicTags, 'ko', 8).map((tag) => (
+                        <span key={tag} className="guides-tag">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <h1>{macroPreview.title}</h1>
+                    {macroPreview.summary && (
+                      <p className="guides-detail-summary">{macroPreview.summary}</p>
+                    )}
+                    {macroPins.length > 0 ? (
+                      <GuideCourseMap pins={macroPins} />
+                    ) : (
+                      <p className="guides-muted">
+                        지도 핀이 없습니다. Google Maps API 키를 확인한 뒤 다시 구성하세요.
+                      </p>
+                    )}
+                    <div className="guides-body">{renderGuideMarkdown(macroPreview.bodyMd)}</div>
+                  </article>
+                </div>
               </div>
-            )}
+            </div>
           </section>
         )}
 
         <section className="admin-section">
-          <div className="admin-notice-form-row" style={{ marginBottom: 12 }}>
+          <div className="admin-filter-row">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.currentTarget.value as GuideStatus | '')}
@@ -660,6 +851,23 @@ export default function AdminGuidesPage() {
                 </option>
               ))}
             </select>
+            <input
+              type="search"
+              className="admin-search-input"
+              value={titleSearch}
+              onChange={(e) => setTitleSearch(e.currentTarget.value)}
+              placeholder="제목·태그 검색"
+              aria-label="가이드 카드 검색"
+            />
+            <span className="admin-cell-sub" style={{ marginLeft: 'auto' }}>
+              전체 {filteredGuides.length}건 ·{' '}
+              {filteredGuides.length === 0
+                ? '0건 표시'
+                : `${guidesPage * GUIDES_PAGE_SIZE + 1}–${Math.min(
+                    guidesPage * GUIDES_PAGE_SIZE + GUIDES_PAGE_SIZE,
+                    filteredGuides.length
+                  )}건 표시`}
+            </span>
           </div>
 
           <div className="admin-table-wrap">
@@ -667,33 +875,34 @@ export default function AdminGuidesPage() {
               <thead>
                 <tr>
                   <th>제목</th>
-                  <th>종류</th>
-                  <th>상태</th>
+                  <th>종류·상태</th>
                   <th>태그</th>
                   <th>갱신</th>
                   <th>액션</th>
                 </tr>
               </thead>
               <tbody>
-                {guides.map((g) => (
+                {pagedGuides.map((g) => (
                   <tr key={g.id}>
-                    <td>
-                      <div>{g.title}</div>
-                      <div className="admin-cell-sub">{g.summary.slice(0, 80)}</div>
-                    </td>
+                    <td>{g.title}</td>
                     <td>
                       <span className="admin-pill">{GUIDE_KIND_META[g.kind].labelKo}</span>
-                    </td>
-                    <td>
                       <span className={`admin-pill ${g.status === 'published' ? 'ok' : ''}`}>
                         {STATUS_LABEL[g.status]}
                       </span>
-                      {draftKeys.has(g.id) && <span className="admin-pill">수정 초안 있음</span>}
+                      {draftKeys.has(g.id) && <span className="admin-pill">수정 초안</span>}
                     </td>
-                    <td>{displayCourseTags(g.topicTags, 'ko', 6).join(', ') || '-'}</td>
-                    <td>{new Date(g.updatedAt).toLocaleString('ko-KR', { hour12: false })}</td>
+                    <td>{displayCourseTags(g.topicTags, 'ko', 3).join(', ') || '-'}</td>
+                    <td className="mono">{formatCompactDateTime(g.updatedAt)}</td>
                     <td>
                       <div className="admin-action-row">
+                        <button
+                          type="button"
+                          disabled={previewLoadingId === g.id}
+                          onClick={() => void openPreview(g.id)}
+                        >
+                          {previewLoadingId === g.id ? '불러오는 중…' : '미리보기'}
+                        </button>
                         <button type="button" onClick={() => void openEdit(g.id)}>
                           편집
                         </button>
@@ -750,16 +959,42 @@ export default function AdminGuidesPage() {
                     </td>
                   </tr>
                 ))}
-                {guides.length === 0 && (
+                {filteredGuides.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="admin-cell-sub">
-                      가이드가 없습니다. 「코스 붙여넣기 매크로」또는 인사이트에서 초안을 만드세요.
+                    <td colSpan={5} className="admin-cell-sub">
+                      {guides.length === 0
+                        ? '가이드가 없습니다. 「코스 붙여넣기 매크로」또는 인사이트에서 초안을 만드세요.'
+                        : '검색·필터 조건에 맞는 가이드가 없습니다.'}
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+
+          {filteredGuides.length > GUIDES_PAGE_SIZE && (
+            <div className="admin-pager">
+              <button
+                type="button"
+                className="admin-link-btn"
+                disabled={guidesPage <= 0}
+                onClick={() => setPage(guidesPage - 1)}
+              >
+                이전
+              </button>
+              <span className="admin-cell-sub">
+                {guidesPage + 1} / {guidesPageCount} 페이지
+              </span>
+              <button
+                type="button"
+                className="admin-link-btn"
+                disabled={guidesPage >= guidesPageCount - 1}
+                onClick={() => setPage(guidesPage + 1)}
+              >
+                다음
+              </button>
+            </div>
+          )}
         </section>
 
         {editing && (
@@ -943,7 +1178,33 @@ export default function AdminGuidesPage() {
             </div>
           </section>
         )}
-      </div>
-    </main>
+
+        <AdminPreviewModal
+          open={Boolean(previewGuide)}
+          onClose={() => setPreviewGuide(null)}
+          title={previewGuide?.title ?? ''}
+          subtitle={previewGuide?.summary}
+          headerExtra={
+            previewGuide && (
+              <div style={{ marginTop: 8 }}>
+                <span className="admin-pill">{GUIDE_KIND_META[previewGuide.kind].labelKo}</span>
+                <span className={`admin-pill ${previewGuide.status === 'published' ? 'ok' : ''}`}>
+                  {STATUS_LABEL[previewGuide.status]}
+                </span>
+                {displayCourseTags(previewGuide.topicTags, 'ko', 8).map((tag) => (
+                  <span key={tag} className="admin-pill">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )
+          }
+        >
+          {previewGuide?.kind === 'course' && (previewGuide.coursePins?.length ?? 0) > 0 && (
+            <GuideCourseMap pins={previewGuide.coursePins} />
+          )}
+          {previewGuide && <div className="guides-body">{renderGuideMarkdown(previewGuide.bodyMd)}</div>}
+        </AdminPreviewModal>
+    </AdminShell>
   );
 }

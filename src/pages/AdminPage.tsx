@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
-import { AdminHeader } from '../components/AdminHeader';
+import { AdminShell } from '../components/AdminShell';
 import {
   addAdminUserAccount,
   createAdminNotice,
@@ -431,17 +431,14 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="admin-page">
-      <div className="admin-shell">
-        <AdminHeader
-          title="관리자 페이지"
-          subtitle="현재 사용자확인 관리 / 공유자료 현황 관리 / 기타 공지사항 관리"
-          current="admin"
-          refreshing={refreshing}
-          onRefresh={() => void loadAll()}
-        />
-
-        {error && <div className="admin-error">{error}</div>}
+    <AdminShell
+      subtitle="현재 사용자확인 관리 / 공유자료 현황 관리 / 기타 공지사항 관리"
+      current="admin"
+      refreshing={refreshing}
+      onRefresh={() => void loadAll()}
+      wide
+    >
+      {error && <div className="admin-error">{error}</div>}
 
         <section className="admin-section">
           <h2>관리자 계정 관리</h2>
@@ -875,7 +872,6 @@ export default function AdminPage() {
             </table>
           </div>
         </section>
-      </div>
-    </main>
+    </AdminShell>
   );
 }
