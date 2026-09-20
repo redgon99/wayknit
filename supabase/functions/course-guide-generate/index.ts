@@ -1,5 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { requireAdminCaller } from '../_shared/adminAuth.ts';
+import { getServiceClient } from '../_shared/serviceClient.ts';
 
 /**
  * 코스 붙여넣기 매크로(courseGuideMacro.ts)를 대체하는 게 아니라, 그 매크로가 받는
@@ -14,6 +15,11 @@ import { requireAdminCaller } from '../_shared/adminAuth.ts';
  * 이 함수는 웹 검색 도구를 쓰지 않는다(Claude API 웹서치 툴 스키마를 이 세션에서 검증하지
  * 못해 추측 구현을 피했다). 대신 프롬프트 자체의 "확인되지 않은 정보는 확인 필요로 표시"
  * 규칙에 의존한다 — 시의성 있는 사실(예: 보수공사로 인한 임시 폐쇄)은 놓칠 수 있다.
+ *
+ * AI 공급자 선택(§32-19): 기본은 Claude API 그대로지만, admin_settings의
+ * course_guide_ai_provider 값이 'local'이면 관리자가 등록한 로컬 LLM
+ * (OpenAI 호환 `/v1/chat/completions`)을 대신 호출한다. 설정 행이 없으면
+ * Claude로 동작 — 기존 사용자에게 아무 영향 없음.
  */
 
 const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
@@ -59,6 +65,36 @@ interface ClaudeMessage {
   content: string;
 }
 
+/**
+ * AI 공급자 설정(§32-19) — admin_settings 테이블의 course_guide_ai_provider
+ * 값. 관리자 화면에서 재배포 없이 Claude API/로컬 LLM을 고를 수 있게 하려고
+ * env var가 아니라 DB에 둔다. 행이 없으면(마이그레이션 직후 기본 상태)
+ * provider는 'claude'로 취급 — 기존 동작 그대로 유지.
+ */
+interface AiProviderSettings {
+  provider: 'claude' | 'local';
+  localEndpoint: string;
+  localModel: string;
+  localApiKey: string;
+}
+
+async function loadAiProviderSettings(): Promise<AiProviderSettings> {
+  const fallback: AiProviderSettings = { provider: 'claude', localEndpoint: '', localModel: '', localApiKey: '' };
+  try {
+    const sb = getServiceClient();
+    const { data, error } = await sb
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'course_guide_ai_provider')
+      .maybeSingle();
+    if (error || !data) return fallback;
+    const value = data.value as Partial<AiProviderSettings> | null;
+    return { ...fallback, ...(value ?? {}) };
+  } catch {
+    return fallback;
+  }
+}
+
 async function callClaude(apiKey: string, messages: ClaudeMessage[], maxTokens: number): Promise<string> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -81,6 +117,57 @@ async function callClaude(apiKey: string, messages: ClaudeMessage[], maxTokens: 
   const text = json.content?.find((b) => b.type === 'text')?.text ?? '';
   if (!text.trim()) throw new Error('AI 응답이 비어 있습니다.');
   return text;
+}
+
+/**
+ * 로컬 LLM 호출 — Ollama/LM Studio/vLLM 등이 공통으로 지원하는 OpenAI 호환
+ * `/v1/chat/completions` 형식을 그대로 쓴다. 이 함수는 Supabase 서버리스
+ * 환경(Deno Deploy)에서 실행되므로, localEndpoint는 "localhost"가 아니라
+ * 관리자가 자기 로컬 LLM 서버를 터널(예: Cloudflare Tunnel/ngrok)로 공개한
+ * 주소여야 한다 — 관리자 화면 안내 문구에도 명시.
+ */
+async function callLocalLlm(
+  settings: AiProviderSettings,
+  messages: ClaudeMessage[],
+  maxTokens: number
+): Promise<string> {
+  if (!settings.localEndpoint) {
+    throw new Error('로컬 LLM 엔드포인트가 설정되지 않았습니다. 관리자 > 가이드 카드 > AI 설정에서 입력하세요.');
+  }
+  const res = await fetch(settings.localEndpoint, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      ...(settings.localApiKey ? { authorization: `Bearer ${settings.localApiKey}` } : {}),
+    },
+    body: JSON.stringify({
+      model: settings.localModel || undefined,
+      max_tokens: maxTokens,
+      messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`로컬 LLM 호출 실패: ${res.status} ${await res.text()}`);
+  }
+  const json = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  const text = json.choices?.[0]?.message?.content ?? '';
+  if (!text.trim()) throw new Error('로컬 LLM 응답이 비어 있습니다.');
+  return text;
+}
+
+async function callAi(
+  settings: AiProviderSettings,
+  apiKey: string | undefined,
+  messages: ClaudeMessage[],
+  maxTokens: number
+): Promise<string> {
+  if (settings.provider === 'local') {
+    return callLocalLlm(settings, messages, maxTokens);
+  }
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
+  return callClaude(apiKey, messages, maxTokens);
 }
 
 function regionUserTurn(region: string, extra?: string): string {
@@ -109,7 +196,8 @@ Deno.serve(async (req) => {
   }
 
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY')?.trim();
-  if (!apiKey) {
+  const providerSettings = await loadAiProviderSettings();
+  if (providerSettings.provider === 'claude' && !apiKey) {
     return new Response(JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured' }), {
       status: 503,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -142,7 +230,8 @@ Deno.serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      const text = await callClaude(
+      const text = await callAi(
+        providerSettings,
         apiKey,
         [
           { role: 'user', content: regionUserTurn(region, body.extra) },
@@ -157,7 +246,12 @@ Deno.serve(async (req) => {
     }
 
     // 기본: propose (여행안 5개)
-    const text = await callClaude(apiKey, [{ role: 'user', content: regionUserTurn(region, body.extra) }], 2048);
+    const text = await callAi(
+      providerSettings,
+      apiKey,
+      [{ role: 'user', content: regionUserTurn(region, body.extra) }],
+      2048
+    );
     return new Response(JSON.stringify({ text }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

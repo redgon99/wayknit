@@ -26,6 +26,12 @@ import {
 } from '../lib/multiLangGuideMacro';
 import { SUPPORTED_LOCALES, LOCALE_LABELS, type AppLocale } from '../lib/locale';
 import {
+  getCourseGuideAiSettings,
+  saveCourseGuideAiSettings,
+  DEFAULT_COURSE_GUIDE_AI_SETTINGS,
+  type CourseGuideAiSettings,
+} from '../lib/adminSettings';
+import {
   buildCourseFromSelection,
   parseCourseOptions,
   proposeCourseOptions,
@@ -139,6 +145,14 @@ export default function AdminGuidesPage() {
   const [aiSelection, setAiSelection] = useState('');
   const [aiProposing, setAiProposing] = useState(false);
   const [aiBuilding, setAiBuilding] = useState(false);
+
+  /** AI 공급자 설정(§32-19) — 기본은 Claude API 그대로, 관리자가 원하면
+   * 로컬 LLM으로 바꿀 수 있게 admin_settings에 저장. */
+  const [aiSettings, setAiSettings] = useState<CourseGuideAiSettings>(DEFAULT_COURSE_GUIDE_AI_SETTINGS);
+  const [aiSettingsOpen, setAiSettingsOpen] = useState(false);
+  const [aiSettingsSaving, setAiSettingsSaving] = useState(false);
+  const [aiSettingsError, setAiSettingsError] = useState<string | null>(null);
+  const [aiSettingsSaved, setAiSettingsSaved] = useState(false);
 
   /* 다국어 붙여넣기(2026-09-20) — 같은 내용을 여러 언어로 반복한 글을
      언어별 가이드 카드로 나눠 만든다. */
@@ -422,6 +436,36 @@ export default function AdminGuidesPage() {
       setError(formatUnknownError(e, '실행 실패'));
     } finally {
       setMacroBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!aiSettingsOpen) return;
+    let alive = true;
+    getCourseGuideAiSettings()
+      .then((s) => {
+        if (alive) setAiSettings(s);
+      })
+      .catch((e) => {
+        if (alive) setAiSettingsError(formatUnknownError(e, 'AI 설정 불러오기 실패'));
+      });
+    return () => {
+      alive = false;
+    };
+  }, [aiSettingsOpen]);
+
+  const handleSaveAiSettings = async () => {
+    setAiSettingsSaving(true);
+    setAiSettingsError(null);
+    setAiSettingsSaved(false);
+    try {
+      const saved = await saveCourseGuideAiSettings(aiSettings);
+      setAiSettings(saved);
+      setAiSettingsSaved(true);
+    } catch (e) {
+      setAiSettingsError(formatUnknownError(e, 'AI 설정 저장 실패'));
+    } finally {
+      setAiSettingsSaving(false);
     }
   };
 
@@ -784,6 +828,93 @@ export default function AdminGuidesPage() {
               지역만 넣으면 조건이 다른 여행안 5개를 먼저 제안하고, 그중 하나를 고르면(또는 조건을 바꿔
               고르면) 상세 일정을 만듭니다. 관리자 커스텀 GPT에 넣어 쓰던 지시문을 그대로 옮겼습니다.
             </p>
+
+            <div className="admin-ai-settings">
+              <button
+                type="button"
+                className="admin-link-btn"
+                onClick={() => setAiSettingsOpen((v) => !v)}
+              >
+                {aiSettingsOpen
+                  ? 'AI 설정 닫기'
+                  : `AI 설정 (현재: ${aiSettings.provider === 'local' ? '로컬 LLM' : 'Claude API'})`}
+              </button>
+              {aiSettingsOpen && (
+                <div className="admin-ai-settings-panel">
+                  <p className="admin-cell-sub" style={{ marginTop: 0 }}>
+                    기본은 Claude API입니다(변경 안 하면 지금까지와 동일하게 동작). 로컬 LLM을
+                    쓰려면 그 서버가 <code>localhost</code>가 아니라 Supabase에서 접근 가능한
+                    공개 주소여야 합니다(Cloudflare Tunnel·ngrok 등으로 공개한 OpenAI 호환{' '}
+                    <code>/v1/chat/completions</code> 엔드포인트).
+                  </p>
+                  <label className="admin-ml-primary-radio">
+                    <input
+                      type="radio"
+                      name="aiProvider"
+                      checked={aiSettings.provider === 'claude'}
+                      onChange={() => setAiSettings((s) => ({ ...s, provider: 'claude' }))}
+                    />
+                    Claude API (기본)
+                  </label>
+                  <label className="admin-ml-primary-radio">
+                    <input
+                      type="radio"
+                      name="aiProvider"
+                      checked={aiSettings.provider === 'local'}
+                      onChange={() => setAiSettings((s) => ({ ...s, provider: 'local' }))}
+                    />
+                    로컬 LLM
+                  </label>
+                  {aiSettings.provider === 'local' && (
+                    <>
+                      <label className="admin-guide-field">
+                        엔드포인트 URL
+                        <input
+                          value={aiSettings.localEndpoint}
+                          onChange={(e) =>
+                            setAiSettings((s) => ({ ...s, localEndpoint: e.currentTarget.value }))
+                          }
+                          placeholder="https://your-tunnel.example.com/v1/chat/completions"
+                        />
+                      </label>
+                      <label className="admin-guide-field">
+                        모델명 (선택, 서버 기본 모델을 쓰려면 비워둠)
+                        <input
+                          value={aiSettings.localModel}
+                          onChange={(e) =>
+                            setAiSettings((s) => ({ ...s, localModel: e.currentTarget.value }))
+                          }
+                          placeholder="llama3.1:8b"
+                        />
+                      </label>
+                      <label className="admin-guide-field">
+                        API 키 (선택, 서버가 인증을 요구할 때만)
+                        <input
+                          type="password"
+                          value={aiSettings.localApiKey}
+                          onChange={(e) =>
+                            setAiSettings((s) => ({ ...s, localApiKey: e.currentTarget.value }))
+                          }
+                        />
+                      </label>
+                    </>
+                  )}
+                  <div className="admin-landing-actions">
+                    <button
+                      type="button"
+                      className="admin-create-btn"
+                      disabled={aiSettingsSaving}
+                      onClick={() => void handleSaveAiSettings()}
+                    >
+                      {aiSettingsSaving ? '저장 중…' : '설정 저장'}
+                    </button>
+                    {aiSettingsSaved && <span className="admin-cell-sub">저장됨</span>}
+                  </div>
+                  {aiSettingsError && <div className="admin-error">{aiSettingsError}</div>}
+                </div>
+              )}
+            </div>
+
             <label className="admin-guide-field">
               지역
               <input

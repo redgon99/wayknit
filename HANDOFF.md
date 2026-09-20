@@ -8031,9 +8031,82 @@ AI 보조**.
 
 ---
 
+### 32-19. 가이드 카드 「AI 자동 생성」 — Claude API/로컬 LLM 선택 설정 추가 (2026-09-20)
+
+사용자가 "가이드카드의 AI자동생성의 AI분석기능을 현재 클로드api를
+로컬llm으로 대체가 가능할까?"라고 물어 트레이드오프(로컬 LLM은
+Supabase Edge Function이 서버리스라 관리자 PC가 24시간 인터넷에
+노출돼야 함, Haiku는 이미 저비용이라 비용 절감 효과는 제한적)를
+설명. 이어진 대화에서 막히는 실제 이유가 "외부 API 자체에 의존하고
+싶지 않음"으로 확인됐고, 최종 요청은 "**기존 Claude API 연동은 그대로
+유지**하고, 관리자 메뉴에 설정을 추가해서 **선택적으로** 로컬 LLM을
+쓸 수 있게" — 즉 대체가 아니라 스위치 추가.
+
+**적용 범위:** "가이드카드의 AI자동생성" 한 기능(`course-guide-generate`
+엣지함수 — 지역 입력 → 여행안 5개 제안 → 상세 일정 생성)에만 한정.
+같은 방식으로 Claude API를 쓰는 다른 엣지함수(`guide-multilang-split`,
+`insight-analyze`, `insight-guide-draft` 등)는 이번에 손대지 않음 —
+요청 범위 밖.
+
+**변경 내용:**
+- **`supabase/migrations/20260920150000_admin_settings.sql`(신규,
+  이미 프로덕션 DB에 적용됨)** — 범용 관리자 설정 키-값 테이블
+  `admin_settings(key text primary key, value jsonb, updated_at)`.
+  RLS는 다른 관리자 전용 테이블과 같은 패턴(`using/with check
+  (public.is_admin())`)으로 관리자만 읽고 쓸 수 있음. env var가 아니라
+  DB에 둔 이유: 관리자가 재배포 없이 화면에서 바로 바꿀 수 있어야
+  해서.
+- **`src/lib/adminSettings.ts`(신규)** — `CourseGuideAiSettings`
+  (`provider: 'claude'|'local'`, `localEndpoint`, `localModel`,
+  `localApiKey`) 타입과 `getCourseGuideAiSettings()`/
+  `saveCourseGuideAiSettings()`. 설정 행이 없으면(마이그레이션 직후)
+  `provider: 'claude'`가 기본값 — **아무 것도 안 하면 지금까지와
+  100% 동일하게 동작**.
+- **`supabase/functions/course-guide-generate/index.ts`** —
+  `loadAiProviderSettings()`가 서비스 롤 클라이언트로 `admin_settings`
+  를 읽어 공급자를 결정(관리자 인증은 이미 `requireAdminCaller()`로
+  끝난 뒤라 서비스 롤로 설정만 읽는 것은 안전). `provider === 'local'`
+  이면 새 `callLocalLlm()`이 OpenAI 호환 `/v1/chat/completions` 형식
+  (Ollama·LM Studio·vLLM 등이 공통 지원)으로 호출, 아니면 기존
+  `callClaude()` 그대로. **로컬 LLM은 자동 폴백 없음** — 실패하면
+  명확한 에러를 보여줘서 관리자가 로컬 서버 상태를 바로 알 수 있게
+  했다(조용히 Claude로 전환하면 의도치 않게 API 비용이 나갈 수 있어
+  일부러 안 넣음).
+- **`supabase/functions/_shared/serviceClient.ts`** — 주석에 있던
+  "billing-* 전용"을 지움(이제 이 함수 등 다른 곳에서도 재사용).
+- **`AdminGuidesPage.tsx`** — "AI 자동 생성" 패널 안에 접이식 "AI 설정"
+  블록 추가: Claude API(기본)/로컬 LLM 라디오, 로컬 선택 시 엔드포인트
+  URL·모델명(선택)·API 키(선택) 입력, "설정 저장" 버튼. 안내 문구에
+  `localhost`가 아니라 Cloudflare Tunnel·ngrok 등으로 공개한 주소여야
+  한다는 점을 명시(Edge Function은 서버리스라 관리자 PC의 localhost에
+  직접 접근할 수 없음).
+- **`app.css`** — `.admin-ai-settings`/`.admin-ai-settings-panel`
+  스타일 추가.
+
+**변경 파일:** 마이그레이션(신규, DB 적용 완료), `lib/adminSettings.ts`
+(신규), `course-guide-generate/index.ts`, `_shared/serviceClient.ts`,
+`AdminGuidesPage.tsx`, `app.css`. `tsc -b`·`npm run build` 클린.
+
+**🔴 아직 미배포:** `course-guide-generate` 엣지함수는 이번에 코드만
+바뀌었고 아직 배포 안 함 — 지금 프로덕션은 여전히 예전 코드(Claude
+API만)로 돈다. 로컬 LLM 스위치를 실제로 쓰려면 이 엣지함수 배포가
+필요(§9-5-1 관례, 사용자 요청 시 진행). 프론트엔드(AdminGuidesPage
+등)는 Netlify 배포 시 반영.
+
+**확인 방법:** 엣지함수 배포 후 `/admin/guides` → "AI 자동 생성" →
+"AI 설정" 열기 → 기본이 "Claude API"인지, 아무것도 안 바꾸고 닫아도
+기존처럼 여행안 생성이 되는지 확인(회귀 없음) → 로컬 LLM 서버를
+터널로 공개한 뒤 "로컬 LLM" 선택 + 엔드포인트 입력 + 저장 → "여행안
+5개 만들기"를 눌러 로컬 서버가 실제로 호출되는지(로컬 서버 로그로
+확인) → 엔드포인트를 일부러 틀리게 넣고 실행해 에러 메시지가 명확히
+뜨는지(조용히 Claude로 안 넘어가는지) 확인.
+
+
+---
+
 ## ▶ 다음 세션 시작점 (2026-09-20 기준, 갱신)
 
-**+ §32-11·32-13~32-18 완료(커밋 전):** §32-11 — 검색 패널 링크
+**+ §32-11·32-13~32-19 완료(커밋 전):** §32-11 — 검색 패널 링크
 추출 결과가 탭 전환 시 사라지던 버그 수정 + 일괄 핀업 기능. `ja`·
 `zh-CN`·`zh-TW` `planner.json`의 `collect` 섹션 통째 누락 발견(번역
 채우기는 별도 작업, 아래 "남은 것"에 추가). §32-12에서 다국어 가이드
@@ -8050,16 +8123,20 @@ jsonb" 구조로 다시 짬(카드 1개 + 상세 페이지 언어 전환 버튼)
 §32-16에서 언어명 추측 대신 `[ko]`처럼 서비스 locale 코드를 헤더에
 직접 명시하는 대괄호 태그 방식 지원(있으면 최우선 신뢰) → §32-17에서
 `ko | 한국어`(대괄호 없이 줄 맨 앞 코드+구분자, 다음 줄이 제목) 형식도
-똑같이 결정적으로 인식하도록 보강 → **§32-18에서 `### ko | 한국어`처럼
+똑같이 결정적으로 인식하도록 보강 → §32-18에서 `### ko | 한국어`처럼
 헤딩 기호(`#`)가 코드 앞에 붙는 실사용 케이스에서 §32-17 로직이
 `^코드` 앵커에 막혀 못 잡고 언어명 추측으로 새서 제목을 잘못 뽑던 것
-수정**(헤딩 기호를 먼저 떼고 코드 매칭). 매칭 우선순위:
-`[코드]` 대괄호 → (헤딩 기호 제거 후) `코드 |` 줄 → 언어명 추측 →
-AI 보조. **새 엣지함수 `guide-multilang-split`는 아직 미배포** —
-규칙 기반 분리가 실패하는 형식을 넣으면 AI 보조 버튼이 에러 남,
-배포는 사용자 요청 시. **현재 에디터에선 발행 후 `translations`를
-다시 수정할 방법이 없음**(생성 시점에만 설정 가능) — 필요해지면
-후속 작업.
+수정(헤딩 기호를 먼저 떼고 코드 매칭) → **§32-19에서 가이드 카드
+「AI 자동 생성」에 Claude API/로컬 LLM 선택 설정 추가** — 기존 Claude
+연동은 그대로 유지하고 `admin_settings` 테이블 + 관리자 화면 "AI 설정"
+토글로 선택적으로 로컬 LLM(OpenAI 호환 엔드포인트)을 쓸 수 있게 함,
+기본값은 Claude라 아무 것도 안 하면 회귀 없음. **🔴 `course-guide-
+generate` 엣지함수는 코드만 바뀌고 아직 미배포** — 로컬 LLM 스위치를
+쓰려면 배포 필요(사용자 요청 시). **`guide-multilang-split`도 여전히
+미배포** — 규칙 기반 분리가 실패하는 형식을 넣으면 AI 보조 버튼이
+에러 남, 배포는 사용자 요청 시. **현재 에디터에선 발행 후
+`translations`를 다시 수정할 방법이 없음**(생성 시점에만 설정 가능)
+— 필요해지면 후속 작업.
 
 **직전 상태:** §31 아크(보안 권장사항 전부 + AI 일정 생성 7단계)는
 지난 세션에 완료. **이번 세션은 관리자 페이지 종합 개편(§32) —**

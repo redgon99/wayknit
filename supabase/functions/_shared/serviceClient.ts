@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
-/** 서비스 롤 클라이언트 (RLS 우회) — billing-* Edge Function 전용 */
+/** 서비스 롤 클라이언트 (RLS 우회) */
 export function getServiceClient(): SupabaseClient {
   const url = Deno.env.get('SUPABASE_URL');
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
