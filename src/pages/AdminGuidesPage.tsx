@@ -958,13 +958,17 @@ export default function AdminGuidesPage() {
           <section className="admin-section admin-guide-editor">
             <h2>다국어 가이드 붙여넣기</h2>
             <p className="admin-cell-sub" style={{ marginTop: 0 }}>
-              "🇰🇷 한국어 / 🇺🇸 English / 🇨🇳 简体中文 / 🇯🇵 日本語…"처럼 같은 내용을
-              여러 언어로 반복해 적은 글을 붙여넣으면 언어별로 나눠 카드
-              하나(언어 전환 버튼)에 담습니다 — 우리 서비스가 지원하는 9개
-              언어(한국어·English·日本語·简体中文·繁體中文·Español·
-              Français·Deutsch·Русский) 모두 가능합니다. 형식이 규칙적이면
-              바로 나누고(무료), 못 나누면 AI가 한 번 더 시도합니다. 자동으로
-              못 찾은 언어는 아래 "언어 추가"로 직접 넣으면 됩니다.
+              같은 내용을 여러 언어로 반복해 적은 글을 붙여넣으면 언어별로
+              나눠 카드 하나(언어 전환 버튼)에 담습니다 — 우리 서비스가
+              지원하는 9개 언어(한국어·English·日本語·简体中文·繁體中文·
+              Español·Français·Deutsch·Русский) 모두 가능합니다. 언어명
+              추측(오탐 가능)보다 훨씬 확실한 방법은, 원문 만들 때 각 언어
+              헤더에 <code>[ko]</code>처럼 코드를 직접 넣게 지시하는
+              것입니다 — 예: <code>## [ko] 대한민국 역사…</code>,{' '}
+              <code>## [en] A Simple History…</code>. 코드는 ko / en / ja /
+              zh-CN / zh-TW / es / fr / de / ru. 태그가 없으면 언어명으로
+              추측해서 나누고, 그마저 실패하면 AI가 한 번 더 시도합니다.
+              자동으로 못 찾은 언어는 아래 "언어 추가"로 직접 넣으면 됩니다.
             </p>
             <label className="admin-guide-field">
               종류 (모든 언어에 동일 적용)
@@ -985,15 +989,13 @@ export default function AdminGuidesPage() {
                   setMlRaw(e.currentTarget.value);
                   setMlSections([]);
                 }}
-                placeholder={`🇰🇷 한국어
-
-외국인이 알아두면 좋은 한국 여행 팁 10가지
+                placeholder={`## [ko] 외국인이 알아두면 좋은 한국 여행 팁 10가지
 
 입국 조건은 출발 전에 확인하세요…
 
-🇺🇸 English
+## [en] 10 Essential Korea Travel Tips
 
-10 Essential Korea Travel Tips…`}
+Check entry requirements before departure…`}
               />
             </label>
             <div className="admin-landing-actions">
