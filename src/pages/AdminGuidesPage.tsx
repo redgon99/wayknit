@@ -20,6 +20,11 @@ import {
 } from '../lib/guides';
 import { parseCourseGuideText, resolveCoursePins, type CourseGuideDraft } from '../lib/courseGuideMacro';
 import {
+  deriveGuideSummary,
+  parseMultiLangGuide,
+  type MultiLangGuideSection,
+} from '../lib/multiLangGuideMacro';
+import {
   buildCourseFromSelection,
   parseCourseOptions,
   proposeCourseOptions,
@@ -133,6 +138,15 @@ export default function AdminGuidesPage() {
   const [aiSelection, setAiSelection] = useState('');
   const [aiProposing, setAiProposing] = useState(false);
   const [aiBuilding, setAiBuilding] = useState(false);
+
+  /* 다국어 붙여넣기(2026-09-20) — 같은 내용을 여러 언어로 반복한 글을
+     언어별 가이드 카드로 나눠 만든다. */
+  const [mlOpen, setMlOpen] = useState(false);
+  const [mlRaw, setMlRaw] = useState('');
+  const [mlKind, setMlKind] = useState<GuideKind>('practical');
+  const [mlSections, setMlSections] = useState<MultiLangGuideSection[]>([]);
+  const [mlUsedAi, setMlUsedAi] = useState(false);
+  const [mlBusy, setMlBusy] = useState(false);
 
   const loadList = useCallback(async () => {
     setRefreshing(true);
@@ -449,6 +463,64 @@ export default function AdminGuidesPage() {
     }
   };
 
+  const handleMlParse = async () => {
+    if (!mlRaw.trim()) return;
+    setMlBusy(true);
+    setError(null);
+    try {
+      const { sections, usedAi } = await parseMultiLangGuide(mlRaw);
+      setMlSections(sections);
+      setMlUsedAi(usedAi);
+    } catch (e) {
+      setMlSections([]);
+      setError(formatUnknownError(e, '다국어 분리 실패'));
+    } finally {
+      setMlBusy(false);
+    }
+  };
+
+  const updateMlSection = (index: number, patch: Partial<MultiLangGuideSection>) => {
+    setMlSections((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
+  };
+
+  const removeMlSection = (index: number) => {
+    setMlSections((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  /** 언어 수만큼 createGuide를 반복 호출 — 하나가 실패해도 나머지는 만들어진
+   * 상태로 남는다(부분 실패 시 사용자가 뭐가 됐는지 알아야 하므로 굳이
+   * 트랜잭션처럼 전부 되돌리지 않음, 실패한 언어만 다시 시도하면 됨). */
+  const handleMlPublish = async () => {
+    if (mlSections.length === 0) return;
+    setMlBusy(true);
+    setError(null);
+    const failed: string[] = [];
+    for (const section of mlSections) {
+      try {
+        await createGuide({
+          title: section.title,
+          summary: deriveGuideSummary(section.bodyMd),
+          bodyMd: section.bodyMd,
+          kind: mlKind,
+          locale: section.locale,
+          status: 'published',
+        });
+      } catch (e) {
+        failed.push(`${section.locale}(${formatUnknownError(e, '실패')})`);
+      }
+    }
+    setMlBusy(false);
+    if (failed.length > 0) {
+      setError(`일부 언어 생성 실패: ${failed.join(', ')} — 나머지는 만들어졌습니다.`);
+      setMlSections((prev) => prev.filter((s) => failed.some((f) => f.startsWith(s.locale))));
+    } else {
+      setMlOpen(false);
+      setMlRaw('');
+      setMlSections([]);
+    }
+    await loadList();
+  };
+
   const handleMacroCreate = async (publishNow: boolean) => {
     setMacroBusy(true);
     setError(null);
@@ -586,6 +658,9 @@ export default function AdminGuidesPage() {
           </button>
           <button type="button" className="admin-create-btn" onClick={() => setMacroOpen((v) => !v)}>
             {macroOpen ? '코스 매크로 닫기' : '코스 붙여넣기 매크로'}
+          </button>
+          <button type="button" className="admin-create-btn" onClick={() => setMlOpen((v) => !v)}>
+            {mlOpen ? '다국어 붙여넣기 닫기' : '다국어 붙여넣기'}
           </button>
           <Link to="/guides" className="admin-link-btn">
             공개 가이드 보기
@@ -829,6 +904,107 @@ export default function AdminGuidesPage() {
                 </div>
               </div>
             </div>
+          </section>
+        )}
+
+        {mlOpen && (
+          <section className="admin-section admin-guide-editor">
+            <h2>다국어 가이드 붙여넣기</h2>
+            <p className="admin-cell-sub" style={{ marginTop: 0 }}>
+              "🇰🇷 한국어 / 🇺🇸 English / 🇨🇳 简体中文 / 🇯🇵 日本語…"처럼 같은 내용을
+              여러 언어로 반복해 적은 글을 붙여넣으면, 언어마다 가이드 카드를
+              따로 만듭니다. 형식이 규칙적이면 바로 나누고(무료), 못 나누면
+              AI가 한 번 더 시도합니다.
+            </p>
+            <label className="admin-guide-field">
+              종류 (모든 언어에 동일 적용)
+              <select value={mlKind} onChange={(e) => setMlKind(e.currentTarget.value as GuideKind)}>
+                {GUIDE_KINDS.map((k) => (
+                  <option key={k} value={k}>
+                    {GUIDE_KIND_META[k].labelKo}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="admin-guide-field">
+              원문
+              <textarea
+                rows={14}
+                value={mlRaw}
+                onChange={(e) => {
+                  setMlRaw(e.currentTarget.value);
+                  setMlSections([]);
+                }}
+                placeholder={`🇰🇷 한국어
+
+외국인이 알아두면 좋은 한국 여행 팁 10가지
+
+입국 조건은 출발 전에 확인하세요…
+
+🇺🇸 English
+
+10 Essential Korea Travel Tips…`}
+              />
+            </label>
+            <div className="admin-landing-actions">
+              <button
+                type="button"
+                className="admin-create-btn"
+                disabled={!mlRaw.trim() || mlBusy}
+                onClick={() => void handleMlParse()}
+              >
+                {mlBusy ? '나누는 중…' : '언어별로 나누기'}
+              </button>
+            </div>
+
+            {mlSections.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <p className="admin-cell-sub">
+                  {mlSections.length}개 언어로 나뉨
+                  {mlUsedAi ? ' · AI 보조 사용됨(비용 발생) — 아래서 꼭 확인 후 발행하세요' : ' · 규칙 기반(무료)'}
+                </p>
+                {mlSections.map((section, i) => (
+                  <div key={`${section.locale}-${i}`} className="admin-ml-section" style={{ marginTop: 12 }}>
+                    <div className="admin-ml-section-head">
+                      <span className="admin-pill">{section.locale}</span>
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => removeMlSection(i)}
+                        title="이 언어는 만들지 않음"
+                      >
+                        빼기
+                      </button>
+                    </div>
+                    <label className="admin-guide-field">
+                      제목
+                      <input
+                        value={section.title}
+                        onChange={(e) => updateMlSection(i, { title: e.currentTarget.value })}
+                      />
+                    </label>
+                    <label className="admin-guide-field">
+                      본문
+                      <textarea
+                        rows={8}
+                        value={section.bodyMd}
+                        onChange={(e) => updateMlSection(i, { bodyMd: e.currentTarget.value })}
+                      />
+                    </label>
+                  </div>
+                ))}
+                <div className="admin-landing-actions" style={{ marginTop: 8 }}>
+                  <button
+                    type="button"
+                    className="admin-create-btn"
+                    disabled={mlBusy || mlSections.length === 0}
+                    onClick={() => void handleMlPublish()}
+                  >
+                    {mlBusy ? '발행 중…' : `${mlSections.length}개 언어로 발행`}
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
         )}
 

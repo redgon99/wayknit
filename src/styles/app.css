@@ -11265,6 +11265,21 @@ a.guide-source-chip:hover {
   border: 1px solid var(--color-border);
 }
 
+/* 다국어 가이드 붙여넣기(2026-09-20) — 언어별 미리보기 카드 */
+.admin-ml-section {
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+}
+
+.admin-ml-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
 .admin-guide-macro-split {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
