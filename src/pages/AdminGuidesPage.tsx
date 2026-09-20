@@ -24,6 +24,7 @@ import {
   parseMultiLangGuide,
   type MultiLangGuideSection,
 } from '../lib/multiLangGuideMacro';
+import { SUPPORTED_LOCALES, LOCALE_LABELS, type AppLocale } from '../lib/locale';
 import {
   buildCourseFromSelection,
   parseCourseOptions,
@@ -499,6 +500,28 @@ export default function AdminGuidesPage() {
     });
   };
 
+  /** 자동 분리가 놓친 언어(또는 형식 없이 새로 쓸 언어)를 우리 서비스가
+   * 지원하는 9개 언어 중에서 직접 추가한다. */
+  const addMlSection = (locale: AppLocale) => {
+    setMlSections((prev) => {
+      if (prev.some((s) => s.locale === locale)) return prev;
+      return [...prev, { locale, title: '', bodyMd: '' }];
+    });
+    setMlPrimaryLocale((prev) => prev || locale);
+  };
+
+  const mlAvailableLocales = SUPPORTED_LOCALES.filter(
+    (loc) => !mlSections.some((s) => s.locale === loc)
+  );
+  // 화면엔 파싱/추가 순서와 무관하게 서비스 언어 순서(SUPPORTED_LOCALES)로 보여준다.
+  const orderedMlSections = mlSections
+    .map((section, index) => ({ section, index }))
+    .sort(
+      (a, b) =>
+        SUPPORTED_LOCALES.indexOf(a.section.locale as AppLocale) -
+        SUPPORTED_LOCALES.indexOf(b.section.locale as AppLocale)
+    );
+
   /**
    * 언어별로 행을 따로 만드는 게 아니라(처음엔 그렇게 만들었다가 사용자가
    * "우리 다국어 기능처럼 한 카드에 언어 전환"을 원한다고 정정함,
@@ -936,9 +959,12 @@ export default function AdminGuidesPage() {
             <h2>다국어 가이드 붙여넣기</h2>
             <p className="admin-cell-sub" style={{ marginTop: 0 }}>
               "🇰🇷 한국어 / 🇺🇸 English / 🇨🇳 简体中文 / 🇯🇵 日本語…"처럼 같은 내용을
-              여러 언어로 반복해 적은 글을 붙여넣으면, 언어마다 가이드 카드를
-              따로 만듭니다. 형식이 규칙적이면 바로 나누고(무료), 못 나누면
-              AI가 한 번 더 시도합니다.
+              여러 언어로 반복해 적은 글을 붙여넣으면 언어별로 나눠 카드
+              하나(언어 전환 버튼)에 담습니다 — 우리 서비스가 지원하는 9개
+              언어(한국어·English·日本語·简体中文·繁體中文·Español·
+              Français·Deutsch·Русский) 모두 가능합니다. 형식이 규칙적이면
+              바로 나누고(무료), 못 나누면 AI가 한 번 더 시도합니다. 자동으로
+              못 찾은 언어는 아래 "언어 추가"로 직접 넣으면 됩니다.
             </p>
             <label className="admin-guide-field">
               종류 (모든 언어에 동일 적용)
@@ -981,6 +1007,27 @@ export default function AdminGuidesPage() {
               </button>
             </div>
 
+            {mlAvailableLocales.length > 0 && (
+              <label className="admin-guide-field" style={{ marginTop: 12 }}>
+                언어 추가(자동으로 못 찾았거나 직접 쓸 언어 — 서비스 지원 9개 언어 순서)
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const loc = e.currentTarget.value as AppLocale;
+                    if (loc) addMlSection(loc);
+                    e.currentTarget.value = '';
+                  }}
+                >
+                  <option value="">+ 언어 선택</option>
+                  {mlAvailableLocales.map((loc) => (
+                    <option key={loc} value={loc}>
+                      {LOCALE_LABELS[loc]} ({loc})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
             {mlSections.length > 0 && (
               <div style={{ marginTop: 16 }}>
                 <p className="admin-cell-sub">
@@ -988,7 +1035,7 @@ export default function AdminGuidesPage() {
                   가이드로 나뉘지 않음)
                   {mlUsedAi ? ' · AI 보조 사용됨(비용 발생) — 아래서 꼭 확인 후 발행하세요' : ' · 규칙 기반(무료)'}
                 </p>
-                {mlSections.map((section, i) => (
+                {orderedMlSections.map(({ section, index: i }) => (
                   <div key={`${section.locale}-${i}`} className="admin-ml-section" style={{ marginTop: 12 }}>
                     <div className="admin-ml-section-head">
                       <label className="admin-ml-primary-radio">
@@ -998,7 +1045,9 @@ export default function AdminGuidesPage() {
                           checked={mlPrimaryLocale === section.locale}
                           onChange={() => setMlPrimaryLocale(section.locale)}
                         />
-                        <span className="admin-pill">{section.locale}</span>
+                        <span className="admin-pill">
+                          {LOCALE_LABELS[section.locale as AppLocale] ?? section.locale} ({section.locale})
+                        </span>
                         {mlPrimaryLocale === section.locale && (
                           <span className="admin-cell-sub">대표 언어(슬러그·기본 표시)</span>
                         )}
