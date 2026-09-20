@@ -30,8 +30,13 @@ const LOCALE_NAME_PATTERNS: Array<{ locale: AppLocale; pattern: RegExp }> = [
   { locale: 'ru', pattern: /русский/i },
 ];
 
-/** 헤더로 볼 만한 짧은 줄(국기 이모지 유무는 안 따짐 — 언어명만 매칭) */
+/** 마크다운 헤딩(#)이 아닌 "언어명만 덜렁 있는 줄"을 헤더로 볼 때만 적용하는
+ * 길이 제한. `## 🇪🇸 Español | Historia...`처럼 `#`으로 시작하는 줄은
+ * 제목이 같이 붙어 길어도 명확한 헤더 신호라 길이를 안 따진다. */
 const MAX_HEADER_LINE_LENGTH = 40;
+const HEADING_LINE_PATTERN = /^#{1,6}\s+/;
+/** 언어 구간을 나누는 장식용 구분선(`---`/`***`/`___`)은 본문이 아니다 */
+const DIVIDER_LINE_PATTERN = /^(-{3,}|\*{3,}|_{3,})$/;
 
 function stripHeadingMarkup(line: string): string {
   return line
@@ -41,6 +46,15 @@ function stripHeadingMarkup(line: string): string {
     .trim();
 }
 
+/** `## 🇰🇷 한국어 | 대한민국 역사, ...`처럼 헤딩 줄에 구분자(|／｜)로 제목이
+ * 함께 적혀 있으면 그 부분을 바로 제목으로 쓴다(없으면 null — 다음 줄이
+ * 제목인 옛 형식으로 처리). */
+function extractInlineTitle(headingLine: string): string | null {
+  const match = headingLine.match(/[|｜]\s*(.+)$/);
+  const title = match?.[1]?.trim();
+  return title ? title : null;
+}
+
 /**
  * 규칙 기반 분리. 최소 2개 언어 헤더를 찾아야 성공으로 본다(1개뿐이면
  * "여러 언어를 붙여넣은 것"이라 보기 어려움 — 그냥 일반 텍스트일 수 있음).
@@ -48,16 +62,18 @@ function stripHeadingMarkup(line: string): string {
  */
 export function parseMultiLangGuideHeuristic(raw: string): MultiLangGuideSection[] | null {
   const lines = raw.replace(/\r\n/g, '\n').split('\n');
-  const markers: Array<{ lineIndex: number; locale: AppLocale }> = [];
+  const markers: Array<{ lineIndex: number; locale: AppLocale; inlineTitle: string | null }> = [];
   const seenLocales = new Set<AppLocale>();
 
   lines.forEach((line, i) => {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.length > MAX_HEADER_LINE_LENGTH) return;
+    if (!trimmed) return;
+    const isHeading = HEADING_LINE_PATTERN.test(trimmed);
+    if (!isHeading && trimmed.length > MAX_HEADER_LINE_LENGTH) return;
     for (const { locale, pattern } of LOCALE_NAME_PATTERNS) {
       if (seenLocales.has(locale)) continue;
       if (pattern.test(trimmed)) {
-        markers.push({ lineIndex: i, locale });
+        markers.push({ lineIndex: i, locale, inlineTitle: isHeading ? extractInlineTitle(trimmed) : null });
         seenLocales.add(locale);
         break;
       }
@@ -68,18 +84,29 @@ export function parseMultiLangGuideHeuristic(raw: string): MultiLangGuideSection
 
   const sections: MultiLangGuideSection[] = [];
   for (let i = 0; i < markers.length; i++) {
-    const start = markers[i].lineIndex + 1;
+    const marker = markers[i];
+    const start = marker.lineIndex + 1;
     const end = i + 1 < markers.length ? markers[i + 1].lineIndex : lines.length;
     const bodyLines = lines
       .slice(start, end)
       .map((l) => l.trim())
-      .filter(Boolean);
-    if (bodyLines.length < 2) continue; // 제목 하나만 있고 본문이 없으면 못 쓴다
+      .filter((l) => l && !DIVIDER_LINE_PATTERN.test(l));
 
-    const title = stripHeadingMarkup(bodyLines[0]);
-    const bodyMd = bodyLines.slice(1).join('\n\n').trim();
+    let title: string;
+    let bodyMd: string;
+    if (marker.inlineTitle) {
+      // 헤딩 줄에 제목이 이미 있었으니 이어지는 줄은 전부 본문
+      if (bodyLines.length < 1) continue;
+      title = marker.inlineTitle;
+      bodyMd = bodyLines.join('\n\n').trim();
+    } else {
+      // 옛 형식: 언어명 줄 다음 줄이 제목, 그다음부터가 본문
+      if (bodyLines.length < 2) continue;
+      title = stripHeadingMarkup(bodyLines[0]);
+      bodyMd = bodyLines.slice(1).join('\n\n').trim();
+    }
     if (!title || !bodyMd) continue;
-    sections.push({ locale: markers[i].locale, title, bodyMd });
+    sections.push({ locale: marker.locale, title, bodyMd });
   }
 
   return sections.length >= 2 ? sections : null;
