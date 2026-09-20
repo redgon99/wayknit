@@ -137,8 +137,12 @@ export function parseMultiLangGuideHeuristic(raw: string): MultiLangGuideSection
 
     // `ko | 한국어`처럼 코드 + 구분자로 시작하는 줄도 마찬가지로 결정적으로
     // 신뢰한다. "|" 뒤는 언어 자기이름일 뿐 제목이 아니므로(제목은 다음
-    // 줄) inlineTitle 없이 옛 형식 경로로 넘긴다.
-    const leadingCode = extractLeadingLocaleCode(trimmed);
+    // 줄) inlineTitle 없이 옛 형식 경로로 넘긴다. `### ko | 한국어`처럼
+    // 마크다운 헤딩(#) 뒤에 코드가 오는 경우도 있어 헤딩 기호를 먼저
+    // 떼어내고 검사한다 — 안 그러면 "^코드" 앵커가 "#"에 막혀 못 잡고,
+    // 아래 언어명 추측 경로로 새서 "|" 뒤 언어명을 엉뚱하게 제목으로
+    // 오인하게 된다(2026-09-20 실사용에서 재현됨).
+    const leadingCode = extractLeadingLocaleCode(trimmed.replace(/^#{1,6}\s*/, ''));
     if (leadingCode) {
       if (seenLocales.has(leadingCode)) return;
       markers.push({ lineIndex: i, locale: leadingCode, inlineTitle: null });
