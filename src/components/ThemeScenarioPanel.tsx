@@ -80,6 +80,8 @@ export function ThemeScenarioPanel({
   const [aiPlan, setAiPlan] = useState<GeneratedTripPlan | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiAppliedCount, setAiAppliedCount] = useState<number | null>(null);
+  /** §31-22 Step 7 — candidates 0건일 때만 "검색 탭으로 이동" 다음 행동을 보여주기 위한 플래그 */
+  const [aiNoCandidates, setAiNoCandidates] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -127,6 +129,7 @@ export function ThemeScenarioPanel({
     setAiError(null);
     setAiPlan(null);
     setAiAppliedCount(null);
+    setAiNoCandidates(false);
     try {
       // §31-22 Step 6 — Claude+TourAPI 호출 전에 하루 캡을 먼저 확인한다(빠른 피드백용).
       // 🔴(§31-27) 실제 방어선은 이제 서버(trip-intent-parse 안의 requireTripPlanQuota)다 —
@@ -145,6 +148,7 @@ export function ThemeScenarioPanel({
       const { candidates } = await searchTripCandidates(intent);
       if (candidates.length === 0) {
         setAiError(t('scenario.ai.noCandidates'));
+        setAiNoCandidates(true);
         setAiStage('idle');
         return;
       }
@@ -187,6 +191,7 @@ export function ThemeScenarioPanel({
     setAiError(null);
     setAiAppliedCount(null);
     setAiStage('idle');
+    setAiNoCandidates(false);
   };
 
   const aiPlanByDay = aiPlan
@@ -453,6 +458,16 @@ export function ThemeScenarioPanel({
                 disabled={aiStage !== 'idle'}
               />
               {aiError && <p className="theme-scenario-error">{aiError}</p>}
+              {aiNoCandidates && onGoToSearch && (
+                <button
+                  type="button"
+                  className="theme-scenario-empty-search-btn"
+                  onClick={onGoToSearch}
+                >
+                  <Icon name="search" size={15} />
+                  {t('scenario.goToSearch')}
+                </button>
+              )}
               <button
                 type="button"
                 className="theme-scenario-apply-btn"
