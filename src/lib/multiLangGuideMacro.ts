@@ -71,6 +71,20 @@ function extractLocaleCodeTag(line: string): { locale: AppLocale; rest: string }
   return { locale, rest };
 }
 
+/** `ko | 한국어`처럼 줄 맨 앞에 코드 + "|" 구분자만 있고, "|" 뒤는 그
+ * 언어의 자기이름(제목이 아님)인 형식 — 실제 제목은 다음 줄에 온다.
+ * 대괄호 없이도 코드를 결정적으로 잡아내되(언어명 추측에 안 기댐),
+ * 본문 중간의 우연한 매치를 막기 위해 반드시 줄 맨 앞 + "|" 구분자가
+ * 있을 때만 인정한다("es | Español"처럼 흔한 짧은 단어 "es"가 스페인어
+ * 본문 문장 앞부분에 우연히 오는 경우까지 헤더로 오인하지 않도록). */
+const LEADING_LOCALE_CODE_PATTERN = /^(ko|en|ja|zh-cn|zh-tw|es|fr|de|ru)\s*[|｜]/i;
+
+function extractLeadingLocaleCode(line: string): AppLocale | null {
+  const match = line.match(LEADING_LOCALE_CODE_PATTERN);
+  if (!match) return null;
+  return LOCALE_CODE_CANON[match[1].toLowerCase()] ?? null;
+}
+
 /** 마크다운 헤딩(#)이 아닌 "언어명만 덜렁 있는 줄"을 헤더로 볼 때만 적용하는
  * 길이 제한. `## 🇪🇸 Español | Historia...`처럼 `#`으로 시작하는 줄은
  * 제목이 같이 붙어 길어도 명확한 헤더 신호라 길이를 안 따진다. */
@@ -118,6 +132,17 @@ export function parseMultiLangGuideHeuristic(raw: string): MultiLangGuideSection
       if (seenLocales.has(tagMatch.locale)) return;
       markers.push({ lineIndex: i, locale: tagMatch.locale, inlineTitle: tagMatch.rest || null });
       seenLocales.add(tagMatch.locale);
+      return;
+    }
+
+    // `ko | 한국어`처럼 코드 + 구분자로 시작하는 줄도 마찬가지로 결정적으로
+    // 신뢰한다. "|" 뒤는 언어 자기이름일 뿐 제목이 아니므로(제목은 다음
+    // 줄) inlineTitle 없이 옛 형식 경로로 넘긴다.
+    const leadingCode = extractLeadingLocaleCode(trimmed);
+    if (leadingCode) {
+      if (seenLocales.has(leadingCode)) return;
+      markers.push({ lineIndex: i, locale: leadingCode, inlineTitle: null });
+      seenLocales.add(leadingCode);
       return;
     }
 
