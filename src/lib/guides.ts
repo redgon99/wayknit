@@ -123,11 +123,51 @@ function mapRow(row: Record<string, unknown>): GuideArticle {
     sourceUrls: (row.source_urls as string[] | null) ?? [],
     coursePins: mapCoursePins(row.course_pins),
     locale: (row.locale as string) ?? 'ko',
+    translations: (row.translations as GuideArticle['translations'] | null) ?? {},
     createdBy: (row.created_by as string | null) ?? null,
     publishedAt: (row.published_at as string | null) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
+}
+
+/** 다국어 통합(2026-09-20) — 조회한 로케일로 뽑은 표시용 콘텐츠 */
+export interface ResolvedGuideContent {
+  /** 실제로 채택된 로케일(요청한 것과 다를 수 있음 — 폴백된 경우) */
+  locale: string;
+  title: string;
+  summary: string;
+  bodyMd: string;
+}
+
+/** 이 가이드가 실제로 갖고 있는 언어 목록(대표 언어 + translations 키) */
+export function guideAvailableLocales(guide: GuideArticle): string[] {
+  const seen = new Set<string>([guide.locale]);
+  for (const loc of Object.keys(guide.translations)) seen.add(loc);
+  return [...seen];
+}
+
+/**
+ * scenarioCatalog.ts의 pickLocaleContent()와 같은 규칙 — 요청 로케일이
+ * 없으면 중국어 번체/간체는 서로 폴백, 그 외엔 대표 언어로 돌아간다.
+ */
+export function pickGuideContent(guide: GuideArticle, locale: string): ResolvedGuideContent {
+  if (locale === guide.locale) {
+    return { locale: guide.locale, title: guide.title, summary: guide.summary, bodyMd: guide.bodyMd };
+  }
+  const exact = guide.translations[locale];
+  if (exact) return { locale, ...exact };
+
+  if (locale === 'zh-CN') {
+    const alt = guide.translations['zh-TW'];
+    if (alt) return { locale: 'zh-TW', ...alt };
+  }
+  if (locale === 'zh-TW') {
+    const alt = guide.translations['zh-CN'];
+    if (alt) return { locale: 'zh-CN', ...alt };
+  }
+
+  return { locale: guide.locale, title: guide.title, summary: guide.summary, bodyMd: guide.bodyMd };
 }
 
 export function slugifyGuideTitle(title: string): string {
@@ -221,6 +261,7 @@ export function buildGuideRow(
   if (patch.sourceAnalysisIds !== undefined) row.source_analysis_ids = patch.sourceAnalysisIds;
   if (patch.coursePins !== undefined) row.course_pins = patch.coursePins;
   if (patch.locale !== undefined) row.locale = patch.locale;
+  if (patch.translations !== undefined) row.translations = patch.translations;
   if (patch.slug !== undefined) row.slug = patch.slug;
   if (patch.status !== undefined) row.status = patch.status;
   if (patch.publishedAt !== undefined) row.published_at = patch.publishedAt;

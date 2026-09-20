@@ -7709,23 +7709,117 @@ index.ts`(신규), `config.toml`, `AdminGuidesPage.tsx`, `app.css`.
 버튼을 눌러도 배포 전엔 에러가 난다 — 배포는 사용자가 요청할 때 진행
 (§9-5-1 관례, 엣지함수는 Netlify 배포와 별개 대상).
 
-**확인 방법:** `/admin/guides` → "다국어 붙여넣기" → 종류 선택 → 사용자가
+**확인 방법:** ~~`/admin/guides` → "다국어 붙여넣기" → 종류 선택 → 사용자가
 준 예시 원문 붙여넣기 → "언어별로 나누기" → 4개 언어 카드(ko/en/zh-CN/ja)
 로 잘 나뉘는지, 마지막 카드(일본어) 끝에 안 어울리는 문장이 붙어있으면
-지우고 → "4개 언어로 발행" → `/guides`에 4개 언어로 각각 뜨는지.
+지우고 → "4개 언어로 발행" → `/guides`에 4개 언어로 각각 뜨는지.~~
+
+**🔴 위 데이터 모델(언어당 별도 행 4개 발행)은 사용자 의도와 다름 —
+아래 §32-13에서 "1행 + translations" 구조로 수정됨. 파싱 로직
+(`multiLangGuideMacro.ts`)과 엣지함수는 그대로 재사용, 발행 방식만
+바뀜. 확인 방법은 §32-13 참고.**
+
+---
+
+### 32-13. 🔧 §32-12 데이터 모델 수정 — "언어당 4행" → "1행 + translations" (2026-09-20)
+
+§32-12를 다 만들고 보고했더니 사용자가 정정: **"내가 원하는것은 우리
+다국어 기능에 적용하는 것이었어 언어별로 하나씩 컨텐츠가 생성되는게
+아니라"**. 즉 카드 4개가 아니라, **사이트의 언어 전환(LocaleSwitcher)과
+같은 개념을 가이드 콘텐츠에도 적용**하길 원한 것 — 방문자 언어에 맞는
+버전이 자동으로 보이길 기대한 것이었다.
+
+확인차 두 가지를 물었으나 둘 다 아니라 하고, 정확한 요구사항을 직접
+제시함: **"하나의 카드에 언어 전환 버튼(같은 페이지에서 언어만 바뀌)"**
+— `/guides` 목록엔 카드 1개만, 상세 페이지 안에 언어 전환 버튼을 두고
+누르면 같은 URL에서 본문만 바뀌는 방식.
+
+**기존 선례 발견:** `scenario_catalog` 테이블이 정확히 이 패턴을 이미
+쓰고 있었다 — `content jsonb`에 `{"ko": {...}, "en": {...}, "zh-CN": {...}}`
+식으로 언어별 콘텐츠를 한 행에 몰아넣고, `lib/scenarioCatalog.ts`의
+`pickLocaleContent()`가 방문자 로케일 → zh-CN/zh-TW 교차 fallback →
+en → ko → 첫 항목 순으로 골라준다. `guide_articles`에도 같은 패턴을
+그대로 이식하기로 함(기존 컬럼 구조는 안 건드리고 addable하게).
+
+**변경 내용:**
+- **`supabase/migrations/20260920140000_guide_translations.sql`(신규,
+  이미 프로덕션 DB에 적용됨)** — `guide_articles`에 `translations jsonb
+  not null default '{}'`컬럼 추가. 기존 `title`/`summary`/`body_md`/
+  `locale`는 그대로 "대표(기본) 언어" 역할, `translations`는 추가
+  언어 버전만 `{ locale: { title, summary, bodyMd } }`로 보관.
+- **`src/types/guides.ts`** — `GuideTranslation` 타입 신설,
+  `GuideArticle.translations`/`GuideArticleInput.translations` 추가.
+- **`src/lib/guides.ts`** — `mapRow()`/`buildGuideRow()`가
+  `translations` 컬럼을 읽고 쓰도록 확장. `scenarioCatalog.ts`의
+  `pickLocaleContent()`를 그대로 본떠 새 함수 2개 추가:
+  `guideAvailableLocales(guide)`(대표 언어 + translations 키를 합친
+  로케일 목록), `pickGuideContent(guide, locale)`(정확히 일치 →
+  zh-CN/zh-TW 교차 fallback → 대표 언어로 최종 fallback).
+- **`src/pages/GuidesPage.tsx`** — 목록 카드가 `pickGuideContent(g,
+  방문자locale)`로 제목/요약을 고름 → 방문자 언어 버전이 있으면 카드도
+  그 언어로 보임(사이트 언어 전환에 자연히 반응).
+- **`src/pages/GuideDetailPage.tsx`** — `viewLocale` 상태 추가(글
+  바뀌면 리셋). `availableLocales.length > 1`일 때만 언어 전환 버튼
+  줄이 보이고, 누르면 `viewLocale`만 바뀌어 같은 페이지에서 본문·제목만
+  교체(URL 이동 없음). 레거시 `summaryEn` 필드는 `translations.en`이
+  없을 때만 fallback으로 사용해 하위 호환 유지.
+- **`src/pages/AdminGuidesPage.tsx`** — §32-12의 "N개 언어로 발행"을
+  걷어내고, 언어별 미리보기 카드마다 라디오 버튼으로 **"대표 언어"**를
+  고르게 함. 발행 시 대표 언어는 `title`/`summary`/`body_md`/`locale`로,
+  나머지 언어는 전부 `translations`에 담아 **`createGuide()` 한 번만**
+  호출 → 결과는 카드 1개.
+- **`src/styles/app.css`** — `.guide-lang-switch`(전환 버튼 줄),
+  `.admin-ml-primary-radio`(대표 언어 라디오) 스타일 추가.
+
+**초안/게시(admin_content_drafts) 시스템과의 안전성 확인:**
+`admin_publish_draft()`(§31-5, `20260916110000_admin_content_drafts.sql`)의
+`guide_articles` 분기는 `UPDATE ... SET %s`의 `%s`를
+**`v_draft`(초안 JSON)에 실제로 존재하는 키만으로** 동적 생성한다.
+관리자가 평소 에디터로 글을 고쳐 초안 저장할 때 쓰는
+`editableGuidePatch()`(`AdminGuidesPage.tsx`)는 `translations` 키를
+아예 안 담기 때문에, 초안 JSON에도 `translations` 키가 없고 →
+`SET` 절에도 포함되지 않는다 → **기존 `translations` 값은 평소
+글 수정/발행 흐름에서 전혀 건드려지지 않고 그대로 보존된다** (같은
+함수의 `landing_promo` 분기가 `jsonb_populate_record`로 누락 컬럼을
+NULL로 채우는 것과 달리, 이쪽은 안전). 단, 이 말은 **현재
+`translations`는 다국어 붙여넣기(생성 시점)로만 채울 수 있고, 평소
+에디터에서 발행 후 다시 열어 수정할 방법은 아직 없다** — 필요해지면
+후속 작업으로.
+
+**변경 파일:** `20260920140000_guide_translations.sql`(신규, DB 적용
+완료), `types/guides.ts`, `lib/guides.ts`, `GuidesPage.tsx`,
+`GuideDetailPage.tsx`, `AdminGuidesPage.tsx`, `app.css`.
+`tsc -b`·`npm run build` 클린.
+
+**확인 방법:** `/admin/guides` → "다국어 붙여넣기" → 종류 선택 → 예시
+원문 붙여넣기 → "언어별로 나누기" → 언어 카드들이 보이면 그 중 하나를
+**대표 언어**로 라디오 선택(기본은 한국어) → "1개 카드로 발행" →
+`/guides`에 카드가 **1개만** 뜨는지 → 그 카드를 열어 상세 페이지에서
+언어 전환 버튼(en/ja/zh-CN 등)을 눌러 URL은 그대로인데 제목·본문만
+바뀌는지 → 사이트 언어(우측 상단 LocaleSwitcher)를 바꿔서 다시
+`/guides` 목록에 들어가면 카드 제목도 그 언어로 자동으로 보이는지.
+
+**🔴 아직 미배포:** 새 엣지함수 `guide-multilang-split`(AI 보조 분리
+경로)는 로컬에만 있음 — §32-12와 동일 상태, 규칙 기반 분리가 성공하는
+형식이면 당장 안 써도 됨. 배포는 사용자 요청 시.
 
 
 ---
 
 ## ▶ 다음 세션 시작점 (2026-09-20 기준, 갱신)
 
-**+ §32-11·32-12 완료(커밋 전):** §32-11 — 검색 패널 링크 추출
+**+ §32-11·32-13 완료(커밋 전):** §32-11 — 검색 패널 링크 추출
 결과가 탭 전환 시 사라지던 버그 수정 + 일괄 핀업 기능. `ja`·`zh-CN`·
 `zh-TW` `planner.json`의 `collect` 섹션 통째 누락 발견(번역 채우기는
-별도 작업, 아래 "남은 것"에 추가). §32-12 — 다국어 가이드 붙여넣기
-신설(규칙 기반 우선 + 실패 시 AI 보조). **새 엣지함수
+별도 작업, 아래 "남은 것"에 추가). §32-12에서 다국어 가이드 붙여넣기를
+"언어당 4행 발행"으로 처음 만들었다가, 사용자가 "다국어 기능에 적용한
+것 — 언어별로 컨텐츠가 따로 생성되는 게 아니라"고 정정 → §32-13에서
+`scenario_catalog`와 같은 "1행 + translations jsonb" 구조로 다시 짬
+(카드 1개 + 상세 페이지 언어 전환 버튼). **새 엣지함수
 `guide-multilang-split`는 아직 미배포** — 규칙 기반 분리가 실패하는
 형식을 넣으면 AI 보조 버튼이 에러 남, 배포는 사용자 요청 시.
+**현재 에디터에선 발행 후 `translations`를 다시 수정할 방법이 없음**
+(생성 시점에만 설정 가능) — 필요해지면 후속 작업.
 
 **직전 상태:** §31 아크(보안 권장사항 전부 + AI 일정 생성 7단계)는
 지난 세션에 완료. **이번 세션은 관리자 페이지 종합 개편(§32) —**

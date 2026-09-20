@@ -15,7 +15,7 @@ import {
 } from '../lib/courseGuideTaxonomy';
 import { normalizeLocale, pathWithLocale } from '../lib/locale';
 import i18n from '../lib/i18n';
-import { isGuidesConfigured, listPublishedGuides } from '../lib/guides';
+import { isGuidesConfigured, listPublishedGuides, pickGuideContent } from '../lib/guides';
 import type { GuideArticle } from '../types/guides';
 import '../styles/app.css';
 
@@ -124,24 +124,30 @@ export default function GuidesPage() {
           <p className="guides-muted">{t('list.empty')}</p>
         )}
         <div className="guides-grid">
-          {visibleGuides.map((g) => (
-            <Link
-              key={g.id}
-              to={pathWithLocale(`/guides/${g.slug}`, locale)}
-              className="guides-card"
-            >
-              <div className="guides-card-tags">
-                <span className="guides-tag guides-tag-kind">{t(`kinds.${g.kind}`)}</span>
-                {displayCourseTags(g.topicTags, locale, 3).map((tag) => (
-                  <span key={tag} className="guides-tag">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <h2>{g.title}</h2>
-              <p>{g.summary}</p>
-            </Link>
-          ))}
+          {visibleGuides.map((g) => {
+            /* 다국어 통합(2026-09-20) — 이 가이드에 방문자 언어 버전이
+               있으면 카드도 그 언어로 보여준다(scenario_catalog와 같은
+               방식). 없으면 대표 언어 그대로. */
+            const content = pickGuideContent(g, locale);
+            return (
+              <Link
+                key={g.id}
+                to={pathWithLocale(`/guides/${g.slug}`, locale)}
+                className="guides-card"
+              >
+                <div className="guides-card-tags">
+                  <span className="guides-tag guides-tag-kind">{t(`kinds.${g.kind}`)}</span>
+                  {displayCourseTags(g.topicTags, locale, 3).map((tag) => (
+                    <span key={tag} className="guides-tag">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <h2>{content.title}</h2>
+                <p>{content.summary}</p>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </main>

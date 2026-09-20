@@ -7,10 +7,15 @@ import { ReportButton } from '../components/ReportButton';
 import { useSeoMeta } from '../hooks/useSeoMeta';
 import { GUIDE_KIND_META } from '../lib/guideKinds';
 import { displayCourseTags } from '../lib/courseGuideTaxonomy';
-import { normalizeLocale, pathWithLocale } from '../lib/locale';
+import { LOCALE_LABELS, normalizeLocale, pathWithLocale, type AppLocale } from '../lib/locale';
 import { plannerPath } from '../lib/routes';
 import i18n from '../lib/i18n';
-import { getPublishedGuideBySlug, isGuidesConfigured } from '../lib/guides';
+import {
+  getPublishedGuideBySlug,
+  guideAvailableLocales,
+  isGuidesConfigured,
+  pickGuideContent,
+} from '../lib/guides';
 import { renderGuideMarkdown } from '../lib/guideMarkdown';
 import { collectGuideSources } from '../lib/guideSources';
 import { GuideCourseMap } from '../components/GuideCourseMap';
@@ -24,6 +29,16 @@ export default function GuideDetailPage() {
   const [guide, setGuide] = useState<GuideArticle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * 다국어 통합(2026-09-20) — 사이트 전체 언어(LocaleSwitcher)와는 별개로,
+   * 이 가이드 콘텐츠만 다른 언어로 볼 수 있는 전환 버튼. null이면 사이트
+   * 언어를 그대로 따른다(guide.slug가 바뀌면(다른 글로 이동) 다시 null로
+   * 리셋 — 이전 글에서 고른 언어가 새 글에 남아 있지 않게).
+   */
+  const [viewLocale, setViewLocale] = useState<string | null>(null);
+  useEffect(() => {
+    setViewLocale(null);
+  }, [slug]);
 
   useEffect(() => {
     if (!isGuidesConfigured()) {
@@ -55,14 +70,20 @@ export default function GuideDetailPage() {
     };
   }, [slug, t]);
 
+  const availableLocales = guide ? guideAvailableLocales(guide) : [];
+  const content = guide ? pickGuideContent(guide, viewLocale ?? locale) : null;
+  /* summaryEn은 translations가 생기기 전부터 있던 필드 — 제대로 된
+     translations.en이 있으면 그쪽이 우선, 없을 때만 이 레거시 값을 쓴다. */
   const summaryText =
-    locale === 'en' && guide?.summaryEn ? guide.summaryEn : guide?.summary;
-  const sources = guide ? collectGuideSources(guide.bodyMd, guide.sourceUrls) : [];
+    content?.locale === 'en' && !guide?.translations.en && guide?.summaryEn
+      ? guide.summaryEn
+      : content?.summary;
+  const sources = content ? collectGuideSources(content.bodyMd, guide?.sourceUrls ?? []) : [];
 
   useSeoMeta(
-    guide
+    guide && content
       ? {
-          title: `${guide.title} · ${t('brand')}`,
+          title: `${content.title} · ${t('brand')}`,
           description: summaryText || undefined,
           type: 'article',
           path: `/guides/${slug}`,
@@ -122,12 +143,26 @@ export default function GuideDetailPage() {
                 </span>
               ))}
             </div>
-            <h1>{guide.title}</h1>
+            {availableLocales.length > 1 && (
+              <div className="guide-lang-switch" role="group" aria-label="가이드 언어 전환">
+                {availableLocales.map((loc) => (
+                  <button
+                    key={loc}
+                    type="button"
+                    className={`guide-lang-switch-btn ${content?.locale === loc ? 'active' : ''}`}
+                    onClick={() => setViewLocale(loc)}
+                  >
+                    {LOCALE_LABELS[loc as AppLocale] ?? loc}
+                  </button>
+                ))}
+              </div>
+            )}
+            <h1>{content?.title}</h1>
             {summaryText && <p className="guides-detail-summary">{summaryText}</p>}
             {guide.kind === 'course' && guide.coursePins.length > 0 && (
               <GuideCourseMap pins={guide.coursePins} />
             )}
-            <div className="guides-body">{renderGuideMarkdown(guide.bodyMd)}</div>
+            <div className="guides-body">{content && renderGuideMarkdown(content.bodyMd)}</div>
             <p className="guides-disclaimer">{t('detail.disclaimer')}</p>
             {sources.length > 0 && (
               <section className="guides-sources">

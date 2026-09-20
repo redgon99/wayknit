@@ -146,6 +146,9 @@ export default function AdminGuidesPage() {
   const [mlKind, setMlKind] = useState<GuideKind>('practical');
   const [mlSections, setMlSections] = useState<MultiLangGuideSection[]>([]);
   const [mlUsedAi, setMlUsedAi] = useState(false);
+  /** 여러 언어 중 이 가이드의 "대표"(guide_articles.title/summary/body_md/
+   * locale에 들어갈 것) — 나머지는 translations jsonb로 들어간다. */
+  const [mlPrimaryLocale, setMlPrimaryLocale] = useState('');
   const [mlBusy, setMlBusy] = useState(false);
 
   const loadList = useCallback(async () => {
@@ -471,6 +474,8 @@ export default function AdminGuidesPage() {
       const { sections, usedAi } = await parseMultiLangGuide(mlRaw);
       setMlSections(sections);
       setMlUsedAi(usedAi);
+      // 대표 언어 기본값 — 한국어가 있으면 그걸, 없으면 첫 번째 섹션
+      setMlPrimaryLocale(sections.find((s) => s.locale === 'ko')?.locale ?? sections[0]?.locale ?? '');
     } catch (e) {
       setMlSections([]);
       setError(formatUnknownError(e, '다국어 분리 실패'));
@@ -484,39 +489,58 @@ export default function AdminGuidesPage() {
   };
 
   const removeMlSection = (index: number) => {
-    setMlSections((prev) => prev.filter((_, i) => i !== index));
+    setMlSections((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      // 대표로 골라둔 언어가 빠지면 남은 것 중 첫 번째로 다시 지정
+      if (prev[index]?.locale === mlPrimaryLocale) {
+        setMlPrimaryLocale(next[0]?.locale ?? '');
+      }
+      return next;
+    });
   };
 
-  /** 언어 수만큼 createGuide를 반복 호출 — 하나가 실패해도 나머지는 만들어진
-   * 상태로 남는다(부분 실패 시 사용자가 뭐가 됐는지 알아야 하므로 굳이
-   * 트랜잭션처럼 전부 되돌리지 않음, 실패한 언어만 다시 시도하면 됨). */
+  /**
+   * 언어별로 행을 따로 만드는 게 아니라(처음엔 그렇게 만들었다가 사용자가
+   * "우리 다국어 기능처럼 한 카드에 언어 전환"을 원한다고 정정함,
+   * 2026-09-20), scenario_catalog와 같은 방식으로 **행 하나**에 대표
+   * 언어(title/summary/bodyMd/locale)와 나머지 언어(translations jsonb)를
+   * 같이 담는다.
+   */
   const handleMlPublish = async () => {
-    if (mlSections.length === 0) return;
+    const primary = mlSections.find((s) => s.locale === mlPrimaryLocale);
+    if (!primary) {
+      setError('대표 언어를 먼저 골라주세요.');
+      return;
+    }
     setMlBusy(true);
     setError(null);
-    const failed: string[] = [];
-    for (const section of mlSections) {
-      try {
-        await createGuide({
+    try {
+      const translations: NonNullable<Parameters<typeof createGuide>[0]['translations']> = {};
+      for (const section of mlSections) {
+        if (section.locale === primary.locale) continue;
+        translations[section.locale] = {
           title: section.title,
           summary: deriveGuideSummary(section.bodyMd),
           bodyMd: section.bodyMd,
-          kind: mlKind,
-          locale: section.locale,
-          status: 'published',
-        });
-      } catch (e) {
-        failed.push(`${section.locale}(${formatUnknownError(e, '실패')})`);
+        };
       }
-    }
-    setMlBusy(false);
-    if (failed.length > 0) {
-      setError(`일부 언어 생성 실패: ${failed.join(', ')} — 나머지는 만들어졌습니다.`);
-      setMlSections((prev) => prev.filter((s) => failed.some((f) => f.startsWith(s.locale))));
-    } else {
+      await createGuide({
+        title: primary.title,
+        summary: deriveGuideSummary(primary.bodyMd),
+        bodyMd: primary.bodyMd,
+        kind: mlKind,
+        locale: primary.locale,
+        translations,
+        status: 'published',
+      });
       setMlOpen(false);
       setMlRaw('');
       setMlSections([]);
+      setMlPrimaryLocale('');
+    } catch (e) {
+      setError(formatUnknownError(e, '가이드 생성 실패'));
+    } finally {
+      setMlBusy(false);
     }
     await loadList();
   };
@@ -960,13 +984,25 @@ export default function AdminGuidesPage() {
             {mlSections.length > 0 && (
               <div style={{ marginTop: 16 }}>
                 <p className="admin-cell-sub">
-                  {mlSections.length}개 언어로 나뉨
+                  {mlSections.length}개 언어로 나뉨 — 카드 하나에 언어 전환 버튼으로 들어갑니다(별도
+                  가이드로 나뉘지 않음)
                   {mlUsedAi ? ' · AI 보조 사용됨(비용 발생) — 아래서 꼭 확인 후 발행하세요' : ' · 규칙 기반(무료)'}
                 </p>
                 {mlSections.map((section, i) => (
                   <div key={`${section.locale}-${i}`} className="admin-ml-section" style={{ marginTop: 12 }}>
                     <div className="admin-ml-section-head">
-                      <span className="admin-pill">{section.locale}</span>
+                      <label className="admin-ml-primary-radio">
+                        <input
+                          type="radio"
+                          name="mlPrimary"
+                          checked={mlPrimaryLocale === section.locale}
+                          onChange={() => setMlPrimaryLocale(section.locale)}
+                        />
+                        <span className="admin-pill">{section.locale}</span>
+                        {mlPrimaryLocale === section.locale && (
+                          <span className="admin-cell-sub">대표 언어(슬러그·기본 표시)</span>
+                        )}
+                      </label>
                       <button
                         type="button"
                         className="danger"
@@ -997,10 +1033,10 @@ export default function AdminGuidesPage() {
                   <button
                     type="button"
                     className="admin-create-btn"
-                    disabled={mlBusy || mlSections.length === 0}
+                    disabled={mlBusy || mlSections.length === 0 || !mlPrimaryLocale}
                     onClick={() => void handleMlPublish()}
                   >
-                    {mlBusy ? '발행 중…' : `${mlSections.length}개 언어로 발행`}
+                    {mlBusy ? '발행 중…' : `1개 카드로 발행 (${mlSections.length}개 언어)`}
                   </button>
                 </div>
               </div>

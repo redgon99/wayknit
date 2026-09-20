@@ -5,6 +5,17 @@ export type GuideStatus = 'draft' | 'published' | 'archived';
 
 export type { GuideKind };
 
+/**
+ * 가이드 다국어 통합(2026-09-20) — scenario_catalog.content와 같은 패턴.
+ * 행 자체의 title/summary/bodyMd/locale이 대표(기본) 언어고, 그 외 보조
+ * 언어는 여기 담는다. `pickGuideContent()`(lib/guides.ts)로 조회한다.
+ */
+export interface GuideTranslation {
+  title: string;
+  summary: string;
+  bodyMd: string;
+}
+
 export interface GuideArticle {
   id: string;
   slug: string;
@@ -20,6 +31,8 @@ export interface GuideArticle {
   /** 추천 여행코스 지도 핀 (발행 시 저장된 좌표) */
   coursePins: GuideCoursePin[];
   locale: string;
+  /** 보조 언어 버전 — 키는 locale 코드('en'·'ja'·'zh-CN' 등) */
+  translations: Partial<Record<string, GuideTranslation>>;
   createdBy: string | null;
   publishedAt: string | null;
   createdAt: string;
@@ -63,6 +76,7 @@ export interface GuideArticleInput {
   sourceUrls?: string[];
   coursePins?: GuideCoursePin[];
   locale?: string;
+  translations?: Partial<Record<string, GuideTranslation>>;
   slug?: string;
 }
 
