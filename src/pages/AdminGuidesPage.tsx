@@ -440,7 +440,10 @@ export default function AdminGuidesPage() {
       setMacroPreview(null);
       setMacroPins([]);
       setMacroMissed([]);
-      setError(formatUnknownError(e, 'AI 일정 생성 실패'));
+      const hint = aiOptionsText
+        ? ' (AI가 만든 원문은 「코스 붙여넣기 매크로」 패널의 「일정 본문」 칸에 남아 있습니다 — 확인 후 수동으로 다시 실행해볼 수 있습니다.)'
+        : '';
+      setError(formatUnknownError(e, 'AI 일정 생성 실패') + hint);
     } finally {
       setAiBuilding(false);
     }
