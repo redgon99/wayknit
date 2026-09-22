@@ -781,9 +781,36 @@
     "step3": "完成！時間割を確認しましょう"
   },
   "collect": {
+    "pasteLabel": "メモ・チャットから場所を貼り付け",
+    "pastePlaceholder": "インスタのキャプション、ブログのリスト、チャット内容を貼り付けてください…",
+    "extract": "候補を抽出",
+    "search": "検索",
+    "save": "名前を保存",
+    "youtubeLabel": "YouTubeから場所を抽出",
+    "youtubePlaceholder": "https://www.youtube.com/watch?v=…",
+    "youtubeExtract": "場所を抽出",
+    "youtubeLoading": "分析中…",
+    "youtubeEmpty": "言及された場所が見つかりませんでした。",
+    "youtubeError": "場所の抽出に失敗しました。",
+    "youtubePreview": "プレビュー · クリックして動画を開く",
+    "youtubeOpenVideo": "YouTubeで開く",
+    "youtubePlaceCount": "場所 {{count}}件",
+    "youtubeCollapse": "折りたたむ",
+    "youtubeExpand": "広げる",
+    "linkOpenSource": "元の投稿を開く",
+    "linkSnsInstagram": "InstagramはURLだけでは自動抽出が難しいです。投稿を開いて場所名をコピーして検索するか、公開ウェブ・YouTubeリンクをご利用ください。",
+    "linkSnsTiktok": "TikTokはURLだけでは自動抽出が難しいです。投稿を開いて場所名をコピーして検索するか、公開ウェブ・YouTubeリンクをご利用ください。",
+    "linkSnsUnsupported": "このSNSは自動場所抽出に対応していません。投稿を開いて場所名を検索欄に貼り付けてください。",
     "bulkPinAll": "{{count}}件をまとめてピン留め",
     "bulkPinning": "ピン留め中…",
     "bulkPinMissed": "{{count}}件見つかりませんでした: {{names}}",
-    "bulkPinAllExisting": "すべてすでにピン留め済みです。"
+    "bulkPinAllExisting": "すべてすでにピン留め済みです。",
+    "linkPreview": {
+      "youtube": "YouTubeプレビュー · クリックして開く",
+      "web": "ウェブプレビュー · クリックして開く",
+      "instagram": "Instagram · クリックして元の投稿を開く",
+      "tiktok": "TikTok · クリックして元の投稿を開く",
+      "unsupported": "元の投稿を開く"
+    }
   }
 }

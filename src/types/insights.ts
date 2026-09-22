@@ -62,6 +62,14 @@ export interface InsightCategoryCount {
   count: number;
 }
 
+/** insight_source_stats() RPC — 소스별 미분석/미매칭 집계(I1) */
+export interface InsightSourceStat {
+  source: InsightSource;
+  totalRaw: number;
+  unanalyzed: number;
+  analyzedUnmatched: number;
+}
+
 export type PlaceReactionAspect =
   | 'crowd'
   | 'price'

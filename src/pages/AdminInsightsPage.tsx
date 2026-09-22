@@ -11,6 +11,7 @@ import {
   listInsightCollectionRuns,
   listInsightItems,
   listInsightKeywords,
+  listInsightSourceStats,
   setInsightKeywordActive,
   triggerInsightAnalysis,
   triggerInsightCollection,
@@ -35,6 +36,7 @@ import type {
   InsightKeyword,
   InsightRunStatus,
   InsightSource,
+  InsightSourceStat,
 } from '../types/insights';
 import '../styles/app.css';
 
@@ -97,6 +99,7 @@ export default function AdminInsightsPage() {
 
   const [keywords, setKeywords] = useState<InsightKeyword[]>([]);
   const [runs, setRuns] = useState<InsightCollectionRun[]>([]);
+  const [sourceStats, setSourceStats] = useState<InsightSourceStat[]>([]);
   const [counts, setCounts] = useState<InsightCategoryCount[]>([]);
   const [items, setItems] = useState<InsightItemWithAnalysis[]>([]);
   const [previewItem, setPreviewItem] = useState<InsightItemWithAnalysis | null>(null);
@@ -152,14 +155,16 @@ export default function AdminInsightsPage() {
     setRefreshing(true);
     setError(null);
     try {
-      const [keywordRows, runRows, countRows] = await Promise.all([
+      const [keywordRows, runRows, countRows, statRows] = await Promise.all([
         listInsightKeywords(),
         listInsightCollectionRuns(),
         listInsightCategoryCounts(),
+        listInsightSourceStats(),
       ]);
       setKeywords(keywordRows);
       setRuns(runRows);
       setCounts(countRows);
+      setSourceStats(statRows);
     } catch (e) {
       setError(e instanceof Error ? e.message : '인사이트 데이터를 불러오지 못했습니다.');
     } finally {
@@ -207,6 +212,28 @@ export default function AdminInsightsPage() {
     }
     return map;
   }, [runs]);
+
+  /** I1 나머지 — insight_source_stats는 raw_items 기준(naver_blog/naver_kin 분리)이라
+   *  naver_kin도 있으면 naver_blog 행에 합쳐서 보여준다(수집 실행 단위가 naver 하나라서). */
+  const sourceStatBySource = useMemo(() => {
+    const map = new Map<string, InsightSourceStat>();
+    for (const s of sourceStats) {
+      const key = s.source === 'naver_kin' ? 'naver_blog' : s.source;
+      const prev = map.get(key);
+      map.set(
+        key,
+        prev
+          ? {
+              source: prev.source,
+              totalRaw: prev.totalRaw + s.totalRaw,
+              unanalyzed: prev.unanalyzed + s.unanalyzed,
+              analyzedUnmatched: prev.analyzedUnmatched + s.analyzedUnmatched,
+            }
+          : s
+      );
+    }
+    return map;
+  }, [sourceStats]);
 
   const categoryRollup = useMemo(() => {
     if (!expandedCategory) return null;
@@ -379,6 +406,15 @@ export default function AdminInsightsPage() {
     } finally {
       setRunningCollector(null);
     }
+  };
+
+  /** I1 나머지 — 상태 표의 행별 "재실행" 버튼. 표의 source는 실행 로그 단위(youtube/
+   *  naver_blog/reddit/analyze/place_match)라 naver_blog는 naver 수집기로 매핑한다. */
+  const handleRetryRow = (source: string) => {
+    if (source === 'analyze') return void handleAnalyze();
+    if (source === 'place_match') return void handlePlaceMatch();
+    if (source === 'naver_blog') return void handleCollect('naver');
+    if (source === 'youtube' || source === 'reddit') return void handleCollect(source);
   };
 
   const handleDraftGuides = async (analysisIds?: string[]) => {
@@ -590,12 +626,16 @@ export default function AdminInsightsPage() {
                   <th>마지막 실행</th>
                   <th>상태</th>
                   <th>수집/분석 건수</th>
+                  <th>미분석</th>
+                  <th>미매칭</th>
                   <th>오류</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {['youtube', 'naver_blog', 'reddit', 'analyze', 'place_match'].map((source) => {
                   const run = latestRunBySource.get(source);
+                  const stat = sourceStatBySource.get(source);
                   const label =
                     source === 'analyze'
                       ? 'AI 분석'
@@ -614,7 +654,28 @@ export default function AdminInsightsPage() {
                         )}
                       </td>
                       <td>{run?.itemsCollected ?? '-'}</td>
+                      <td className="admin-cell-sub" title="AI 분석이 아직 안 된 게시물 수">
+                        {stat ? stat.unanalyzed : '-'}
+                      </td>
+                      <td
+                        className="admin-cell-sub"
+                        title="분석은 끝났지만 장소 언급이 매칭되지 않은 게시물 수(장소를 언급하지 않은 글일 수도 있음)"
+                      >
+                        {stat ? stat.analyzedUnmatched : '-'}
+                      </td>
                       <td className="admin-cell-sub">{run?.errorMessage ?? '-'}</td>
+                      <td>
+                        <button
+                          type="button"
+                          disabled={runningCollector !== null}
+                          onClick={() => handleRetryRow(source)}
+                        >
+                          {runningCollector === source ||
+                          (source === 'naver_blog' && runningCollector === 'naver')
+                            ? '실행 중…'
+                            : '재실행'}
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}

@@ -781,9 +781,36 @@
     "step3": "完成！看看你的時間表吧"
   },
   "collect": {
+    "pasteLabel": "從備忘錄·聊天記錄中貼上地點",
+    "pastePlaceholder": "貼上Instagram文案、部落格列表或聊天內容…",
+    "extract": "擷取候選",
+    "search": "搜尋",
+    "save": "儲存名稱",
+    "youtubeLabel": "從YouTube擷取地點",
+    "youtubePlaceholder": "https://www.youtube.com/watch?v=…",
+    "youtubeExtract": "擷取地點",
+    "youtubeLoading": "分析中…",
+    "youtubeEmpty": "未找到提及的地點。",
+    "youtubeError": "地點擷取失敗。",
+    "youtubePreview": "預覽 · 點擊開啟影片",
+    "youtubeOpenVideo": "在YouTube中開啟",
+    "youtubePlaceCount": "{{count}}個地點",
+    "youtubeCollapse": "收合",
+    "youtubeExpand": "展開",
+    "linkOpenSource": "開啟原文",
+    "linkSnsInstagram": "僅憑連結難以自動擷取Instagram內容。請開啟原文複製地點名稱後搜尋，或使用公開網頁·YouTube連結。",
+    "linkSnsTiktok": "僅憑連結難以自動擷取TikTok內容。請開啟原文複製地點名稱後搜尋，或使用公開網頁·YouTube連結。",
+    "linkSnsUnsupported": "此社群平台不支援自動擷取地點。請開啟原文，將地點名稱貼到搜尋欄。",
     "bulkPinAll": "一鍵收藏全部{{count}}個地點",
     "bulkPinning": "收藏中…",
     "bulkPinMissed": "未找到{{count}}個: {{names}}",
-    "bulkPinAllExisting": "全部地點已收藏。"
+    "bulkPinAllExisting": "全部地點已收藏。",
+    "linkPreview": {
+      "youtube": "YouTube預覽 · 點擊開啟",
+      "web": "網頁預覽 · 點擊開啟",
+      "instagram": "Instagram · 點擊開啟原文",
+      "tiktok": "TikTok · 點擊開啟原文",
+      "unsupported": "開啟原文"
+    }
   }
 }

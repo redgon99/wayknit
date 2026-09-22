@@ -9,6 +9,7 @@ import type {
   InsightKeyword,
   InsightRawItem,
   InsightSource,
+  InsightSourceStat,
 } from '../types/insights';
 
 /** 관리자 UI에서 "지금 수집" 버튼이 호출하는 Edge Function 그룹 (naver_blog/naver_kin은 함수 하나로 처리) */
@@ -212,6 +213,20 @@ export async function listInsightCollectionRuns(limit = 20): Promise<InsightColl
     status: row.status as InsightCollectionRun['status'],
     itemsCollected: (row.items_collected as number) ?? 0,
     errorMessage: (row.error_message as string | null) ?? null,
+  }));
+}
+
+/** I1 나머지 — 소스별 미분석/미매칭 집계(insight_source_stats RPC) */
+export async function listInsightSourceStats(): Promise<InsightSourceStat[]> {
+  const sb = requireSupabase();
+  const { data, error } = await sb.rpc('insight_source_stats');
+  if (error) throw error;
+  type Row = { source: string; total_raw: number; unanalyzed: number; analyzed_unmatched: number };
+  return ((data ?? []) as Row[]).map((row) => ({
+    source: row.source as InsightSource,
+    totalRaw: Number(row.total_raw) || 0,
+    unanalyzed: Number(row.unanalyzed) || 0,
+    analyzedUnmatched: Number(row.analyzed_unmatched) || 0,
   }));
 }
 
