@@ -5,7 +5,6 @@ const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 const BATCH_TOTAL_LIMIT = 50;
 const ITEMS_PER_CLAUDE_CALL = 10;
 const CONTENT_MAX_CHARS = 800;
-const CANDIDATE_POOL_SIZE = 300;
 
 interface RawItemRow {
   id: string;
@@ -116,22 +115,22 @@ Deno.serve(async (req) => {
   const runId = await startRun(sb, 'analyze');
 
   try {
-    const { data: analyzedRows, error: analyzedError } = await sb
-      .from('insight_analysis')
-      .select('raw_item_id');
-    if (analyzedError) throw analyzedError;
-    const analyzedIds = new Set((analyzedRows ?? []).map((r) => r.raw_item_id as string));
-
+    /*
+     * 예전엔 "최신 300건(CANDIDATE_POOL_SIZE)을 가져와 그중 미분석만 고르기"였다.
+     * 미분석 적체가 그 창을 넘어서면 밖으로 밀려난 오래된 항목은 버튼을 몇 번
+     * 눌러도 **영영 분석되지 않는다** — 2026-09-23 진단 시 유튜브 613건 중 409건이
+     * 미분석이라 약 280건이 실제로 그 상태로 갇혀 있었다.
+     * 이제 "분석 행이 없는 것"만 DB에서 직접 골라 오므로 적체 크기와 무관하다.
+     */
     const { data: candidates, error: candidatesError } = await sb
       .from('insight_raw_items')
-      .select('id, source, title, content, url')
+      .select('id, source, title, content, url, insight_analysis!left(id)')
+      .is('insight_analysis', null)
       .order('collected_at', { ascending: false })
-      .limit(CANDIDATE_POOL_SIZE);
+      .limit(BATCH_TOTAL_LIMIT);
     if (candidatesError) throw candidatesError;
 
-    const unanalyzed = ((candidates ?? []) as RawItemRow[])
-      .filter((row) => !analyzedIds.has(row.id))
-      .slice(0, BATCH_TOTAL_LIMIT);
+    const unanalyzed = (candidates ?? []) as unknown as RawItemRow[];
 
     let itemsAnalyzed = 0;
     for (let i = 0; i < unanalyzed.length; i += ITEMS_PER_CLAUDE_CALL) {

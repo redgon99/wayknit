@@ -51,6 +51,27 @@ const COLLECTOR_FUNCTION: Record<InsightCollector, string> = {
   reddit: 'insight-collect-reddit',
 };
 
+/**
+ * Edge Function이 실패하면 supabase-js는 `Edge Function returned a non-2xx status
+ * code`라는 일반 문구만 준다. 서버가 본문에 담아 보낸 진짜 이유
+ * (`{ error: "REDDIT_CLIENT_ID... not configured" }` 같은)는 응답 객체
+ * (FunctionsHttpError.context)에 그대로 남아 있으니 그걸 꺼내 쓴다 — 2026-09-23에
+ * Reddit 수집이 시크릿 미설정으로 죽고 있었는데 저 일반 문구에 가려 원인을
+ * 못 찾고 있었다.
+ */
+async function describeFunctionError(error: unknown): Promise<string> {
+  const context = (error as { context?: unknown })?.context;
+  if (context instanceof Response) {
+    try {
+      const body = (await context.clone().json()) as { error?: unknown };
+      if (body?.error) return String(body.error);
+    } catch {
+      /* 본문이 JSON이 아니면 아래 기본 메시지로 */
+    }
+  }
+  return error instanceof Error ? error.message : String(error);
+}
+
 function requireSupabase() {
   if (!isSupabaseConfigured) {
     throw new Error('Supabase가 설정되어야 인사이트 기능을 사용할 수 있습니다.');
@@ -113,6 +134,36 @@ export async function deleteInsightKeyword(id: string): Promise<void> {
  * 이미 집계에 반영된 원문을 지우면 그 집계가 다음 수집 전까지 부풀어 있을 수
  * 있다는 뜻 — 분석 전(아직 place_reactions에 안 들어간) 원문 정리 용도로 우선 쓴다.
  */
+/**
+ * 수동 등록(§34) — 인스타그램·틱톡처럼 API로 못 긁는 플랫폼이나 기타 웹페이지에서
+ * 관리자가 직접 복사한 텍스트를 넣는다. source는 항상 'manual'(INSERT 정책이
+ * 이것만 허용). external_id는 자동수집처럼 플랫폼 고유 id가 없어 클라이언트에서
+ * uuid로 생성 — (source, external_id) unique 제약만 지키면 된다.
+ * 이후 AI 분석(insight-analyze)·장소 매칭(insight-place-match)은 source를
+ * 가리지 않아 그대로 파이프라인을 탄다.
+ */
+export async function addInsightManualItem(input: {
+  content: string;
+  url?: string;
+  title?: string;
+  author?: string;
+  sourceCreatedAt?: string;
+}): Promise<void> {
+  const sb = requireSupabase();
+  const content = input.content.trim();
+  if (!content) throw new Error('내용을 입력해 주세요.');
+  const { error } = await sb.from('insight_raw_items').insert({
+    source: 'manual',
+    external_id: `manual-${crypto.randomUUID()}`,
+    title: input.title?.trim() || null,
+    content,
+    author: input.author?.trim() || null,
+    url: input.url?.trim() || null,
+    source_created_at: input.sourceCreatedAt || null,
+  });
+  if (error) throw error;
+}
+
 export async function deleteInsightRawItem(id: string): Promise<void> {
   const sb = requireSupabase();
   const { error } = await sb.from('insight_raw_items').delete().eq('id', id);
@@ -242,7 +293,7 @@ export async function triggerInsightCollection(
   const { data, error } = await sb.functions.invoke(COLLECTOR_FUNCTION[collector], {
     body,
   });
-  if (error) throw error;
+  if (error) throw new Error(await describeFunctionError(error));
   return {
     itemsCollected: (data?.itemsCollected as number) ?? 0,
     period: typeof data?.period === 'string' ? data.period : undefined,
@@ -252,7 +303,7 @@ export async function triggerInsightCollection(
 export async function triggerInsightAnalysis(): Promise<{ itemsAnalyzed: number }> {
   const sb = requireSupabase();
   const { data, error } = await sb.functions.invoke('insight-analyze', { body: {} });
-  if (error) throw error;
+  if (error) throw new Error(await describeFunctionError(error));
   return { itemsAnalyzed: (data?.itemsAnalyzed as number) ?? 0 };
 }
 
@@ -264,7 +315,7 @@ export async function triggerInsightPlaceMatch(): Promise<{
 }> {
   const sb = requireSupabase();
   const { data, error } = await sb.functions.invoke('insight-place-match', { body: {} });
-  if (error) throw error;
+  if (error) throw new Error(await describeFunctionError(error));
   return {
     itemsProcessed: (data?.itemsProcessed as number) ?? 0,
     mentionsAdded: (data?.mentionsAdded as number) ?? 0,

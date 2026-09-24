@@ -79,3 +79,20 @@ export async function finishRun(
     })
     .eq('id', runId);
 }
+
+/**
+ * 시크릿 미설정처럼 "시작도 못 한" 실패도 실행 이력에 남긴다.
+ *
+ * 예전엔 env 체크에서 곧바로 503을 반환해 `startRun`조차 안 거쳤다 — 그래서
+ * 관리자 화면 "수집 실행 현황"에 아무 기록도 안 남고, **한 번도 안 돌린 것과
+ * 돌렸는데 설정이 없어 튕긴 것을 구분할 수 없었다**(Reddit이 실제로 이 상태로
+ * 방치돼 있었음, 2026-09-23 진단).
+ */
+export async function recordFailedRun(
+  sb: SupabaseClient,
+  source: string,
+  errorMessage: string
+): Promise<void> {
+  const runId = await startRun(sb, source);
+  await finishRun(sb, runId, { status: 'error', errorMessage });
+}

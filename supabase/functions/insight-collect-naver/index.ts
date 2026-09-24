@@ -4,6 +4,7 @@ import {
   finishRun,
   getServiceClient,
   listActiveKeywords,
+  recordFailedRun,
   startRun,
   upsertRawItems,
   type RawItemInput,
@@ -77,10 +78,12 @@ Deno.serve(async (req) => {
   const clientId = Deno.env.get('NAVER_CLIENT_ID')?.trim();
   const clientSecret = Deno.env.get('NAVER_CLIENT_SECRET')?.trim();
   if (!clientId || !clientSecret) {
-    return new Response(
-      JSON.stringify({ error: 'NAVER_CLIENT_ID/NAVER_CLIENT_SECRET not configured' }),
-      { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    const message = 'NAVER_CLIENT_ID/NAVER_CLIENT_SECRET not configured';
+    await recordFailedRun(getServiceClient(), 'naver_blog', message);
+    return new Response(JSON.stringify({ error: message }), {
+      status: 503,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   let body: CollectionPeriodInput = {};

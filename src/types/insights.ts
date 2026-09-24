@@ -1,4 +1,8 @@
-export type InsightSource = 'youtube' | 'naver_blog' | 'naver_kin' | 'reddit';
+import type { ParsedInsightReport } from '../lib/insightReportParser';
+
+/** 'manual' — 자동 수집이 안 되는 플랫폼(인스타그램·틱톡 등)이나 기타 웹페이지에서
+ *  관리자가 직접 텍스트를 붙여넣어 등록한 항목(§34) */
+export type InsightSource = 'youtube' | 'naver_blog' | 'naver_kin' | 'reddit' | 'manual';
 
 export type InsightCategory =
   | 'pain_point'
@@ -68,6 +72,23 @@ export interface InsightSourceStat {
   totalRaw: number;
   unanalyzed: number;
   analyzedUnmatched: number;
+}
+
+/** insight_reports — 여러 원문을 이미 종합한 리서치 리포트 아카이브 */
+export interface InsightReport {
+  id: string;
+  title: string;
+  summary: string | null;
+  bodyMd: string;
+  keywords: string[];
+  periodFrom: string | null;
+  periodTo: string | null;
+  sourceNote: string | null;
+  /** 본문에서 규칙 기반으로 뽑은 지역/관심사/긍정부정 표·그래프용 데이터(§34) */
+  parsed: ParsedInsightReport | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type PlaceReactionAspect =

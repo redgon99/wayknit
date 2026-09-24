@@ -13,7 +13,6 @@ const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
 const BATCH_TOTAL_LIMIT = 40;
 const ITEMS_PER_CLAUDE_CALL = 8;
 const CONTENT_MAX_CHARS = 900;
-const CANDIDATE_POOL_SIZE = 300;
 const MAX_PLACES_PER_ITEM = 5;
 
 const ASPECTS = [
@@ -144,19 +143,20 @@ Deno.serve(async (req) => {
   const runId = await startRun(sb, 'place_match');
 
   try {
-    const { data: matchedRows, error: matchedError } = await sb
-      .from('insight_place_mentions')
-      .select('analysis_id');
-    if (matchedError) throw matchedError;
-    const matchedIds = new Set((matchedRows ?? []).map((r) => r.analysis_id as string));
-
-    // 장소 언급이 있을 법한 카테고리만 대상으로 삼는다 (feature_request 등은 제외)
+    /*
+     * 장소 언급이 있을 법한 카테고리만 대상으로 삼는다(feature_request 등은 제외).
+     * 예전엔 최신 300건(CANDIDATE_POOL_SIZE)을 가져와 그중 미매칭을 골랐는데,
+     * 매칭 누적이 그 창을 넘으면 오래된 미매칭 건이 영영 후보에 안 들어간다 —
+     * insight-analyze와 같은 문제라 여기도 "매칭 행이 없는 것"만 DB에서 직접
+     * 골라 온다(2026-09-23).
+     */
     const { data: rows, error: rowsError } = await sb
       .from('insight_analysis')
-      .select('id, raw_item_id, insight_raw_items(title, content, url)')
+      .select('id, raw_item_id, insight_raw_items(title, content, url), insight_place_mentions!left(analysis_id)')
       .in('category', ['praise', 'pain_point', 'useful_tip'])
+      .is('insight_place_mentions', null)
       .order('analyzed_at', { ascending: false })
-      .limit(CANDIDATE_POOL_SIZE);
+      .limit(BATCH_TOTAL_LIMIT);
     if (rowsError) throw rowsError;
 
     type JoinedRow = {
@@ -166,7 +166,6 @@ Deno.serve(async (req) => {
     };
 
     const candidates: CandidateRow[] = ((rows ?? []) as unknown as JoinedRow[])
-      .filter((row) => !matchedIds.has(row.id))
       .map((row) => ({
         analysis_id: row.id,
         raw_item_id: row.raw_item_id,
@@ -176,8 +175,7 @@ Deno.serve(async (req) => {
         content: decodeHtmlEntities(row.insight_raw_items?.content ?? null),
         url: row.insight_raw_items?.url ?? null,
       }))
-      .filter((row) => (row.title ?? '').length + (row.content ?? '').length >= 40)
-      .slice(0, BATCH_TOTAL_LIMIT);
+      .filter((row) => (row.title ?? '').length + (row.content ?? '').length >= 40);
 
     const touchedKeys = new Set<string>();
     let mentionsAdded = 0;

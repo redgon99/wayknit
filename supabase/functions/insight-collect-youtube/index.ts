@@ -4,6 +4,7 @@ import {
   finishRun,
   getServiceClient,
   listActiveKeywords,
+  recordFailedRun,
   startRun,
   upsertRawItems,
   type RawItemInput,
@@ -87,7 +88,9 @@ Deno.serve(async (req) => {
 
   const apiKey = Deno.env.get('YOUTUBE_API_KEY')?.trim();
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'YOUTUBE_API_KEY not configured' }), {
+    const message = 'YOUTUBE_API_KEY not configured';
+    await recordFailedRun(getServiceClient(), 'youtube', message);
+    return new Response(JSON.stringify({ error: message }), {
       status: 503,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

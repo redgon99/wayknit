@@ -5,6 +5,7 @@ import { AdminShell } from '../components/AdminShell';
 import { AdminPreviewModal } from '../components/AdminPreviewModal';
 import {
   addInsightKeyword,
+  addInsightManualItem,
   deleteInsightKeyword,
   deleteInsightRawItem,
   listInsightCategoryCounts,
@@ -45,7 +46,12 @@ const SOURCE_LABEL: Record<InsightSource, string> = {
   naver_blog: '네이버 블로그',
   naver_kin: '네이버 지식인',
   reddit: 'Reddit',
+  manual: '수동 등록',
 };
+
+/** 자동 수집기가 있는 소스만 — 키워드 관리 탭 드롭다운/목록에서 'manual'을 뺀다
+ *  ('manual'은 키워드가 아니라 개별 텍스트를 직접 등록하는 경로라 관계 없음) */
+const KEYWORD_SOURCES: InsightSource[] = ['youtube', 'naver_blog', 'naver_kin', 'reddit'];
 
 /** S2(관리자 검토 2026-09-16) — 'success' 같은 원본 영문이 그대로 보이던 것을 한글로 */
 const RUN_STATUS_LABEL: Record<InsightRunStatus, string> = {
@@ -66,7 +72,7 @@ const CATEGORY_LABEL: Record<InsightCategory, string> = {
 const COLLECTORS: Array<{ id: InsightCollector; label: string; keywordSources: InsightSource[] }> = [
   { id: 'youtube', label: 'YouTube 수집', keywordSources: ['youtube'] },
   { id: 'naver', label: '네이버 수집', keywordSources: ['naver_blog', 'naver_kin'] },
-  { id: 'reddit', label: 'Reddit 수집', keywordSources: ['reddit'] },
+  { id: 'reddit', label: 'Reddit 수집 (지원 종료)', keywordSources: ['reddit'] },
 ];
 
 function truncate(text: string | null, max: number): string {
@@ -91,6 +97,15 @@ export default function AdminInsightsPage() {
     InsightCollector | 'analyze' | 'place_match' | null
   >(null);
   const [placeMatchResult, setPlaceMatchResult] = useState<string | null>(null);
+  const [manualForm, setManualForm] = useState({
+    url: '',
+    title: '',
+    author: '',
+    content: '',
+    sourceCreatedAt: '',
+  });
+  const [manualSubmitting, setManualSubmitting] = useState(false);
+  const [manualResult, setManualResult] = useState<string | null>(null);
   const [draftingGuides, setDraftingGuides] = useState(false);
   const [draftingAnalysisId, setDraftingAnalysisId] = useState<string | null>(null);
   const [deletingRawItemId, setDeletingRawItemId] = useState<string | null>(null);
@@ -417,6 +432,36 @@ export default function AdminInsightsPage() {
     if (source === 'youtube' || source === 'reddit') return void handleCollect(source);
   };
 
+  /** 수동 등록(§34) — 인스타그램·틱톡 등 자동수집이 안 되는 곳에서 복사해 온
+   *  텍스트를 바로 등록한다. 등록 후엔 자동수집과 똑같이 "AI 분석 실행"을
+   *  눌러야 분류가 붙는다(여기서 자동으로 분석을 트리거하진 않음). */
+  const handleAddManualItem = async () => {
+    if (!manualForm.content.trim()) {
+      setError('내용을 입력해 주세요.');
+      return;
+    }
+    setManualSubmitting(true);
+    setError(null);
+    setManualResult(null);
+    try {
+      await addInsightManualItem({
+        content: manualForm.content,
+        url: manualForm.url || undefined,
+        title: manualForm.title || undefined,
+        author: manualForm.author || undefined,
+        sourceCreatedAt: manualForm.sourceCreatedAt || undefined,
+      });
+      setManualForm({ url: '', title: '', author: '', content: '', sourceCreatedAt: '' });
+      setManualResult('등록했습니다 — "AI 분석 실행"을 눌러야 분류·요약이 붙습니다.');
+      await loadAll();
+      await loadItems();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '수동 등록에 실패했습니다.');
+    } finally {
+      setManualSubmitting(false);
+    }
+  };
+
   const handleDraftGuides = async (analysisIds?: string[]) => {
     setDraftingGuides(true);
     setError(null);
@@ -594,6 +639,11 @@ export default function AdminInsightsPage() {
                 className="admin-create-btn"
                 disabled={runningCollector !== null}
                 onClick={() => void handleCollect(c.id)}
+                title={
+                  c.id === 'reddit'
+                    ? 'Reddit이 API 셀프등록·공개 JSON 접근을 모두 막아 자동 수집이 안 됩니다. 아래 "수동으로 자료 등록"이나 "리서치 리포트"를 이용하세요.'
+                    : undefined
+                }
               >
                 {runningCollector === c.id ? '실행 중...' : c.label}
               </button>
@@ -618,6 +668,78 @@ export default function AdminInsightsPage() {
           </div>
           {placeMatchResult && <p className="admin-cell-sub">{placeMatchResult}</p>}
 
+          <div className="admin-section" style={{ marginTop: 16 }}>
+            <h3 style={{ fontSize: 14, marginBottom: 4 }}>수동으로 자료 등록</h3>
+            <p className="admin-cell-sub" style={{ marginBottom: 8 }}>
+              인스타그램·틱톡처럼 자동 수집이 안 되는 곳이나 기타 웹페이지에서 직접
+              복사한 텍스트를 넣습니다. 등록 후 "AI 분석 실행"을 누르면 나머지
+              자료와 똑같이 분류·요약됩니다.
+            </p>
+            <div className="admin-notice-form-row">
+              <input
+                className="admin-notice-title"
+                style={{ flex: 2 }}
+                value={manualForm.url}
+                onChange={(e) => {
+                  const url = e.currentTarget.value;
+                  setManualForm((f) => ({ ...f, url }));
+                }}
+                placeholder="원문 링크 (선택)"
+              />
+              <input
+                className="admin-notice-title"
+                style={{ flex: 1 }}
+                value={manualForm.author}
+                onChange={(e) => {
+                  const author = e.currentTarget.value;
+                  setManualForm((f) => ({ ...f, author }));
+                }}
+                placeholder="작성자/계정명 (선택)"
+              />
+              <input
+                type="date"
+                value={manualForm.sourceCreatedAt}
+                onChange={(e) => {
+                  const sourceCreatedAt = e.currentTarget.value;
+                  setManualForm((f) => ({ ...f, sourceCreatedAt }));
+                }}
+                title="게시일 (선택)"
+              />
+            </div>
+            <input
+              className="admin-notice-title"
+              style={{ marginTop: 8 }}
+              value={manualForm.title}
+              onChange={(e) => {
+                const title = e.currentTarget.value;
+                setManualForm((f) => ({ ...f, title }));
+              }}
+              placeholder="제목 (선택)"
+            />
+            <textarea
+              className="admin-notice-body"
+              style={{ marginTop: 8 }}
+              rows={6}
+              value={manualForm.content}
+              onChange={(e) => {
+                const content = e.currentTarget.value;
+                setManualForm((f) => ({ ...f, content }));
+              }}
+              placeholder="붙여넣은 원문 텍스트"
+            />
+            <div className="admin-action-row" style={{ marginTop: 8 }}>
+              <button
+                type="button"
+                className="admin-create-btn"
+                disabled={manualSubmitting || !manualForm.content.trim()}
+                onClick={() => void handleAddManualItem()}
+              >
+                {manualSubmitting ? '등록 중...' : '등록'}
+              </button>
+              {manualResult && <span className="admin-cell-sub">{manualResult}</span>}
+            </div>
+          </div>
+
           <div className="admin-table-wrap" style={{ marginTop: 12 }}>
             <table className="admin-table">
               <thead>
@@ -633,9 +755,10 @@ export default function AdminInsightsPage() {
                 </tr>
               </thead>
               <tbody>
-                {['youtube', 'naver_blog', 'reddit', 'analyze', 'place_match'].map((source) => {
+                {['youtube', 'naver_blog', 'reddit', 'manual', 'analyze', 'place_match'].map((source) => {
                   const run = latestRunBySource.get(source);
                   const stat = sourceStatBySource.get(source);
+                  const isManual = source === 'manual';
                   const label =
                     source === 'analyze'
                       ? 'AI 분석'
@@ -645,7 +768,13 @@ export default function AdminInsightsPage() {
                   return (
                     <tr key={source}>
                       <td>{label}</td>
-                      <td>{run ? formatDateTime(run.startedAt) : '실행 이력 없음'}</td>
+                      <td>
+                        {isManual
+                          ? '(수동 등록 — 실행 이력 없음)'
+                          : run
+                            ? formatDateTime(run.startedAt)
+                            : '실행 이력 없음'}
+                      </td>
                       <td>
                         {run && (
                           <span className={`admin-pill ${run.status === 'success' ? 'ok' : ''}`}>
@@ -653,7 +782,7 @@ export default function AdminInsightsPage() {
                           </span>
                         )}
                       </td>
-                      <td>{run?.itemsCollected ?? '-'}</td>
+                      <td>{run?.itemsCollected ?? (isManual ? (stat?.totalRaw ?? 0) : '-')}</td>
                       <td className="admin-cell-sub" title="AI 분석이 아직 안 된 게시물 수">
                         {stat ? stat.unanalyzed : '-'}
                       </td>
@@ -665,16 +794,18 @@ export default function AdminInsightsPage() {
                       </td>
                       <td className="admin-cell-sub">{run?.errorMessage ?? '-'}</td>
                       <td>
-                        <button
-                          type="button"
-                          disabled={runningCollector !== null}
-                          onClick={() => handleRetryRow(source)}
-                        >
-                          {runningCollector === source ||
-                          (source === 'naver_blog' && runningCollector === 'naver')
-                            ? '실행 중…'
-                            : '재실행'}
-                        </button>
+                        {!isManual && (
+                          <button
+                            type="button"
+                            disabled={runningCollector !== null}
+                            onClick={() => handleRetryRow(source)}
+                          >
+                            {runningCollector === source ||
+                            (source === 'naver_blog' && runningCollector === 'naver')
+                              ? '실행 중…'
+                              : '재실행'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -690,7 +821,7 @@ export default function AdminInsightsPage() {
           <h2>키워드 관리</h2>
           <div className="admin-notice-form-row" style={{ marginBottom: 12 }}>
             <select value={newSource} onChange={(e) => setNewSource(e.currentTarget.value as InsightSource)}>
-              {(Object.keys(SOURCE_LABEL) as InsightSource[]).map((s) => (
+              {KEYWORD_SOURCES.map((s) => (
                 <option key={s} value={s}>
                   {SOURCE_LABEL[s]}
                 </option>
@@ -708,7 +839,7 @@ export default function AdminInsightsPage() {
             </button>
           </div>
 
-          {(Object.keys(SOURCE_LABEL) as InsightSource[]).map((source) => (
+          {KEYWORD_SOURCES.map((source) => (
             <div key={source} style={{ marginBottom: 10 }}>
               <strong style={{ fontSize: 13 }}>{SOURCE_LABEL[source]}</strong>
               <div style={{ marginTop: 4 }}>

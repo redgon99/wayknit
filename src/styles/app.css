@@ -6095,6 +6095,145 @@ button {
   padding-left: 20px;
 }
 
+/* 리서치 리포트 — 붙여넣은 본문에서 뽑은 표·그래프 대시보드(§34) */
+.insight-report-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.insight-report-dashboard-block h4 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.insight-report-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.insight-report-bar-row {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  column-gap: 10px;
+  row-gap: 2px;
+  align-items: center;
+}
+
+.insight-report-bar-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: right;
+}
+
+.insight-report-bar-track {
+  grid-column: 2;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  height: 20px;
+}
+
+.insight-report-bar-fill {
+  height: 100%;
+  min-width: 28px;
+  background: var(--color-accent-hover);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.insight-report-bar-value {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.insight-report-bar-places {
+  grid-column: 2;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.insight-report-interest-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.insight-report-interest-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background: var(--color-surface-solid);
+}
+
+.insight-report-interest-card strong {
+  display: block;
+  font-size: 12.5px;
+  margin-bottom: 4px;
+}
+
+.insight-report-interest-card p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.insight-report-signals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.insight-report-signal {
+  border-left: 3px solid;
+  padding: 4px 0 4px 12px;
+}
+
+.insight-report-signal strong {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.insight-report-signal p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.insight-report-signal-positive {
+  border-left-color: var(--color-success-text);
+}
+
+.insight-report-signal-positive strong {
+  color: var(--color-success-text);
+}
+
+.insight-report-signal-negative {
+  border-left-color: var(--color-danger-text);
+}
+
+.insight-report-signal-negative strong {
+  color: var(--color-danger-text);
+}
+
+@media (max-width: 520px) {
+  .insight-report-signals {
+    grid-template-columns: 1fr;
+  }
+}
+
 .legal-modal #legal-modal-title {
   margin: 0 36px 4px 0;
   font-size: 18px;

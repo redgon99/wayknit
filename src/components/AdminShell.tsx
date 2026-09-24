@@ -6,6 +6,7 @@ export type AdminPageKey =
   | 'dashboard'
   | 'admin'
   | 'insights'
+  | 'insight-reports'
   | 'guides'
   | 'distribution'
   | 'scenarios'
@@ -51,6 +52,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: '성장',
     items: [
       { key: 'insights', label: '시장 인사이트', to: '/admin/insights' },
+      { key: 'insight-reports', label: '리서치 리포트', to: '/admin/insight-reports' },
       { key: 'distribution', label: '배포관리', to: '/admin/distribution' },
     ],
   },
@@ -60,6 +62,7 @@ const PAGE_TITLE: Record<AdminPageKey, string> = {
   dashboard: '대시보드',
   admin: '현황 관리',
   insights: '시장 인사이트',
+  'insight-reports': '리서치 리포트',
   guides: '가이드 카드',
   distribution: '배포관리',
   scenarios: '시나리오 카탈로그',
