@@ -2,6 +2,7 @@ import { getSupabase, isSupabaseConfigured } from './supabase';
 import type { InsightCollectPeriod } from './insightCollectPeriod';
 import type {
   InsightAnalysis,
+  InsightAudience,
   InsightCategory,
   InsightCategoryCount,
   InsightCollectionRun,
@@ -186,19 +187,21 @@ export async function updateInsightAnalysisCategory(
 export async function listInsightItems(filter: {
   source?: InsightSource;
   category?: InsightCategory;
+  audience?: InsightAudience;
   limit?: number;
 } = {}): Promise<InsightItemWithAnalysis[]> {
   const sb = requireSupabase();
-  const analysisJoin = filter.category ? 'insight_analysis!inner' : 'insight_analysis';
+  const analysisJoin = filter.category || filter.audience ? 'insight_analysis!inner' : 'insight_analysis';
   let query = sb
     .from('insight_raw_items')
     .select(
-      `id, source, external_id, title, content, author, url, source_created_at, collected_at, ${analysisJoin}(id, category, sentiment, summary, mentioned_services, model_used, analyzed_at)`
+      `id, source, external_id, title, content, author, url, source_created_at, collected_at, ${analysisJoin}(id, category, sentiment, summary, mentioned_services, audience, model_used, analyzed_at)`
     )
     .order('collected_at', { ascending: false })
     .limit(filter.limit ?? 100);
   if (filter.source) query = query.eq('source', filter.source);
   if (filter.category) query = query.eq('insight_analysis.category', filter.category);
+  if (filter.audience) query = query.eq('insight_analysis.audience', filter.audience);
 
   const { data, error } = await query;
   if (error) throw error;
@@ -215,6 +218,7 @@ export async function listInsightItems(filter: {
           sentiment: (analysisRow.sentiment as InsightAnalysis['sentiment']) ?? null,
           summary: (analysisRow.summary as string | null) ?? null,
           mentionedServices: (analysisRow.mentioned_services as string[] | null) ?? [],
+          audience: (analysisRow.audience as InsightAudience | null) ?? null,
           modelUsed: (analysisRow.model_used as string | null) ?? null,
           analyzedAt: analysisRow.analyzed_at as string,
         }

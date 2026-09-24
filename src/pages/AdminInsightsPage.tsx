@@ -30,6 +30,7 @@ import {
 import { triggerGuideDraftFromTips } from '../lib/guides';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import type {
+  InsightAudience,
   InsightCategory,
   InsightCategoryCount,
   InsightCollectionRun,
@@ -67,6 +68,13 @@ const CATEGORY_LABEL: Record<InsightCategory, string> = {
   competitor_mention: '경쟁서비스 언급',
   useful_tip: '유용한정보',
   other: '기타',
+};
+
+/** 외국인 인사이트 목적과 국내(한국인) 참고용 콘텐츠 구분(§35) */
+const AUDIENCE_LABEL: Record<InsightAudience, string> = {
+  foreign: '외국인',
+  domestic: '국내(참고용)',
+  unclear: '판정 불명',
 };
 
 const COLLECTORS: Array<{ id: InsightCollector; label: string; keywordSources: InsightSource[] }> = [
@@ -124,6 +132,7 @@ export default function AdminInsightsPage() {
 
   const [filterSource, setFilterSource] = useState<InsightSource | ''>('');
   const [filterCategory, setFilterCategory] = useState<InsightCategory | ''>('');
+  const [filterAudience, setFilterAudience] = useState<InsightAudience | ''>('');
   const [expandedCategory, setExpandedCategory] = useState<InsightCategory | null>(null);
   const [activeTab, setActiveTab] = useState<'collect' | 'keywords' | 'dashboard'>('dashboard');
   const [collectPeriod, setCollectPeriod] = useState<InsightCollectPeriod>(() =>
@@ -192,13 +201,14 @@ export default function AdminInsightsPage() {
       const rows = await listInsightItems({
         source: filterSource || undefined,
         category: filterCategory || undefined,
+        audience: filterAudience || undefined,
         limit: 100,
       });
       setItems(rows);
     } catch (e) {
       setError(e instanceof Error ? e.message : '수집 항목을 불러오지 못했습니다.');
     }
-  }, [filterSource, filterCategory]);
+  }, [filterSource, filterCategory, filterAudience]);
 
   useEffect(() => {
     if (access !== 'ok') return;
@@ -1008,6 +1018,18 @@ export default function AdminInsightsPage() {
                 </option>
               ))}
             </select>
+            <select
+              value={filterAudience}
+              onChange={(e) => setFilterAudience(e.currentTarget.value as InsightAudience | '')}
+              title="외국인 인사이트 목적과 국내(한국인) 참고용 콘텐츠를 구분해서 봅니다"
+            >
+              <option value="">전체 대상</option>
+              {(Object.keys(AUDIENCE_LABEL) as InsightAudience[]).map((a) => (
+                <option key={a} value={a}>
+                  {AUDIENCE_LABEL[a]}
+                </option>
+              ))}
+            </select>
             <button
               type="button"
               className="admin-create-btn"
@@ -1066,6 +1088,11 @@ export default function AdminInsightsPage() {
                       </td>
                       <td>
                         <span className="admin-pill">{SOURCE_LABEL[item.source]}</span>
+                        {item.analysis?.audience && (
+                          <div className="admin-cell-sub" style={{ marginTop: 4 }}>
+                            {AUDIENCE_LABEL[item.analysis.audience]}
+                          </div>
+                        )}
                       </td>
                       <td>
                         <div>{item.title || '(제목 없음)'}</div>

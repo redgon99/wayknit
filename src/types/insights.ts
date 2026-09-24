@@ -14,6 +14,9 @@ export type InsightCategory =
 
 export type InsightSentiment = 'positive' | 'neutral' | 'negative';
 
+/** 이 글의 작성자·독자층 — 외국인 인사이트 목적과 국내(한국인) 참고용 콘텐츠를 구분(§35) */
+export type InsightAudience = 'foreign' | 'domestic' | 'unclear';
+
 export type InsightRunStatus = 'running' | 'success' | 'error';
 
 export interface InsightKeyword {
@@ -43,6 +46,7 @@ export interface InsightAnalysis {
   sentiment: InsightSentiment | null;
   summary: string | null;
   mentionedServices: string[];
+  audience: InsightAudience | null;
   modelUsed: string | null;
   analyzedAt: string;
 }

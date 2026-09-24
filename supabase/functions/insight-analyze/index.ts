@@ -26,6 +26,17 @@ interface AnalysisResult {
   sentiment: 'positive' | 'neutral' | 'negative';
   summary: string;
   mentionedServices: string[];
+  audience?: string;
+}
+
+const AUDIENCE_VALUES = new Set(['foreign', 'domestic', 'unclear']);
+/** 네이버(블로그·지식인)는 한국 플랫폼·한국어라 소스만 보고 100% 확정 가능 —
+ * AI 판단보다 더 정확해서 응답과 무관하게 덮어쓴다(§35). */
+const ALWAYS_DOMESTIC_SOURCES = new Set(['naver_blog', 'naver_kin']);
+
+function normalizeAudience(source: string, value: string | undefined): string {
+  if (ALWAYS_DOMESTIC_SOURCES.has(source)) return 'domestic';
+  return value && AUDIENCE_VALUES.has(value) ? value : 'unclear';
 }
 
 function truncate(text: string | null, max: number): string {
@@ -58,6 +69,10 @@ function buildPrompt(items: RawItemRow[]): string {
 - sentiment: positive | neutral | negative
 - summary: 한국어 1문장 요약 (useful_tip이면 핵심 팁을, 그 외에는 불편함/요청/의견을 요약)
 - mentionedServices: 언급된 서비스/앱 이름 배열 (예: ["Naver Map", "Kakao Map", "T-money"]), 없으면 빈 배열
+- audience: 이 글의 작성자·독자층
+  - foreign: 외국인이 작성했거나 외국인 여행자를 대상/관점으로 쓴 콘텐츠
+  - domestic: 한국인이 한국인 대상으로 쓴 국내용 콘텐츠
+  - unclear: 언어·맥락만으로 판단하기 어려움
 
 규칙: 불편만 호소하고 방법이 없으면 pain_point. 방법이 구체적으로 있으면 useful_tip을 우선.
 
@@ -65,7 +80,7 @@ function buildPrompt(items: RawItemRow[]): string {
 ${listing}
 
 반드시 아래 JSON 배열 형식으로만 응답하세요. 다른 텍스트를 추가하지 마세요.
-[{"id": "...", "category": "...", "sentiment": "...", "summary": "...", "mentionedServices": ["..."]}]`;
+[{"id": "...", "category": "...", "sentiment": "...", "summary": "...", "mentionedServices": ["..."], "audience": "..."}]`;
 }
 
 function parseClaudeJson(text: string): AnalysisResult[] {
@@ -138,14 +153,16 @@ Deno.serve(async (req) => {
       const results = await classifyBatch(chunk, apiKey);
 
       const rows = results
-        .filter((r) => chunk.some((c) => c.id === r.id))
-        .map((r) => ({
+        .map((r) => ({ result: r, source: chunk.find((c) => c.id === r.id)?.source }))
+        .filter((x): x is { result: AnalysisResult; source: string } => x.source !== undefined)
+        .map(({ result: r, source }) => ({
           raw_item_id: r.id,
           category: r.category,
           sentiment: r.sentiment,
           summary: r.summary,
           mentioned_services: r.mentionedServices ?? [],
           model_used: CLAUDE_MODEL,
+          audience: normalizeAudience(source, r.audience),
         }));
       if (rows.length === 0) continue;
 

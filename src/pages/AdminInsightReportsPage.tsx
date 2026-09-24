@@ -5,6 +5,7 @@ import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminShell } from '../components/AdminShell';
 import { AdminPreviewModal } from '../components/AdminPreviewModal';
 import { InsightReportDashboard } from '../components/InsightReportDashboard';
+import { InsightAggregateDashboard } from '../components/InsightAggregateDashboard';
 import {
   createInsightReport,
   deleteInsightReport,
@@ -13,6 +14,7 @@ import {
   updateInsightReport,
   type InsightReportInput,
 } from '../lib/adminInsightReports';
+import { aggregateInsightReports } from '../lib/insightReportAggregate';
 import { hasParsedContent, parseInsightReportBody } from '../lib/insightReportParser';
 import { renderGuideMarkdown } from '../lib/guideMarkdown';
 import type { InsightReport } from '../types/insights';
@@ -52,6 +54,7 @@ export default function AdminInsightReportsPage() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [view, setView] = useState<'list' | 'aggregate'>('list');
   const [reports, setReports] = useState<InsightReport[]>([]);
   const [keywordOptions, setKeywordOptions] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState('');
@@ -221,6 +224,23 @@ export default function AdminInsightReportsPage() {
 
       <section className="admin-section">
         <div className="admin-notice-form-row" style={{ marginBottom: 12 }}>
+          <button
+            type="button"
+            className={view === 'list' ? 'admin-tab-btn active' : 'admin-tab-btn'}
+            onClick={() => setView('list')}
+          >
+            리포트 목록
+          </button>
+          <button
+            type="button"
+            className={view === 'aggregate' ? 'admin-tab-btn active' : 'admin-tab-btn'}
+            onClick={() => setView('aggregate')}
+          >
+            통합 대시보드
+          </button>
+        </div>
+
+        <div className="admin-notice-form-row" style={{ marginBottom: 12 }}>
           <input
             className="admin-notice-title"
             style={{ flex: 2 }}
@@ -241,12 +261,16 @@ export default function AdminInsightReportsPage() {
               <option key={k} value={k} />
             ))}
           </datalist>
-          <button type="button" className="admin-create-btn" onClick={openCreate}>
-            + 새 리포트
-          </button>
+          {view === 'list' && (
+            <button type="button" className="admin-create-btn" onClick={openCreate}>
+              + 새 리포트
+            </button>
+          )}
         </div>
 
-        {editingId && (
+        {view === 'aggregate' && <InsightAggregateDashboard data={aggregateInsightReports(reports)} />}
+
+        {view === 'list' && editingId && (
           <div className="admin-section" style={{ marginBottom: 16 }}>
             <h3 style={{ fontSize: 14, marginBottom: 8 }}>
               {editingId === 'new' ? '새 리포트' : '리포트 수정'}
@@ -358,68 +382,70 @@ export default function AdminInsightReportsPage() {
           </div>
         )}
 
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>제목</th>
-                <th>기간</th>
-                <th>키워드</th>
-                <th>등록일</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.map((r) => (
-                <tr key={r.id}>
-                  <td>
-                    <button
-                      type="button"
-                      className="admin-link-btn"
-                      onClick={() => openView(r)}
-                    >
-                      {r.title}
-                    </button>
-                    {r.summary && <div className="admin-cell-sub">{r.summary}</div>}
-                  </td>
-                  <td className="admin-cell-sub">
-                    {r.periodFrom || r.periodTo ? `${formatDate(r.periodFrom)} ~ ${formatDate(r.periodTo)}` : '-'}
-                  </td>
-                  <td>
-                    {r.keywords.map((k) => (
-                      <span key={k} className="admin-pill" style={{ marginRight: 4 }}>
-                        {k}
-                      </span>
-                    ))}
-                  </td>
-                  <td className="admin-cell-sub">{formatDate(r.createdAt)}</td>
-                  <td>
-                    <div className="admin-action-row">
-                      <button type="button" onClick={() => openEdit(r)}>
-                        수정
-                      </button>
+        {view === 'list' && (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>제목</th>
+                  <th>기간</th>
+                  <th>키워드</th>
+                  <th>등록일</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {reports.map((r) => (
+                  <tr key={r.id}>
+                    <td>
                       <button
                         type="button"
-                        className="danger"
-                        disabled={deletingId === r.id}
-                        onClick={() => void handleDelete(r.id)}
+                        className="admin-link-btn"
+                        onClick={() => openView(r)}
                       >
-                        삭제
+                        {r.title}
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {reports.length === 0 && !refreshing && (
-                <tr>
-                  <td colSpan={5} className="admin-cell-sub">
-                    등록된 리포트가 없습니다.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                      {r.summary && <div className="admin-cell-sub">{r.summary}</div>}
+                    </td>
+                    <td className="admin-cell-sub">
+                      {r.periodFrom || r.periodTo ? `${formatDate(r.periodFrom)} ~ ${formatDate(r.periodTo)}` : '-'}
+                    </td>
+                    <td>
+                      {r.keywords.map((k) => (
+                        <span key={k} className="admin-pill" style={{ marginRight: 4 }}>
+                          {k}
+                        </span>
+                      ))}
+                    </td>
+                    <td className="admin-cell-sub">{formatDate(r.createdAt)}</td>
+                    <td>
+                      <div className="admin-action-row">
+                        <button type="button" onClick={() => openEdit(r)}>
+                          수정
+                        </button>
+                        <button
+                          type="button"
+                          className="danger"
+                          disabled={deletingId === r.id}
+                          onClick={() => void handleDelete(r.id)}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {reports.length === 0 && !refreshing && (
+                  <tr>
+                    <td colSpan={5} className="admin-cell-sub">
+                      등록된 리포트가 없습니다.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <AdminPreviewModal

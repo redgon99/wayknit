@@ -6162,6 +6162,10 @@ button {
   color: var(--color-text-muted);
 }
 
+.insight-report-bar-count {
+  margin-right: 4px;
+}
+
 .insight-report-interest-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -6183,6 +6187,17 @@ button {
 
 .insight-report-interest-card p {
   margin: 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.insight-report-interest-descriptions {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-size: 12.5px;
   color: var(--color-text-secondary);
   line-height: 1.5;
@@ -6210,6 +6225,24 @@ button {
   font-size: 12.5px;
   color: var(--color-text-secondary);
   line-height: 1.5;
+}
+
+.insight-report-signal-list {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* 언급 수 없는 지역·음식 키워드 등 태그만 나열할 때(§37) */
+.insight-report-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .insight-report-signal-positive {
