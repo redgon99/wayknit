@@ -11,6 +11,63 @@ function requireSupabase() {
   return sb;
 }
 
+/**
+ * DB의 `parsed`는 저장 시점 파서가 만든 스냅샷이라, 파서 스키마가 바뀌면
+ * 예전에 저장된 행은 옛 모양 그대로 남는다(§37에서 실제로 겪음 —
+ * signals.positive가 string|null이던 옛 행을 새 컴포넌트가 배열로 가정하고
+ * `.length`를 읽다가 흰 화면으로 죽었다). 화면단에서 매번 타입을 믿지 않고
+ * 여기서 한 번 정규화해 어떤 모양이 들어와도 안전한 값으로 맞춘다 —
+ * 이후 리포트를 다시 저장하면 새 파서가 다시 계산해 자연히 갱신된다.
+ */
+function normalizeParsed(raw: unknown): ParsedInsightReport | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+
+  const toStringArray = (v: unknown): string[] => {
+    if (Array.isArray(v)) return v.filter((x): x is string => typeof x === 'string');
+    if (typeof v === 'string' && v) return [v];
+    return [];
+  };
+
+  const regions = Array.isArray(r.regions)
+    ? r.regions
+        .map((x) => {
+          const item = (x ?? {}) as Record<string, unknown>;
+          const name = typeof item.name === 'string' ? item.name : '';
+          return {
+            name,
+            mentionCount: typeof item.mentionCount === 'number' ? item.mentionCount : null,
+            notablePlaces: typeof item.notablePlaces === 'string' ? item.notablePlaces : '',
+          };
+        })
+        .filter((x) => x.name)
+    : [];
+
+  const interests = Array.isArray(r.interests)
+    ? r.interests
+        .map((x) => {
+          const item = (x ?? {}) as Record<string, unknown>;
+          return {
+            title: typeof item.title === 'string' ? item.title : '',
+            description: typeof item.description === 'string' ? item.description : '',
+          };
+        })
+        .filter((x) => x.title && x.description)
+    : [];
+
+  const signalsRaw = (r.signals ?? {}) as Record<string, unknown>;
+
+  return {
+    regions,
+    interests,
+    signals: {
+      positive: toStringArray(signalsRaw.positive),
+      negative: toStringArray(signalsRaw.negative),
+    },
+    foods: toStringArray(r.foods),
+  };
+}
+
 function mapRow(row: Record<string, unknown>): InsightReport {
   return {
     id: row.id as string,
@@ -21,7 +78,7 @@ function mapRow(row: Record<string, unknown>): InsightReport {
     periodFrom: (row.period_from as string | null) ?? null,
     periodTo: (row.period_to as string | null) ?? null,
     sourceNote: (row.source_note as string | null) ?? null,
-    parsed: (row.parsed as ParsedInsightReport | null) ?? null,
+    parsed: normalizeParsed(row.parsed),
     createdBy: (row.created_by as string | null) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
