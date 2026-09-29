@@ -199,3 +199,72 @@ export async function deleteScenarioCatalogEntry(id: string): Promise<void> {
   const { error } = await sb.from('scenario_catalog').delete().eq('id', id);
   if (error) throw error;
 }
+
+/** 편집 UI 저장 — content 전체(ko + 구조 동기화된 다른 언어)를 그대로 덮어쓴다. */
+export async function updateScenarioCatalogEntryContent(
+  id: string,
+  content: ScenarioCatalogEntry['content']
+): Promise<void> {
+  const sb = requireSupabase();
+  const { error } = await sb
+    .from('scenario_catalog')
+    .update({ content, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+/**
+ * DB에 저장된 최신 content.ko를 기준으로 나머지 언어를 AI로 재번역한다.
+ * 언어별로 독립 실패를 허용하므로(엣지함수가 Promise.allSettled로 처리),
+ * 일부만 실패해도 성공한 언어는 저장된다 — failedLocales로 알려준다.
+ */
+export async function retranslateScenarioCatalogEntry(
+  id: string
+): Promise<{ entry: ScenarioCatalogEntry; failedLocales: string[] }> {
+  const sb = requireSupabase();
+  const { data, error } = await sb.functions.invoke<{
+    entry?: Record<string, unknown>;
+    failedLocales?: string[];
+    error?: string;
+  }>('tour-scenario-catalog-retranslate', { body: { id } });
+  if (error) throw new Error(await describeFunctionError(error));
+  if (data && typeof data === 'object' && 'error' in data && data.error) {
+    throw new Error(String(data.error));
+  }
+  if (!data?.entry) throw new Error('재번역 결과가 비어 있습니다.');
+  return { entry: mapRow(data.entry), failedLocales: data.failedLocales ?? [] };
+}
+
+/**
+ * ko 구조(일자/스팟 구성·순서)가 바뀌면 다른 언어도 같은 구조로 맞춘다.
+ * contentId가 겹치는 스팟은 그 언어의 기존 번역 텍스트를 재사용하고, 새로
+ * 추가/교체된 스팟이나 새 날짜는 ko 텍스트로 채워 넣는다(플레이스홀더) —
+ * "재번역" 버튼을 눌러야 그 언어 문구로 완전히 바뀐다.
+ */
+export function syncScenarioStructureToLocales(
+  content: ScenarioCatalogEntry['content'],
+  newKo: ScenarioCatalogLocaleContent
+): ScenarioCatalogEntry['content'] {
+  const result: ScenarioCatalogEntry['content'] = { ...content, ko: newKo };
+  for (const [locale, localeContent] of Object.entries(content)) {
+    if (locale === 'ko' || !localeContent) continue;
+    const oldDayTitleByDay = new Map(localeContent.days.map((d) => [d.day, d.dayTitle] as const));
+    const oldStopById = new Map(
+      localeContent.days.flatMap((d) => d.stops.map((s) => [s.contentId, s] as const))
+    );
+    result[locale] = {
+      regionLabel: localeContent.regionLabel,
+      title: localeContent.title,
+      intro: localeContent.intro,
+      days: newKo.days.map((koDay) => ({
+        day: koDay.day,
+        dayTitle: oldDayTitleByDay.get(koDay.day) ?? koDay.dayTitle,
+        stops: koDay.stops.map((koStop) => {
+          const old = oldStopById.get(koStop.contentId);
+          return old ? { ...koStop, title: old.title, note: old.note, reason: old.reason } : { ...koStop };
+        }),
+      })),
+    };
+  }
+  return result;
+}

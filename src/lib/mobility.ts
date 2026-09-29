@@ -1,8 +1,13 @@
 import type { OptimizeBy, TravelMode } from '../types';
 import { estimateLegDistance, estimateLegMinutes, haversineMeters } from './planner';
+import { getSupabase } from './supabase';
 
-const KAKAO_REST_KEY = import.meta.env.VITE_KAKAO_REST_KEY;
-const CAR_URL = 'https://apis-navi.kakaomobility.com/v1/directions';
+/**
+ * 카카오 REST 키를 클라이언트에 직접 두지 않는다(2026-09-29, §31-25) —
+ * `kakao-directions` 엣지함수가 서버 시크릿으로 대신 호출한다. Supabase가
+ * 설정 안 된 환경(로컬 미설정 등)에서는 기존처럼 API 호출 자체를 건너뛰고
+ * 곧장 추정치로 간다.
+ */
 
 /**
  * 실제 길찾기 API를 쓸 수 있는 이동수단은 **자동차뿐이다.**
@@ -68,7 +73,7 @@ async function tryFetchApiLeg(
   mode: TravelMode,
   optimizeBy?: OptimizeBy
 ): Promise<LegResult | null> {
-  if (!KAKAO_REST_KEY) return null;
+  if (!getSupabase()) return null;
   if (mode === 'car') return fetchCarLegFromKakao(from, to, optimizeBy);
   return null;
 }
@@ -82,7 +87,7 @@ export async function fetchLeg(
   mode: TravelMode,
   optimizeBy?: OptimizeBy
 ): Promise<LegResult> {
-  if (!KAKAO_REST_KEY || !hasDirectionsApi(mode)) {
+  if (!getSupabase() || !hasDirectionsApi(mode)) {
     return estimateLeg(from, to, mode);
   }
 
@@ -122,13 +127,7 @@ async function fetchCarLegFromKakao(
   optimizeBy?: OptimizeBy
 ): Promise<LegResult> {
   const { priority, avoid } = carParamsFor(optimizeBy);
-  const params = new URLSearchParams({
-    origin: `${from.lng},${from.lat}`,
-    destination: `${to.lng},${to.lat}`,
-    priority,
-  });
-  if (avoid) params.set('avoid', avoid);
-  const route = await fetchMobilityRoute(`${CAR_URL}?${params.toString()}`);
+  const route = await fetchMobilityRoute({ origin: from, destination: to, priority, avoid });
   const dist = route.summary.distance as number;
   const durSec = route.summary.duration as number;
   return {
@@ -139,17 +138,22 @@ async function fetchCarLegFromKakao(
   };
 }
 
-async function fetchMobilityRoute(url: string): Promise<{
+/** `kakao-directions` 엣지함수 호출(§31-25 — REST 키를 서버로 옮김). */
+async function fetchMobilityRoute(params: {
+  origin: { lat: number; lng: number };
+  destination: { lat: number; lng: number };
+  priority: string;
+  avoid?: string;
+}): Promise<{
   summary: { distance: number; duration: number };
   sections?: Array<{ roads?: Array<{ vertexes?: number[] }> }>;
 }> {
-  const resp = await fetch(url, {
-    headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
+  const sb = getSupabase();
+  if (!sb) throw new Error('Supabase가 설정되지 않았습니다');
+  const { data, error } = await sb.functions.invoke('kakao-directions', {
+    body: { kind: 'single', ...params },
   });
-  if (!resp.ok) {
-    throw new Error(`Kakao Mobility ${resp.status}`);
-  }
-  const data = await resp.json();
+  if (error) throw new Error(`Kakao Mobility proxy: ${error.message}`);
   const route = data?.routes?.[0];
   if (!route?.summary) {
     throw new Error('Invalid Mobility response');
@@ -185,7 +189,7 @@ export async function fetchLegs(
   const firstPass = await Promise.all(pairs.map(([a, b]) => fetchLeg(a, b, mode, optimizeBy)));
 
   // 실패(estimate) 구간만 한 번 더 보강 시도 — API가 없는 이동수단은 재시도도 무의미하다
-  if (!KAKAO_REST_KEY || !hasDirectionsApi(mode)) return firstPass;
+  if (!getSupabase() || !hasDirectionsApi(mode)) return firstPass;
 
   const retryIndices = firstPass
     .map((leg, idx) => (leg.source === 'estimate' ? idx : -1))

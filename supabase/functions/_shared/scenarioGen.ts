@@ -331,6 +331,71 @@ Respond with JSON only:
 {"region":"${regionKey}","regionLabel":"region name in ${localeLabel}","title":"scenario title in ${localeLabel}","intro":"3-5 sentence intro in ${localeLabel}","days":[{"day":1,"dayTitle":"day subtitle in ${localeLabel}","stops":[{"contentId":"...","title":"place name in ${localeLabel}","reason":"short one-line reason in ${localeLabel}","note":"..."}]}]}`;
 }
 
+export interface TranslateSourceStop {
+  contentId: string;
+  title: string;
+  reason: string;
+  note: string;
+}
+export interface TranslateSourceDay {
+  day: number;
+  dayTitle: string;
+  stops: TranslateSourceStop[];
+}
+export interface TranslateSource {
+  regionLabel: string;
+  title: string;
+  intro: string;
+  days: TranslateSourceDay[];
+}
+
+/**
+ * buildNarratePrompt와 달리 관리자가 이미 고친 한국어 문구를 "번역"한다
+ * (테마/지역 지식만으로 새로 창작하지 않음) — 시나리오 편집 UI의
+ * "다른 언어 재번역" 기능 전용.
+ */
+export function buildTranslatePrompt(
+  theme: ScenarioTheme,
+  locale: string,
+  localeLabel: string,
+  regionKey: string,
+  source: TranslateSource
+): string {
+  const themeLabel = themeLabelFor(theme, locale);
+  const dayListing = source.days
+    .map((d) => {
+      const items = d.stops
+        .map(
+          (s) =>
+            `  - contentId="${s.contentId}" title="${s.title}" reason="${s.reason}" note="${s.note}"`
+        )
+        .join('\n');
+      return `Day ${d.day} (Korean day subtitle: "${d.dayTitle}"):\n${items}`;
+    })
+    .join('\n\n');
+
+  return `You are a professional Korean-to-${localeLabel} travel translator for Wayknit, a Korea trip planner.
+Translate the following Korean "${themeLabel}" itinerary content into natural, fluent ${localeLabel} — written the way a native travel writer would phrase it, not a literal word-for-word translation. Preserve the meaning and any specific facts exactly.
+
+Korean source (region "${regionKey}", region label "${source.regionLabel}"):
+title: "${source.title}"
+intro: "${source.intro}"
+
+${dayListing}
+
+LANGUAGE LOCK (critical):
+- Write title, intro, dayTitle, regionLabel, every stop.title, stop.reason, and stop.note entirely in ${localeLabel}. Do not leave any Korean in the output.
+- stop.title must be a natural ${localeLabel} place name a traveler would recognize for that place (common local name, not a letter-by-letter romanization unless that is the usual name).
+- regionLabel is the traveler-facing region name in ${localeLabel}.
+
+Hard rules:
+- Return exactly the same days and the exact same contentId set given above, in the same day grouping and order. Do not add, remove, reorder across days, or invent any contentId.
+- "region" in your JSON response must be exactly "${regionKey}" (unchanged).
+
+Respond with JSON only:
+{"region":"${regionKey}","regionLabel":"region name in ${localeLabel}","title":"scenario title in ${localeLabel}","intro":"3-5 sentence intro in ${localeLabel}","days":[{"day":1,"dayTitle":"day subtitle in ${localeLabel}","stops":[{"contentId":"...","title":"place name in ${localeLabel}","reason":"short one-line reason in ${localeLabel}","note":"..."}]}]}`;
+}
+
 async function requestClaudeText(prompt: string, apiKey: string, localeLabel: string, model: string): Promise<string> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',

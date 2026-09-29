@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
@@ -9,10 +9,15 @@ import {
   generateScenarioCatalogEntry,
   listAdminScenarioCatalog,
   publishScenarioCatalogEntry,
+  retranslateScenarioCatalogEntry,
+  syncScenarioStructureToLocales,
   unpublishScenarioCatalogEntry,
+  updateScenarioCatalogEntryContent,
 } from '../lib/scenarioCatalog';
-import { fetchScenarioAvailability, SCENARIO_THEMES, type ScenarioTheme } from '../lib/tourScenario';
-import type { ScenarioCatalogEntry, ScenarioCatalogStatus } from '../types/scenarioCatalog';
+import { parseTourPlaceId, searchTourPlaces } from '../lib/tourApi';
+import { fetchScenarioAvailability, SCENARIO_THEMES, type ScenarioStop, type ScenarioTheme } from '../lib/tourScenario';
+import type { ScenarioCatalogEntry, ScenarioCatalogLocaleContent, ScenarioCatalogStatus } from '../types/scenarioCatalog';
+import type { Place } from '../types';
 import '../styles/app.css';
 
 const THEME_LABEL: Record<ScenarioTheme, string> = {
@@ -47,6 +52,15 @@ const LOCALE_LABEL: Record<(typeof PREVIEW_LOCALES)[number], string> = {
   ru: 'Русский',
 };
 
+interface PlaceSearchState {
+  dayIdx: number;
+  /** null이면 이 일자 끝에 새 스탑을 추가, 아니면 해당 인덱스의 스탑을 교체 */
+  stopIdx: number | null;
+  keyword: string;
+  results: Place[];
+  loading: boolean;
+}
+
 function formatDateTime(iso: string | null): string {
   if (!iso) return '-';
   const d = new Date(iso);
@@ -73,6 +87,12 @@ export default function AdminScenariosPage() {
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [previewLocale, setPreviewLocale] = useState<(typeof PREVIEW_LOCALES)[number]>('ko');
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const [editMode, setEditMode] = useState(false);
+  const [draftKo, setDraftKo] = useState<ScenarioCatalogLocaleContent | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [retranslating, setRetranslating] = useState(false);
+  const [placeSearch, setPlaceSearch] = useState<PlaceSearchState | null>(null);
 
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; label: string } | null>(null);
@@ -215,6 +235,169 @@ export default function AdminScenariosPage() {
 
   const previewEntry = useMemo(() => entries.find((e) => e.id === previewId) ?? null, [entries, previewId]);
   const previewContent = previewEntry?.content[previewLocale];
+
+  useEffect(() => {
+    setEditMode(false);
+    setDraftKo(null);
+    setPlaceSearch(null);
+  }, [previewId]);
+
+  function updateDraft(mutator: (d: ScenarioCatalogLocaleContent) => ScenarioCatalogLocaleContent) {
+    setDraftKo((d) => (d ? mutator(d) : d));
+  }
+
+  const handleStartEdit = () => {
+    if (!previewEntry?.content.ko) return;
+    setDraftKo(structuredClone(previewEntry.content.ko));
+    setEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditMode(false);
+    setDraftKo(null);
+    setPlaceSearch(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!previewEntry || !draftKo) return;
+    setSavingEdit(true);
+    setError(null);
+    try {
+      const merged = syncScenarioStructureToLocales(previewEntry.content, draftKo);
+      await updateScenarioCatalogEntryContent(previewEntry.id, merged);
+      await loadEntries();
+      setEditMode(false);
+      setDraftKo(null);
+      setPlaceSearch(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '저장 실패');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleRetranslate = async () => {
+    if (!previewEntry) return;
+    setRetranslating(true);
+    setError(null);
+    try {
+      const { failedLocales } = await retranslateScenarioCatalogEntry(previewEntry.id);
+      await loadEntries();
+      if (failedLocales.length > 0) {
+        setError(`${failedLocales.length}개 언어 재번역 실패(나머지는 저장됨) — ${failedLocales.join(', ')}. 다시 눌러 재시도하세요.`);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '재번역 실패');
+    } finally {
+      setRetranslating(false);
+    }
+  };
+
+  function moveDay(idx: number, dir: -1 | 1) {
+    updateDraft((d) => {
+      const days = [...d.days];
+      const target = idx + dir;
+      if (target < 0 || target >= days.length) return d;
+      [days[idx], days[target]] = [days[target], days[idx]];
+      return { ...d, days: days.map((day, i) => ({ ...day, day: i + 1 })) };
+    });
+  }
+
+  function removeDay(idx: number) {
+    if (!window.confirm('이 일자를 삭제할까요?')) return;
+    updateDraft((d) => {
+      const days = d.days.filter((_, i) => i !== idx);
+      return { ...d, days: days.map((day, i) => ({ ...day, day: i + 1 })) };
+    });
+  }
+
+  function addDay() {
+    updateDraft((d) => ({ ...d, days: [...d.days, { day: d.days.length + 1, dayTitle: '', stops: [] }] }));
+  }
+
+  function updateDayTitle(idx: number, value: string) {
+    updateDraft((d) => {
+      const days = [...d.days];
+      days[idx] = { ...days[idx], dayTitle: value };
+      return { ...d, days };
+    });
+  }
+
+  function moveStop(dayIdx: number, stopIdx: number, dir: -1 | 1) {
+    updateDraft((d) => {
+      const days = [...d.days];
+      const stops = [...days[dayIdx].stops];
+      const target = stopIdx + dir;
+      if (target < 0 || target >= stops.length) return d;
+      [stops[stopIdx], stops[target]] = [stops[target], stops[stopIdx]];
+      days[dayIdx] = { ...days[dayIdx], stops };
+      return { ...d, days };
+    });
+  }
+
+  function removeStop(dayIdx: number, stopIdx: number) {
+    updateDraft((d) => {
+      const days = [...d.days];
+      days[dayIdx] = { ...days[dayIdx], stops: days[dayIdx].stops.filter((_, i) => i !== stopIdx) };
+      return { ...d, days };
+    });
+  }
+
+  function moveStopToDay(dayIdx: number, stopIdx: number, targetDay: number) {
+    updateDraft((d) => {
+      const days = d.days.map((day) => ({ ...day, stops: [...day.stops] }));
+      const [stop] = days[dayIdx].stops.splice(stopIdx, 1);
+      const targetIdx = days.findIndex((day) => day.day === targetDay);
+      if (targetIdx < 0) {
+        days[dayIdx].stops.splice(stopIdx, 0, stop);
+        return d;
+      }
+      days[targetIdx].stops.push(stop);
+      return { ...d, days };
+    });
+  }
+
+  function updateStopField(dayIdx: number, stopIdx: number, field: 'title' | 'note' | 'reason', value: string) {
+    updateDraft((d) => {
+      const days = [...d.days];
+      const stops = [...days[dayIdx].stops];
+      stops[stopIdx] = { ...stops[stopIdx], [field]: value };
+      days[dayIdx] = { ...days[dayIdx], stops };
+      return { ...d, days };
+    });
+  }
+
+  function replaceOrAddStop(place: Place) {
+    if (!placeSearch) return;
+    const parsed = parseTourPlaceId(place.id);
+    if (!parsed) return;
+    const newStop: ScenarioStop = {
+      placeId: place.id,
+      contentId: parsed.contentId,
+      contentTypeId: parsed.contentTypeId,
+      title: place.name,
+      titleKo: place.nameKo ?? place.name,
+      address: place.address,
+      lat: place.lat,
+      lng: place.lng,
+      thumbnailUrl: place.thumbnailUrl,
+      note: '',
+      reason: '',
+    };
+    const { dayIdx, stopIdx } = placeSearch;
+    updateDraft((d) => {
+      const days = [...d.days];
+      const stops = [...days[dayIdx].stops];
+      if (stopIdx === null) {
+        stops.push(newStop);
+      } else {
+        stops[stopIdx] = newStop;
+      }
+      days[dayIdx] = { ...days[dayIdx], stops };
+      return { ...d, days };
+    });
+    setPlaceSearch(null);
+  }
 
   if (!configured) {
     return (
@@ -471,23 +654,219 @@ export default function AdminScenariosPage() {
               : ''
           }
           headerExtra={
-            <div className="admin-tab-bar" role="tablist" aria-label="미리보기 언어" style={{ marginTop: 10 }}>
-              {PREVIEW_LOCALES.map((locale) => (
-                <button
-                  key={locale}
-                  type="button"
-                  role="tab"
-                  aria-selected={previewLocale === locale}
-                  className={`admin-tab-btn ${previewLocale === locale ? 'active' : ''}`}
-                  onClick={() => setPreviewLocale(locale)}
-                >
-                  {LOCALE_LABEL[locale]}
-                </button>
-              ))}
-            </div>
+            editMode ? (
+              <p className="admin-cell-sub" style={{ marginTop: 10 }}>
+                편집 중에는 한국어(ko) 기준으로만 수정합니다 — 저장 후 "다른 언어 재번역"으로 나머지 언어를 갱신하세요.
+              </p>
+            ) : (
+              <div
+                className="admin-tab-bar"
+                role="tablist"
+                aria-label="미리보기 언어"
+                style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
+              >
+                {PREVIEW_LOCALES.map((locale) => (
+                  <button
+                    key={locale}
+                    type="button"
+                    role="tab"
+                    aria-selected={previewLocale === locale}
+                    className={`admin-tab-btn ${previewLocale === locale ? 'active' : ''}`}
+                    onClick={() => setPreviewLocale(locale)}
+                  >
+                    {LOCALE_LABEL[locale]}
+                  </button>
+                ))}
+                {previewLocale === 'ko' && previewEntry?.content.ko && (
+                  <button type="button" className="admin-create-btn" style={{ marginLeft: 'auto' }} onClick={handleStartEdit}>
+                    편집
+                  </button>
+                )}
+              </div>
+            )
           }
         >
-          {previewContent ? (
+          {editMode && draftKo ? (
+            <div>
+              <label style={{ display: 'block', marginBottom: 10 }}>
+                제목
+                <input
+                  type="text"
+                  value={draftKo.title}
+                  onChange={(e) => {
+                    const v = e.currentTarget.value;
+                    updateDraft((d) => ({ ...d, title: v }));
+                  }}
+                  style={{ width: '100%', marginTop: 4 }}
+                />
+              </label>
+              <label style={{ display: 'block', marginBottom: 10 }}>
+                지역명
+                <input
+                  type="text"
+                  value={draftKo.regionLabel}
+                  onChange={(e) => {
+                    const v = e.currentTarget.value;
+                    updateDraft((d) => ({ ...d, regionLabel: v }));
+                  }}
+                  style={{ width: '100%', marginTop: 4 }}
+                />
+              </label>
+              <label style={{ display: 'block', marginBottom: 14 }}>
+                소개
+                <textarea
+                  value={draftKo.intro}
+                  onChange={(e) => {
+                    const v = e.currentTarget.value;
+                    updateDraft((d) => ({ ...d, intro: v }));
+                  }}
+                  rows={3}
+                  style={{ width: '100%', marginTop: 4 }}
+                />
+              </label>
+
+              {draftKo.days.map((day, dayIdx) => (
+                <div key={dayIdx} style={{ marginBottom: 16, padding: 10, border: '1px solid #e5e7eb', borderRadius: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                    <strong style={{ fontSize: 13, whiteSpace: 'nowrap' }}>{day.day}일차</strong>
+                    <input
+                      type="text"
+                      value={day.dayTitle}
+                      placeholder="일자 소제목"
+                      onChange={(e) => {
+                        const v = e.currentTarget.value;
+                        updateDayTitle(dayIdx, v);
+                      }}
+                      style={{ flex: 1 }}
+                    />
+                    <button type="button" disabled={dayIdx === 0} onClick={() => moveDay(dayIdx, -1)}>
+                      ▲
+                    </button>
+                    <button type="button" disabled={dayIdx === draftKo.days.length - 1} onClick={() => moveDay(dayIdx, 1)}>
+                      ▼
+                    </button>
+                    <button type="button" className="danger" onClick={() => removeDay(dayIdx)}>
+                      일자 삭제
+                    </button>
+                  </div>
+
+                  {day.stops.map((stop, stopIdx) => (
+                    <div key={stop.placeId + stopIdx} style={{ marginBottom: 8, padding: 8, background: '#f9fafb', borderRadius: 6 }}>
+                      <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                        <input
+                          type="text"
+                          value={stop.title}
+                          placeholder="장소명"
+                          onChange={(e) => {
+                            const v = e.currentTarget.value;
+                            updateStopField(dayIdx, stopIdx, 'title', v);
+                          }}
+                          style={{ flex: '1 1 180px' }}
+                        />
+                        <button type="button" disabled={stopIdx === 0} onClick={() => moveStop(dayIdx, stopIdx, -1)}>
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          disabled={stopIdx === day.stops.length - 1}
+                          onClick={() => moveStop(dayIdx, stopIdx, 1)}
+                        >
+                          ▼
+                        </button>
+                        {draftKo.days.length > 1 && (
+                          <select
+                            value={day.day}
+                            onChange={(e) => {
+                              const v = Number(e.currentTarget.value);
+                              if (v !== day.day) moveStopToDay(dayIdx, stopIdx, v);
+                            }}
+                          >
+                            {draftKo.days.map((d2) => (
+                              <option key={d2.day} value={d2.day}>
+                                {d2.day}일차로 이동
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setPlaceSearch({ dayIdx, stopIdx, keyword: '', results: [], loading: false })}
+                        >
+                          장소 교체
+                        </button>
+                        <button type="button" className="danger" onClick={() => removeStop(dayIdx, stopIdx)}>
+                          삭제
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={stop.reason ?? ''}
+                        placeholder="이 장소를 넣은 이유(짧게)"
+                        onChange={(e) => {
+                          const v = e.currentTarget.value;
+                          updateStopField(dayIdx, stopIdx, 'reason', v);
+                        }}
+                        style={{ width: '100%', marginBottom: 6 }}
+                      />
+                      <textarea
+                        value={stop.note}
+                        placeholder="설명"
+                        onChange={(e) => {
+                          const v = e.currentTarget.value;
+                          updateStopField(dayIdx, stopIdx, 'note', v);
+                        }}
+                        rows={2}
+                        style={{ width: '100%' }}
+                      />
+
+                      {placeSearch && placeSearch.dayIdx === dayIdx && placeSearch.stopIdx === stopIdx && (
+                        <PlaceSearchBox
+                          placeSearch={placeSearch}
+                          setPlaceSearch={setPlaceSearch}
+                          onPick={replaceOrAddStop}
+                          onCancel={() => setPlaceSearch(null)}
+                        />
+                      )}
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() => setPlaceSearch({ dayIdx, stopIdx: null, keyword: '', results: [], loading: false })}
+                  >
+                    + 장소 추가
+                  </button>
+                  {placeSearch && placeSearch.dayIdx === dayIdx && placeSearch.stopIdx === null && (
+                    <PlaceSearchBox
+                      placeSearch={placeSearch}
+                      setPlaceSearch={setPlaceSearch}
+                      onPick={replaceOrAddStop}
+                      onCancel={() => setPlaceSearch(null)}
+                    />
+                  )}
+                </div>
+              ))}
+
+              <button type="button" onClick={addDay} style={{ marginBottom: 16 }}>
+                + 새 일자
+              </button>
+
+              <div className="admin-action-row" style={{ marginTop: 10, borderTop: '1px solid #e5e7eb', paddingTop: 12 }}>
+                <button type="button" onClick={handleCancelEdit} disabled={savingEdit}>
+                  취소
+                </button>
+                <button type="button" className="admin-create-btn" disabled={savingEdit} onClick={() => void handleSaveEdit()}>
+                  {savingEdit ? '저장 중…' : '저장'}
+                </button>
+                <button type="button" disabled={retranslating || savingEdit} onClick={() => void handleRetranslate()}>
+                  {retranslating ? '재번역 중… (8개 언어, 다소 걸려요)' : '다른 언어 재번역'}
+                </button>
+              </div>
+              <p className="admin-cell-sub" style={{ marginTop: 6 }}>
+                "다른 언어 재번역"은 DB에 저장된 최신 한국어 내용을 기준으로 동작합니다 — 위 수정 후 먼저 저장하세요.
+              </p>
+            </div>
+          ) : previewContent ? (
             <div>
               <h3 style={{ margin: '0 0 6px' }}>{previewContent.title}</h3>
               <p className="admin-cell-sub" style={{ marginBottom: 14 }}>
@@ -527,5 +906,69 @@ export default function AdminScenariosPage() {
           )}
         </AdminPreviewModal>
     </AdminShell>
+  );
+}
+
+function PlaceSearchBox({
+  placeSearch,
+  setPlaceSearch,
+  onPick,
+  onCancel,
+}: {
+  placeSearch: PlaceSearchState;
+  setPlaceSearch: Dispatch<SetStateAction<PlaceSearchState | null>>;
+  onPick: (place: Place) => void;
+  onCancel: () => void;
+}) {
+  const runSearch = async () => {
+    const keyword = placeSearch.keyword.trim();
+    if (!keyword) return;
+    setPlaceSearch((s) => (s ? { ...s, loading: true } : s));
+    const results = await searchTourPlaces(keyword);
+    setPlaceSearch((s) => (s ? { ...s, results, loading: false } : s));
+  };
+
+  return (
+    <div style={{ marginTop: 8, padding: 8, background: '#fff', border: '1px dashed #d1d5db', borderRadius: 6 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+        <input
+          type="text"
+          value={placeSearch.keyword}
+          placeholder="장소명으로 검색"
+          onChange={(e) => {
+            const v = e.currentTarget.value;
+            setPlaceSearch((s) => (s ? { ...s, keyword: v } : s));
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') void runSearch();
+          }}
+          style={{ flex: 1 }}
+        />
+        <button type="button" disabled={placeSearch.loading} onClick={() => void runSearch()}>
+          {placeSearch.loading ? '검색 중…' : '검색'}
+        </button>
+        <button type="button" onClick={onCancel}>
+          닫기
+        </button>
+      </div>
+      {placeSearch.results.length > 0 && (
+        <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', maxHeight: 180, overflowY: 'auto' }}>
+          {placeSearch.results.map((place) => (
+            <li key={place.id}>
+              <button
+                type="button"
+                onClick={() => onPick(place)}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '4px 6px' }}
+              >
+                <span>{place.name}</span>
+                <span className="admin-cell-sub" style={{ display: 'block' }}>
+                  {place.address}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

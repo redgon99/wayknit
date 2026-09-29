@@ -10,9 +10,9 @@
  * 비교하면 정류장 5곳 기준 15회가 나간다.
  */
 import type { OptimizeBy, TravelMode } from '../types';
+import { getSupabase } from './supabase';
 
-const KAKAO_REST_KEY = import.meta.env.VITE_KAKAO_REST_KEY;
-const WAYPOINTS_URL = 'https://apis-navi.kakaomobility.com/v1/waypoints/directions';
+/** 카카오 REST 키는 서버로 옮겼다 — `kakao-directions` 엣지함수 경유(§31-25). */
 
 /** 지도에서 서로 구분되도록. 선택된 것만 진하게 그린다. */
 export const COMPARE_COLORS: Record<OptimizeBy, string> = {
@@ -75,29 +75,23 @@ function extractPath(route: {
 }
 
 async function fetchOne(points: Point[], optimizeBy: OptimizeBy): Promise<RouteComparison | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
   const { priority, avoid } = paramsFor(optimizeBy);
-  const body: Record<string, unknown> = {
-    origin: { x: points[0].lng, y: points[0].lat },
-    destination: { x: points[points.length - 1].lng, y: points[points.length - 1].lat },
-    priority,
-  };
   const waypoints = points.slice(1, -1);
-  if (waypoints.length > 0) {
-    body.waypoints = waypoints.map((p) => ({ x: p.lng, y: p.lat }));
-  }
-  if (avoid) body.avoid = avoid;
 
-  const resp = await fetch(WAYPOINTS_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `KakaoAK ${KAKAO_REST_KEY}`,
-      'Content-Type': 'application/json',
+  const { data, error } = await sb.functions.invoke('kakao-directions', {
+    body: {
+      kind: 'waypoints',
+      origin: points[0],
+      destination: points[points.length - 1],
+      waypoints: waypoints.length > 0 ? waypoints : undefined,
+      priority,
+      avoid,
     },
-    body: JSON.stringify(body),
   });
-  if (!resp.ok) return null;
+  if (error) return null;
 
-  const data = await resp.json();
   const route = data?.routes?.[0];
   // result_code 0이 정상. 경유지가 도로에서 너무 멀면 실패 코드가 온다.
   if (!route || (route.result_code !== undefined && route.result_code !== 0)) return null;
@@ -121,7 +115,7 @@ export async function compareRouteOptions(
   points: Point[],
   mode: TravelMode
 ): Promise<RouteComparison[]> {
-  if (!KAKAO_REST_KEY || mode !== 'car' || points.length < 2) return [];
+  if (!getSupabase() || mode !== 'car' || points.length < 2) return [];
 
   const results = await Promise.all(
     COMPARE_ORDER.map((key) => fetchOne(points, key).catch(() => null))
