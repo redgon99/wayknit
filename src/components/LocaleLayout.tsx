@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { setAppLocale } from '../lib/i18n';
 import { applyRobotsPolicy } from '../lib/seo';
+import { trackEvent } from '../lib/analytics';
 import {
   DEFAULT_LOCALE,
   SUPPORTED_LOCALES,
@@ -68,6 +69,16 @@ export function LocaleLayout() {
 
     applyRobotsPolicy(location.pathname);
   }, [lang, location.pathname]);
+
+  /* 접속 로그(§42) — 이동할 때마다 언어 접두사를 뗀 경로로 기록.
+   * search/hash 변화로는 재발화하지 않도록 pathname만 의존성에 둔다. */
+  useEffect(() => {
+    if (lang === 'zh') return; // 레거시 리다이렉트 직전 — 위 이펙트가 곧 새 경로로 옮긴다
+    const current = lang ? normalizeLocale(lang) : localeFromPathname(location.pathname);
+    const locale = current ?? DEFAULT_LOCALE;
+    trackEvent('page_view', { path: stripLocalePrefix(location.pathname), locale });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   return <Outlet />;
 }

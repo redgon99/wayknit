@@ -18,7 +18,9 @@ export type AnalyticsEvent =
   | 'presence_multi_viewer'
   | 'route_generated'
   /** 앵커·영업시간을 지킬 수 없는 일정이 나옴 — 엔진 고도화 착수 판단 */
-  | 'route_conflict';
+  | 'route_conflict'
+  /** 페이지 이동(관리자 접속 로그 화면의 기반 데이터, §42) — LocaleLayout에서 기록 */
+  | 'page_view';
 
 export type AnalyticsProps = Record<string, string | number | boolean | null>;
 

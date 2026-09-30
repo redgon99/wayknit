@@ -13,6 +13,7 @@ export type AdminPageKey =
   | 'landing'
   | 'reports'
   | 'audit'
+  | 'access-log'
   | 'search';
 
 interface NavItem {
@@ -38,6 +39,7 @@ const NAV_GROUPS: NavGroup[] = [
       { key: 'admin', label: '현황 관리', to: '/admin' },
       { key: 'reports', label: '신고 검수', to: '/admin/reports' },
       { key: 'audit', label: '감사 로그', to: '/admin/audit' },
+      { key: 'access-log', label: '접속 로그', to: '/admin/access-log' },
     ],
   },
   {
@@ -69,6 +71,7 @@ const PAGE_TITLE: Record<AdminPageKey, string> = {
   landing: '랜딩페이지 관리',
   reports: '신고 검수',
   audit: '감사 로그',
+  'access-log': '접속 로그',
   search: '통합 검색',
 };
 
