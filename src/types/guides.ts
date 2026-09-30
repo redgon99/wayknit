@@ -37,6 +37,9 @@ export interface GuideArticle {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** 검수자 이름(자유 텍스트) — 관리자 검토 보고서 C3 */
+  reviewedBy: string | null;
+  reviewedAt: string | null;
 }
 
 /** 가이드 상세·매크로용 코스 핀 */
@@ -78,6 +81,8 @@ export interface GuideArticleInput {
   locale?: string;
   translations?: Partial<Record<string, GuideTranslation>>;
   slug?: string;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
 }
 
 export { DEFAULT_GUIDE_KIND };

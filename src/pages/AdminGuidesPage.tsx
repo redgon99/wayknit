@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminShell } from '../components/AdminShell';
 import { AdminPreviewModal } from '../components/AdminPreviewModal';
-import { GUIDE_KIND_META, GUIDE_KINDS, type GuideKind } from '../lib/guideKinds';
+import { DEFAULT_GUIDE_KIND, GUIDE_KIND_META, GUIDE_KINDS, type GuideKind } from '../lib/guideKinds';
 import {
   archiveGuide,
   buildGuideRow,
@@ -102,6 +102,32 @@ function formatCompactDateTime(iso: string): string {
 
 const GUIDES_PAGE_SIZE = 8;
 
+/** "새 가이드" 진입점 — id가 빈 문자열이면 신규 작성으로 취급한다(handleSave 분기). */
+function blankGuideDraft(): GuideArticle {
+  return {
+    id: '',
+    slug: '',
+    title: '',
+    summary: '',
+    bodyMd: '',
+    summaryEn: null,
+    kind: DEFAULT_GUIDE_KIND,
+    topicTags: [],
+    status: 'draft',
+    sourceAnalysisIds: [],
+    sourceUrls: [],
+    coursePins: [],
+    locale: 'ko',
+    translations: {},
+    createdBy: null,
+    publishedAt: null,
+    createdAt: '',
+    updatedAt: '',
+    reviewedBy: null,
+    reviewedAt: null,
+  };
+}
+
 export default function AdminGuidesPage() {
   const { configured } = useAuth();
   const access = useAdminAccess();
@@ -124,6 +150,7 @@ export default function AdminGuidesPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [previewGuide, setPreviewGuide] = useState<GuideArticle | null>(null);
   const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   /* 추천 여행코스 붙여넣기 매크로 */
   const [macroOpen, setMacroOpen] = useState(false);
@@ -208,6 +235,48 @@ export default function AdminGuidesPage() {
     guidesPage * GUIDES_PAGE_SIZE + GUIDES_PAGE_SIZE
   );
 
+  const openNewGuide = () => {
+    setAiOpen(false);
+    setMacroOpen(false);
+    setMlOpen(false);
+    setShowVersions(false);
+    setHasDraft(false);
+    setVersions([]);
+    setEditing(blankGuideDraft());
+  };
+
+  /** 서식 도구 — 선택 영역을 감싸거나(없으면 placeholder 삽입) 삽입 뒤 커서를 복원한다 */
+  const wrapSelection = (before: string, after: string, placeholder: string) => {
+    const el = bodyRef.current;
+    if (!el || !editing) return;
+    const start = el.selectionStart ?? editing.bodyMd.length;
+    const end = el.selectionEnd ?? editing.bodyMd.length;
+    const selected = editing.bodyMd.slice(start, end) || placeholder;
+    const next = editing.bodyMd.slice(0, start) + before + selected + after + editing.bodyMd.slice(end);
+    setEditing({ ...editing, bodyMd: next });
+    const cursorStart = start + before.length;
+    const cursorEnd = cursorStart + selected.length;
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(cursorStart, cursorEnd);
+    }, 0);
+  };
+
+  /** 서식 도구 — 현재 커서가 있는 줄의 맨 앞에 prefix를 삽입한다(제목·목록용) */
+  const insertLinePrefix = (prefix: string) => {
+    const el = bodyRef.current;
+    if (!el || !editing) return;
+    const start = el.selectionStart ?? editing.bodyMd.length;
+    const lineStart = editing.bodyMd.lastIndexOf('\n', start - 1) + 1;
+    const next = editing.bodyMd.slice(0, lineStart) + prefix + editing.bodyMd.slice(lineStart);
+    setEditing({ ...editing, bodyMd: next });
+    const cursor = start + prefix.length;
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(cursor, cursor);
+    }, 0);
+  };
+
   const openEdit = async (id: string) => {
     setShowVersions(false);
     try {
@@ -283,6 +352,8 @@ export default function AdminGuidesPage() {
       sourceUrls: g.sourceUrls,
       coursePins: g.coursePins,
       slug: g.slug,
+      reviewedBy: g.reviewedBy,
+      reviewedAt: g.reviewedAt,
     };
   }
 
@@ -292,15 +363,22 @@ export default function AdminGuidesPage() {
     await loadGoogleMapsSdk(key);
   }
 
-  /** draft/archived 글 — 예전처럼 바로 라이브 행을 고친다(운영본 개념이 없음) */
+  /** draft/archived 글 — 예전처럼 바로 라이브 행을 고친다(운영본 개념이 없음).
+   *  id가 빈 문자열이면 "새 가이드"로 연 빈 초안이라 생성 경로를 탄다. */
   const handleSave = async () => {
     if (!editing) return;
     setSaving(true);
     setError(null);
     try {
-      await updateGuide(editing.id, editableGuidePatch(editing));
-      await loadList();
-      setEditing(null);
+      if (!editing.id) {
+        const created = await createGuide(editableGuidePatch(editing));
+        await loadList();
+        await openEdit(created.id);
+      } else {
+        await updateGuide(editing.id, editableGuidePatch(editing));
+        await loadList();
+        setEditing(null);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : '저장 실패');
     } finally {
@@ -744,6 +822,9 @@ export default function AdminGuidesPage() {
       onRefresh={() => void loadList()}
       extraActions={
         <>
+          <button type="button" className="admin-create-btn" onClick={openNewGuide}>
+            새 가이드
+          </button>
           <button type="button" className="admin-create-btn" onClick={() => setAiOpen((v) => !v)}>
             {aiOpen ? 'AI 자동 생성 닫기' : 'AI 자동 생성'}
           </button>
@@ -1469,7 +1550,28 @@ Check entry requirements before departure…`}
             </label>
             <label className="admin-guide-field">
               본문 (Markdown)
+              <div className="admin-action-row" style={{ marginBottom: 6 }}>
+                <button type="button" onClick={() => wrapSelection('**', '**', '굵은 텍스트')}>
+                  굵게
+                </button>
+                <button type="button" onClick={() => wrapSelection('*', '*', '기울임 텍스트')}>
+                  기울임
+                </button>
+                <button type="button" onClick={() => insertLinePrefix('## ')}>
+                  제목
+                </button>
+                <button type="button" onClick={() => insertLinePrefix('- ')}>
+                  목록
+                </button>
+                <button type="button" onClick={() => insertLinePrefix('1. ')}>
+                  번호목록
+                </button>
+                <button type="button" onClick={() => wrapSelection('[', '](https://)', '링크 텍스트')}>
+                  링크
+                </button>
+              </div>
               <textarea
+                ref={bodyRef}
                 rows={14}
                 value={editing.bodyMd}
                 onChange={(e) => setEditing({ ...editing, bodyMd: e.currentTarget.value })}
@@ -1531,6 +1633,24 @@ Check entry requirements before departure…`}
                 }
               />
             </label>
+            <label className="admin-guide-field">
+              검수자
+              <input
+                value={editing.reviewedBy ?? ''}
+                onChange={(e) => setEditing({ ...editing, reviewedBy: e.currentTarget.value || null })}
+              />
+            </label>
+            <label className="admin-guide-field" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={Boolean(editing.reviewedAt)}
+                onChange={(e) =>
+                  setEditing({ ...editing, reviewedAt: e.currentTarget.checked ? new Date().toISOString() : null })
+                }
+              />
+              검수 완료
+              {editing.reviewedAt ? ` (${new Date(editing.reviewedAt).toLocaleDateString('ko-KR')})` : ''}
+            </label>
             <div className="admin-action-row">
               {editing.status === 'published' ? (
                 <>
@@ -1564,14 +1684,16 @@ Check entry requirements before departure…`}
               <button type="button" onClick={() => setEditing(null)}>
                 취소
               </button>
-              <button
-                type="button"
-                className="danger"
-                disabled={saving || deletingId === editing.id}
-                onClick={() => void handleDeleteGuide(editing)}
-              >
-                {deletingId === editing.id ? '삭제 중…' : '삭제'}
-              </button>
+              {editing.id && (
+                <button
+                  type="button"
+                  className="danger"
+                  disabled={saving || deletingId === editing.id}
+                  onClick={() => void handleDeleteGuide(editing)}
+                >
+                  {deletingId === editing.id ? '삭제 중…' : '삭제'}
+                </button>
+              )}
             </div>
           </section>
         )}

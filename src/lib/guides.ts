@@ -128,6 +128,8 @@ function mapRow(row: Record<string, unknown>): GuideArticle {
     publishedAt: (row.published_at as string | null) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
+    reviewedBy: (row.reviewed_by as string | null) ?? null,
+    reviewedAt: (row.reviewed_at as string | null) ?? null,
   };
 }
 
@@ -263,6 +265,8 @@ export function buildGuideRow(
   if (patch.locale !== undefined) row.locale = patch.locale;
   if (patch.translations !== undefined) row.translations = patch.translations;
   if (patch.slug !== undefined) row.slug = patch.slug;
+  if (patch.reviewedBy !== undefined) row.reviewed_by = patch.reviewedBy;
+  if (patch.reviewedAt !== undefined) row.reviewed_at = patch.reviewedAt;
   if (patch.status !== undefined) row.status = patch.status;
   if (patch.publishedAt !== undefined) row.published_at = patch.publishedAt;
   return row;
