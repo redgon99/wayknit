@@ -490,6 +490,72 @@
   box-shadow: var(--shadow-md);
 }
 
+/* 실제 홍보 영상이 없는 동안, 핀이 하나씩 찍히고 동선표가 이어서 채워지는
+   과정을 반복 재생해 "자동 동선 생성" 순간을 영상처럼 보여준다(영상 파일
+   없이 CSS만으로 — 2026-10). 각 항목은 같은 길이의 주기를 delay만 다르게
+   줘서 자연스럽게 겹치며 순환한다. 모션을 줄이고 싶은 사용자는 기존처럼
+   정적으로 전부 보인다. */
+@media (prefers-reduced-motion: no-preference) {
+  .landing-hero-demo-pin,
+  .landing-hero-demo-stop {
+    opacity: 0;
+    animation: landing-hero-item-in 9s infinite;
+  }
+  .landing-hero-demo-pin:nth-of-type(1) {
+    animation-delay: 0s;
+  }
+  .landing-hero-demo-pin:nth-of-type(2) {
+    animation-delay: 0.45s;
+  }
+  .landing-hero-demo-pin:nth-of-type(3) {
+    animation-delay: 0.9s;
+  }
+  .landing-hero-demo-stop:nth-of-type(1) {
+    animation-delay: 2s;
+  }
+  .landing-hero-demo-stop:nth-of-type(2) {
+    animation-delay: 2.45s;
+  }
+  .landing-hero-demo-stop:nth-of-type(3) {
+    animation-delay: 2.9s;
+  }
+  .landing-hero-demo-arrow {
+    animation: landing-hero-arrow-pulse 2.2s ease-in-out infinite;
+  }
+}
+
+@keyframes landing-hero-item-in {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  7% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  78% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes landing-hero-arrow-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
 /* Pillars */
 .landing-pillars {
   display: grid;
