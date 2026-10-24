@@ -32,6 +32,10 @@
       "route": "Ruta del día 1"
     }
   },
+  "showcase": {
+    "title": "Mira las funciones clave en video",
+    "subtitle": "Se reproducen 4 videos en orden — toca una pestaña para saltar directamente."
+  },
   "pillars": {
     "title": "Tres pasos",
     "search": {

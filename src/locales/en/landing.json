@@ -32,6 +32,10 @@
       "route": "Day 1 route"
     }
   },
+  "showcase": {
+    "title": "Watch the key features",
+    "subtitle": "Four short videos play in sequence — tap a tab to jump to any one."
+  },
   "pillars": {
     "title": "Three steps",
     "search": {

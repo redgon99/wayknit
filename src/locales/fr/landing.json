@@ -32,6 +32,10 @@
       "route": "Itinéraire jour 1"
     }
   },
+  "showcase": {
+    "title": "Découvrez les fonctions clés en vidéo",
+    "subtitle": "4 vidéos se lisent dans l'ordre — touchez un onglet pour y accéder directement."
+  },
   "pillars": {
     "title": "Trois étapes",
     "search": {

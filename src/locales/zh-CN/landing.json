@@ -32,6 +32,10 @@
       "route": "第1天动线"
     }
   },
+  "showcase": {
+    "title": "用视频了解核心功能",
+    "subtitle": "4个视频按顺序播放 — 点击标签也可以直接跳转。"
+  },
   "pillars": {
     "title": "三步",
     "search": {

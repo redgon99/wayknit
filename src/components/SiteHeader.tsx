@@ -53,9 +53,6 @@ export function SiteHeader({ active, beforeLinks, noticeTexts }: SiteHeaderProps
       <a href={`${homePath}#features`} onClick={() => setMenuOpen(false)}>
         {t('nav.features')}
       </a>
-      <a href={`${homePath}#how`} onClick={() => setMenuOpen(false)}>
-        {t('nav.howItWorks')}
-      </a>
       <Link
         to={plazaPath}
         className={active === 'plaza' ? 'nav-active' : ''}

@@ -31,12 +31,6 @@ function LandingBrand({ className = '' }: { className?: string }) {
   );
 }
 
-const GALLERY = [
-  { src: '/landing/hero.png', alt: 'Wayknit map' },
-  { src: '/landing/screen-search.png', alt: 'Search' },
-  { src: '/landing/screen-route.png', alt: 'Route' },
-];
-
 export default function LandingPage() {
   const { t } = useTranslation('landing');
   const { t: tg } = useTranslation('guides');
@@ -81,13 +75,6 @@ export default function LandingPage() {
     };
   }, [locale]);
 
-  const compareRows = [
-    t('compare.row1', { returnObjects: true }) as string[],
-    t('compare.row2', { returnObjects: true }) as string[],
-    t('compare.row3', { returnObjects: true }) as string[],
-  ];
-
-  const steps = ['step1', 'step2', 'step3'] as const;
   const menu = promo?.menu ?? [];
   const heroCopy = findFirstEnabledOfType(menu, 'copy');
   const noticeTexts = menu.length > 0 ? collectNoticeTexts(menu) : [t('notice.trial')];
@@ -162,121 +149,74 @@ export default function LandingPage() {
 
       {menu.length > 0 ? <LandingCmsSections tree={menu} skipId={heroCopy?.id} /> : null}
 
-      <section className="landing-section" id="features" aria-labelledby="pillars-title">
+      <section className="landing-section landing-showcase" id="features" aria-labelledby="showcase-title">
         <div className="landing-section-header">
-          <h2 id="pillars-title">{t('pillars.title')}</h2>
+          <h2 id="showcase-title">{t('showcase.title')}</h2>
+          <p>{t('showcase.subtitle')}</p>
         </div>
-        <div className="landing-pillars">
-          <article className="landing-pillar-card">
-            <div className="landing-pillar-icon">
-              <Icon name="search" size={24} />
-            </div>
-            <h3>{t('pillars.search.title')}</h3>
-            <p>{t('pillars.search.body')}</p>
-          </article>
-          <article className="landing-pillar-card">
-            <div className="landing-pillar-icon">
-              <Icon name="route" size={24} />
-            </div>
-            <h3>{t('pillars.route.title')}</h3>
-            <p>{t('pillars.route.body')}</p>
-          </article>
-          <article className="landing-pillar-card">
-            <div className="landing-pillar-icon">
-              <Icon name="share" size={24} />
-            </div>
-            <h3>{t('pillars.share.title')}</h3>
-            <p>{t('pillars.share.body')}</p>
-          </article>
-        </div>
-      </section>
-
-      <section className="landing-section" aria-labelledby="features-title">
-        <div className="landing-section-header">
-          <h2 id="features-title">{t('features.title')}</h2>
-          <p>{t('features.subtitle')}</p>
-        </div>
-        <div className="landing-feature-grid">
-          <article className="landing-feature-card">
-            <h3>{t('features.multiDay.title')}</h3>
-            <p>{t('features.multiDay.body')}</p>
-          </article>
-          <article className="landing-feature-card">
-            <h3>{t('features.category.title')}</h3>
-            <p>{t('features.category.body')}</p>
-          </article>
-          <article className="landing-feature-card">
-            <h3>{t('features.maps.title')}</h3>
-            <p>{t('features.maps.body')}</p>
-          </article>
-          <article className="landing-feature-card">
-            <h3>{t('features.presentation.title')}</h3>
-            <p>{t('features.presentation.body')}</p>
-          </article>
-          <Link
-            to={`${planPath}?openScenario=1`}
-            className="landing-feature-card landing-feature-card-cta"
-          >
-            <h3>{t('features.scenario.title')}</h3>
-            <p>{t('features.scenario.body')}</p>
-            <span className="landing-feature-card-arrow" aria-hidden>
-              →
+        <div className="landing-showcase-grid">
+          <div className="landing-showcase-video" aria-hidden="true">
+            <span className="landing-showcase-video-badge">
+              <span>02</span> {t('pillars.route.title')}
             </span>
-          </Link>
-        </div>
-      </section>
-
-      <section className="landing-section" aria-labelledby="compare-title">
-        <div className="landing-section-header">
-          <h2 id="compare-title">{t('compare.title')}</h2>
-        </div>
-        <div className="landing-compare">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col" />
-                <th scope="col" className="col-us">
-                  {t('compare.us')}
-                </th>
-                <th scope="col">{t('compare.them')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {compareRows.map((row, i) => (
-                <tr key={i}>
-                  <td />
-                  <td className="col-us">{row[0]}</td>
-                  <td>{row[1]}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="landing-section" id="how" aria-labelledby="steps-title">
-        <div className="landing-section-header">
-          <h2 id="steps-title">{t('steps.title')}</h2>
-        </div>
-        <div className="landing-steps">
-          {steps.map((key, i) => (
-            <div
-              key={key}
-              className={`landing-step ${key === 'step2' ? 'landing-step-highlight' : ''}`}
-            >
-              <span className="landing-step-num">{i + 1}</span>
+            <span className="landing-showcase-video-play">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7 5v14l12-7z" />
+              </svg>
+            </span>
+          </div>
+          <div className="landing-showcase-tabs">
+            <div className="landing-showcase-tab">
+              <span className="landing-showcase-tab-icon">
+                <Icon name="search" size={18} />
+              </span>
               <div>
-                <h3>{t(`steps.${key}.title`)}</h3>
-                <p>{t(`steps.${key}.body`)}</p>
-                {key === 'step2' && (
-                  <Link to={planPath} className="landing-btn landing-btn-primary landing-step-cta">
-                    {t('steps.step2.cta')}
-                  </Link>
-                )}
+                <p>01 · {t('pillars.search.title')}</p>
+                <p>{t('pillars.search.body')}</p>
               </div>
             </div>
-          ))}
+            <div className="landing-showcase-tab landing-showcase-tab-active">
+              <div className="landing-showcase-tab-row">
+                <span className="landing-showcase-tab-icon">
+                  <Icon name="route" size={18} />
+                </span>
+                <div>
+                  <p>02 · {t('pillars.route.title')}</p>
+                  <p>{t('pillars.route.body')}</p>
+                </div>
+              </div>
+              <div className="landing-showcase-tab-progress">
+                <div className="landing-showcase-tab-progress-fill" />
+              </div>
+            </div>
+            <div className="landing-showcase-tab">
+              <span className="landing-showcase-tab-icon">
+                <Icon name="sparkles" size={18} />
+              </span>
+              <div>
+                <p>03 · {t('features.scenario.title')}</p>
+                <p>{t('features.scenario.body')}</p>
+              </div>
+            </div>
+            <div className="landing-showcase-tab">
+              <span className="landing-showcase-tab-icon">
+                <Icon name="share" size={18} />
+              </span>
+              <div>
+                <p>04 · {t('pillars.share.title')}</p>
+                <p>{t('pillars.share.body')}</p>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <section className="landing-positioning" aria-labelledby="positioning-title">
+        <p className="landing-positioning-eyebrow" id="positioning-title">
+          {t('compare.title')}
+        </p>
+        <p className="landing-positioning-statement">{t('features.subtitle')}</p>
+        <span className="landing-positioning-underline" aria-hidden="true" />
       </section>
 
       <section className="landing-section" aria-labelledby="tips-title">
@@ -307,21 +247,6 @@ export default function LandingPage() {
           </div>
         )}
       </section>
-
-      {!promo && (
-        <section className="landing-section" aria-labelledby="gallery-title">
-          <div className="landing-section-header">
-            <h2 id="gallery-title">{t('gallery.title')}</h2>
-          </div>
-          <div className="landing-gallery">
-            {GALLERY.map((item) => (
-              <div key={item.src} className="landing-gallery-item">
-                <img src={item.src} alt={item.alt} loading="lazy" />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       <section className="landing-cta-band" aria-labelledby="cta-title">
         <h2 id="cta-title">{t('cta.title')}</h2>

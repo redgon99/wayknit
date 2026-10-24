@@ -32,6 +32,10 @@
       "route": "Route Tag 1"
     }
   },
+  "showcase": {
+    "title": "Die wichtigsten Funktionen im Video",
+    "subtitle": "4 Videos werden nacheinander abgespielt — tippen Sie auf einen Tab, um direkt dorthin zu springen."
+  },
   "pillars": {
     "title": "Drei Schritte",
     "search": {
