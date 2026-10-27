@@ -7,8 +7,8 @@ import type { Place, SimpleCategory } from '../types';
 export const CATEGORY_EMOJI: Record<SimpleCategory | 'mart' | 'sight', string> = {
   food: '🍽',
   cafe: '☕',
-  tour: '🌋',
-  sight: '🌋',
+  tour: '🏞',
+  sight: '🏞',
   stay: '🏨',
   culture: '🎭',
   shop: '🛒',
@@ -66,6 +66,7 @@ const PLACE_EMOJI_RULES: Array<{ re: RegExp; emoji: string }> = [
   },
   { re: /해변|비치|beach|해수욕/i, emoji: '🏖' },
   { re: /해안|coast|바다|ocean|wave/i, emoji: '🌊' },
+  { re: /palace|temple|shrine|궁궐|사찰|[가-힣]궁(?:\s|$)/i, emoji: '🏯' },
   { re: /일출봉|오름|volcano|peak|hike|등반|등산/i, emoji: '🌋' },
   { re: /호텔|hotel|리조트|resort/i, emoji: '🏨' },
   { re: /게스트|guesthouse|펜션|hostel|모텔|motel/i, emoji: '🛏' },

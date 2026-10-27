@@ -45,6 +45,7 @@
     "offday": "定休日"
   },
   "sort": {
+    "relevance": "関連度順",
     "distance": "距離順",
     "rating": "評価順",
     "review": "レビュー順"

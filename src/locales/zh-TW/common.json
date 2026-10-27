@@ -45,6 +45,7 @@
     "offday": "休息日"
   },
   "sort": {
+    "relevance": "相關度",
     "distance": "距離",
     "rating": "評分",
     "review": "評價數"

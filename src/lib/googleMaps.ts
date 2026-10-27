@@ -233,6 +233,18 @@ function inferCategoryCodeByTypes(types: string[] | undefined): CategoryCode | '
   return 'OTHER';
 }
 
+/** Google이 거의 모든 장소에 붙이는 일반 타입 — 화면에 그대로 보이면 의미 없는 노이즈라 뺀다 */
+const GENERIC_GOOGLE_TYPES = new Set(['establishment', 'point_of_interest', 'premise', 'geocode', 'political']);
+
+function describeGoogleTypes(types: unknown): string | undefined {
+  if (!Array.isArray(types)) return undefined;
+  const meaningful = types
+    .filter((t): t is string => typeof t === 'string' && !GENERIC_GOOGLE_TYPES.has(t))
+    .map((t) => t.replace(/_/g, ' '))
+    .map((t) => t.charAt(0).toUpperCase() + t.slice(1));
+  return meaningful.length ? meaningful.join(' · ') : undefined;
+}
+
 function normalizeGooglePlace(row: any): Place | null {
   const loc = row?.geometry?.location;
   const lat = typeof loc?.lat === 'function' ? loc.lat() : loc?.lat;
@@ -250,7 +262,7 @@ function normalizeGooglePlace(row: any): Place | null {
     category: meta.category,
     categoryCode,
     categoryLabel: meta.label,
-    categoryDetail: Array.isArray(row.types) ? row.types.join(' > ') : undefined,
+    categoryDetail: describeGoogleTypes(row.types),
     address: String(row.formatted_address ?? row.vicinity ?? ''),
     roadAddress: String(row.formatted_address ?? row.vicinity ?? ''),
     lat,

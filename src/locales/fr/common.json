@@ -45,6 +45,7 @@
     "offday": "Fermé aujourd’hui"
   },
   "sort": {
+    "relevance": "Pertinence",
     "distance": "Distance",
     "rating": "Note",
     "review": "Avis"

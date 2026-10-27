@@ -131,7 +131,7 @@ export interface PinnedPlace extends Place {
 }
 
 /** 정렬 기준 */
-export type SortKey = 'distance' | 'rating' | 'review';
+export type SortKey = 'relevance' | 'distance' | 'rating' | 'review';
 
 /** 장소 검색 범위 */
 export type SearchScope = 'nationwide' | 'nearby';

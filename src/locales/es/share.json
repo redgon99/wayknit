@@ -89,6 +89,7 @@
     },
     "demoBadge": "Ejemplo",
     "statDays": "{{count}} días",
+    "statDays_one": "{{count}} día",
     "statPlaces": "{{count}} lugares"
   },
   "modal": {

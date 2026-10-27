@@ -46,9 +46,10 @@ import { AppSheetModal } from './AppSheetModal';
 import type { MapProvider } from '../lib/mapProvider';
 import type { IconName } from '../icons/wayknit-icons';
 
-/** 검색 결과 정렬 — 거리·별점 */
-const SEARCH_SORT_KEYS = ['distance', 'rating'] as const satisfies readonly SortKey[];
+/** 검색 결과 정렬 — 관련도(검색 엔진 순서 그대로)·거리·별점 */
+const SEARCH_SORT_KEYS = ['relevance', 'distance', 'rating'] as const satisfies readonly SortKey[];
 const SORT_ICONS: Record<(typeof SEARCH_SORT_KEYS)[number], IconName> = {
+  relevance: 'search',
   distance: 'mapPin',
   rating: 'star',
 };
@@ -228,7 +229,7 @@ export function SearchPanel({
   const appLocale = normalizeLocale(i18n.language);
   const compact = variant === 'compact';
   const [toolsOpen, setToolsOpen] = useState(false);
-  const [sortKey, setSortKey] = useState<SortKey>('distance');
+  const [sortKey, setSortKey] = useState<SortKey>('relevance');
   const subFilterGroup = getSearchSubFilterGroup(categoryFilter);
   const activeSubFilters =
     categoryFilter === 'FD6' ? foodRestrictions : categorySubFilters;
@@ -379,6 +380,9 @@ export function SearchPanel({
 
   const sorted = useMemo(() => {
     const list = [...results];
+    // 관련도는 검색 엔진이 준 순서가 곧 정답이다 — "Gyeongbokgung" 검색에서 거리순이
+    // 경복궁 본체를 7위로 밀어냈던 문제(2026-10-27 외국인 리뷰).
+    if (sortKey === 'relevance') return list;
     list.sort((a, b) => {
       const openRank = (p: Place) =>
         p.openingStatus === 'open' || p.isOpenNow
@@ -1065,7 +1069,7 @@ export function SearchPanel({
           type="button"
           className="search-reset-link"
           onClick={() => {
-            setSortKey('distance');
+            setSortKey('relevance');
             onResetResults();
           }}
           disabled={loading}

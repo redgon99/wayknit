@@ -45,6 +45,7 @@
     "offday": "휴무일"
   },
   "sort": {
+    "relevance": "관련도",
     "distance": "거리",
     "rating": "별점",
     "review": "리뷰"

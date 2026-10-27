@@ -40,6 +40,7 @@ export function useSortLabels(): Record<SortKey, string> {
   const { t } = useTranslation('common');
   return useMemo(
     () => ({
+      relevance: t('sort.relevance'),
       distance: t('sort.distance'),
       rating: t('sort.rating'),
       review: t('sort.review'),

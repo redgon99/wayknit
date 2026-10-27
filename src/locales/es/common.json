@@ -45,6 +45,7 @@
     "offday": "Cerrado hoy"
   },
   "sort": {
+    "relevance": "Relevancia",
     "distance": "Distancia",
     "rating": "Valoración",
     "review": "Reseñas"

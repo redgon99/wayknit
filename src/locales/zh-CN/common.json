@@ -45,6 +45,7 @@
     "offday": "休息日"
   },
   "sort": {
+    "relevance": "相关度",
     "distance": "距离",
     "rating": "评分",
     "review": "评价数"
