@@ -136,6 +136,24 @@ export function extractMarkdownLinks(md: string): { alt: string; href: string; i
   return out;
 }
 
+/**
+ * 본문에 사진으로 보여 줄 수 있는 이미지 주소(한국관광공사 TourAPI 사진만 허용).
+ * 출처가 확인된 공공 사진만 표시하고, 그 밖의 이미지 문법은 기존처럼 출처 칩으로 둔다.
+ */
+const GUIDE_PHOTO_HOSTS = ['tong.visitkorea.or.kr'];
+
+export function guidePhotoUrl(raw: string): string | null {
+  if (!isHttpUrl(raw)) return null;
+  try {
+    const u = new URL(raw.trim());
+    if (!GUIDE_PHOTO_HOSTS.includes(u.hostname)) return null;
+    u.protocol = 'https:';
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
 export function collectGuideSources(bodyMd: string, sourceUrls: string[] = []): GuideSource[] {
   const seen = new Set<string>();
   const list: GuideSource[] = [];
@@ -159,6 +177,7 @@ export function collectGuideSources(bodyMd: string, sourceUrls: string[] = []): 
     push(raw, null, true);
   }
   for (const link of extractMarkdownLinks(bodyMd)) {
+    if (link.image && guidePhotoUrl(link.href)) continue; // 본문 사진은 출처 목록에 넣지 않는다
     const hint = labelFromCiteAlt(link.alt) || (link.image ? null : link.alt.trim() || null);
     const usable =
       hint && !/^https?:/i.test(hint) && hint.length <= 40 ? hint : null;

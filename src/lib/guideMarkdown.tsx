@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   cleanSourceUrl,
+  guidePhotoUrl,
   isFaviconUrl,
   isHttpUrl,
   labelFromCiteAlt,
@@ -31,6 +32,18 @@ function SourceChip({ href, label }: { href: string; label: string }) {
   );
 }
 
+/** 한국관광공사 사진 한 장(설명 = alt). 주소가 깨졌으면 통째로 숨긴다. */
+function GuidePhoto({ src, alt }: { src: string; alt: string }) {
+  const [broken, setBroken] = useState(false);
+  if (broken) return null;
+  return (
+    <figure className="guide-photo">
+      <img src={src} alt={alt} loading="lazy" decoding="async" onError={() => setBroken(true)} />
+      {alt && <figcaption>{alt}</figcaption>}
+    </figure>
+  );
+}
+
 function sourceLabel(alt: string, href: string, image: boolean): string {
   if (image) return labelFromCiteAlt(alt) || labelFromUrl(href);
   const named = alt.trim();
@@ -40,7 +53,7 @@ function sourceLabel(alt: string, href: string, image: boolean): string {
   return labelFromUrl(href);
 }
 
-/** Minimal markdown for guide bodies (headings, lists, tables, paragraphs, bold/italic, links). */
+/** Minimal markdown for guide bodies (headings, lists, tables, paragraphs, bold/italic, links, TourAPI photos). */
 export function renderGuideMarkdown(md: string): ReactNode[] {
   const lines = md.replace(/\r\n/g, '\n').split('\n');
   const nodes: ReactNode[] = [];
@@ -171,6 +184,15 @@ export function renderGuideMarkdown(md: string): ReactNode[] {
           </table>
         </div>
       );
+      continue;
+    }
+
+    // 한 줄 전체가 이미지이고 한국관광공사 사진이면 본문 사진으로 보여 준다
+    const photo = trimmed.match(/^!\[([^\]]*)\]\(([^)\s]+)\)$/);
+    const photoSrc = photo ? guidePhotoUrl(photo[2]) : null;
+    if (photo && photoSrc) {
+      flushList();
+      nodes.push(<GuidePhoto key={`photo-${key++}`} src={photoSrc} alt={photo[1].trim()} />);
       continue;
     }
 
