@@ -3,7 +3,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SITE_URL = (process.env.VITE_SITE_URL ?? 'https://wayknit.netlify.app').replace(/\/+$/, '');
+// 검색엔진에 알릴 대표 주소(netlify/edge-lib/guides.ts siteOrigin과 같게). 평소엔 Edge 함수(sitemap.ts)가
+// 요청 때 만든 사이트맵을 주고, 이 파일은 DB 조회 실패 시 대체본이다.
+const SITE_URL = (process.env.CANONICAL_SITE_URL ?? 'https://wayknit.com').replace(/\/+$/, '');
 
 const DEFAULT_LOCALE = 'ko';
 const LOCALES = ['ko', 'en', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'de', 'ru'];
@@ -39,18 +41,19 @@ function escapeXml(value) {
  * 로케일별 URL 하나마다 전체 언어 alternate를 붙인다.
  * (구글은 각 URL이 자기 자신을 포함한 alternate 집합을 갖기를 요구한다)
  */
-function urlEntries({ path, changefreq, priority, lastmod }) {
-  return LOCALES.map((locale) => {
+function urlEntries({ path, changefreq, priority, lastmod, locales = LOCALES }) {
+  const fallback = locales.includes(DEFAULT_LOCALE) ? DEFAULT_LOCALE : locales[0];
+  return locales.map((locale) => {
     const loc = `${SITE_URL}${pathWithLocale(path, locale)}`;
-    const alternates = [
-      ...LOCALES.map(
+    const alternates = locales.length < 2 ? null : [
+      ...locales.map(
         (alt) =>
           `    <xhtml:link rel="alternate" hreflang="${alt}" href="${escapeXml(
             `${SITE_URL}${pathWithLocale(path, alt)}`,
           )}" />`,
       ),
       `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(
-        `${SITE_URL}${pathWithLocale(path, DEFAULT_LOCALE)}`,
+        `${SITE_URL}${pathWithLocale(path, fallback)}`,
       )}" />`,
     ].join('\n');
 
@@ -75,7 +78,10 @@ async function fetchGuideRoutes() {
   if (!url || !key) return [];
 
   try {
-    const endpoint = `${url.replace(/\/+$/, '')}/rest/v1/guide_articles?select=slug,published_at,updated_at&status=eq.published&order=published_at.desc&limit=1000`;
+    // 번역이 실제로 있는 언어 주소만 알린다(언어별 제목만 받아 판단)
+    const others = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
+    const cols = others.map((l, i) => `t${i}:translations->"${l}"->>title`).join(',');
+    const endpoint = `${url.replace(/\/+$/, '')}/rest/v1/guide_articles?select=slug,locale,published_at,updated_at,${cols}&status=eq.published&order=published_at.desc&limit=1000`;
     const res = await fetch(endpoint, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
     });
@@ -87,7 +93,11 @@ async function fetchGuideRoutes() {
     return rows
       .filter((row) => row?.slug)
       .map((row) => ({
-        path: `/guides/${row.slug}`,
+        path: `/guides/${encodeURIComponent(row.slug)}`,
+        locales: (() => {
+          const base = row.locale || DEFAULT_LOCALE;
+          return [base, ...others.filter((l, i) => l !== base && row[`t${i}`])];
+        })(),
         changefreq: 'monthly',
         priority: '0.7',
         lastmod: (row.updated_at ?? row.published_at ?? '').slice(0, 10) || undefined,
@@ -114,7 +124,8 @@ mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, 'sitemap.xml'), xml, 'utf8');
 
 console.log(
-  `wrote public/sitemap.xml (${routes.length} routes × ${LOCALES.length} locales = ${
-    routes.length * LOCALES.length
-  } urls)`,
+  `wrote public/sitemap.xml (${routes.length} routes, ${routes.reduce(
+    (n, r) => n + (r.locales ?? LOCALES).length,
+    0,
+  )} urls)`,
 );

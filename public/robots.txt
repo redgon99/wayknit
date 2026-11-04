@@ -6,4 +6,6 @@ Disallow: /login
 Disallow: /*/admin
 Disallow: /*/login
 
-Sitemap: https://wayknit.netlify.app/sitemap.xml
+# 검색·AI 크롤러(GPTBot, ClaudeBot, PerplexityBot 등)도 위 규칙으로 허용한다.
+# 대표 주소는 wayknit.com (wayknit.netlify.app도 같은 사이트)
+Sitemap: https://wayknit.com/sitemap.xml
