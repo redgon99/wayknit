@@ -8,6 +8,7 @@ import {
   isFaviconUrl,
   isGuidePlaceLink,
   isHttpUrl,
+  isPhotoCreditLink,
   labelFromCiteAlt,
   labelFromCiteCaption,
   labelFromUrl,
@@ -91,7 +92,7 @@ export function renderGuideMarkdown(md: string, locale?: AppLocale): ReactNode[]
       if (token.startsWith('**')) {
         parts.push(<strong key={`b-${i++}`}>{token.slice(2, -2)}</strong>);
       } else if (token.startsWith('*') && !token.startsWith('*[')) {
-        parts.push(<em key={`e-${i++}`}>{token.slice(1, -1)}</em>);
+        parts.push(<em key={`e-${i++}`}>{inline(token.slice(1, -1))}</em>);
       } else {
         const nested = token.match(
           /^\[!\[([^\]]*)\]\(([^)]+)\)([^\]]*)\]\(([^)]+)\)$/
@@ -119,7 +120,7 @@ export function renderGuideMarkdown(md: string, locale?: AppLocale): ReactNode[]
                   {simple[1] || internal}
                 </Link>
               );
-            } else if (!image && isGuidePlaceLink(href)) {
+            } else if (!image && (isGuidePlaceLink(href) || isPhotoCreditLink(href))) {
               parts.push(
                 <a key={`a-${i++}`} href={href} target="_blank" rel="noopener noreferrer">
                   {simple[1] || href}

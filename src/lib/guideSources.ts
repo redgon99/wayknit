@@ -137,10 +137,10 @@ export function extractMarkdownLinks(md: string): { alt: string; href: string; i
 }
 
 /**
- * 본문에 사진으로 보여 줄 수 있는 이미지 주소(한국관광공사 TourAPI 사진만 허용).
+ * 본문에 사진으로 보여 줄 수 있는 이미지 주소(한국관광공사 TourAPI 사진과 Wikimedia Commons 원본).
  * 출처가 확인된 공공 사진만 표시하고, 그 밖의 이미지 문법은 기존처럼 출처 칩으로 둔다.
  */
-const GUIDE_PHOTO_HOSTS = ['tong.visitkorea.or.kr'];
+const GUIDE_PHOTO_HOSTS = ['tong.visitkorea.or.kr', 'upload.wikimedia.org'];
 
 export function guidePhotoUrl(raw: string): string | null {
   if (!isHttpUrl(raw)) return null;
@@ -167,6 +167,20 @@ export function isGuidePlaceLink(raw: string): boolean {
       u.hostname === 'korean.visitkorea.or.kr' &&
       u.pathname === '/search/search_list.do' &&
       !!u.searchParams.get('keyword')?.trim()
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** 사진 작가·라이선스 표기 링크. 출처 칩이 아니라 일반 링크로 보여 주고 출처 목록에 넣지 않는다. */
+export function isPhotoCreditLink(raw: string): boolean {
+  if (!isHttpUrl(raw)) return false;
+  try {
+    const u = new URL(raw.trim());
+    return (
+      (u.hostname === 'commons.wikimedia.org' && u.pathname.startsWith('/wiki/File')) ||
+      (u.hostname === 'creativecommons.org' && /^\/(licenses|publicdomain)\//.test(u.pathname))
     );
   } catch {
     return false;
@@ -203,7 +217,7 @@ export function collectGuideSources(bodyMd: string, sourceUrls: string[] = []): 
   }
   for (const link of extractMarkdownLinks(bodyMd)) {
     if (link.image && guidePhotoUrl(link.href)) continue; // 본문 사진은 출처 목록에 넣지 않는다
-    if (isGuidePlaceLink(link.href)) continue; // 본문에 이미 연결된 장소 링크
+    if (isGuidePlaceLink(link.href) || isPhotoCreditLink(link.href)) continue; // 본문에 이미 연결된 링크
     const hint = labelFromCiteAlt(link.alt) || (link.image ? null : link.alt.trim() || null);
     const usable =
       hint && !/^https?:/i.test(hint) && hint.length <= 40 ? hint : null;
