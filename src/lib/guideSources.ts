@@ -154,6 +154,31 @@ export function guidePhotoUrl(raw: string): string | null {
   }
 }
 
+/**
+ * 사진 출처와 본문 장소 링크로 쓰는 대한민국 구석구석의 장소 검색 주소.
+ * 상세 페이지는 TourAPI로 얻을 수 없는 내부 ID가 필요해 쓸 수 없다.
+ * 기존 글의 출처 칩과 섞이지 않도록 이 형식만 본문 링크로 다룬다.
+ */
+export function isGuidePlaceLink(raw: string): boolean {
+  if (!isHttpUrl(raw)) return false;
+  try {
+    const u = new URL(raw.trim());
+    return (
+      u.hostname === 'korean.visitkorea.or.kr' &&
+      u.pathname === '/search/search_list.do' &&
+      !!u.searchParams.get('keyword')?.trim()
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** 다른 가이드로 가는 본문 링크의 경로. */
+export function guideInternalPath(raw: string): string | null {
+  const path = raw.trim();
+  return /^\/guides\/[a-z0-9-]+$/i.test(path) ? path : null;
+}
+
 export function collectGuideSources(bodyMd: string, sourceUrls: string[] = []): GuideSource[] {
   const seen = new Set<string>();
   const list: GuideSource[] = [];
@@ -178,6 +203,7 @@ export function collectGuideSources(bodyMd: string, sourceUrls: string[] = []): 
   }
   for (const link of extractMarkdownLinks(bodyMd)) {
     if (link.image && guidePhotoUrl(link.href)) continue; // 본문 사진은 출처 목록에 넣지 않는다
+    if (isGuidePlaceLink(link.href)) continue; // 본문에 이미 연결된 장소 링크
     const hint = labelFromCiteAlt(link.alt) || (link.image ? null : link.alt.trim() || null);
     const usable =
       hint && !/^https?:/i.test(hint) && hint.length <= 40 ? hint : null;

@@ -162,7 +162,7 @@ export default function GuideDetailPage() {
             {guide.kind === 'course' && guide.coursePins.length > 0 && (
               <GuideCourseMap pins={guide.coursePins} />
             )}
-            <div className="guides-body">{content && renderGuideMarkdown(content.bodyMd)}</div>
+            <div className="guides-body">{content && renderGuideMarkdown(content.bodyMd, locale)}</div>
             <p className="guides-disclaimer">{t('detail.disclaimer')}</p>
             {sources.length > 0 && (
               <section className="guides-sources">

@@ -1,8 +1,12 @@
 import { useState, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { pathWithLocale, type AppLocale } from './locale';
 import {
   cleanSourceUrl,
+  guideInternalPath,
   guidePhotoUrl,
   isFaviconUrl,
+  isGuidePlaceLink,
   isHttpUrl,
   labelFromCiteAlt,
   labelFromCiteCaption,
@@ -32,13 +36,20 @@ function SourceChip({ href, label }: { href: string; label: string }) {
   );
 }
 
-/** 한국관광공사 사진 한 장(설명 = alt). 주소가 깨졌으면 통째로 숨긴다. */
-function GuidePhoto({ src, alt }: { src: string; alt: string }) {
+/** 한국관광공사 사진 한 장(설명 = alt). href가 있으면 사진을 눌러 출처로 간다. 주소가 깨졌으면 통째로 숨긴다. */
+function GuidePhoto({ src, alt, href }: { src: string; alt: string; href?: string }) {
   const [broken, setBroken] = useState(false);
   if (broken) return null;
+  const image = <img src={src} alt={alt} loading="lazy" decoding="async" onError={() => setBroken(true)} />;
   return (
     <figure className="guide-photo">
-      <img src={src} alt={alt} loading="lazy" decoding="async" onError={() => setBroken(true)} />
+      {href ? (
+        <a href={href} target="_blank" rel="noopener noreferrer">
+          {image}
+        </a>
+      ) : (
+        image
+      )}
       {alt && <figcaption>{alt}</figcaption>}
     </figure>
   );
@@ -54,7 +65,7 @@ function sourceLabel(alt: string, href: string, image: boolean): string {
 }
 
 /** Minimal markdown for guide bodies (headings, lists, tables, paragraphs, bold/italic, links, TourAPI photos). */
-export function renderGuideMarkdown(md: string): ReactNode[] {
+export function renderGuideMarkdown(md: string, locale?: AppLocale): ReactNode[] {
   const lines = md.replace(/\r\n/g, '\n').split('\n');
   const nodes: ReactNode[] = [];
   let listItems: string[] = [];
@@ -101,7 +112,20 @@ export function renderGuideMarkdown(md: string): ReactNode[] {
           if (simple) {
             const href = simple[2].trim();
             const image = token.startsWith('![');
-            if (isHttpUrl(href) && !isFaviconUrl(href)) {
+            const internal = guideInternalPath(href);
+            if (!image && internal) {
+              parts.push(
+                <Link key={`l-${i++}`} to={locale ? pathWithLocale(internal, locale) : internal}>
+                  {simple[1] || internal}
+                </Link>
+              );
+            } else if (!image && isGuidePlaceLink(href)) {
+              parts.push(
+                <a key={`a-${i++}`} href={href} target="_blank" rel="noopener noreferrer">
+                  {simple[1] || href}
+                </a>
+              );
+            } else if (isHttpUrl(href) && !isFaviconUrl(href)) {
               parts.push(
                 <SourceChip
                   key={`s-${i++}`}
@@ -188,11 +212,14 @@ export function renderGuideMarkdown(md: string): ReactNode[] {
     }
 
     // 한 줄 전체가 이미지이고 한국관광공사 사진이면 본문 사진으로 보여 준다
-    const photo = trimmed.match(/^!\[([^\]]*)\]\(([^)\s]+)\)$/);
+    const photo =
+      trimmed.match(/^\[!\[([^\]]*)\]\(([^)\s]+)\)\]\(([^)\s]+)\)$/) ??
+      trimmed.match(/^!\[([^\]]*)\]\(([^)\s]+)\)$/);
     const photoSrc = photo ? guidePhotoUrl(photo[2]) : null;
     if (photo && photoSrc) {
       flushList();
-      nodes.push(<GuidePhoto key={`photo-${key++}`} src={photoSrc} alt={photo[1].trim()} />);
+      const href = photo[3] && isGuidePlaceLink(photo[3]) ? photo[3] : undefined;
+      nodes.push(<GuidePhoto key={`photo-${key++}`} src={photoSrc} alt={photo[1].trim()} href={href} />);
       continue;
     }
 
