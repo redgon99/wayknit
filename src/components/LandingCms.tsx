@@ -1,4 +1,11 @@
-import { landingAnchor, nodeHasContent, walkEnabled, type LandingMenuNode } from '../lib/landingMenu';
+import { useTranslation } from 'react-i18next';
+import {
+  hasPlaceholderTitle,
+  landingAnchor,
+  nodeHasContent,
+  walkEnabled,
+  type LandingMenuNode,
+} from '../lib/landingMenu';
 import { youtubeEmbedUrl } from '../lib/landingPromo';
 
 const FALLBACK_IMAGES = [
@@ -22,36 +29,58 @@ export function collectNoticeTexts(tree: LandingMenuNode[]): string[] {
 
 export function landingNavItems(tree: LandingMenuNode[], skipId?: string): LandingMenuNode[] {
   return walkEnabled(tree)
-    .filter((n) => n.type !== 'notice' && n.id !== skipId && nodeHasContent(n))
+    .filter(
+      (n) =>
+        n.type !== 'notice' && n.id !== skipId && nodeHasContent(n) && !hasPlaceholderTitle(n)
+    )
     .map((n) => ({ ...n, children: landingNavItems(n.children, skipId) }));
 }
 
-function NavItem({ item }: { item: LandingMenuNode }) {
-  const href = `#${landingAnchor(item.id)}`;
+interface NavItemProps {
+  item: LandingMenuNode;
+  /** 랜딩 밖(공유마당 등)에선 홈 경로를 붙여 랜딩의 그 섹션으로 보낸다. 랜딩에선 빈 문자열. */
+  hrefBase: string;
+  onNavigate?: () => void;
+}
+
+function NavItem({ item, hrefBase, onNavigate }: NavItemProps) {
+  const href = `${hrefBase}#${landingAnchor(item.id)}`;
   if (item.children.length === 0) {
-    return <a href={href}>{item.title}</a>;
+    return (
+      <a href={href} onClick={onNavigate}>
+        {item.title}
+      </a>
+    );
   }
   return (
     <div className="landing-nav-drop">
-      <a href={href}>
+      <a href={href} onClick={onNavigate}>
         {item.title}
         <span aria-hidden> ▾</span>
       </a>
       <div className="landing-nav-drop-menu">
         {item.children.map((child) => (
-          <NavItem key={child.id} item={child} />
+          <NavItem key={child.id} item={child} hrefBase={hrefBase} onNavigate={onNavigate} />
         ))}
       </div>
     </div>
   );
 }
 
-export function LandingCmsNav({ items }: { items: LandingMenuNode[] }) {
+export function LandingCmsNav({
+  items,
+  hrefBase = '',
+  onNavigate,
+}: {
+  items: LandingMenuNode[];
+  hrefBase?: string;
+  onNavigate?: () => void;
+}) {
   if (items.length === 0) return null;
   return (
     <>
       {items.map((item) => (
-        <NavItem key={item.id} item={item} />
+        <NavItem key={item.id} item={item} hrefBase={hrefBase} onNavigate={onNavigate} />
       ))}
     </>
   );
@@ -80,6 +109,7 @@ function CmsNode({
   node: LandingMenuNode;
   skipId?: string;
 }) {
+  const { t } = useTranslation('landing');
   const kids = walkEnabled(node.children).map((child) => (
     <CmsNode key={child.id} node={child} skipId={skipId} />
   ));
@@ -127,16 +157,17 @@ function CmsNode({
   }
   if (node.type === 'images') {
     const items = node.images.length > 0 ? node.images : FALLBACK_IMAGES;
+    const title = hasPlaceholderTitle(node) ? t('gallery.title') : node.title;
     return (
       <>
         <section className="landing-section" id={landingAnchor(node.id)} aria-labelledby={`${landingAnchor(node.id)}-title`}>
           <div className="landing-section-header">
-            <h2 id={`${landingAnchor(node.id)}-title`}>{node.title}</h2>
+            <h2 id={`${landingAnchor(node.id)}-title`}>{title}</h2>
           </div>
           <div className="landing-gallery">
             {items.map((item, i) => (
               <div key={`${item.url}-${i}`} className="landing-gallery-item">
-                <img src={item.url} alt={item.alt || `${node.title} ${i + 1}`} loading="lazy" />
+                <img src={item.url} alt={item.alt || `${title} ${i + 1}`} loading="lazy" />
               </div>
             ))}
           </div>

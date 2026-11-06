@@ -22,7 +22,18 @@
   "trip": {
     "readOnly": "共享行程（只讀）",
     "notFound": "未找到行程。",
-    "loading": "加載中…"
+    "loading": "加載中…",
+    "badge": "分享檢視",
+    "addToMine": "加入我的旅行",
+    "adding": "正在加入…",
+    "editMine": "編輯我的旅行",
+    "goToPlanner": "前往編輯頁面",
+    "mapLoading": "正在載入地圖…",
+    "empty": "尚未加入任何地點。",
+    "invalidLink": "分享連結無效。",
+    "notFoundDetail": "找不到這個分享的旅行。連結可能已過期或已設為不公開。",
+    "loadFailed": "無法載入旅行。",
+    "addFailed": "儲存失敗，請再試一次。"
   },
   "plaza": {
     "title": "分享廣場",
@@ -61,10 +72,10 @@
     "filterEmpty": "沒有符合條件的行程。",
     "dayFilterLabel": "行程天數",
     "day": {
-      "all": "不限",
       "1": "1天",
       "2": "2天",
       "3": "3天",
+      "all": "不限",
       "4plus": "4天以上"
     },
     "regionFilterLabel": "地區",
@@ -171,5 +182,15 @@
     "notFound": "找不到邀請。連結可能已取消或不正確。",
     "loginCta": "登入並加入",
     "dismiss": "關閉"
+  },
+  "coach": {
+    "aria": "分享檢視說明",
+    "viewTitle": "查看分享的旅行",
+    "viewBody": "可以在地圖上查看釘選的地點和規劃的路線。用上方分頁切換天數。",
+    "addTitle": "加入我的旅行",
+    "addBody": "點綠色按鈕，就能把這個行程複製到你的旅行清單，之後可以自由修改。",
+    "editTitle": "前往編輯頁面",
+    "editBody": "點「{{editButton}}」就能直接進入搜尋、釘選和路線規劃頁面。",
+    "dontShow": "不再顯示"
   }
 }

@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import { usePwaInstall } from '../hooks/usePwaInstall';
 
@@ -14,6 +15,8 @@ interface Props {
 
 /** 모바일 상단·플로팅 아이콘 등에 표시하는 PWA 홈 화면 설치 버튼 */
 export function PwaInstallButton({ className = '', showDismiss = false }: Props) {
+  const { t } = useTranslation('planner');
+  const { t: tc } = useTranslation('common');
   const { showInstallButton, install, dismiss, iosHintOpen, closeIosHint } = usePwaInstall();
 
   if (!showInstallButton) return null;
@@ -25,19 +28,19 @@ export function PwaInstallButton({ className = '', showDismiss = false }: Props)
           type="button"
           className="pwa-install-btn"
           onClick={() => void install()}
-          aria-label="앱 설치"
-          title="홈 화면에 추가"
+          aria-label={t('pwa.installAria')}
+          title={t('pwa.addToHome')}
         >
           <Icon name="install" size={18} />
-          <span className="pwa-install-btn-label">설치</span>
+          <span className="pwa-install-btn-label">{t('pwa.install')}</span>
         </button>
         {showDismiss && (
           <button
             type="button"
             className="pwa-install-dismiss-badge"
             onClick={dismiss}
-            aria-label="닫기 (다시 보지 않기)"
-            title="닫기"
+            aria-label={t('pwa.dismissAria')}
+            title={tc('close')}
           >
             <Icon name="close" size={11} />
           </button>
@@ -52,22 +55,24 @@ export function PwaInstallButton({ className = '', showDismiss = false }: Props)
             aria-labelledby="pwa-ios-hint-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 id="pwa-ios-hint-title">홈 화면에 추가</h3>
+            <h3 id="pwa-ios-hint-title">{t('pwa.addToHome')}</h3>
             <ol className="pwa-ios-hint-steps">
               <li>
-                Safari 하단 <strong>공유</strong> 버튼을 누릅니다.
+                <Trans i18nKey="pwa.step1" ns="planner" components={{ b: <strong /> }} />
               </li>
               <li>
-                <strong>홈 화면에 추가</strong>를 선택합니다.
+                <Trans i18nKey="pwa.step2" ns="planner" components={{ b: <strong /> }} />
               </li>
-              <li>이름을 확인한 뒤 <strong>추가</strong>를 누릅니다.</li>
+              <li>
+                <Trans i18nKey="pwa.step3" ns="planner" components={{ b: <strong /> }} />
+              </li>
             </ol>
             <div className="pwa-ios-hint-actions">
               <button type="button" className="pwa-ios-hint-dismiss" onClick={dismiss}>
-                다시 보지 않기
+                {t('pwa.dontShow')}
               </button>
               <button type="button" className="pwa-ios-hint-ok" onClick={closeIosHint}>
-                확인
+                {tc('confirm')}
               </button>
             </div>
           </div>

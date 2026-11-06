@@ -231,6 +231,9 @@ export function SearchPanel({
   const [toolsOpen, setToolsOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('relevance');
   const subFilterGroup = getSearchSubFilterGroup(categoryFilter);
+  const subFilterGroupLabel = subFilterGroup
+    ? t(`subFilter.group.${subFilterGroup.categoryCode}`, { defaultValue: subFilterGroup.label })
+    : '';
   const activeSubFilters =
     categoryFilter === 'FD6' ? foodRestrictions : categorySubFilters;
   // 링크 추출 결과 화면 상태 — PlannerPage가 안 넘겨주는 호출부(없을 것으로
@@ -672,8 +675,8 @@ export function SearchPanel({
 
   const subFiltersPanel = subFilterGroup && (
     <div className="search-subfilters">
-      <span className="search-subfilters-label">{subFilterGroup.label}</span>
-      <div className="search-subfilters-row" role="group" aria-label={subFilterGroup.label}>
+      <span className="search-subfilters-label">{subFilterGroupLabel}</span>
+      <div className="search-subfilters-row" role="group" aria-label={subFilterGroupLabel}>
         {subFilterGroup.options.map((opt) => {
           const active = activeSubFilters.includes(opt.id);
           return (
@@ -684,7 +687,7 @@ export function SearchPanel({
               aria-pressed={active}
               onClick={() => toggleSubFilter(opt.id)}
             >
-              {opt.label}
+              {t(`subFilter.option.${opt.id}`, { defaultValue: opt.label })}
             </button>
           );
         })}

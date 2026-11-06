@@ -1,5 +1,6 @@
 import { Icon } from './Icon';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   open: boolean;
@@ -18,6 +19,8 @@ export function ManualPinModal({
   onConfirm,
   onClose,
 }: Props) {
+  const { t } = useTranslation('planner');
+  const { t: tc } = useTranslation('common');
   const [name, setName] = useState('');
 
   useEffect(() => {
@@ -33,22 +36,22 @@ export function ManualPinModal({
       className="roadview-overlay manual-pin-overlay"
       role="dialog"
       aria-modal="true"
-      aria-label="지도 위치 핀업"
+      aria-label={t('manualPin.aria')}
       onClick={onClose}
     >
       <div className="manual-pin-panel" onClick={(e) => e.stopPropagation()}>
         <header className="manual-pin-header">
           <span className="manual-pin-title">
-            <Icon name="pinPlus" /> 지도에서 핀업
+            <Icon name="pinPlus" /> {t('manualPin.title')}
           </span>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="닫기">
+          <button type="button" className="icon-btn" onClick={onClose} aria-label={tc('close')}>
             <Icon name="close" />
           </button>
         </header>
 
         <div className="manual-pin-body">
           <label className="manual-pin-label" htmlFor="manual-pin-name">
-            장소 이름
+            {t('manualPin.nameLabel')}
           </label>
           <input
             id="manual-pin-name"
@@ -56,7 +59,7 @@ export function ManualPinModal({
             className="manual-pin-input"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="장소 이름 입력"
+            placeholder={t('manualPin.namePlaceholder')}
             autoFocus
             onKeyDown={(e) => {
               if (e.key === 'Enter' && name.trim()) onConfirm(name.trim());
@@ -74,7 +77,7 @@ export function ManualPinModal({
 
         <footer className="manual-pin-footer">
           <button type="button" className="manual-pin-cancel" onClick={onClose}>
-            취소
+            {tc('cancel')}
           </button>
           <button
             type="button"
@@ -82,7 +85,7 @@ export function ManualPinModal({
             disabled={!name.trim()}
             onClick={() => onConfirm(name.trim())}
           >
-            핀업 추가
+            {t('manualPin.confirm')}
           </button>
         </footer>
       </div>

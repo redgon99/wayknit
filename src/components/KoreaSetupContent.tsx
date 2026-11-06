@@ -6,6 +6,8 @@ import {
   readSetupProgress,
   toggleSetupItem,
 } from '../lib/koreaSetup';
+import { normalizeLocale, pathWithLocale } from '../lib/locale';
+import i18n from '../lib/i18n';
 
 interface Props {
   onOpenAirportHelp?: () => void;
@@ -88,7 +90,10 @@ export function KoreaSetupContent({ onOpenAirportHelp }: Props) {
                         {t('setup.airportWizardLink')}
                       </button>
                     ) : (
-                      <a className="setup-item-hint-btn" href="/help#airport">
+                      <a
+                        className="setup-item-hint-btn"
+                        href={`${pathWithLocale('/help', normalizeLocale(i18n.language))}#airport`}
+                      >
                         {t('setup.airportWizardLink')}
                       </a>
                     )

@@ -1,5 +1,6 @@
 import { Icon } from './Icon';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   open: boolean;
@@ -21,6 +22,8 @@ export function RoadviewModal({
   provider = 'kakao',
   onClose,
 }: Props) {
+  const { t } = useTranslation('planner');
+  const { t: tc } = useTranslation('common');
   const containerRef = useRef<HTMLDivElement>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -102,7 +105,7 @@ export function RoadviewModal({
   if (!open) return null;
 
   const isGoogle = provider === 'google';
-  const title = isGoogle ? '스트리트뷰' : '로드뷰';
+  const title = t(isGoogle ? 'roadviewModal.streetview' : 'roadviewModal.roadview');
   const externalUrl = isGoogle
     ? `https://www.google.com/maps?layer=c&cbll=${lat},${lng}`
     : `https://map.kakao.com/link/roadview/${lat},${lng}`;
@@ -115,18 +118,18 @@ export function RoadviewModal({
             <Icon name="roadview" /> {title}
             {placeName ? ` · ${placeName}` : ''}
           </span>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="닫기">
+          <button type="button" className="icon-btn" onClick={onClose} aria-label={tc('close')}>
             <Icon name="close" />
           </button>
         </header>
 
-        {loading && <p className="roadview-status">{title} 불러오는 중…</p>}
+        {loading && <p className="roadview-status">{t('roadviewModal.loading', { title })}</p>}
 
         {unavailable && !loading && (
           <div className="roadview-unavailable">
-            <p>이 위치 근처에 {title}가 없습니다.</p>
+            <p>{t('roadviewModal.none', { title })}</p>
             <a href={externalUrl} target="_blank" rel="noopener noreferrer">
-              {isGoogle ? 'Google 지도에서 확인' : '카카오맵에서 확인'}
+              {t(isGoogle ? 'roadviewModal.openGoogle' : 'roadviewModal.openKakao')}
             </a>
           </div>
         )}

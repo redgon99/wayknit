@@ -1,6 +1,7 @@
 import { registerAnalyticsSink, type AnalyticsRecord } from './analytics';
 import { getSupabase, isSupabaseConfigured } from './supabase';
 import { normalizeLocale } from './locale';
+import { loadVisitCountry } from './visitContext';
 import i18n from './i18n';
 
 /**
@@ -46,12 +47,14 @@ async function flush(): Promise<void> {
   const userId = data.session?.user?.id ?? null;
   const locale = normalizeLocale(i18n.language);
   const sid = sessionId();
+  // 국가는 비동기로 오므로 기록 시점이 아니라 보낼 때 붙인다.
+  const country = await loadVisitCountry();
 
   try {
     await sb.from('analytics_events').insert(
       batch.map((r) => ({
         event: r.event,
-        props: r.props,
+        props: r.event === 'page_view' && country ? { ...r.props, country } : r.props,
         user_id: userId,
         session_id: sid,
         locale,
@@ -71,7 +74,11 @@ function schedule() {
 /** 앱 시작 시 한 번 호출 */
 export function startAnalyticsSink(): void {
   if (started || !isSupabaseConfigured || typeof window === 'undefined') return;
+  // 접속 로그 미리보기처럼 액자 안에서 열린 페이지는 실제 방문이 아니다.
+  if (window.self !== window.top) return;
   started = true;
+  // 일찍 시작해 두어야 탭을 곧 닫아도 첫 전송 전에 답을 받을 수 있다.
+  void loadVisitCountry();
 
   registerAnalyticsSink((record) => {
     queue.push(record);

@@ -59,7 +59,11 @@
     "culture": "文化",
     "shop": "超市",
     "parking": "停车",
-    "other": "其他"
+    "other": "其他",
+    "beauty": "美容",
+    "market": "市场",
+    "transport": "交通",
+    "road": "街道"
   },
   "travelMode": {
     "car": "驾车",

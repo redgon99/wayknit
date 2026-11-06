@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Place } from '../types';
 import { Icon } from './Icon';
 import { getCategoryMeta } from '../lib/categories';
@@ -22,6 +23,7 @@ export function PlaceThumb({
   onOpenPhotos,
   variant = 'photo',
 }: Props) {
+  const { t } = useTranslation('planner');
   const meta = getCategoryMeta(place.categoryCode, place.category);
   const emoji = getPlaceEmoji(place);
   const [imgFailed, setImgFailed] = useState(false);
@@ -48,8 +50,8 @@ export function PlaceThumb({
         e.stopPropagation();
         onOpenPhotos(place);
       }}
-      title={`${place.name} 사진 보기`}
-      aria-label={`${place.name} 사진 보기`}
+      title={t('map.viewPhoto', { name: place.name })}
+      aria-label={t('map.viewPhoto', { name: place.name })}
     >
       {showImage ? (
         <img

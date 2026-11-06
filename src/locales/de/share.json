@@ -22,7 +22,18 @@
   "trip": {
     "readOnly": "Geteilte Reise (nur Lesen)",
     "notFound": "Reise nicht gefunden.",
-    "loading": "Laden…"
+    "loading": "Laden…",
+    "badge": "Geteilte Ansicht",
+    "addToMine": "Zu meinen Reisen hinzufügen",
+    "adding": "Wird hinzugefügt…",
+    "editMine": "Meine Reisen bearbeiten",
+    "goToPlanner": "Zum Planer",
+    "mapLoading": "Karte wird geladen…",
+    "empty": "Noch keine Orte.",
+    "invalidLink": "Dieser Freigabelink ist ungültig.",
+    "notFoundDetail": "Diese geteilte Reise wurde nicht gefunden. Der Link ist möglicherweise abgelaufen oder die Reise ist privat.",
+    "loadFailed": "Die Reise konnte nicht geladen werden.",
+    "addFailed": "Speichern fehlgeschlagen. Bitte versuchen Sie es erneut."
   },
   "plaza": {
     "title": "Teilen-Platz",
@@ -61,10 +72,10 @@
     "filterEmpty": "Keine Reise passt zu Ihren Filtern.",
     "dayFilterLabel": "Reisedauer",
     "day": {
-      "all": "Alle",
       "1": "1 Tag",
       "2": "2 Tage",
       "3": "3 Tage",
+      "all": "Alle",
       "4plus": "4+ Tage"
     },
     "regionFilterLabel": "Region",
@@ -172,5 +183,15 @@
     "notFound": "Einladung nicht gefunden. Der Link wurde möglicherweise storniert oder ist falsch.",
     "loginCta": "Anmelden und beitreten",
     "dismiss": "Schließen"
+  },
+  "coach": {
+    "aria": "Hinweise zur geteilten Ansicht",
+    "viewTitle": "Geteilte Reise ansehen",
+    "viewBody": "Sehen Sie die angepinnten Orte und die Route auf der Karte. Mit den Tabs oben wechseln Sie den Tag.",
+    "addTitle": "Zu meinen Reisen hinzufügen",
+    "addBody": "Tippen Sie auf die grüne Schaltfläche, um diese Route in Ihre Reisen zu kopieren. Danach können Sie sie frei bearbeiten.",
+    "editTitle": "Zum Editor",
+    "editBody": "Mit „{{editButton}}“ gelangen Sie direkt zu Suche, Anpinnen und Routenplanung.",
+    "dontShow": "Nicht mehr anzeigen"
   }
 }

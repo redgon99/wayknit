@@ -403,6 +403,47 @@
         "home": "Start",
         "map": "Karte",
         "info": "Info"
+      },
+      "bizVerified": "Geschäftsangaben verifiziert.",
+      "googleUser": "Google-Nutzer",
+      "googleApiNote": "Daten von {{source}}",
+      "kakaoReviewCount": "{{count}} Bewertungen",
+      "kakaoReviewCount_one": "{{count}} Bewertung",
+      "priceFree": "Kostenlos",
+      "priceUnder": "Unter {{amount}}",
+      "service": {
+        "dineIn": "Vor Ort essen",
+        "takeout": "Zum Mitnehmen",
+        "delivery": "Lieferung",
+        "curbsidePickup": "Abholung vor der Tür",
+        "reservable": "Reservierungen"
+      },
+      "facility": {
+        "groupSeating": "Gruppentische",
+        "babyChair": "Kinderstühle",
+        "kidsMenu": "Kindermenü",
+        "terrace": "Terrasse",
+        "takeout": "Zum Mitnehmen",
+        "paidParking": "Kostenpflichtiges Parken",
+        "freeParking": "Kostenloses Parken",
+        "parking": "Parkplätze",
+        "pet": "Haustiere erlaubt",
+        "advanceBooking": "Vorab reservieren",
+        "onlineTicket": "Online-Tickets",
+        "reservation": "Reservierung möglich",
+        "genderRestroom": "Getrennte Toiletten",
+        "inStoreRestroom": "Toilette im Lokal",
+        "restroom": "Toilette",
+        "barTable": "Barplätze",
+        "breakfast": "Frühstück",
+        "wifi": "WLAN",
+        "smoking": "Raucherraum",
+        "paidAdmission": "Eintritt kostenpflichtig",
+        "freeAdmission": "Eintritt frei",
+        "souvenirShop": "Souvenirladen",
+        "restArea": "Ruhebereich",
+        "cafeRestaurant": "Café/Restaurant",
+        "payment": "Zahlungsarten"
       }
     }
   },
@@ -628,7 +669,34 @@
     "step2Title": "2. Orte pinnen",
     "step2Body": "Pinnen Sie aus den Suchergebnissen oder der Karte, um Ihren Reiseplan aufzubauen.",
     "step3Title": "3. Route erstellen",
-    "step3Body": "Sortieren Sie Pins um und erzeugen Sie eine optimierte Route."
+    "step3Body": "Sortieren Sie Pins um und erzeugen Sie eine optimierte Route.",
+    "coach": {
+      "progress": "{{n}} / {{total}}",
+      "skip": "Überspringen",
+      "start": "Los geht’s",
+      "searchTitle": "Orte suchen",
+      "searchBody": "Suchen Sie Orte nach Namen oder mit Stichwörtern wie „Restaurant“ oder „Café“.",
+      "resultTitle": "Suchergebnisse",
+      "resultBody": "Als Beispiel haben wir nach „Gyeongbokgung“ gesucht. Tippen Sie auf ein Ergebnis für die Karte oder auf + zum Hinzufügen.",
+      "bubbleTitle": "Kartenvorschau",
+      "bubbleBody": "Tippen Sie auf das Foto in der Vorschau, um die Details zu öffnen. Auch hier können Sie den Ort anheften.",
+      "detailTitle": "Ortsdetails",
+      "detailBody": "Blättern Sie durch echte Fotos und sehen Sie Überblick, Speisekarte, Bewertungen und Reservierung auf einen Blick – mit Taxikarte und Karten-App-Links.",
+      "pinupTitle": "Anheften",
+      "pinupBody": "Gefällt Ihnen der Ort? Mit der Pin-Taste kommt er in Ihren Plan. Tippen Sie auf Weiter – wir heften Gyeongbokgung und zwei Orte in der Nähe nacheinander an.",
+      "pinsTitle": "Ihre angehefteten Orte",
+      "pinsBody": "Die eben angehefteten Orte sammeln sich hier der Reihe nach, und auch der Zähler im Tab darüber ist gestiegen. (Die Beispiel-Pins werden am Ende der Tour entfernt.)",
+      "routeTitle": "Route erstellen",
+      "routeBody": "Aus Ihren Orten erstellen wir automatisch eine Reihenfolge und einen Zeitplan. Tippen Sie auf Weiter – wir erstellen jetzt eine.",
+
+      "routeDoneTitle": "Ihre Route",
+
+      "routeDoneBody": "Die Route wird auf der Karte eingezeichnet, und die Karte unten zeigt Ankunftszeiten und Fahrzeiten. (Die Beispielroute wird am Ende der Tour gelöscht.)",
+      "scenarioTitle": "Themenrouten",
+      "scenarioBody": "Keine Idee, wo Sie anfangen sollen? Wählen Sie ein Thema und starten Sie mit einer Vorschlagsroute.",
+      "shareTitle": "Teilen",
+      "shareBody": "Teilen Sie Ihren fertigen Plan per Link oder laden Sie Freunde ein, ihn gemeinsam zu bearbeiten."
+    }
   },
   "plazaNav": "Teilen-Platz",
   "export": {
@@ -673,6 +741,73 @@
       "note": "Notiz",
       "map": "Kartenlink"
     }
+  },
+  "subFilter": {
+    "group": {
+      "FD6": "Ernährung",
+      "AD5": "Unterkunftsart",
+      "AT4": "Sehenswürdigkeit",
+      "MT1": "Einkaufsart"
+    },
+    "option": {
+      "halal": "Halal",
+      "vegetarian": "Vegan",
+      "no_pork": "Ohne Schweinefleisch",
+      "hotel": "Hotel",
+      "motel": "Motel",
+      "hanok": "Hanok",
+      "pension": "Pension",
+      "guesthouse": "Gästehaus",
+      "beach": "Strand",
+      "nature": "Natur",
+      "museum": "Ausstellung",
+      "park": "Park",
+      "supermarket": "Supermarkt",
+      "convenience": "Convenience-Store",
+      "market": "Markt"
+    }
+  },
+  "import": {
+    "label": "Importieren",
+    "scopeAll": "Alle Tage",
+    "replaceCurrent": "Importieren (ersetzen)",
+    "mergeCurrent": "Zur Liste hinzufügen",
+    "replaceAll": "JSON auf alle anwenden",
+    "mergeAll": "JSON zu allen hinzufügen",
+    "hint": "JSON · CSV · TXT (Export-Format)",
+    "doneReplaceDay": "Tag {{day}}: {{count}} importiert",
+    "doneMergeDay": "Tag {{day}}: {{count}} hinzugefügt",
+    "doneReplaceAll": "Alle Tage: {{count}} importiert",
+    "doneMergeAll": "Alle Tage: {{count}} hinzugefügt",
+    "readFailed": "Die Datei konnte nicht gelesen werden",
+    "errNoPins": "Keine Orte zum Importieren",
+    "errCsvColumns": "Die CSV braucht Spalten für Name, Breiten- und Längengrad",
+    "errNoDayPins": "Keine Orte für den aktuellen Tag"
+  },
+  "pwa": {
+    "install": "Installieren",
+    "installAria": "App installieren",
+    "addToHome": "Zum Home-Bildschirm",
+    "dismissAria": "Schließen (nicht mehr anzeigen)",
+    "step1": "Tippen Sie unten in Safari auf <b>Teilen</b>.",
+    "step2": "Wählen Sie <b>Zum Home-Bildschirm</b>.",
+    "step3": "Prüfen Sie den Namen und tippen Sie auf <b>Hinzufügen</b>.",
+    "dontShow": "Nicht mehr anzeigen"
+  },
+  "manualPin": {
+    "aria": "Kartenposition anheften",
+    "title": "Von der Karte anheften",
+    "nameLabel": "Ortsname",
+    "namePlaceholder": "Ortsnamen eingeben",
+    "confirm": "Pin hinzufügen"
+  },
+  "roadviewModal": {
+    "roadview": "Roadview",
+    "streetview": "Street View",
+    "loading": "{{title}} wird geladen…",
+    "none": "In der Nähe gibt es kein {{title}}.",
+    "openKakao": "In Kakao Map ansehen",
+    "openGoogle": "In Google Maps ansehen"
   },
   "scenario": {
     "menuLabel": "Themenreise erstellen",

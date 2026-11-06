@@ -1,4 +1,6 @@
-const STORAGE_KEY = 'wayknit:onboarding-v1';
+// v2 — 텍스트 카드 투어(v1)를 손가락 코치마크로 바꾸면서 올렸다. v1을 이미 닫은
+// 사람도 새 안내를 한 번은 보게 된다.
+const STORAGE_KEY = 'wayknit:onboarding-v2';
 const SHARE_STORAGE_KEY = 'wayknit:share-onboarding-v1';
 
 export function isOnboardingDismissed(): boolean {
@@ -17,9 +19,12 @@ export function dismissOnboarding(): void {
   }
 }
 
-export function shouldShowOnboarding(totalPinCount: number, hydrated: boolean): boolean {
-  if (!hydrated || totalPinCount > 0) return false;
-  return !isOnboardingDismissed();
+/**
+ * 플래너를 처음 열었을 때 한 번만. 예전엔 핀이 0개일 때만 띄웠지만, 공유받은
+ * 여행이나 가이드 코스로 들어와 핀이 이미 있는 첫 방문자도 메뉴 위치는 모른다.
+ */
+export function shouldShowOnboarding(hydrated: boolean, dismissed: boolean): boolean {
+  return hydrated && !dismissed;
 }
 
 export function isShareOnboardingDismissed(): boolean {

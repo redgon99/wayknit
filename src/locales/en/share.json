@@ -22,7 +22,18 @@
   "trip": {
     "readOnly": "Shared trip (read-only)",
     "notFound": "Trip not found.",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "badge": "Shared view",
+    "addToMine": "Add to my trips",
+    "adding": "Adding…",
+    "editMine": "Edit my trips",
+    "goToPlanner": "Go to the planner",
+    "mapLoading": "Loading map…",
+    "empty": "No places added yet.",
+    "invalidLink": "This share link is invalid.",
+    "notFoundDetail": "Couldn’t find this shared trip. The link may have expired or been made private.",
+    "loadFailed": "Couldn’t load the trip.",
+    "addFailed": "Couldn’t save. Please try again."
   },
   "plaza": {
     "title": "Share plaza",
@@ -61,10 +72,10 @@
     "filterEmpty": "No trips match your filters.",
     "dayFilterLabel": "Trip length",
     "day": {
-      "all": "Any",
       "1": "1 day",
       "2": "2 days",
       "3": "3 days",
+      "all": "Any",
       "4plus": "4+ days"
     },
     "regionFilterLabel": "Region",
@@ -172,5 +183,15 @@
     "notFound": "Invite not found. The link may have been cancelled or is incorrect.",
     "loginCta": "Sign in to join",
     "dismiss": "Close"
+  },
+  "coach": {
+    "aria": "Shared trip guide",
+    "viewTitle": "Viewing a shared trip",
+    "viewBody": "See the pinned places and the route on the map. Use the tabs at the top to switch days.",
+    "addTitle": "Add to my trips",
+    "addBody": "Tap the green button to copy this itinerary into your trips. You can edit it freely afterwards.",
+    "editTitle": "Go to the editor",
+    "editBody": "Use “{{editButton}}” to jump straight to search, pinning and route building.",
+    "dontShow": "Don’t show again"
   }
 }

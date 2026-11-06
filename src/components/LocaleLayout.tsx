@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { setAppLocale } from '../lib/i18n';
 import { applyRobotsPolicy } from '../lib/seo';
 import { trackEvent } from '../lib/analytics';
+import { takeEntryProps } from '../lib/visitContext';
 import {
   DEFAULT_LOCALE,
   SUPPORTED_LOCALES,
@@ -76,7 +77,11 @@ export function LocaleLayout() {
     if (lang === 'zh') return; // 레거시 리다이렉트 직전 — 위 이펙트가 곧 새 경로로 옮긴다
     const current = lang ? normalizeLocale(lang) : localeFromPathname(location.pathname);
     const locale = current ?? DEFAULT_LOCALE;
-    trackEvent('page_view', { path: stripLocalePrefix(location.pathname), locale });
+    trackEvent('page_view', {
+      path: stripLocalePrefix(location.pathname),
+      locale,
+      ...takeEntryProps(location.search),
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 

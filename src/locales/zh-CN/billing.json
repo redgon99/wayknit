@@ -21,7 +21,10 @@
   },
   "checkout": {
     "redirecting": "正在打开支付页面…",
-    "notConfigured": "支付尚未配置。"
+    "notConfigured": "支付尚未配置。",
+    "processing": "正在处理支付…",
+    "success": "Plus 订阅已开通。",
+    "failed": "支付失败：{{message}}"
   },
   "compare": {
     "feature": "功能",
@@ -39,5 +42,12 @@
     "plazaImport": "共享广场/分享链接导入",
     "plazaImportFree": "计入行程数上限",
     "unlimited": "无限制"
+  },
+  "cancel": {
+    "button": "取消订阅",
+    "confirm": "确定要取消订阅吗？在本计费周期结束前，你仍可继续使用 Plus。",
+    "processing": "正在取消订阅…",
+    "success": "订阅已取消。当前计费周期结束后将切换为 Free 方案。",
+    "failed": "取消失败：{{message}}"
   }
 }

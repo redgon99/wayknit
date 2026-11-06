@@ -37,7 +37,7 @@ import {
   writeMapViewport,
 } from '../lib/mapViewport';
 import { computeTripCenter } from '../lib/tripGeo';
-import { googleMapsLanguage, normalizeLocale, SUPPORTED_LOCALES } from '../lib/locale';
+import { googleMapsLanguage, normalizeLocale, pathWithLocale, SUPPORTED_LOCALES } from '../lib/locale';
 import i18n from '../lib/i18n';
 import {
   canCreateTrip,
@@ -123,13 +123,14 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import { createManualPlace } from '../lib/manualPlace';
 import type { PinImportResult } from '../lib/importPins';
 import { SaveStatusBadge, type SaveStatus } from '../components/SaveStatusBadge';
-import { OnboardingCoach } from '../components/OnboardingCoach';
+import { OnboardingCoach, type CoachStep } from '../components/OnboardingCoach';
 import { ThemePreferenceChips } from '../components/ThemePreferenceChips';
 import { TaxiDriverCardModal } from '../components/TaxiDriverCardModal';
 import { ThemeScenarioPanel } from '../components/ThemeScenarioPanel';
 import { AppSheetModal } from '../components/AppSheetModal';
 import { isTourScenarioConfigured } from '../lib/tourScenario';
 import {
+  isOnboardingDismissed,
   shouldShowOnboarding,
   shouldShowFirstItineraryGuide,
   isPlazaNavUnlocked,
@@ -319,6 +320,8 @@ export default function PlannerPage() {
   const [collabBannerFaded, setCollabBannerFaded] = useState(false);
   const [shareSaving, setShareSaving] = useState(false);
   const [plazaNavVisible, setPlazaNavVisible] = useState(() => isPlazaNavUnlocked());
+  // 코치마크를 닫으면 localStorage에도 남기지만, 화면에서 바로 내리려면 상태가 필요하다.
+  const [onboardingDone, setOnboardingDone] = useState(() => isOnboardingDismissed());
 
   // 검색 상태
   const [query, setQuery] = useState('');
@@ -2602,7 +2605,12 @@ export default function PlannerPage() {
       setShareSaving(false);
       trackEvent('trip_share_created', { listInPlaza: opts.listInPlaza });
 
-      const url = `${window.location.origin}/trip/${trip.slug}${shareLinkSuffix}`;
+      // 공유하는 사람의 언어로 열리게 접두어를 붙인다 — 접두어 없는 /trip/…은 받는 사람
+      // 누구에게나 한국어로 열렸다.
+      const url = `${window.location.origin}${pathWithLocale(
+        `/trip/${trip.slug}`,
+        normalizeLocale(i18n.language)
+      )}${shareLinkSuffix}`;
       setShareLinkSuffix('');
       const copied = () => {
         showToast(opts.listInPlaza ? tp('toast.shareCopiedPlaza') : tp('toast.shareCopied'));
@@ -2627,7 +2635,10 @@ export default function PlannerPage() {
    */
   const handleShareFromTable = useCallback(() => {
     if (trip.isPublic) {
-      const url = `${window.location.origin}/trip/${trip.slug}?view=table`;
+      const url = `${window.location.origin}${pathWithLocale(
+        `/trip/${trip.slug}`,
+        normalizeLocale(i18n.language)
+      )}?view=table`;
       const copied = () => showToast(tp('toast.tableViewLinkCopied'));
       if (navigator.share) {
         navigator.share({ title: trip.title, url }).catch(() => {
@@ -2669,7 +2680,349 @@ export default function PlannerPage() {
       ),
     [trip.pinnedByDay]
   );
-  const showOnboarding = shouldShowOnboarding(totalPinCount, hydrated);
+  const showOnboarding = shouldShowOnboarding(hydrated, onboardingDone);
+
+  /*
+   * 첫 진입 코치마크 단계. 검색 → (결과 카드 → 지도 말풍선 → 장소 상세) → 핀 →
+   * 동선 → 테마 → 공유. 괄호 안 세 단계는 "결과를 누르면 지도에 말풍선, 말풍선을
+   * 누르면 상세"라는 흐름을 실제로 열어 보여준다(2026-10-27 사용자 요청) —
+   * 각 단계의 prepare가 그 화면을 열고, 상세 단계를 떠날 때 닫는다.
+   * 예시 장소는 경복궁으로 고정한다(사용자 지정) — 누구나 아는 곳이고 사진이 많아
+   * 상세 단계에서 실제 사진 몇 장을 넘겨 보여주기 좋다. 말풍선·상세 단계가 같은
+   * 장소를 이어 쓴다.
+   */
+  const displayResultsRef = useRef(displayResults);
+  displayResultsRef.current = displayResults;
+  const coachPlaceRef = useRef<Place | null>(null);
+  const coachPhotoTimerRef = useRef<number | null>(null);
+  /** 안내가 대신 담은 핀(경복궁 + 근처 두 곳) — 끝나면 도로 뺀다 */
+  const coachAddedPinIdsRef = useRef<string[]>([]);
+  /** 핀을 이어서 담는 타이머 — 안내가 중간에 끝나면 걷어낸다 */
+  const coachTimersRef = useRef<number[]>([]);
+  /** 안내가 만든 시연 동선 — 만들기 전 동선(`prev`)을 기억해 끝나면 되돌린다 */
+  const coachRouteRef = useRef<{ day: number; prev: GeneratedRoute | null } | null>(null);
+  /** 늦게 도착한 실제 길찾기 결과가 이미 지운 시연 동선을 되살리지 않게 하는 표 */
+  const coachRouteTokenRef = useRef(0);
+  /**
+   * 핀 목록·동선 단계에서 지도를 핀 전체가 보이게 맞출 때 가장자리에서 비울 픽셀.
+   * null이면 맞추지 않는다. 패널·시트·일정 카드가 지도를 가리는 만큼 피해서 잡는다.
+   */
+  const [coachFitInset, setCoachFitInset] = useState<{
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  } | null>(null);
+  const fitMapToCoachPins = useCallback((delayMs: number) => {
+    // 패널·시트가 열리고 자리를 잡은 뒤에 재야 한다
+    coachTimersRef.current.push(
+      window.setTimeout(() => {
+        const MARGIN = 32;
+        const inset = { top: 96, right: 48, bottom: 96, left: 48 };
+        const panel = document.querySelector<HTMLElement>('.planner-side-panel');
+        if (panel) inset.left = Math.max(inset.left, Math.round(panel.getBoundingClientRect().right) + MARGIN);
+        for (const el of document.querySelectorAll<HTMLElement>(
+          '.mobile-planner-sheet, .route-timeline-dock'
+        )) {
+          const r = el.getBoundingClientRect();
+          if (r.width < 4 || r.height < 4) continue;
+          inset.bottom = Math.max(inset.bottom, Math.round(window.innerHeight - r.top) + MARGIN);
+        }
+        setCoachFitInset(inset);
+      }, delayMs)
+    );
+  }, []);
+  const onboardingSteps = useMemo<CoachStep[]>(() => {
+    const COACH_KEYWORD = '경복궁';
+    // 같은 검색에 경복궁역·주차장 등이 함께 나온다 — 궁 자체를 고른다.
+    const pickCoachPlace = (): Place | null => {
+      const list = displayResultsRef.current;
+      const palace = list.find((p) => {
+        const names = `${p.nameKo ?? ''} ${p.name}`;
+        return /경복궁|gyeongbokgung/i.test(names) && !/역|station|주차|parking/i.test(names);
+      });
+      return palace ?? list[0] ?? null;
+    };
+    // 경복궁 말고 이어서 담을 두 곳 — 같은 검색 결과 중 역·주차장이 아닌 곳, 궁에서 150m~5km.
+    // 너무 붙어 있으면 동선이 한 점처럼 보이고, 너무 멀면 한 화면에 안 담긴다.
+    const pickExtraPlaces = (palace: Place, count: number): Place[] => {
+      const t = tripRef.current;
+      const pinnedIds = new Set((t.pinnedByDay[t.currentDay] ?? []).map((p) => p.id));
+      const base = displayResultsRef.current.filter(
+        (p) =>
+          p.id !== palace.id &&
+          !pinnedIds.has(p.id) &&
+          !/역(\s|$)|station|주차|parking|출구|exit/i.test(`${p.nameKo ?? ''} ${p.name}`)
+      );
+      const apart = base.filter((p) => {
+        const d = haversineMeters(palace, p);
+        return d >= 150 && d <= 5000;
+      });
+      return [...apart, ...base.filter((p) => !apart.includes(p))].slice(0, count);
+    };
+    /** 결과 카드의 자리 — 핀이 날아오를 출발점. 카드를 못 찾으면 화면 가운데에서 뜬다. */
+    const resultCardRect = (id: string): DOMRect =>
+      document
+        .querySelector<HTMLElement>(`.search-result-card[data-place-id="${CSS.escape(id)}"]`)
+        ?.getBoundingClientRect() ?? new DOMRect(window.innerWidth / 2, window.innerHeight / 2, 0, 0);
+    // 말풍선 없이 담는 핀업 — 연달아 부르므로 렌더 시점 값이 아니라 직전 상태에서 이어 붙인다.
+    const coachAddPin = (place: Place) => {
+      const from = resultCardRect(place.id);
+      setTrip((prev) => {
+        const day = prev.currentDay;
+        const list = prev.pinnedByDay[day] ?? [];
+        if (list.some((p) => p.id === place.id)) return prev;
+        const pinnedPlace: PinnedPlace = {
+          ...place,
+          nameKo: place.nameKo ?? place.name,
+          pinnedAt: Date.now(),
+          order: list.length + 1,
+          stayMinutes: suggestStayMinutes(place.category).minutes,
+          day,
+        };
+        return {
+          ...prev,
+          pinnedByDay: { ...prev.pinnedByDay, [day]: [...list, pinnedPlace] },
+          updatedAt: Date.now(),
+        };
+      });
+      coachAddedPinIdsRef.current.push(place.id);
+      flyPinToTab({
+        from,
+        label: place.name,
+        iconName: CATEGORY_MAP[place.categoryCode]?.icon ?? 'mapPin',
+      });
+    };
+    // 담은 핀으로 시연 동선을 만든다. 출발지는 첫 핀 — 안내 중에 위치 권한 창이 뜨면 안 된다.
+    const buildCoachRoute = () => {
+      const t = tripRef.current;
+      const day = t.currentDay;
+      const pins = t.pinnedByDay[day] ?? [];
+      if (pins.length < 2) return;
+      const first = pins[0];
+      if (!coachRouteRef.current) {
+        coachRouteRef.current = { day, prev: t.generatedRouteByDay[day] ?? null };
+      }
+      const base = generateRoute(pins, {
+        ...getRouteOptionsForDay(t, day),
+        origin: { type: 'map-click', label: first.name, lat: first.lat, lng: first.lng },
+        preferences: t.preferences,
+      });
+      setRouteForDay(day, base);
+      setDockCollapsed(false);
+      // 실제 도로 길이로 다듬는다 — 실패해도 위 추정 동선이 그대로 남는다.
+      const token = ++coachRouteTokenRef.current;
+      void refineRouteWithRealLegs(base, fetchLegs)
+        .then((refined) => {
+          if (coachRouteTokenRef.current === token) setRouteForDay(day, refined);
+        })
+        .catch(() => undefined);
+    };
+    const stopPhotoFlip = () => {
+      if (coachPhotoTimerRef.current) window.clearInterval(coachPhotoTimerRef.current);
+      coachPhotoTimerRef.current = null;
+    };
+    return [
+      { id: 'search', selector: '[data-tour="search"]' },
+      {
+        id: 'result',
+        selector: () => {
+          const place = pickCoachPlace();
+          coachPlaceRef.current = place;
+          return place ? `.search-result-card[data-place-id="${CSS.escape(place.id)}"]` : '';
+        },
+        waitMs: 6000,
+        prepare: () => {
+          const ready = mapProvider === 'google' ? googleReady : kakaoReady;
+          if (!ready) return false;
+          openSearchPanel();
+          setResults([]);
+          // 검색창에도 경복궁을 채워 무엇을 검색했는지 보이게 한다. 단 모바일 검색창은 글자가
+          // 바뀌면 스스로 한 번 더 검색한다(autoSearch) — Google은 그게 무료 횟수를 한 번 더
+          // 쓰므로 카카오일 때만 채운다.
+          if (mapProvider === 'kakao') setQuery(COACH_KEYWORD);
+          setCategoryFilter(null);
+          setSearchScope('nationwide');
+          void (async () => {
+            // Google은 무료 검색 횟수가 걸려 있다 — 남았을 때만 쓴다. 못 쓰면 이 단계와
+            // 말풍선·상세 단계가 대상을 못 찾아 건너뛴다(업그레이드 창을 안내 중에 띄우지 않는다).
+            if (mapProvider === 'google' && !(await canRunGoogleSearch(plan, isAdmin, user?.id))) {
+              return;
+            }
+            void runSearch(1, false, {
+              scope: 'nationwide',
+              category: null,
+              query: COACH_KEYWORD,
+            });
+          })();
+        },
+      },
+      {
+        id: 'bubble',
+        selector: '.map-place-bubble',
+        waitMs: 2500,
+        prepare: () => {
+          const place = coachPlaceRef.current;
+          if (!place) return false;
+          handleSelectPlace(place);
+        },
+      },
+      {
+        id: 'detail',
+        // 사진이 로드되기 전엔 탭 줄을, 로드되면 사진 영역을 가리킨다(측정마다 다시 고른다).
+        selector: () =>
+          document.querySelector('.place-detail-panel .photos-main')
+            ? '.place-detail-panel .photos-main'
+            : '.place-detail-tabs',
+        waitMs: 3000,
+        prepare: () => {
+          if (!coachPlaceRef.current) return false;
+          setPhotosTarget(coachPlaceRef.current);
+          // 실제 사진을 몇 장 넘겨 보여준다 — 안내 막이 클릭을 막으므로 다음 버튼을 대신 누른다.
+          stopPhotoFlip();
+          let flips = 0;
+          coachPhotoTimerRef.current = window.setInterval(() => {
+            const next = document.querySelector<HTMLButtonElement>(
+              '.place-detail-panel .photos-nav-next'
+            );
+            if (!next || next.disabled) return;
+            next.click();
+            flips += 1;
+            if (flips >= 4) stopPhotoFlip();
+          }, 1800);
+        },
+        // 말풍선은 남겨 둔다 — 다음 단계(핀업)가 말풍선의 핀업 버튼을 가리킨다.
+        cleanup: () => {
+          stopPhotoFlip();
+          setPhotosTarget(null);
+        },
+      },
+      {
+        // 경복궁을 실제로 담아 핀이 탭으로 날아가 "핀 0 → 핀 1"이 되는 걸 보여주고(사용자 요청),
+        // 이어서 근처 두 곳을 연달아 더 담아 3곳을 만든다(2026-10-27 사용자 요청 — 동선은 2곳 이상
+        // 있어야 짜진다). 담는 건 [다음]을 눌렀을 때만이고, 안내가 끝나면 finishOnboarding이 도로 뺀다.
+        id: 'pinup',
+        selector: '.map-place-bubble-pin',
+        waitMs: 2500,
+        prepare: () => {
+          const place = coachPlaceRef.current;
+          if (!place) return false;
+          if (!document.querySelector('.map-place-bubble')) handleSelectPlace(place);
+        },
+        onNext: () => {
+          const place = coachPlaceRef.current;
+          if (!place) return;
+          // 이미 담겨 있던 곳이면 토글이 "해제"가 되므로 건드리지 않는다.
+          if (!(trip.pinnedByDay[currentDay] ?? []).some((p) => p.id === place.id)) {
+            handleTogglePinFromInfo(place);
+            coachAddedPinIdsRef.current.push(place.id);
+          }
+          pickExtraPlaces(place, 2).forEach((extra, i) => {
+            coachTimersRef.current.push(window.setTimeout(() => coachAddPin(extra), 900 * (i + 1)));
+          });
+        },
+        cleanup: () => setInfoWindowPlace(null),
+      },
+      {
+        // 세 핀이 차례로 탭에 날아드는 동안(약 2.8초) 어두운 막을 걷어 두고, 다 담긴 뒤 핀 목록 화면을 연다.
+        id: 'pins',
+        selector: '.pinup-groups',
+        delayMs: 2900,
+        waitMs: 2500,
+        prepare: () => {
+          openPlannerTab('pins');
+          setMobileSheetTab('pins');
+          setMobileSheetLevel((prev) => (prev === 'peek' ? 'half' : prev));
+          fitMapToCoachPins(400);
+        },
+      },
+      {
+        // 동선 탭을 열어 [동선 만들기] 버튼을 가리킨다. 누르는 건 안내 쪽에서 대신 한다.
+        id: 'route',
+        selector: '.generate-btn',
+        waitMs: 2500,
+        prepare: () => {
+          const t = tripRef.current;
+          if ((t.pinnedByDay[t.currentDay] ?? []).length < 2) return false;
+          openPlannerTab('route');
+          setMobileSheetTab('route');
+          setMobileSheetLevel((prev) => (prev === 'peek' ? 'half' : prev));
+          fitMapToCoachPins(400);
+        },
+        onNext: buildCoachRoute,
+      },
+      {
+        // 만들어진 동선 — 지도의 선과 하단 일정 카드. 모바일은 카드가 시트를 접었을 때만 보인다.
+        id: 'routeDone',
+        selector: '.route-timeline-dock',
+        waitMs: 3000,
+        prepare: () => {
+          if (!coachRouteRef.current) return false;
+          setMobileSheetLevel('peek');
+          setDockCollapsed(false);
+          // 시트가 접히고 일정 카드가 자리 잡은 뒤, 그 위로 핀 전체가 보이게 다시 맞춘다
+          fitMapToCoachPins(700);
+        },
+      },
+      { id: 'scenario', selector: '[data-tour="scenario"]' },
+      { id: 'share', selector: '[data-tour="share"]' },
+    ];
+  }, [
+    openSearchPanel,
+    mapProvider,
+    googleReady,
+    kakaoReady,
+    plan,
+    isAdmin,
+    user?.id,
+    runSearch,
+    handleSelectPlace,
+    handleTogglePinFromInfo,
+    openPlannerTab,
+    fitMapToCoachPins,
+    trip.pinnedByDay,
+    currentDay,
+  ]);
+
+  /**
+   * 안내가 끝나면(끝까지 봤든 건너뛰었든) 안내가 열어 둔 말풍선·상세를 닫고, 안내가
+   * 대신 담은 경복궁 핀을 도로 뺀다 — 시연용으로 담은 것이지 사용자가 고른 장소가 아니다.
+   * 토스트·애니메이션 없이 조용히 뺀다(handleTogglePin을 쓰면 "해제" 토스트가 뜬다).
+   */
+  const finishOnboarding = useCallback(() => {
+    setOnboardingDone(true);
+    setPhotosTarget(null);
+    setInfoWindowPlace(null);
+    // 아직 담지 않은 핀이 뒤늦게 들어오거나 늦은 길찾기 결과가 동선을 되살리지 않게 막는다.
+    coachTimersRef.current.forEach((id) => window.clearTimeout(id));
+    coachTimersRef.current = [];
+    coachRouteTokenRef.current += 1;
+    setCoachFitInset(null);
+    const addedIds = new Set(coachAddedPinIdsRef.current);
+    coachAddedPinIdsRef.current = [];
+    const demoRoute = coachRouteRef.current;
+    coachRouteRef.current = null;
+    if (demoRoute) {
+      // 시연으로 열어 둔 동선 탭을 검색 화면으로 되돌린다.
+      setPanelTab('search');
+      setMobileSheetTab('search');
+      setMobileSheetLevel('half');
+      setRouteOptionsOpen(false);
+    }
+    if (addedIds.size === 0 && !demoRoute) return;
+    setTrip((prev) => {
+      const pinnedByDay = Object.fromEntries(
+        Object.entries(prev.pinnedByDay).map(([day, list]) => [
+          day,
+          (list ?? []).filter((p) => !addedIds.has(p.id)),
+        ])
+      );
+      const generatedRouteByDay = demoRoute
+        ? { ...prev.generatedRouteByDay, [demoRoute.day]: demoRoute.prev }
+        : prev.generatedRouteByDay;
+      return { ...prev, pinnedByDay, generatedRouteByDay, updatedAt: Date.now() };
+    });
+  }, []);
   /** N08 — 목표는 "핀 3곳 + 동선 1개"(리포트가 명시한 완료 기준) */
   const FIRST_ITINERARY_PIN_GOAL = 3;
   const hasAnyRoute = useMemo(
@@ -2885,7 +3238,8 @@ export default function PlannerPage() {
           selectedOptimizeBy={routeOptions.optimizeBy}
           nearbySearchCenter={searchScope === 'nearby' ? nearbySearchCenter : null}
           fitSearchBounds={fitSearchBounds}
-          fitPinsBounds={presentationMode}
+          fitPinsBounds={presentationMode || coachFitInset !== null}
+          fitPinsInset={presentationMode ? undefined : coachFitInset ?? undefined}
           pickingOriginFromMap={pickingOriginFromMap}
           pickingPinFromMap={pickingPinFromMap}
           onOriginPicked={handleOriginPicked}
@@ -2939,7 +3293,7 @@ export default function PlannerPage() {
             countsByDay={countsByDay}
             saveStatus={saveStatus}
             lastSavedAt={lastSavedAt ?? trip.updatedAt}
-            onGuestSaveClick={() => navigate('/login')}
+            onGuestSaveClick={() => navigate(pathWithLocale('/login', normalizeLocale(i18n.language)))}
             onTitleChange={handleTitleChange}
             onSelectTrip={handleSelectTrip}
             onSelectDay={selectDay}
@@ -3247,7 +3601,7 @@ export default function PlannerPage() {
                 status={saveStatus}
                 lastSavedAt={lastSavedAt ?? trip.updatedAt}
                 compact
-                onGuestClick={() => navigate('/login')}
+                onGuestClick={() => navigate(pathWithLocale('/login', normalizeLocale(i18n.language)))}
                 onTap={(msg) => showToast(msg)}
               />
             </div>
@@ -3371,6 +3725,7 @@ export default function PlannerPage() {
               <button
                 type="button"
                 className={`mobile-sheet-tab ${mobileSheetTab === 'search' ? 'active' : ''}`}
+                data-tour="search"
                 onClick={() => setMobileSheetTab('search')}
               >
                 {tp('chrome.tabSearch')}
@@ -3378,6 +3733,7 @@ export default function PlannerPage() {
               <button
                 type="button"
                 className={`mobile-sheet-tab ${mobileSheetTab === 'pins' ? 'active' : ''}`}
+                data-tour="pins"
                 onClick={() => setMobileSheetTab('pins')}
               >
                 {tp('chrome.viewList')}
@@ -3385,6 +3741,7 @@ export default function PlannerPage() {
               <button
                 type="button"
                 className={`mobile-sheet-tab ${mobileSheetTab === 'route' ? 'active' : ''}`}
+                data-tour="route"
                 onClick={() => {
                   if (generatedRoute) {
                     handleOpenRouteTable();
@@ -3570,6 +3927,7 @@ export default function PlannerPage() {
               <button
                 type="button"
                 className={`mobile-tabbar-btn ${scenarioOpen ? 'active' : ''}`}
+                data-tour="scenario"
                 onClick={() =>
                   setScenarioOpen((prev) => {
                     const next = !prev;
@@ -3757,12 +4115,7 @@ export default function PlannerPage() {
       </AppSheetModal>
 
       {showOnboarding && (
-        <OnboardingCoach
-          mobile={useMobileChrome}
-          onOpenSearch={() => toggleMobileSheet('search')}
-          onOpenPins={() => toggleMobileSheet('pins')}
-          onOpenRoute={handleOpenRouteOptions}
-        />
+        <OnboardingCoach steps={onboardingSteps} onDone={finishOnboarding} />
       )}
       {/*
         N08 — 탭 투어(위)가 끝난 뒤를 이어받는 진행 상태 기반 안내. 동시에 안 뜬다.

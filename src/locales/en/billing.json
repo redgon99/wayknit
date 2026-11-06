@@ -21,7 +21,10 @@
   },
   "checkout": {
     "redirecting": "Opening checkout…",
-    "notConfigured": "Checkout is not configured yet."
+    "notConfigured": "Checkout is not configured yet.",
+    "processing": "Processing your payment…",
+    "success": "Your Plus subscription has started.",
+    "failed": "Payment failed: {{message}}"
   },
   "compare": {
     "feature": "Feature",
@@ -39,5 +42,12 @@
     "plazaImport": "Plaza / share-link import",
     "plazaImportFree": "Counts toward trip limit",
     "unlimited": "Unlimited"
+  },
+  "cancel": {
+    "button": "Cancel subscription",
+    "confirm": "Cancel your subscription? You can keep using Plus until the end of the current billing period.",
+    "processing": "Cancelling your subscription…",
+    "success": "Your subscription has been cancelled. You’ll move to the Free plan when the current billing period ends.",
+    "failed": "Couldn’t cancel: {{message}}"
   }
 }

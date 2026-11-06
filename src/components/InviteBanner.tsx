@@ -4,6 +4,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from './Icon';
 import { useAuth } from '../hooks/useAuth';
 import { fetchInvitePreview, type TripInvitePreview } from '../lib/trips';
+import { normalizeLocale, pathWithLocale } from '../lib/locale';
+import i18n from '../lib/i18n';
 
 /**
  * 초대 링크(/plan?invite=<id>)로 들어온 사람에게 상황을 알려준다.
@@ -83,7 +85,7 @@ export function InviteBanner() {
       run: () => {
         const q = new URLSearchParams({ invite: inviteId });
         if (invitedEmailFromLink) q.set('email', invitedEmailFromLink);
-        navigate(`/login?${q.toString()}`);
+        navigate(`${pathWithLocale('/login', normalizeLocale(i18n.language))}?${q.toString()}`);
       },
     };
   } else if (!looksLikeMe) {

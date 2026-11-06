@@ -1,9 +1,11 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import { AuthBar } from './AuthBar';
+import { LandingCmsNav } from './LandingCms';
 import { LocaleSwitcher } from './LocaleSwitcher';
+import { useLandingCms } from '../hooks/useLandingCms';
 import { normalizeLocale, pathWithLocale } from '../lib/locale';
 import { plannerPath } from '../lib/routes';
 import i18n from '../lib/i18n';
@@ -25,20 +27,21 @@ function SiteBrand({ className = '' }: { className?: string }) {
 interface SiteHeaderProps {
   /** 현재 페이지에 해당하는 내비게이션 항목 (하이라이트용) */
   active: SiteHeaderActive;
-  /** 랜딩페이지의 CMS 프로모 메뉴 등, 이 페이지만의 추가 링크 */
-  beforeLinks?: ReactNode;
-  /** 상단 공지 배너 문구 (기본: 시범운영 안내). 빈 배열을 넘기면 배너를 숨긴다 */
-  noticeTexts?: string[];
 }
 
 /**
- * 랜딩·한국여행정보·가이드 페이지가 공유하는 상단 바.
+ * 랜딩·공유마당·한국여행정보·가이드 페이지가 공유하는 상단 바.
  * 페이지마다 따로 헤더를 그려서 언어 선택이 두 번 뜨거나(AuthBar 내부 + 페이지 자체)
  * 관리자 로그아웃 링크가 공개 페이지에 그대로 노출되던 문제를 여기서 한 번에 해소한다.
+ *
+ * 공지 배너와 관리자 랜딩 CMS 메뉴도 여기서 직접 읽는다 — 예전엔
+ * 페이지가 각자 넘겨줬고, 메뉴는 랜딩만 넘겨서 다른 페이지로 가면 사라졌다
+ * (hooks/useLandingCms.ts 주석).
  */
-export function SiteHeader({ active, beforeLinks, noticeTexts }: SiteHeaderProps) {
+export function SiteHeader({ active }: SiteHeaderProps) {
   const { t } = useTranslation('landing');
-  const notices = noticeTexts ?? [t('notice.trial')];
+  const cms = useLandingCms();
+  const notices = cms.noticeTexts ?? [t('notice.trial')];
   const locale = normalizeLocale(i18n.language);
   const homePath = pathWithLocale('/', locale);
   const plazaPath = pathWithLocale('/plaza', locale);
@@ -49,7 +52,12 @@ export function SiteHeader({ active, beforeLinks, noticeTexts }: SiteHeaderProps
 
   const navLinks = (
     <>
-      {beforeLinks}
+      {/* CMS 섹션은 랜딩에만 있다 — 다른 페이지에선 랜딩의 그 섹션으로 보낸다(아래 "소개"와 같은 방식) */}
+      <LandingCmsNav
+        items={cms.navItems}
+        hrefBase={active === 'home' ? '' : homePath}
+        onNavigate={() => setMenuOpen(false)}
+      />
       <a href={`${homePath}#features`} onClick={() => setMenuOpen(false)}>
         {t('nav.features')}
       </a>

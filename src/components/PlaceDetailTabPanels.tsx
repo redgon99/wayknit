@@ -160,7 +160,7 @@ function SummaryTab({ panel, place }: TabProps) {
       {bizVerified && (
         <p className="place-detail-summary-verified">
           <Icon name="check" />
-          사업자 정보가 확인된 장소입니다.
+          {t('place.detail.bizVerified')}
         </p>
       )}
 
@@ -190,7 +190,11 @@ function GoogleSummaryTab({ panel, place }: TabProps) {
     openingNow === true ? 'open' : openingNow === false ? 'closed' : null;
   const editorial = pickStr(summary, 'editorialSummary');
   const categoryLabel = pickStr(summary, 'categoryLabel') ?? place?.categoryLabel;
-  const priceLevelLabel = pickStr(summary, 'priceLevelLabel');
+  // 가격대는 숫자(0~4)로 받아 여기서 번역한다. 숫자가 없는 예전 캐시만 저장된 라벨을 쓴다.
+  const priceLevelLabel =
+    typeof summary.priceLevel === 'number'
+      ? googlePriceLevelLabel(summary.priceLevel, t)
+      : pickStr(summary, 'priceLevelLabel');
   const ratingRaw = summary.rating;
   const reviewRaw = summary.reviewCount;
   const rating =
@@ -225,7 +229,7 @@ function GoogleSummaryTab({ panel, place }: TabProps) {
               </span>
               {reviewCount != null && !Number.isNaN(reviewCount) && (
                 <span className="place-detail-google-rating-count">
-                  리뷰 {Math.round(reviewCount).toLocaleString()}개
+                  {t('search.reviewsSuffix', { count: Math.round(reviewCount) })}
                 </span>
               )}
             </div>
@@ -285,7 +289,9 @@ function GoogleSummaryTab({ panel, place }: TabProps) {
 
       {panel?.api_source != null && (
         <p className="place-detail-google-api-note">
-          {String(panel.api_source) === 'new' ? 'Places API (New)' : 'Places API'} 데이터
+          {t('place.detail.googleApiNote', {
+            source: String(panel.api_source) === 'new' ? 'Places API (New)' : 'Places API',
+          })}
         </p>
       )}
     </div>
@@ -374,6 +380,10 @@ function GoogleReviewTab({ panel }: TabProps) {
     return <EmptyTab message={t('place.detail.empty.reviews')} />;
   }
 
+  // 이름 없는 작성자는 저장할 때 빈 문자열로 두고 여기서 지금 언어로 채운다.
+  const authorOf = (r: GooglePlaceReview) =>
+    r.authorName ? String(r.authorName) : t('place.detail.googleUser');
+
   return (
     <div className="place-detail-google-reviews">
       {rating != null && !Number.isNaN(rating) && (
@@ -382,14 +392,14 @@ function GoogleReviewTab({ panel }: TabProps) {
           <Icon name="star" size={18} />
           {reviewCount != null && !Number.isNaN(reviewCount) && (
             <span className="place-detail-google-rating-count">
-              {Math.round(reviewCount).toLocaleString()}개 리뷰
+              {t('search.reviewsSuffix', { count: Math.round(reviewCount) })}
             </span>
           )}
         </div>
       )}
       <ul className="place-detail-google-review-list">
         {reviews.map((r, i) => (
-          <li key={`${String(r.authorName)}-${i}`} className="place-detail-google-review-item">
+          <li key={`${authorOf(r)}-${i}`} className="place-detail-google-review-item">
             <div className="place-detail-google-review-head">
               <div className="place-detail-google-review-author">
                 {r.profilePhotoUrl ? (
@@ -401,7 +411,7 @@ function GoogleReviewTab({ panel }: TabProps) {
                   />
                 ) : (
                   <span className="place-detail-google-review-avatar-fallback" aria-hidden="true">
-                    {(String(r.authorName ?? '?')).charAt(0)}
+                    {authorOf(r).charAt(0)}
                   </span>
                 )}
                 <div>
@@ -412,11 +422,11 @@ function GoogleReviewTab({ panel }: TabProps) {
                       rel="noopener noreferrer"
                       className="place-detail-google-review-author"
                     >
-                      {String(r.authorName ?? 'Google 사용자')}
+                      {authorOf(r)}
                     </a>
                   ) : (
                     <span className="place-detail-google-review-author">
-                      {String(r.authorName ?? 'Google 사용자')}
+                      {authorOf(r)}
                     </span>
                   )}
                   {r.relativeTime ? (
@@ -445,7 +455,8 @@ function GoogleReviewTab({ panel }: TabProps) {
 
 function GoogleInfoTab({ panel }: TabProps) {
   const { t } = useTranslation('planner');
-  const options = (panel?.serviceOptions as Array<{ label?: string; available?: boolean }>) ?? [];
+  const options =
+    (panel?.serviceOptions as Array<{ id?: string; label?: string; available?: boolean }>) ?? [];
   if (options.length === 0) {
     return <EmptyTab message={t('place.detail.empty.googleInfo')} />;
   }
@@ -456,11 +467,14 @@ function GoogleInfoTab({ panel }: TabProps) {
       <ul className="place-detail-google-service-list">
         {options.map((opt) => (
           <li
-            key={String(opt.label)}
+            key={String(opt.id ?? opt.label)}
             className={`place-detail-google-service-item ${opt.available ? 'available' : 'unavailable'}`}
           >
             <Icon name={opt.available ? 'check' : 'close'} size={14} />
-            {String(opt.label ?? '')}
+            {/* id가 없는 건 30분 캐시에 남은 예전 데이터 — 저장된 라벨을 그대로 쓴다 */}
+            {opt.id
+              ? t(`place.detail.service.${opt.id}`, { defaultValue: opt.label })
+              : String(opt.label ?? '')}
           </li>
         ))}
       </ul>
@@ -517,7 +531,11 @@ function StoreFacilitySection({
               <span className="place-detail-facility-icon" aria-hidden="true">
                 <Icon name={chip.icon} size={28} />
               </span>
-              <span className="place-detail-facility-label">{chip.label}</span>
+              <span className="place-detail-facility-label">
+                {chip.id
+                  ? t(`place.detail.facility.${chip.id}`, { defaultValue: chip.label })
+                  : chip.label}
+              </span>
             </li>
           ))}
         </ul>
@@ -801,7 +819,7 @@ function KakaoReviewTab({ panel }: TabProps) {
           <Icon name="star" />
           {Number(score.average_score).toFixed(1)}
           {score.review_count !== undefined && (
-            <span> · 후기 {Number(score.review_count).toLocaleString()}개</span>
+            <span> · {t('place.detail.kakaoReviewCount', { count: Number(score.review_count) })}</span>
           )}
         </p>
       )}
@@ -1015,4 +1033,15 @@ function pickStr(obj: Record<string, unknown> | undefined, key: string): string 
   if (!obj) return undefined;
   const v = obj[key];
   return typeof v === 'string' && v.trim() ? v.trim() : undefined;
+}
+
+/** 구글 가격대(0~4). 0·1은 말이라 번역하고, 2~4는 금액 범위라 언어와 무관하다. */
+function googlePriceLevelLabel(
+  level: number,
+  t: ReturnType<typeof useTranslation>['t']
+): string | undefined {
+  if (level < 0) return undefined;
+  if (level === 0) return t('place.detail.priceFree');
+  if (level === 1) return t('place.detail.priceUnder', { amount: '₩10,000' });
+  return ['₩10,000–20,000', '₩20,000–30,000', '₩30,000+'][Math.min(level, 4) - 2];
 }

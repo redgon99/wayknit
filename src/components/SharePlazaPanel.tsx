@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import { ThemePreferenceChips } from './ThemePreferenceChips';
 import { formatDate } from '../lib/format';
-import { normalizeLocale } from '../lib/locale';
+import { normalizeLocale, pathWithLocale } from '../lib/locale';
 import i18n from '../lib/i18n';
 import { MapView } from './MapView';
 import { ReportButton } from './ReportButton';
@@ -389,7 +389,8 @@ export function SharePlazaPanel() {
                   </div>
                   <p className="plaza-board-summary">{entry.pinSummary}</p>
                   <div className="plaza-board-actions">
-                    <Link to={`/trip/${entry.slug}`} className="plaza-board-link">
+                    {/* 언어 접두어 없는 /trip/…은 한국어 경로라, 영어 공유마당에서 눌러도 한국어로 바뀌었다 */}
+                    <Link to={pathWithLocale(`/trip/${entry.slug}`, locale)} className="plaza-board-link">
                       {t('plaza.viewDetail')}
                     </Link>
                     {pulled ? (

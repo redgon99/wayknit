@@ -1,24 +1,14 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import type { IconName } from '../icons/wayknit-icons';
 import { dismissShareOnboarding } from '../lib/onboarding';
 
-const STEPS: Array<{ title: string; body: string; icon: IconName }> = [
-  {
-    title: '공유된 여행 보기',
-    body: '지도에서 핀업한 장소와 만든 동선을 확인할 수 있습니다. 상단 탭으로 일차를 바꿀 수 있어요.',
-    icon: 'mapPin',
-  },
-  {
-    title: '내 여행에 추가',
-    body: '녹색 버튼을 누르면 이 일정이 내 여행 목록에 복사됩니다. 이후 자유롭게 수정할 수 있어요.',
-    icon: 'plus',
-  },
-  {
-    title: '편집 화면으로 이동',
-    body: '「내 여행 편집하기」로 검색·핀업·동선 만들기 화면으로 바로 갈 수 있습니다.',
-    icon: 'route',
-  },
+/** 문구는 share 번역의 `coach.<id>Title` / `coach.<id>Body` */
+const STEPS: Array<{ id: 'view' | 'add' | 'edit'; icon: IconName }> = [
+  { id: 'view', icon: 'mapPin' },
+  { id: 'add', icon: 'plus' },
+  { id: 'edit', icon: 'route' },
 ];
 
 interface Props {
@@ -26,6 +16,8 @@ interface Props {
 }
 
 export function ShareOnboardingCoach({ onComplete }: Props) {
+  const { t } = useTranslation('share');
+  const { t: tc } = useTranslation('common');
   const [step, setStep] = useState(0);
   const current = STEPS[step];
   const isLast = step >= STEPS.length - 1;
@@ -50,21 +42,22 @@ export function ShareOnboardingCoach({ onComplete }: Props) {
         className="onboarding-coach share-onboarding-coach"
         role="dialog"
         aria-modal="true"
-        aria-label="공유 보기 안내"
+        aria-label={t('coach.aria')}
       >
         <div className="onboarding-coach-body">
           <Icon name={current.icon} size={20} />
           <div>
-            <strong>{current.title}</strong>
-            <p>{current.body}</p>
+            <strong>{t(`coach.${current.id}Title`)}</strong>
+            {/* 3단계 본문은 실제 버튼 이름을 따옴표로 가리킨다 — 버튼과 같은 번역을 끼워 넣는다 */}
+            <p>{t(`coach.${current.id}Body`, { editButton: t('trip.editMine') })}</p>
           </div>
         </div>
         <div className="onboarding-coach-actions">
           <button type="button" className="onboarding-dismiss" onClick={finish}>
-            다시 보지 않기
+            {t('coach.dontShow')}
           </button>
           <button type="button" className="onboarding-next" onClick={handleNext}>
-            {isLast ? '확인' : '다음'}
+            {isLast ? tc('confirm') : tc('next')}
           </button>
         </div>
         <div className="onboarding-dots" aria-hidden>

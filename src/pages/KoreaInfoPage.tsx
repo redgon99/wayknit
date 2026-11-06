@@ -7,7 +7,6 @@ import { TrailRouteModal } from '../components/TrailRouteModal';
 import { OdiiStoriesModal } from '../components/OdiiStoriesModal';
 import { Icon } from '../components/Icon';
 import { useSeoMeta } from '../hooks/useSeoMeta';
-import { useLandingNoticeTexts } from '../hooks/useLandingNoticeTexts';
 import { normalizeLocale, type AppLocale } from '../lib/locale';
 import { plannerPath } from '../lib/routes';
 import i18n from '../lib/i18n';
@@ -335,8 +334,6 @@ export default function KoreaInfoPage() {
   const { t } = useTranslation('korInfo');
   const locale = normalizeLocale(i18n.language);
   const multilingualLocale = toMultilingualLocale(locale);
-  const noticeTexts = useLandingNoticeTexts();
-
   const [tab, setTab] = useState<InfoTab>('photos');
   const [placeTypeId, setPlaceTypeId] = useState<TourContentTypeId | ''>('');
 
@@ -494,7 +491,7 @@ export default function KoreaInfoPage() {
 
   return (
     <main className="guides-page">
-      <SiteHeader active="info" noticeTexts={noticeTexts} />
+      <SiteHeader active="info" />
       <div className="guides-page-title guides-shell">
         <h1>{t('title')}</h1>
         <p className="guides-lead">{t('subtitle')}</p>

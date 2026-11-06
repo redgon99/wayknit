@@ -22,7 +22,18 @@
   "trip": {
     "readOnly": "Viaje compartido (solo lectura)",
     "notFound": "No se encontró el viaje.",
-    "loading": "Cargando…"
+    "loading": "Cargando…",
+    "badge": "Vista compartida",
+    "addToMine": "Añadir a mis viajes",
+    "adding": "Añadiendo…",
+    "editMine": "Editar mis viajes",
+    "goToPlanner": "Ir al planificador",
+    "mapLoading": "Cargando el mapa…",
+    "empty": "Aún no hay lugares.",
+    "invalidLink": "El enlace para compartir no es válido.",
+    "notFoundDetail": "No se encontró este viaje compartido. Puede que el enlace haya caducado o que el viaje sea privado.",
+    "loadFailed": "No se pudo cargar el viaje.",
+    "addFailed": "No se pudo guardar. Inténtalo de nuevo."
   },
   "plaza": {
     "title": "Plaza de compartir",
@@ -61,10 +72,10 @@
     "filterEmpty": "Ningún viaje coincide con tus filtros.",
     "dayFilterLabel": "Duración del viaje",
     "day": {
-      "all": "Cualquiera",
       "1": "1 día",
       "2": "2 días",
       "3": "3 días",
+      "all": "Cualquiera",
       "4plus": "4+ días"
     },
     "regionFilterLabel": "Región",
@@ -172,5 +183,15 @@
     "notFound": "No se encontró la invitación. El enlace pudo cancelarse o ser incorrecto.",
     "loginCta": "Iniciar sesión para unirte",
     "dismiss": "Cerrar"
+  },
+  "coach": {
+    "aria": "Guía de la vista compartida",
+    "viewTitle": "Ver un viaje compartido",
+    "viewBody": "Consulta en el mapa los lugares fijados y la ruta. Cambia de día con las pestañas de arriba.",
+    "addTitle": "Añadir a mis viajes",
+    "addBody": "Pulsa el botón verde para copiar este itinerario en tus viajes. Después podrás editarlo libremente.",
+    "editTitle": "Ir al editor",
+    "editBody": "Con «{{editButton}}» vas directamente a buscar, fijar lugares y crear rutas.",
+    "dontShow": "No volver a mostrar"
   }
 }

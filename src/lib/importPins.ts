@@ -1,5 +1,48 @@
 import type { CategoryCode, PinnedPlace, SimpleCategory } from '../types';
 import { DEFAULT_CODE_BY_SIMPLE_CATEGORY } from './categories';
+import i18n from './i18n';
+
+/**
+ * 화면에 보여 줄 문구는 호출부가 `import.<code>` 번역으로 바꾼다 — 이 파일은 언어를 모른다.
+ * `message`의 한국어는 번역이 없을 때의 안전망이다.
+ */
+export class PinImportError extends Error {
+  constructor(
+    public readonly code: 'errNoPins' | 'errCsvColumns' | 'errNoDayPins',
+    message: string
+  ) {
+    super(message);
+    this.name = 'PinImportError';
+  }
+}
+
+/**
+ * 보내기 파일의 열 이름·줄 머리말은 보낸 사람의 화면 언어로 써진다. 영어 화면에서 내보낸
+ * 파일을 다시 읽어올 수 있게, 모든 언어의 표기를 받아들인다(한국어는 번역이 없어도 항상 포함).
+ */
+function exportLabelVariants(key: string, korean: string): string[] {
+  const variants = new Set<string>([korean]);
+  for (const lng of Object.keys(i18n.store?.data ?? {})) {
+    const value = i18n.getResource(lng, 'planner', `export.${key}`);
+    if (typeof value === 'string' && value) variants.add(value);
+  }
+  return [...variants];
+}
+
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** `labelPattern('address', '주소')` → `(?:주소|Address|…)` */
+function labelPattern(key: string, korean: string): string {
+  return `(?:${exportLabelVariants(key, korean).map(escapeRegExp).join('|')})`;
+}
+
+/** "{{day}}일차" / "Day {{day}}" 같은 머리말 번역에서 일차 숫자를 뽑는 식 */
+function dayHeadingPattern(): string {
+  const parts = exportLabelVariants('dayHeading', '{{day}}일차').map((tpl) =>
+    escapeRegExp(tpl).replace(escapeRegExp('{{day}}'), '(\\d+)')
+  );
+  return `(?:${parts.join('|')})`;
+}
 
 export type PinImportScope = 'current' | 'all';
 export type PinImportMode = 'replace' | 'merge';
@@ -65,7 +108,7 @@ export function parseImportFile(
   }
 
   if (rows.length === 0) {
-    throw new Error('가져올 핀업 장소가 없습니다');
+    throw new PinImportError('errNoPins', '가져올 핀업 장소가 없습니다');
   }
 
   return applyImportRows(rows, options);
@@ -116,22 +159,25 @@ function parseCsvImport(content: string, currentDay: number): RawPinRow[] {
   if (lines.length < 2) return [];
 
   const header = splitCsvLine(lines[0]).map((h) => h.trim());
-  const idx = (name: string) => header.findIndex((h) => h === name);
+  const idx = (key: string, korean: string) => {
+    const names = exportLabelVariants(`csvHeaders.${key}`, korean);
+    return header.findIndex((h) => names.includes(h));
+  };
 
-  const dayIdx = idx('일차');
-  const orderIdx = idx('순서');
-  const nameIdx = idx('장소명');
-  const catIdx = idx('카테고리');
-  const addrIdx = idx('주소');
-  const roadIdx = idx('도로명주소');
-  const phoneIdx = idx('전화');
-  const latIdx = idx('위도');
-  const lngIdx = idx('경도');
-  const stayIdx = idx('체류시간(분)');
-  const noteIdx = idx('메모');
+  const dayIdx = idx('day', '일차');
+  const orderIdx = idx('order', '순서');
+  const nameIdx = idx('name', '장소명');
+  const catIdx = idx('category', '카테고리');
+  const addrIdx = idx('address', '주소');
+  const roadIdx = idx('road', '도로명주소');
+  const phoneIdx = idx('phone', '전화');
+  const latIdx = idx('lat', '위도');
+  const lngIdx = idx('lng', '경도');
+  const stayIdx = idx('stay', '체류시간(분)');
+  const noteIdx = idx('note', '메모');
 
   if (nameIdx < 0 || latIdx < 0 || lngIdx < 0) {
-    throw new Error('CSV에 장소명·위도·경도 열이 필요합니다');
+    throw new PinImportError('errCsvColumns', 'CSV에 장소명·위도·경도 열이 필요합니다');
   }
 
   const rows: RawPinRow[] = [];
@@ -163,13 +209,19 @@ function parseTextImport(content: string, currentDay: number): RawPinRow[] {
   let day = currentDay;
   let order = 0;
   let pending: RawPinRow | null = null;
+  const dayRe = new RegExp(`^##\\s*${dayHeadingPattern()}`);
+  const addrRe = new RegExp(`^\\s*${labelPattern('address', '주소')}:\\s*(.+)$`);
+  const coordRe = new RegExp(`^\\s*${labelPattern('coords', '좌표')}:\\s*([-\\d.]+)\\s*,\\s*([-\\d.]+)`);
+  const phoneRe = new RegExp(`^\\s*${labelPattern('phone', '전화')}:\\s*(.+)$`);
+  const stayRe = new RegExp(`^\\s*${labelPattern('stay', '체류')}:\\s*(\\d+)`);
+  const noteRe = new RegExp(`^\\s*${labelPattern('note', '메모')}:\\s*(.+)$`);
 
   for (const line of content.split(/\r?\n/)) {
-    const dayMatch = line.match(/^##\s*(\d+)\s*일차/);
+    const dayMatch = line.match(dayRe);
     if (dayMatch) {
       if (pending && !Number.isNaN(pending.lat)) withCoords.push(pending);
       pending = null;
-      day = Number(dayMatch[1]) || currentDay;
+      day = Number(dayMatch.slice(1).find(Boolean)) || currentDay;
       continue;
     }
     const pinMatch = line.match(/^(\d+)\.\s+(.+?)\s*\(([^)]+)\)\s*$/);
@@ -188,18 +240,18 @@ function parseTextImport(content: string, currentDay: number): RawPinRow[] {
       continue;
     }
     if (!pending) continue;
-    const addr = line.match(/^\s*주소:\s*(.+)$/);
+    const addr = line.match(addrRe);
     if (addr) pending.address = addr[1].trim();
-    const coord = line.match(/^\s*좌표:\s*([-\d.]+)\s*,\s*([-\d.]+)/);
+    const coord = line.match(coordRe);
     if (coord) {
       pending.lat = parseFloat(coord[1]);
       pending.lng = parseFloat(coord[2]);
     }
-    const tel = line.match(/^\s*전화:\s*(.+)$/);
+    const tel = line.match(phoneRe);
     if (tel) pending.phone = tel[1].trim();
-    const stay = line.match(/^\s*체류:\s*(\d+)/);
+    const stay = line.match(stayRe);
     if (stay) pending.stayMinutes = Number(stay[1]);
-    const memo = line.match(/^\s*메모:\s*(.+)$/);
+    const memo = line.match(noteRe);
     if (memo) pending.note = memo[1].trim();
   }
   if (pending && !Number.isNaN(pending.lat)) withCoords.push(pending);
@@ -247,7 +299,7 @@ export function applyImportRows(
   }
 
   if (byDay.size === 0) {
-    throw new Error('현재 일차에 해당하는 장소가 없습니다');
+    throw new PinImportError('errNoDayPins', '현재 일차에 해당하는 장소가 없습니다');
   }
 
   let totalDays = options.totalDays;

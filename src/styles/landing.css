@@ -558,6 +558,12 @@
 
 /* Pillars */
 /* Feature showcase (영상 4개 순차 소개) */
+/* 앵커로 이동했을 때 첫 제목이 sticky 헤더(.landing-top) 뒤에 가려지지 않게 한다.
+   섹션 자체의 상단 패딩(64px)에 더해져 제목이 헤더 아래에 놓인다. */
+.landing-intro {
+  scroll-margin-top: 72px;
+}
+
 .landing-showcase {
   background: var(--landing-surface);
   border-top: 1px solid var(--landing-border);

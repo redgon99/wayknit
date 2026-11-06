@@ -403,6 +403,47 @@
         "home": "Inicio",
         "map": "Mapa",
         "info": "Info"
+      },
+      "bizVerified": "Información del negocio verificada.",
+      "googleUser": "Usuario de Google",
+      "googleApiNote": "Datos de {{source}}",
+      "kakaoReviewCount": "{{count}} reseñas",
+      "kakaoReviewCount_one": "{{count}} reseña",
+      "priceFree": "Gratis",
+      "priceUnder": "Menos de {{amount}}",
+      "service": {
+        "dineIn": "Comer en el local",
+        "takeout": "Para llevar",
+        "delivery": "A domicilio",
+        "curbsidePickup": "Recogida en la puerta",
+        "reservable": "Reservas"
+      },
+      "facility": {
+        "groupSeating": "Mesas para grupos",
+        "babyChair": "Tronas",
+        "kidsMenu": "Menú infantil",
+        "terrace": "Terraza",
+        "takeout": "Para llevar",
+        "paidParking": "Parking de pago",
+        "freeParking": "Parking gratuito",
+        "parking": "Parking",
+        "pet": "Se admiten mascotas",
+        "advanceBooking": "Reserva previa",
+        "onlineTicket": "Entradas online",
+        "reservation": "Admite reservas",
+        "genderRestroom": "Baños separados",
+        "inStoreRestroom": "Baño en el local",
+        "restroom": "Baño",
+        "barTable": "Barra",
+        "breakfast": "Desayuno",
+        "wifi": "Wi-Fi",
+        "smoking": "Zona de fumadores",
+        "paidAdmission": "Entrada de pago",
+        "freeAdmission": "Entrada gratuita",
+        "souvenirShop": "Tienda de recuerdos",
+        "restArea": "Zona de descanso",
+        "cafeRestaurant": "Café/restaurante",
+        "payment": "Formas de pago"
       }
     }
   },
@@ -628,7 +669,34 @@
     "step2Title": "2. Fija lugares",
     "step2Body": "Fíjalos desde los resultados o el mapa para armar el itinerario.",
     "step3Title": "3. Crea la ruta",
-    "step3Body": "Reordena los pines y genera una ruta optimizada."
+    "step3Body": "Reordena los pines y genera una ruta optimizada.",
+    "coach": {
+      "progress": "{{n}} / {{total}}",
+      "skip": "Omitir",
+      "start": "Empezar",
+      "searchTitle": "Buscar lugares",
+      "searchBody": "Busca lugares por nombre o con palabras clave como \"restaurante\" o \"café\".",
+      "resultTitle": "Resultados",
+      "resultBody": "Hemos buscado \"Gyeongbokgung\" como ejemplo. Toca un resultado para verlo en el mapa o usa el botón + para añadirlo.",
+      "bubbleTitle": "Vista en el mapa",
+      "bubbleBody": "Toca la foto de la vista previa para abrir los detalles. También puedes fijar el lugar desde aquí.",
+      "detailTitle": "Detalles del lugar",
+      "detailBody": "Pasa fotos reales y consulta resumen, menú, reseñas y reservas en una sola vista, con tarjeta de taxi y enlaces a apps de mapas.",
+      "pinupTitle": "Fijar",
+      "pinupBody": "¿Te gusta? Toca el botón de fijar para añadirlo a tu plan. Pulsa Siguiente y fijaremos Gyeongbokgung y dos lugares cercanos, uno tras otro.",
+      "pinsTitle": "Tus lugares fijados",
+      "pinsBody": "Los lugares que acabamos de fijar se reúnen aquí en orden, y el contador de la pestaña de arriba también subió. (Los ejemplos se quitan al terminar la guía.)",
+      "routeTitle": "Crear ruta",
+      "routeBody": "Convertimos tus lugares en un orden de visita y un horario automáticamente. Pulsa Siguiente y crearemos uno ahora.",
+
+      "routeDoneTitle": "Tu ruta",
+
+      "routeDoneBody": "La ruta se dibuja en el mapa y la tarjeta de abajo muestra las horas de llegada y el tiempo de viaje. (La ruta de ejemplo se borra al terminar la guía.)",
+      "scenarioTitle": "Rutas temáticas",
+      "scenarioBody": "¿No sabes por dónde empezar? Elige un tema y parte de una ruta sugerida.",
+      "shareTitle": "Compartir",
+      "shareBody": "Comparte tu plan terminado con un enlace o invita a tus amigos a editarlo contigo."
+    }
   },
   "plazaNav": "Plaza de compartir",
   "export": {
@@ -673,6 +741,73 @@
       "note": "Nota",
       "map": "Enlace del mapa"
     }
+  },
+  "subFilter": {
+    "group": {
+      "FD6": "Restricciones alimentarias",
+      "AD5": "Tipo de alojamiento",
+      "AT4": "Tipo de atracción",
+      "MT1": "Tipo de compras"
+    },
+    "option": {
+      "halal": "Halal",
+      "vegetarian": "Vegano",
+      "no_pork": "Sin cerdo",
+      "hotel": "Hotel",
+      "motel": "Motel",
+      "hanok": "Hanok",
+      "pension": "Pensión",
+      "guesthouse": "Casa de huéspedes",
+      "beach": "Playa",
+      "nature": "Naturaleza",
+      "museum": "Exposición",
+      "park": "Parque",
+      "supermarket": "Supermercado",
+      "convenience": "Tienda de conveniencia",
+      "market": "Mercado"
+    }
+  },
+  "import": {
+    "label": "Importar",
+    "scopeAll": "Todos los días",
+    "replaceCurrent": "Importar (reemplazar)",
+    "mergeCurrent": "Añadir a la lista",
+    "replaceAll": "Aplicar JSON a todo",
+    "mergeAll": "Añadir JSON a todo",
+    "hint": "JSON · CSV · TXT (formato de exportación)",
+    "doneReplaceDay": "Día {{day}}: {{count}} importados",
+    "doneMergeDay": "Día {{day}}: {{count}} añadidos",
+    "doneReplaceAll": "Todos los días: {{count}} importados",
+    "doneMergeAll": "Todos los días: {{count}} añadidos",
+    "readFailed": "No se pudo leer el archivo",
+    "errNoPins": "No hay lugares para importar",
+    "errCsvColumns": "El CSV necesita columnas de nombre, latitud y longitud",
+    "errNoDayPins": "No hay lugares para el día actual"
+  },
+  "pwa": {
+    "install": "Instalar",
+    "installAria": "Instalar la app",
+    "addToHome": "Añadir a pantalla de inicio",
+    "dismissAria": "Cerrar (no volver a mostrar)",
+    "step1": "Toca el botón <b>Compartir</b> en la parte inferior de Safari.",
+    "step2": "Elige <b>Añadir a pantalla de inicio</b>.",
+    "step3": "Comprueba el nombre y toca <b>Añadir</b>.",
+    "dontShow": "No volver a mostrar"
+  },
+  "manualPin": {
+    "aria": "Fijar una ubicación del mapa",
+    "title": "Fijar desde el mapa",
+    "nameLabel": "Nombre del lugar",
+    "namePlaceholder": "Escribe el nombre del lugar",
+    "confirm": "Añadir pin"
+  },
+  "roadviewModal": {
+    "roadview": "Roadview",
+    "streetview": "Street View",
+    "loading": "Cargando {{title}}…",
+    "none": "No hay {{title}} cerca de esta ubicación.",
+    "openKakao": "Ver en Kakao Map",
+    "openGoogle": "Ver en Google Maps"
   },
   "scenario": {
     "menuLabel": "Crear viaje temático",

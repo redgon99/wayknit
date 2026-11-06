@@ -21,7 +21,10 @@
   },
   "checkout": {
     "redirecting": "決済ページへ移動します…",
-    "notConfigured": "決済はまだ設定されていません。"
+    "notConfigured": "決済はまだ設定されていません。",
+    "processing": "決済を処理しています…",
+    "success": "Plusのサブスクリプションが始まりました。",
+    "failed": "決済に失敗しました: {{message}}"
   },
   "compare": {
     "feature": "機能",
@@ -39,5 +42,12 @@
     "plazaImport": "共有広場・共有リンクからの取り込み",
     "plazaImportFree": "旅行保存件数に含まれる",
     "unlimited": "無制限"
+  },
+  "cancel": {
+    "button": "サブスクリプションを解約",
+    "confirm": "本当に解約しますか?今回の請求期間が終わるまでは、引き続きPlusをご利用いただけます。",
+    "processing": "解約を処理しています…",
+    "success": "解約しました。現在の請求期間が終わるとFreeプランに切り替わります。",
+    "failed": "解約に失敗しました: {{message}}"
   }
 }

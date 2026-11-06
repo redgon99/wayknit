@@ -250,6 +250,7 @@ export function PlannerAppBar({
       <button
         type="button"
         className="planner-bar-icon-btn"
+        data-tour="share"
         onClick={onShare}
         title={t('trip.share')}
         aria-label={t('trip.share')}

@@ -22,7 +22,18 @@
   "trip": {
     "readOnly": "Voyage partagé (lecture seule)",
     "notFound": "Voyage introuvable.",
-    "loading": "Chargement…"
+    "loading": "Chargement…",
+    "badge": "Vue partagée",
+    "addToMine": "Ajouter à mes voyages",
+    "adding": "Ajout en cours…",
+    "editMine": "Modifier mes voyages",
+    "goToPlanner": "Aller au planificateur",
+    "mapLoading": "Chargement de la carte…",
+    "empty": "Aucun lieu pour l’instant.",
+    "invalidLink": "Ce lien de partage n’est pas valide.",
+    "notFoundDetail": "Ce voyage partagé est introuvable. Le lien a peut-être expiré ou le voyage est devenu privé.",
+    "loadFailed": "Impossible de charger le voyage.",
+    "addFailed": "Échec de l’enregistrement. Veuillez réessayer."
   },
   "plaza": {
     "title": "Place de partage",
@@ -61,10 +72,10 @@
     "filterEmpty": "Aucun voyage ne correspond à vos filtres.",
     "dayFilterLabel": "Durée du voyage",
     "day": {
-      "all": "Toutes",
       "1": "1 jour",
       "2": "2 jours",
       "3": "3 jours",
+      "all": "Toutes",
       "4plus": "4+ jours"
     },
     "regionFilterLabel": "Région",
@@ -172,5 +183,15 @@
     "notFound": "Invitation introuvable. Le lien a peut-être été annulé ou est incorrect.",
     "loginCta": "Se connecter pour rejoindre",
     "dismiss": "Fermer"
+  },
+  "coach": {
+    "aria": "Guide de la vue partagée",
+    "viewTitle": "Consulter un voyage partagé",
+    "viewBody": "Retrouvez sur la carte les lieux épinglés et l’itinéraire. Changez de jour avec les onglets en haut.",
+    "addTitle": "Ajouter à mes voyages",
+    "addBody": "Touchez le bouton vert pour copier cet itinéraire dans vos voyages. Vous pourrez ensuite le modifier librement.",
+    "editTitle": "Aller à l’éditeur",
+    "editBody": "« {{editButton}} » vous mène directement à la recherche, aux épingles et à la création d’itinéraire.",
+    "dontShow": "Ne plus afficher"
   }
 }

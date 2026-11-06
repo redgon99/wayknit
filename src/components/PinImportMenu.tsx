@@ -1,10 +1,12 @@
 import { Icon } from './Icon';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { PinnedPlace } from '../types';
 import {
   type PinImportMode,
   type PinImportResult,
   type PinImportScope,
+  PinImportError,
   parseImportFile,
 } from '../lib/importPins';
 
@@ -28,8 +30,9 @@ export function PinImportMenu({
   pinnedByDay,
   onImport,
   onNotify,
-  label = '읽어오기',
+  label,
 }: Props) {
+  const { t } = useTranslation('planner');
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<PendingImport | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -73,13 +76,13 @@ export function PinImportMenu({
         mode: choice.mode,
       });
       onImport(result);
-      const scopeLabel =
-        choice.scope === 'all' ? '전체 일차' : `${currentDay}일차`;
-      const modeLabel = choice.mode === 'merge' ? '추가' : '가져오기';
-      onNotify?.(`${scopeLabel} ${result.importedCount}곳 ${modeLabel} 완료`);
+      const doneKey = `import.${choice.mode === 'merge' ? 'doneMerge' : 'doneReplace'}${
+        choice.scope === 'all' ? 'All' : 'Day'
+      }`;
+      onNotify?.(t(doneKey, { day: currentDay, count: result.importedCount }));
     } catch (err) {
       onNotify?.(
-        err instanceof Error ? err.message : '파일을 읽을 수 없습니다'
+        err instanceof PinImportError ? t(`import.${err.code}`) : t('import.readFailed')
       );
     }
   }
@@ -103,50 +106,52 @@ export function PinImportMenu({
         aria-haspopup="menu"
       >
         <Icon name="upload" />
-        {label}
+        {label ?? t('import.label')}
       </button>
 
       {open && (
         <div className="pin-import-dropdown" role="menu">
           <div className="pin-import-section">
-            <span className="pin-import-section-label">{currentDay}일차</span>
+            <span className="pin-import-section-label">
+              {t('export.dayHeading', { day: currentDay })}
+            </span>
             <button
               type="button"
               role="menuitem"
               onClick={() => startImport('current', 'replace')}
             >
-              가져오기 (덮어쓰기)
+              {t('import.replaceCurrent')}
             </button>
             <button
               type="button"
               role="menuitem"
               onClick={() => startImport('current', 'merge')}
             >
-              목록에 추가
+              {t('import.mergeCurrent')}
             </button>
           </div>
 
           {showAllScope && (
             <div className="pin-import-section">
-              <span className="pin-import-section-label">전체 일차</span>
+              <span className="pin-import-section-label">{t('import.scopeAll')}</span>
               <button
                 type="button"
                 role="menuitem"
                 onClick={() => startImport('all', 'replace')}
               >
-                JSON 전체 적용
+                {t('import.replaceAll')}
               </button>
               <button
                 type="button"
                 role="menuitem"
                 onClick={() => startImport('all', 'merge')}
               >
-                JSON 전체 추가
+                {t('import.mergeAll')}
               </button>
             </div>
           )}
 
-          <p className="pin-import-hint">JSON · CSV · TXT(보내기 형식)</p>
+          <p className="pin-import-hint">{t('import.hint')}</p>
         </div>
       )}
     </div>

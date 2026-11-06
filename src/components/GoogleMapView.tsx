@@ -65,6 +65,8 @@ interface Props {
   fitSearchBounds?: boolean;
   /** 조감(Overview) 등 — 보이는 핀(+출발지) 전체가 들어오도록 축척 맞춤 */
   fitPinsBounds?: boolean;
+  /** 핀 맞춤 시 가장자리에서 비울 픽셀(지도를 가리는 패널·시트·카드). 없으면 기본 여백 */
+  fitPinsInset?: { top: number; right: number; bottom: number; left: number };
   highlightPlaceId?: string | null;
   onHoverSearchPlace?: (place: Place) => void;
   pinSelectionFilter?: ReadonlySet<string>;
@@ -112,6 +114,7 @@ export function GoogleMapView({
   fitRouteBounds = false,
   fitSearchBounds = false,
   fitPinsBounds = false,
+  fitPinsInset,
   highlightPlaceId = null,
   onHoverSearchPlace,
   pinSelectionFilter,
@@ -623,9 +626,13 @@ export function GoogleMapView({
 
     const bounds = new window.google.maps.LatLngBounds();
     points.forEach((p) => bounds.extend(p));
-    mapRef.current.fitBounds(bounds, { top: 96, right: 48, bottom: 96, left: 48 });
+    mapRef.current.fitBounds(bounds, fitPinsInset ?? { top: 96, right: 48, bottom: 96, left: 48 });
   }, [
     fitPinsBounds,
+    fitPinsInset?.top,
+    fitPinsInset?.right,
+    fitPinsInset?.bottom,
+    fitPinsInset?.left,
     pinned,
     pinCategoryFilter,
     pinSelectionFilter,

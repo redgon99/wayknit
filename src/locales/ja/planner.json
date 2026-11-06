@@ -70,7 +70,14 @@
     "metaNearby": "地図周辺 {{km}}km · {{count}}件",
     "metaNationwide": "全国 · {{count}}件",
     "pasteExtracted": "貼り付けから場所を{{count}}件抽出しました。検索を押してください。",
-    "reviewsSuffix": "口コミ{{count}}件"
+    "reviewsSuffix": "口コミ{{count}}件",
+    "placeholderWithYoutube": "場所名またはYouTubeリンク",
+    "placeholderWithLink": "場所名・YouTube・Web・SNSリンク",
+    "batchDone": "{{count}}件を検索 · {{results}}か所見つかりました",
+    "batchHint": "カンマや改行で区切ると複数の場所を検索できます(最大5件)",
+    "youtubeHint": "YouTubeリンクを検出しました。「場所を抽出」を押すと候補を作成します",
+    "linkExtractHint": "リンクを検出しました。「場所を抽出」を押すと候補を作成します",
+    "linkSnsHint": "Instagram・TikTokなどは自動抽出に制限があります。元の投稿を開いて確認してください"
   },
   "trip": {
     "newTrip": "新しい旅行",
@@ -160,7 +167,11 @@
     "toolbarMore": "ツール",
     "sortVisit": "訪問順",
     "sortCategory": "種類別",
-    "placeMaterials": "連携資料{{count}}件を見る"
+    "placeMaterials": "連携資料{{count}}件を見る",
+    "mustVisitOnly": "必須のみ",
+    "markRequired": "必須の場所にする",
+    "unmarkRequired": "必須の場所を解除",
+    "requiredBadge": "必須の場所"
   },
   "route": {
     "fixedArrivalAt": "到着時刻を {{time}} に固定",
@@ -378,6 +389,46 @@
         "home": "ホーム",
         "map": "地図",
         "info": "情報"
+      },
+      "bizVerified": "事業者情報が確認された場所です。",
+      "googleUser": "Googleユーザー",
+      "googleApiNote": "{{source}} のデータ",
+      "kakaoReviewCount": "口コミ{{count}}件",
+      "priceFree": "無料",
+      "priceUnder": "{{amount}}未満",
+      "service": {
+        "dineIn": "店内飲食",
+        "takeout": "テイクアウト",
+        "delivery": "デリバリー",
+        "curbsidePickup": "店外受け取り",
+        "reservable": "予約"
+      },
+      "facility": {
+        "groupSeating": "団体席",
+        "babyChair": "ベビーチェア",
+        "kidsMenu": "キッズメニュー",
+        "terrace": "テラス席",
+        "takeout": "テイクアウト可",
+        "paidParking": "有料駐車場",
+        "freeParking": "無料駐車場",
+        "parking": "駐車場あり",
+        "pet": "ペット同伴可",
+        "advanceBooking": "事前予約",
+        "onlineTicket": "オンライン予約",
+        "reservation": "予約可",
+        "genderRestroom": "男女別トイレ",
+        "inStoreRestroom": "店内トイレ",
+        "restroom": "トイレ",
+        "barTable": "カウンター席",
+        "breakfast": "朝食",
+        "wifi": "Wi-Fi",
+        "smoking": "喫煙室",
+        "paidAdmission": "有料入場",
+        "freeAdmission": "入場無料",
+        "souvenirShop": "お土産ショップ",
+        "restArea": "休憩スペース",
+        "cafeRestaurant": "カフェ・レストラン",
+        "payment": "決済方法"
       }
     }
   },
@@ -394,7 +445,34 @@
     "step2Title": "2. ピン",
     "step2Body": "検索結果や地図からピンして日程に追加します。",
     "step3Title": "3. ルート作成",
-    "step3Body": "順序を調整してルートを生成します。"
+    "step3Body": "順序を調整してルートを生成します。",
+    "coach": {
+      "progress": "{{n}} / {{total}}",
+      "skip": "スキップ",
+      "start": "はじめる",
+      "searchTitle": "スポット検索",
+      "searchBody": "行きたい場所を名前や「グルメ・カフェ」などのキーワードで探しましょう。",
+      "resultTitle": "検索結果",
+      "resultBody": "例として「景福宮」を検索しました。結果をタップすると地図に表示され、右の＋ボタンですぐ保存できます。",
+      "bubbleTitle": "地図の吹き出し",
+      "bubbleBody": "吹き出しの写真をタップすると詳細が開きます。ここからもピン留めできます。",
+      "detailTitle": "スポット詳細",
+      "detailBody": "実際の写真をめくりながら、概要・メニュー・口コミ・予約までひとつの画面で確認できます。タクシーカードや地図アプリにもすぐ移れます。",
+      "pinupTitle": "ピン留め",
+      "pinupBody": "気に入ったらピン留めボタンでプランに追加します。［次へ］を押すと景福宮と近くの2か所を続けて追加してみます。",
+      "pinsTitle": "保存したスポットを見る",
+      "pinsBody": "追加したスポットが順番にここに集まり、上のタブの数も増えました。（例のピンは案内の終了時に外れます）",
+      "routeTitle": "ルート作成",
+      "routeBody": "保存したスポットから回る順番とタイムテーブルを自動で作ります。［次へ］を押すと今のスポットで作ってみます。",
+
+      "routeDoneTitle": "ルート完成",
+
+      "routeDoneBody": "地図に移動ルートが描かれ、下のカードに到着時刻と移動時間が表示されます。（例のルートは案内の終了時に消えます）",
+      "scenarioTitle": "テーマコース",
+      "scenarioBody": "どこから行くか迷ったら、テーマを選んでおすすめコースから始めましょう。",
+      "shareTitle": "共有",
+      "shareBody": "完成したプランはここからリンクで共有したり、友だちを招待して一緒に編集したりできます。"
+    }
   },
   "plazaNav": "共有広場",
   "export": {
@@ -465,6 +543,73 @@
       "notSpicy": "辛くしないでください",
       "thankYou": "ありがとうございます"
     }
+  },
+  "subFilter": {
+    "group": {
+      "FD6": "食事の制限",
+      "AD5": "宿泊タイプ",
+      "AT4": "観光タイプ",
+      "MT1": "ショッピングタイプ"
+    },
+    "option": {
+      "halal": "ハラール",
+      "vegetarian": "ヴィーガン",
+      "no_pork": "豚肉なし",
+      "hotel": "ホテル",
+      "motel": "モーテル",
+      "hanok": "韓屋",
+      "pension": "ペンション",
+      "guesthouse": "ゲストハウス",
+      "beach": "ビーチ",
+      "nature": "自然",
+      "museum": "展示",
+      "park": "公園",
+      "supermarket": "大型スーパー",
+      "convenience": "コンビニ",
+      "market": "市場"
+    }
+  },
+  "import": {
+    "label": "読み込む",
+    "scopeAll": "全日程",
+    "replaceCurrent": "読み込み（上書き）",
+    "mergeCurrent": "リストに追加",
+    "replaceAll": "JSONを全体に適用",
+    "mergeAll": "JSONを全体に追加",
+    "hint": "JSON · CSV · TXT（書き出し形式）",
+    "doneReplaceDay": "{{day}}日目：{{count}}件を読み込みました",
+    "doneMergeDay": "{{day}}日目：{{count}}件を追加しました",
+    "doneReplaceAll": "全日程：{{count}}件を読み込みました",
+    "doneMergeAll": "全日程：{{count}}件を追加しました",
+    "readFailed": "ファイルを読み込めません",
+    "errNoPins": "読み込めるスポットがありません",
+    "errCsvColumns": "CSVにはスポット名・緯度・経度の列が必要です",
+    "errNoDayPins": "現在の日程に該当するスポットがありません"
+  },
+  "pwa": {
+    "install": "インストール",
+    "installAria": "アプリをインストール",
+    "addToHome": "ホーム画面に追加",
+    "dismissAria": "閉じる（今後表示しない）",
+    "step1": "Safari下部の<b>共有</b>ボタンをタップします。",
+    "step2": "<b>ホーム画面に追加</b>を選びます。",
+    "step3": "名前を確認して<b>追加</b>をタップします。",
+    "dontShow": "今後表示しない"
+  },
+  "manualPin": {
+    "aria": "地図の位置をピン留め",
+    "title": "地図からピン留め",
+    "nameLabel": "スポット名",
+    "namePlaceholder": "スポット名を入力",
+    "confirm": "ピンを追加"
+  },
+  "roadviewModal": {
+    "roadview": "ロードビュー",
+    "streetview": "ストリートビュー",
+    "loading": "{{title}}を読み込み中…",
+    "none": "この付近に{{title}}はありません。",
+    "openKakao": "カカオマップで確認",
+    "openGoogle": "Googleマップで確認"
   },
   "scenario": {
     "menuLabel": "テーマ旅行を作る",
@@ -811,6 +956,145 @@
       "instagram": "Instagram · クリックして元の投稿を開く",
       "tiktok": "TikTok · クリックして元の投稿を開く",
       "unsupported": "元の投稿を開く"
+    }
+  },
+  "taxi": {
+    "title": "タクシー運転手に見せる",
+    "close": "閉じる",
+    "koreanName": "韓国語の名前",
+    "romanized": "ローマ字表記",
+    "localeMeaning": "この名前の意味",
+    "address": "住所",
+    "sayThis": "こう伝えてください",
+    "copyName": "名前をコピー",
+    "copyAddress": "住所をコピー",
+    "copyPhrase": "フレーズをコピー",
+    "showCard": "タクシーカード"
+  },
+  "foodRestrictions": {
+    "label": "食事の制限",
+    "halal": "ハラール",
+    "vegetarian": "ベジタリアン",
+    "no_spicy": "辛くない",
+    "no_pork": "豚肉なし",
+    "gluten_free": "グルテンフリー"
+  },
+  "nav": {
+    "setup": "韓国旅行の準備",
+    "help": "ヘルプ",
+    "themes": "テーマ",
+    "more": "その他",
+    "plazaLead": "ほかの旅行者のプランを見て、自分の旅行に取り込みましょう。"
+  },
+  "setup": {
+    "title": "韓国旅行の準備",
+    "lead": "到着前にチェックしておきましょう。",
+    "backToPlan": "プランナーに戻る",
+    "progress": "{{done}} / {{total}} 完了",
+    "airportWizardLink": "空港→宿泊先ガイド",
+    "items": {
+      "esim": "eSIM・ポケットWi-Fiを準備",
+      "tmoney": "T-money・交通カードを準備",
+      "maps": "カカオ/NAVER/Googleマップをインストール",
+      "airport": "空港→宿泊先の移動を計画",
+      "exchange": "現金(ウォン)を少し用意",
+      "emergency": "1330 / 112 / 119を登録"
+    },
+    "expand": "もっと見る",
+    "collapse": "閉じる",
+    "details": {
+      "esim": {
+        "body": "入国審査のあとすぐデータを使えるよう、着陸前にeSIMを有効にするか、空港の通信会社ブースで開通しておきましょう。",
+        "tip1": "空港の到着ロビーにある通信会社ブースですぐに開通できます",
+        "tip2": "eSIMはQRコードで事前にインストールし、到着後に有効にするだけ",
+        "tip3": "ポケットWi-Fiは事前に予約して空港で受け取り・返却",
+        "links": [
+          {
+            "label": "仁川国際空港公社 – 通信・ローミングセンター案内",
+            "url": "https://www.airport.kr/ap/ko/svc/getFacilityMain.do?CTGRY_ID=12&UPPER_ID=127"
+          }
+        ]
+      },
+      "tmoney": {
+        "body": "バス・地下鉄・コンビニのどこでも使えるプリペイド式の交通カードです。毎回現金を数えるよりずっと便利です。",
+        "tip1": "コンビニ(GS25、CUなど)や空港の売店で購入できます",
+        "tip2": "購入したコンビニで現金チャージができます",
+        "tip3": "乗車時にカードリーダーにタッチし、乗り換え時にもう一度タッチ",
+        "links": [
+          {
+            "label": "T-money公式サイト",
+            "url": "https://www.tmoney.co.kr/"
+          }
+        ]
+      },
+      "maps": {
+        "body": "韓国ではGoogleマップの公共交通・ルート案内が限られています。カカオマップやNAVERマップも一緒にインストールしておきましょう。",
+        "tip1": "カカオマップ — 公共交通・徒歩ルートの精度がいちばん高い",
+        "tip2": "NAVERマップ — カカオマップと同じように使える代替アプリ",
+        "tip3": "Googleマップは場所の検索や海外への共有用に補助的に使う",
+        "links": [
+          {
+            "label": "カカオマップ",
+            "url": "https://map.kakao.com/"
+          },
+          {
+            "label": "NAVERマップ",
+            "url": "https://map.naver.com/"
+          },
+          {
+            "label": "Googleマップ",
+            "url": "https://maps.google.com/"
+          }
+        ]
+      },
+      "airport": {
+        "body": "空港鉄道(AREX)・リムジンバス・タクシーのうち、宿泊先の場所に合った移動手段を前もって決めておきましょう。",
+        "tip1": "空港鉄道の直通列車がいちばん速くて安い",
+        "tip2": "荷物が多いなら、宿泊先の近くまで行けるリムジンバスが便利",
+        "tip3": "タクシー運転手に見せる宿泊先の住所を保存しておく",
+        "links": [
+          {
+            "label": "仁川国際空港公社 公式サイト",
+            "url": "https://www.airport.kr/"
+          },
+          {
+            "label": "空港鉄道(AREX) 公式サイト",
+            "url": "https://www.arex.or.kr/"
+          }
+        ]
+      },
+      "exchange": {
+        "body": "ほとんどの場所でカード払いができますが、伝統市場や一部の寺院、個人のタクシーなどでは現金のみのこともあります。",
+        "tip1": "空港や市内の銀行で少額を両替すれば十分",
+        "tip2": "海外のカードはコンビニのATM(「Global」表示)で現金を引き出せます",
+        "tip3": "伝統市場での買い物や寺院の入場料のために現金を用意しておきましょう",
+        "links": [
+          {
+            "label": "関税庁 – 出入国時の外貨申告案内",
+            "url": "https://www.customs.go.kr/kcs/cm/cntnts/cntntsView.do?mi=8458&cntntsId=2808"
+          }
+        ]
+      },
+      "emergency": {
+        "body": "旅行中に困ったことがあれば、下の番号にすぐ電話してください。1330では多言語の観光案内を受けられます。",
+        "tip1": "1330 — 観光案内・通訳(多言語対応)",
+        "tip2": "112 — 警察",
+        "tip3": "119 — 火災・救急",
+        "links": [
+          {
+            "label": "政府24 – 観光通訳案内電話 1330",
+            "url": "https://www.gov.kr/portal/service/serviceInfo/B55101100019"
+          },
+          {
+            "label": "警察庁 112通報ポータル",
+            "url": "https://www.112.go.kr/"
+          },
+          {
+            "label": "消防庁 119安心コール",
+            "url": "https://u119.nfa.go.kr/"
+          }
+        ]
+      }
     }
   }
 }

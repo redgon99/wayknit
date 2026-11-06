@@ -262,6 +262,17 @@ export function landingAnchor(id: string): string {
 }
 
 /**
+ * 제목이 유형 기본값 그대로인지("홍보이미지", "홍보동영상 1" 등). 이런 제목은
+ * 관리자 화면용 임시 이름이라 공개 메뉴·헤딩에 내보내지 않는다 — 그런 노드는
+ * 상단 "소개" 한 곳으로 통합되고, 관리자가 제목을 바꾸면 자기 메뉴를 갖는다.
+ * `group`은 제외 — 메뉴에서 빼면 자식까지 함께 사라진다.
+ */
+export function hasPlaceholderTitle(n: LandingMenuNode): boolean {
+  if (n.type === 'group') return false;
+  return n.title.trim().replace(/\s*\d+$/, '') === LANDING_NODE_TYPE_LABEL[n.type];
+}
+
+/**
  * F05(모바일 감사 보고서, 2026-09-10) — 관리자가 섹션을 만들어만 두고 내용을
  * 안 채우면 제목이 유형 기본값("본문"/"홍보문구")인 빈 구간이 그대로
  * 퍼블릭 화면·내비 메뉴에 나갔다. `LandingCms.tsx`의 `video` 타입엔 이미

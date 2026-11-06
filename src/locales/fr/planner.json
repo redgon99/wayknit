@@ -403,6 +403,46 @@
         "home": "Accueil",
         "map": "Carte",
         "info": "Infos"
+      },
+      "bizVerified": "Informations de l’établissement vérifiées.",
+      "googleUser": "Utilisateur Google",
+      "googleApiNote": "Données : {{source}}",
+      "kakaoReviewCount": "{{count}} avis",
+      "priceFree": "Gratuit",
+      "priceUnder": "Moins de {{amount}}",
+      "service": {
+        "dineIn": "Sur place",
+        "takeout": "À emporter",
+        "delivery": "Livraison",
+        "curbsidePickup": "Retrait à l’extérieur",
+        "reservable": "Réservations"
+      },
+      "facility": {
+        "groupSeating": "Places pour groupes",
+        "babyChair": "Chaises hautes",
+        "kidsMenu": "Menu enfant",
+        "terrace": "Terrasse",
+        "takeout": "À emporter",
+        "paidParking": "Parking payant",
+        "freeParking": "Parking gratuit",
+        "parking": "Parking",
+        "pet": "Animaux acceptés",
+        "advanceBooking": "Réservation préalable",
+        "onlineTicket": "Billets en ligne",
+        "reservation": "Réservation possible",
+        "genderRestroom": "Toilettes séparées",
+        "inStoreRestroom": "Toilettes sur place",
+        "restroom": "Toilettes",
+        "barTable": "Comptoir",
+        "breakfast": "Petit-déjeuner",
+        "wifi": "Wi-Fi",
+        "smoking": "Espace fumeurs",
+        "paidAdmission": "Entrée payante",
+        "freeAdmission": "Entrée gratuite",
+        "souvenirShop": "Boutique de souvenirs",
+        "restArea": "Espace de repos",
+        "cafeRestaurant": "Café/restaurant",
+        "payment": "Moyens de paiement"
       }
     }
   },
@@ -628,7 +668,34 @@
     "step2Title": "2. Épingler des lieux",
     "step2Body": "Épinglez depuis les résultats ou la carte pour construire votre itinéraire.",
     "step3Title": "3. Créer l’itinéraire",
-    "step3Body": "Réordonnez les épingles et générez un itinéraire optimisé."
+    "step3Body": "Réordonnez les épingles et générez un itinéraire optimisé.",
+    "coach": {
+      "progress": "{{n}} / {{total}}",
+      "skip": "Passer",
+      "start": "Commencer",
+      "searchTitle": "Rechercher des lieux",
+      "searchBody": "Trouvez des lieux par leur nom ou avec des mots-clés comme « restaurant » ou « café ».",
+      "resultTitle": "Résultats",
+      "resultBody": "Nous avons recherché « Gyeongbokgung » pour l’exemple. Touchez un résultat pour le voir sur la carte, ou le bouton + pour l’ajouter.",
+      "bubbleTitle": "Aperçu sur la carte",
+      "bubbleBody": "Touchez la photo de l’aperçu pour ouvrir les détails. Vous pouvez aussi épingler le lieu ici.",
+      "detailTitle": "Détails du lieu",
+      "detailBody": "Faites défiler de vraies photos, puis consultez résumé, menu, avis et réservation sur un seul écran, avec carte taxi et liens vers les applis de cartes.",
+      "pinupTitle": "Épingler",
+      "pinupBody": "Ça vous plaît ? Touchez le bouton d’épingle pour l’ajouter à votre programme. Appuyez sur Suivant : nous épinglons Gyeongbokgung et deux lieux proches, à la suite.",
+      "pinsTitle": "Vos lieux épinglés",
+      "pinsBody": "Les lieux qu’on vient d’épingler se retrouvent ici dans l’ordre, et le compteur de l’onglet au-dessus a augmenté aussi. (Les épingles d’exemple sont retirées à la fin du guide.)",
+      "routeTitle": "Créer un itinéraire",
+      "routeBody": "Nous transformons vos lieux en ordre de visite et en horaire, automatiquement. Appuyez sur Suivant : nous en créons un maintenant.",
+
+      "routeDoneTitle": "Votre itinéraire",
+
+      "routeDoneBody": "L’itinéraire est tracé sur la carte, et la carte du bas indique les heures d’arrivée et les temps de trajet. (L’itinéraire d’exemple est effacé à la fin du guide.)",
+      "scenarioTitle": "Parcours thématiques",
+      "scenarioBody": "Vous ne savez pas par où commencer ? Choisissez un thème et partez d’un parcours suggéré.",
+      "shareTitle": "Partager",
+      "shareBody": "Partagez votre programme par lien ou invitez vos amis à le modifier avec vous."
+    }
   },
   "plazaNav": "Place de partage",
   "export": {
@@ -673,6 +740,73 @@
       "note": "Note",
       "map": "Lien carte"
     }
+  },
+  "subFilter": {
+    "group": {
+      "FD6": "Restrictions alimentaires",
+      "AD5": "Type d’hébergement",
+      "AT4": "Type de visite",
+      "MT1": "Type de shopping"
+    },
+    "option": {
+      "halal": "Halal",
+      "vegetarian": "Végan",
+      "no_pork": "Sans porc",
+      "hotel": "Hôtel",
+      "motel": "Motel",
+      "hanok": "Hanok",
+      "pension": "Pension",
+      "guesthouse": "Maison d’hôtes",
+      "beach": "Plage",
+      "nature": "Nature",
+      "museum": "Exposition",
+      "park": "Parc",
+      "supermarket": "Supermarché",
+      "convenience": "Supérette",
+      "market": "Marché"
+    }
+  },
+  "import": {
+    "label": "Importer",
+    "scopeAll": "Tous les jours",
+    "replaceCurrent": "Importer (remplacer)",
+    "mergeCurrent": "Ajouter à la liste",
+    "replaceAll": "Appliquer le JSON à tout",
+    "mergeAll": "Ajouter le JSON à tout",
+    "hint": "JSON · CSV · TXT (format d’export)",
+    "doneReplaceDay": "Jour {{day}} : {{count}} importés",
+    "doneMergeDay": "Jour {{day}} : {{count}} ajoutés",
+    "doneReplaceAll": "Tous les jours : {{count}} importés",
+    "doneMergeAll": "Tous les jours : {{count}} ajoutés",
+    "readFailed": "Impossible de lire le fichier",
+    "errNoPins": "Aucun lieu à importer",
+    "errCsvColumns": "Le CSV doit contenir des colonnes nom, latitude et longitude",
+    "errNoDayPins": "Aucun lieu pour le jour actuel"
+  },
+  "pwa": {
+    "install": "Installer",
+    "installAria": "Installer l’appli",
+    "addToHome": "Sur l’écran d’accueil",
+    "dismissAria": "Fermer (ne plus afficher)",
+    "step1": "Touchez le bouton <b>Partager</b> en bas de Safari.",
+    "step2": "Choisissez <b>Sur l’écran d’accueil</b>.",
+    "step3": "Vérifiez le nom, puis touchez <b>Ajouter</b>.",
+    "dontShow": "Ne plus afficher"
+  },
+  "manualPin": {
+    "aria": "Épingler un point de la carte",
+    "title": "Épingler depuis la carte",
+    "nameLabel": "Nom du lieu",
+    "namePlaceholder": "Saisissez le nom du lieu",
+    "confirm": "Ajouter l’épingle"
+  },
+  "roadviewModal": {
+    "roadview": "Roadview",
+    "streetview": "Street View",
+    "loading": "Chargement de {{title}}…",
+    "none": "Aucun {{title}} près de cet endroit.",
+    "openKakao": "Voir sur Kakao Map",
+    "openGoogle": "Voir sur Google Maps"
   },
   "scenario": {
     "menuLabel": "Créer un voyage thématique",

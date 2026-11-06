@@ -11,6 +11,7 @@ import { normalizeTrip, DEFAULT_ROUTE_OPTIONS } from './tripRouteOptions';
 import { computeTripCenter } from './tripGeo';
 import i18n from './i18n';
 import { normalizeLocale } from './locale';
+import { plannerPath } from './routes';
 import { regionCodesFromPins } from './koreaRegions';
 import { effectiveOwnerId } from './authIdentity';
 
@@ -1413,7 +1414,8 @@ export function buildInviteLink(inviteId: string, email?: string | null): string
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const params = new URLSearchParams({ invite: inviteId });
   if (email) params.set('email', email);
-  return `${origin}/plan?${params.toString()}`;
+  // 초대하는 사람의 언어로 열리게 접두어를 붙인다(접두어 없는 /plan은 한국어).
+  return `${origin}${plannerPath(normalizeLocale(i18n.language))}?${params.toString()}`;
 }
 
 export interface TripInvitePreview {

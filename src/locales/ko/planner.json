@@ -402,6 +402,46 @@
         "home": "홈",
         "map": "지도",
         "info": "정보"
+      },
+      "bizVerified": "사업자 정보가 확인된 장소입니다.",
+      "googleUser": "Google 사용자",
+      "googleApiNote": "{{source}} 데이터",
+      "kakaoReviewCount": "후기 {{count}}개",
+      "priceFree": "무료",
+      "priceUnder": "{{amount}} 미만",
+      "service": {
+        "dineIn": "매장 내 식사",
+        "takeout": "테이크아웃",
+        "delivery": "배달",
+        "curbsidePickup": "매장 외 픽업",
+        "reservable": "예약"
+      },
+      "facility": {
+        "groupSeating": "단체석",
+        "babyChair": "유아의자",
+        "kidsMenu": "키즈메뉴",
+        "terrace": "테라스",
+        "takeout": "포장가능",
+        "paidParking": "유료 주차",
+        "freeParking": "무료 주차",
+        "parking": "주차가능",
+        "pet": "반려동물",
+        "advanceBooking": "사전예약",
+        "onlineTicket": "온라인예매",
+        "reservation": "예약가능",
+        "genderRestroom": "남녀분리 화장실",
+        "inStoreRestroom": "매장 내 화장실",
+        "restroom": "화장실",
+        "barTable": "바테이블",
+        "breakfast": "아침식사",
+        "wifi": "와이파이",
+        "smoking": "흡연실",
+        "paidAdmission": "유료입장",
+        "freeAdmission": "무료입장",
+        "souvenirShop": "기념품샵",
+        "restArea": "휴게공간",
+        "cafeRestaurant": "카페/식당",
+        "payment": "결제"
       }
     }
   },
@@ -627,7 +667,34 @@
     "step2Title": "2. 핀업",
     "step2Body": "검색 결과나 지도에서 장소를 핀업하면 일정에 쌓입니다.",
     "step3Title": "3. 동선 생성",
-    "step3Body": "핀업한 순서를 조정하고 경로를 생성해 보세요."
+    "step3Body": "핀업한 순서를 조정하고 경로를 생성해 보세요.",
+    "coach": {
+      "progress": "{{n}} / {{total}}",
+      "skip": "건너뛰기",
+      "start": "시작하기",
+      "searchTitle": "장소 검색",
+      "searchBody": "가고 싶은 곳을 이름이나 '맛집·카페' 같은 키워드로 찾아보세요.",
+      "resultTitle": "검색 결과",
+      "resultBody": "예시로 '경복궁'을 검색했어요. 결과를 누르면 지도에서 그 장소를 보여 드리고, 오른쪽 + 버튼으로 바로 담을 수 있어요.",
+      "bubbleTitle": "지도 말풍선",
+      "bubbleBody": "지도에 뜬 말풍선의 사진을 누르면 상세 정보가 열려요. 여기서도 바로 핀업할 수 있어요.",
+      "detailTitle": "장소 상세",
+      "detailBody": "실제 사진을 넘겨 보고, 요약·메뉴·후기·예약까지 한 화면에서 확인하세요. 택시 카드나 지도 앱으로도 바로 이어져요.",
+      "pinupTitle": "핀업",
+      "pinupBody": "마음에 들면 핀업 버튼으로 일정에 담아요. [다음]을 누르면 경복궁과 근처 두 곳을 이어서 담아 볼게요.",
+      "pinsTitle": "담은 장소 보기",
+      "pinsBody": "방금 담은 장소들이 담은 순서대로 모이고, 위 탭의 숫자도 함께 늘었어요. (안내가 끝나면 예시 핀은 빠져요.)",
+      "routeTitle": "동선 만들기",
+      "routeBody": "담은 장소로 이동 순서와 시간표를 자동으로 짜 드려요. [다음]을 누르면 지금 담은 곳으로 만들어 볼게요.",
+
+      "routeDoneTitle": "동선 완성",
+
+      "routeDoneBody": "지도에 이동 경로가 그려지고, 아래 카드에 도착 시각과 이동 시간이 나와요. (안내가 끝나면 예시 동선도 지워져요.)",
+      "scenarioTitle": "테마 코스",
+      "scenarioBody": "어디부터 갈지 막막하면 테마를 골라 추천 코스로 시작해 보세요.",
+      "shareTitle": "공유하기",
+      "shareBody": "완성한 일정은 여기서 링크로 공유하거나 친구를 초대해 함께 편집할 수 있어요."
+    }
   },
   "plazaNav": "공유마당",
   "export": {
@@ -672,6 +739,73 @@
       "note": "메모",
       "map": "지도링크"
     }
+  },
+  "subFilter": {
+    "group": {
+      "FD6": "음식 제약",
+      "AD5": "숙소 유형",
+      "AT4": "관광 유형",
+      "MT1": "쇼핑 유형"
+    },
+    "option": {
+      "halal": "할랄",
+      "vegetarian": "비건",
+      "no_pork": "돼지고기 제외",
+      "hotel": "호텔",
+      "motel": "모텔",
+      "hanok": "한옥",
+      "pension": "펜션",
+      "guesthouse": "게스트하우스",
+      "beach": "해변",
+      "nature": "자연",
+      "museum": "전시",
+      "park": "공원",
+      "supermarket": "대형마트",
+      "convenience": "편의점",
+      "market": "시장"
+    }
+  },
+  "import": {
+    "label": "읽어오기",
+    "scopeAll": "전체 일차",
+    "replaceCurrent": "가져오기 (덮어쓰기)",
+    "mergeCurrent": "목록에 추가",
+    "replaceAll": "JSON 전체 적용",
+    "mergeAll": "JSON 전체 추가",
+    "hint": "JSON · CSV · TXT(보내기 형식)",
+    "doneReplaceDay": "{{day}}일차 {{count}}곳 가져오기 완료",
+    "doneMergeDay": "{{day}}일차 {{count}}곳 추가 완료",
+    "doneReplaceAll": "전체 일차 {{count}}곳 가져오기 완료",
+    "doneMergeAll": "전체 일차 {{count}}곳 추가 완료",
+    "readFailed": "파일을 읽을 수 없습니다",
+    "errNoPins": "가져올 핀업 장소가 없습니다",
+    "errCsvColumns": "CSV에 장소명·위도·경도 열이 필요합니다",
+    "errNoDayPins": "현재 일차에 해당하는 장소가 없습니다"
+  },
+  "pwa": {
+    "install": "설치",
+    "installAria": "앱 설치",
+    "addToHome": "홈 화면에 추가",
+    "dismissAria": "닫기 (다시 보지 않기)",
+    "step1": "Safari 하단 <b>공유</b> 버튼을 누릅니다.",
+    "step2": "<b>홈 화면에 추가</b>를 선택합니다.",
+    "step3": "이름을 확인한 뒤 <b>추가</b>를 누릅니다.",
+    "dontShow": "다시 보지 않기"
+  },
+  "manualPin": {
+    "aria": "지도 위치 핀업",
+    "title": "지도에서 핀업",
+    "nameLabel": "장소 이름",
+    "namePlaceholder": "장소 이름 입력",
+    "confirm": "핀업 추가"
+  },
+  "roadviewModal": {
+    "roadview": "로드뷰",
+    "streetview": "스트리트뷰",
+    "loading": "{{title}} 불러오는 중…",
+    "none": "이 위치 근처에 {{title}}가 없습니다.",
+    "openKakao": "카카오맵에서 확인",
+    "openGoogle": "Google 지도에서 확인"
   },
   "scenario": {
     "menuLabel": "테마 여행 만들기",

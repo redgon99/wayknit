@@ -21,7 +21,10 @@
   },
   "checkout": {
     "redirecting": "Abriendo el pago…",
-    "notConfigured": "El pago aún no está configurado."
+    "notConfigured": "El pago aún no está configurado.",
+    "processing": "Procesando el pago…",
+    "success": "Tu suscripción Plus ha comenzado.",
+    "failed": "El pago ha fallado: {{message}}"
   },
   "compare": {
     "feature": "Función",
@@ -39,5 +42,12 @@
     "plazaImport": "Importar desde plaza/enlace",
     "plazaImportFree": "Cuenta para el límite de viajes",
     "unlimited": "Ilimitado"
+  },
+  "cancel": {
+    "button": "Cancelar suscripción",
+    "confirm": "¿Seguro que quieres cancelar la suscripción? Podrás seguir usando Plus hasta que termine el periodo de facturación actual.",
+    "processing": "Cancelando la suscripción…",
+    "success": "Tu suscripción se ha cancelado. Pasarás al plan Gratis cuando termine el periodo de facturación actual.",
+    "failed": "No se pudo cancelar: {{message}}"
   }
 }

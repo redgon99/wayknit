@@ -63,6 +63,8 @@ interface Props {
   fitSearchBounds?: boolean;
   /** 조감(Overview) 등 — 보이는 핀(+출발지) 전체가 들어오도록 축척 맞춤 */
   fitPinsBounds?: boolean;
+  /** 핀 맞춤 시 가장자리에서 비울 픽셀(지도를 가리는 패널·시트·카드). 없으면 기본 여백 */
+  fitPinsInset?: { top: number; right: number; bottom: number; left: number };
   highlightPlaceId?: string | null;
   /** 검색 결과 마커 호버 → 결과 칩 하이라이트 (지도 이동·말풍선 없음) */
   onHoverSearchPlace?: (place: Place) => void;
@@ -117,6 +119,7 @@ export function MapView({
         fitRouteBounds={rest.fitRouteBounds}
         fitSearchBounds={rest.fitSearchBounds}
         fitPinsBounds={rest.fitPinsBounds}
+        fitPinsInset={rest.fitPinsInset}
         highlightPlaceId={rest.highlightPlaceId}
         onHoverSearchPlace={rest.onHoverSearchPlace}
         pinSelectionFilter={rest.pinSelectionFilter}
@@ -171,6 +174,7 @@ function KakaoMapView({
   fitRouteBounds = false,
   fitSearchBounds = false,
   fitPinsBounds = false,
+  fitPinsInset,
   highlightPlaceId = null,
   onHoverSearchPlace,
   pinSelectionFilter,
@@ -738,13 +742,18 @@ function KakaoMapView({
       bounds.extend(new window.kakao.maps.LatLng(p.lat, p.lng))
     );
     // top/right/bottom/left — Overview 크롬·범례 여백
+    const pad = fitPinsInset ?? { top: 96, right: 48, bottom: 96, left: 48 };
     try {
-      mapRef.current.setBounds(bounds, 96, 48, 96, 48);
+      mapRef.current.setBounds(bounds, pad.top, pad.right, pad.bottom, pad.left);
     } catch {
       mapRef.current.setBounds(bounds);
     }
   }, [
     fitPinsBounds,
+    fitPinsInset?.top,
+    fitPinsInset?.right,
+    fitPinsInset?.bottom,
+    fitPinsInset?.left,
     pinned,
     pinCategoryFilter,
     pinSelectionFilter,

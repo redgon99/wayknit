@@ -70,7 +70,14 @@
     "metaNearby": "地圖周邊 {{km}}km · {{count}}個結果",
     "metaNationwide": "全國 · {{count}}個結果",
     "pasteExtracted": "已從貼上內容中提取 {{count}} 個地點，請點擊搜尋。",
-    "reviewsSuffix": "{{count}}則評論"
+    "reviewsSuffix": "{{count}}則評論",
+    "placeholderWithYoutube": "地點名稱或 YouTube 連結",
+    "placeholderWithLink": "地點 · YouTube · 網頁 · 社群連結",
+    "batchDone": "已搜尋 {{count}} 項 · 找到 {{results}} 個地點",
+    "batchHint": "用逗號或換行分隔，可一次搜尋多個地點（最多 5 個）",
+    "youtubeHint": "已偵測到 YouTube 連結。點「擷取地點」即可產生候選",
+    "linkExtractHint": "已偵測到連結。點「擷取地點」即可產生候選",
+    "linkSnsHint": "Instagram、TikTok 等無法完整自動擷取，請開啟原始貼文查看"
   },
   "trip": {
     "newTrip": "新旅行",
@@ -160,7 +167,11 @@
     "toolbarMore": "工具",
     "sortVisit": "依遊覽順序",
     "sortCategory": "依類型",
-    "placeMaterials": "查看關聯資料 {{count}} 個"
+    "placeMaterials": "查看關聯資料 {{count}} 個",
+    "mustVisitOnly": "只看必去",
+    "markRequired": "標記為必去",
+    "unmarkRequired": "取消必去",
+    "requiredBadge": "必去地點"
   },
   "route": {
     "fixedArrivalAt": "抵達時間固定為 {{time}}",
@@ -378,6 +389,46 @@
         "home": "主頁",
         "map": "地圖",
         "info": "信息"
+      },
+      "bizVerified": "已核實商家資訊。",
+      "googleUser": "Google 使用者",
+      "googleApiNote": "資料來源：{{source}}",
+      "kakaoReviewCount": "{{count}} 則評價",
+      "priceFree": "免費",
+      "priceUnder": "{{amount}} 以下",
+      "service": {
+        "dineIn": "內用",
+        "takeout": "外帶",
+        "delivery": "外送",
+        "curbsidePickup": "路邊取餐",
+        "reservable": "可訂位"
+      },
+      "facility": {
+        "groupSeating": "團體座位",
+        "babyChair": "兒童座椅",
+        "kidsMenu": "兒童餐",
+        "terrace": "露台",
+        "takeout": "可外帶",
+        "paidParking": "收費停車",
+        "freeParking": "免費停車",
+        "parking": "可停車",
+        "pet": "可攜帶寵物",
+        "advanceBooking": "需事先預約",
+        "onlineTicket": "線上購票",
+        "reservation": "可訂位",
+        "genderRestroom": "男女分開的廁所",
+        "inStoreRestroom": "店內廁所",
+        "restroom": "廁所",
+        "barTable": "吧檯座位",
+        "breakfast": "早餐",
+        "wifi": "Wi-Fi",
+        "smoking": "吸菸室",
+        "paidAdmission": "收費入場",
+        "freeAdmission": "免費入場",
+        "souvenirShop": "紀念品店",
+        "restArea": "休息區",
+        "cafeRestaurant": "咖啡廳/餐廳",
+        "payment": "付款方式"
       }
     }
   },
@@ -394,7 +445,34 @@
     "step2Title": "2. 標記地點",
     "step2Body": "從搜索結果或地圖標記，加入行程。",
     "step3Title": "3. 生成路線",
-    "step3Body": "調整順序並生成優化路線。"
+    "step3Body": "調整順序並生成優化路線。",
+    "coach": {
+      "progress": "{{n}} / {{total}}",
+      "skip": "略過",
+      "start": "開始使用",
+      "searchTitle": "搜尋地點",
+      "searchBody": "用名稱或「美食、咖啡廳」等關鍵字搜尋想去的地方。",
+      "resultTitle": "搜尋結果",
+      "resultBody": "我們以「景福宮」為例進行了搜尋。點選結果即可在地圖上查看,點右側 + 按鈕可直接收藏。",
+      "bubbleTitle": "地圖泡泡",
+      "bubbleBody": "點選地圖泡泡裡的照片就能打開詳細資訊,在這裡也能直接釘選。",
+      "detailTitle": "地點詳情",
+      "detailBody": "翻看真實照片,簡介、菜單、評價、預約一頁看完,還能直接打開計程車卡或地圖 App。",
+      "pinupTitle": "釘選",
+      "pinupBody": "喜歡就點釘選按鈕加入行程。按「下一步」,我們會連續把景福宮和附近兩個地點加進去。",
+      "pinsTitle": "查看已收藏地點",
+      "pinsBody": "剛才加入的地點會依序集中在這裡,上方分頁的數字也跟著增加。(導覽結束後示範釘選會被移除)",
+      "routeTitle": "產生路線",
+      "routeBody": "依照已收藏的地點,自動排好參觀順序和時間表。按「下一步」,我們現在就產生一條。",
+
+      "routeDoneTitle": "路線完成",
+
+      "routeDoneBody": "地圖上會畫出行駛路線,下方卡片顯示抵達時間和行車時間。(導覽結束後示範路線會被清除)",
+      "scenarioTitle": "主題路線",
+      "scenarioBody": "不知道從哪裡開始?選一個主題,從推薦路線出發吧。",
+      "shareTitle": "分享",
+      "shareBody": "完成的行程可以在這裡用連結分享,或邀請朋友一起編輯。"
+    }
   },
   "plazaNav": "分享廣場",
   "export": {
@@ -465,6 +543,73 @@
       "notSpicy": "請不要辣",
       "thankYou": "謝謝"
     }
+  },
+  "subFilter": {
+    "group": {
+      "FD6": "飲食限制",
+      "AD5": "住宿類型",
+      "AT4": "景點類型",
+      "MT1": "購物類型"
+    },
+    "option": {
+      "halal": "清真",
+      "vegetarian": "純素",
+      "no_pork": "不含豬肉",
+      "hotel": "飯店",
+      "motel": "汽車旅館",
+      "hanok": "韓屋",
+      "pension": "韓式民宿",
+      "guesthouse": "旅舍",
+      "beach": "海灘",
+      "nature": "自然",
+      "museum": "展覽",
+      "park": "公園",
+      "supermarket": "大型超市",
+      "convenience": "便利商店",
+      "market": "市場"
+    }
+  },
+  "import": {
+    "label": "匯入",
+    "scopeAll": "全部天數",
+    "replaceCurrent": "匯入(覆蓋)",
+    "mergeCurrent": "新增至清單",
+    "replaceAll": "套用 JSON 至全部",
+    "mergeAll": "追加 JSON 至全部",
+    "hint": "JSON · CSV · TXT(匯出格式)",
+    "doneReplaceDay": "第 {{day}} 天:已匯入 {{count}} 個地點",
+    "doneMergeDay": "第 {{day}} 天:已新增 {{count}} 個地點",
+    "doneReplaceAll": "全部天數:已匯入 {{count}} 個地點",
+    "doneMergeAll": "全部天數:已新增 {{count}} 個地點",
+    "readFailed": "無法讀取檔案",
+    "errNoPins": "沒有可匯入的地點",
+    "errCsvColumns": "CSV 需要包含地點名稱、緯度、經度欄",
+    "errNoDayPins": "沒有屬於目前天數的地點"
+  },
+  "pwa": {
+    "install": "安裝",
+    "installAria": "安裝 App",
+    "addToHome": "加入主畫面",
+    "dismissAria": "關閉(不再顯示)",
+    "step1": "點按 Safari 底部的<b>分享</b>按鈕。",
+    "step2": "選擇<b>加入主畫面</b>。",
+    "step3": "確認名稱後點按<b>新增</b>。",
+    "dontShow": "不再顯示"
+  },
+  "manualPin": {
+    "aria": "釘選地圖位置",
+    "title": "從地圖釘選",
+    "nameLabel": "地點名稱",
+    "namePlaceholder": "輸入地點名稱",
+    "confirm": "新增釘選"
+  },
+  "roadviewModal": {
+    "roadview": "路景",
+    "streetview": "街景",
+    "loading": "正在載入{{title}}…",
+    "none": "此位置附近沒有{{title}}。",
+    "openKakao": "在 Kakao 地圖中查看",
+    "openGoogle": "在 Google 地圖中查看"
   },
   "scenario": {
     "menuLabel": "創建主題旅行",
@@ -811,6 +956,145 @@
       "instagram": "Instagram · 點擊開啟原文",
       "tiktok": "TikTok · 點擊開啟原文",
       "unsupported": "開啟原文"
+    }
+  },
+  "taxi": {
+    "title": "出示給計程車司機",
+    "close": "關閉",
+    "koreanName": "韓文名稱",
+    "romanized": "羅馬拼音",
+    "localeMeaning": "這個名稱的意思",
+    "address": "地址",
+    "sayThis": "這樣說",
+    "copyName": "複製名稱",
+    "copyAddress": "複製地址",
+    "copyPhrase": "複製這句話",
+    "showCard": "計程車卡"
+  },
+  "foodRestrictions": {
+    "label": "飲食限制",
+    "halal": "清真",
+    "vegetarian": "素食",
+    "no_spicy": "不辣",
+    "no_pork": "不含豬肉",
+    "gluten_free": "無麩質"
+  },
+  "nav": {
+    "setup": "韓國旅行準備",
+    "help": "說明",
+    "themes": "主題",
+    "more": "更多",
+    "plazaLead": "瀏覽其他旅人的行程，匯入到你的旅行中。"
+  },
+  "setup": {
+    "title": "韓國旅行準備",
+    "lead": "抵達前先確認這些事項。",
+    "backToPlan": "返回規劃器",
+    "progress": "已完成 {{done}} / {{total}}",
+    "airportWizardLink": "機場→住宿指南",
+    "items": {
+      "esim": "準備 eSIM 或 Wi-Fi 分享器",
+      "tmoney": "準備 T-money 交通卡",
+      "maps": "安裝 Kakao/Naver/Google 地圖",
+      "airport": "規劃機場→住宿的路線",
+      "exchange": "準備少量現金（韓元）",
+      "emergency": "儲存 1330 / 112 / 119"
+    },
+    "expand": "展開",
+    "collapse": "收合",
+    "details": {
+      "esim": {
+        "body": "為了入境後馬上就能上網，請在降落前啟用 eSIM，或在機場的電信公司櫃檯開通。",
+        "tip1": "機場入境大廳的電信公司櫃檯可當場開通",
+        "tip2": "eSIM 可事先掃描 QR Code 安裝，抵達後只要啟用",
+        "tip3": "Wi-Fi 分享器可事先預約，在機場領取與歸還",
+        "links": [
+          {
+            "label": "仁川國際機場公社 – 通訊漫遊中心介紹",
+            "url": "https://www.airport.kr/ap/ko/svc/getFacilityMain.do?CTGRY_ID=12&UPPER_ID=127"
+          }
+        ]
+      },
+      "tmoney": {
+        "body": "公車、地鐵、便利商店都能用的預付交通卡，比每次數現金方便多了。",
+        "tip1": "可在便利商店（GS25、CU 等）或機場商店購買",
+        "tip2": "可在購買的便利商店用現金儲值",
+        "tip3": "上車時在讀卡機感應，轉乘時也要再感應一次",
+        "links": [
+          {
+            "label": "T-money 官方網站",
+            "url": "https://www.tmoney.co.kr/"
+          }
+        ]
+      },
+      "maps": {
+        "body": "在韓國，Google 地圖的大眾運輸與路線導航功能有限。請同時安裝 Kakao 地圖或 Naver 地圖。",
+        "tip1": "Kakao 地圖 — 大眾運輸與步行路線最準確",
+        "tip2": "Naver 地圖 — 與 Kakao 地圖類似的替代 App",
+        "tip3": "Google 地圖可當作搜尋地點、分享給海外親友的輔助工具",
+        "links": [
+          {
+            "label": "Kakao 地圖",
+            "url": "https://map.kakao.com/"
+          },
+          {
+            "label": "Naver 地圖",
+            "url": "https://map.naver.com/"
+          },
+          {
+            "label": "Google 地圖",
+            "url": "https://maps.google.com/"
+          }
+        ]
+      },
+      "airport": {
+        "body": "依住宿位置，事先決定要搭機場鐵路（AREX）、機場巴士還是計程車。",
+        "tip1": "機場鐵路直達車最快也最便宜",
+        "tip2": "行李多的話，機場巴士可直達住宿附近，比較方便",
+        "tip3": "事先存好住宿地址，方便出示給計程車司機",
+        "links": [
+          {
+            "label": "仁川國際機場公社官網",
+            "url": "https://www.airport.kr/"
+          },
+          {
+            "label": "機場鐵路（AREX）官網",
+            "url": "https://www.arex.or.kr/"
+          }
+        ]
+      },
+      "exchange": {
+        "body": "大多數地方都能刷卡，但傳統市場、部分寺廟和一些計程車可能只收現金。",
+        "tip1": "在機場或市區銀行少量兌換就夠了",
+        "tip2": "海外卡片可在便利商店標示「Global」的 ATM 提領現金",
+        "tip3": "在傳統市場購物和支付寺廟門票時請準備現金",
+        "links": [
+          {
+            "label": "韓國關稅廳 – 出入境外幣申報指南",
+            "url": "https://www.customs.go.kr/kcs/cm/cntnts/cntntsView.do?mi=8458&cntntsId=2808"
+          }
+        ]
+      },
+      "emergency": {
+        "body": "旅行中遇到問題，請立即撥打以下電話。1330 提供多語旅遊諮詢。",
+        "tip1": "1330 — 旅遊諮詢·口譯（多語）",
+        "tip2": "112 — 報警",
+        "tip3": "119 — 火警·救護",
+        "links": [
+          {
+            "label": "政府24 – 觀光口譯諮詢專線 1330",
+            "url": "https://www.gov.kr/portal/service/serviceInfo/B55101100019"
+          },
+          {
+            "label": "警察廳 112 報案入口",
+            "url": "https://www.112.go.kr/"
+          },
+          {
+            "label": "消防廳 119 安心通報",
+            "url": "https://u119.nfa.go.kr/"
+          }
+        ]
+      }
     }
   }
 }

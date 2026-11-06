@@ -107,6 +107,8 @@ export function MobileMoreMenu({
       <button
         type="button"
         className={`mobile-tabbar-btn ${open ? 'active' : ''}`}
+        // 모바일엔 공유 버튼이 따로 없고 이 메뉴 안에 있다 — 코치마크 "공유" 단계가 여기를 가리킨다
+        data-tour="share"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"

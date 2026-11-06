@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { SiteHeader } from '../components/SiteHeader';
 import { SegmentedTabs } from '../components/SegmentedTabs';
 import { useSeoMeta } from '../hooks/useSeoMeta';
-import { useLandingNoticeTexts } from '../hooks/useLandingNoticeTexts';
 import { GUIDE_KINDS, type GuideKind } from '../lib/guideKinds';
 import { CourseTaxonomyChips } from '../components/CourseTaxonomyChips';
 import {
@@ -22,7 +21,6 @@ import '../styles/app.css';
 export default function GuidesPage() {
   const { t } = useTranslation('guides');
   const locale = normalizeLocale(i18n.language);
-  const noticeTexts = useLandingNoticeTexts();
   const [guides, setGuides] = useState<GuideArticle[]>([]);
   const [kindFilter, setKindFilter] = useState<GuideKind | ''>('');
   const [courseFilters, setCourseFilters] = useState<string[]>([]);
@@ -89,7 +87,7 @@ export default function GuidesPage() {
 
   return (
     <main className="guides-page">
-      <SiteHeader active="guides" noticeTexts={noticeTexts} />
+      <SiteHeader active="guides" />
 
       <div className="guides-shell">
         <div className="guides-page-title">

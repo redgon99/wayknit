@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '../Icon';
 
 export type MobileSheetHeight = 'tall' | 'medium';
@@ -18,6 +19,7 @@ export function MobileSheet({
   height = 'tall',
   children,
 }: Props) {
+  const { t } = useTranslation('common');
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -34,7 +36,7 @@ export function MobileSheet({
       <button
         type="button"
         className="mobile-sheet-backdrop"
-        aria-label="닫기"
+        aria-label={t('close')}
         onClick={onClose}
       />
       <div
@@ -48,7 +50,7 @@ export function MobileSheet({
           <span className="mobile-sheet-title">{title ?? ''}</span>
           <button type="button" className="mobile-sheet-close" onClick={onClose}>
             <Icon name="close" size={18} />
-            닫기
+            {t('close')}
           </button>
         </header>
         <div className="mobile-sheet-body">{children}</div>

@@ -5786,6 +5786,179 @@ button {
   bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 }
 
+/* =============================================
+   플래너 첫 진입 코치마크 (components/OnboardingCoach.tsx)
+   대상 버튼만 밝히고, 손가락이 그 버튼을 톡톡 누르며, 옆에 말풍선.
+   ============================================= */
+.coachmark-layer {
+  position: fixed;
+  inset: 0;
+  /* 장소 상세(.photos-overlay 12500)·앱 시트(13000)까지 안내 대상이라 그 위에 둔다 */
+  z-index: 20000;
+}
+
+.coachmark-blocker {
+  position: absolute;
+  inset: 0;
+}
+
+/* 어두운 막은 별도 레이어가 아니라 밝힌 영역의 바깥 그림자다 — 구멍이 대상 모양을 따라 움직인다 */
+.coachmark-spot {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.9),
+    0 0 0 9999px rgba(15, 23, 42, 0.62);
+  transition:
+    top 0.35s ease,
+    left 0.35s ease,
+    width 0.35s ease,
+    height 0.35s ease;
+  pointer-events: none;
+}
+
+.coachmark-ripple {
+  position: fixed;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  animation: coachmark-ripple 1.6s ease-out 0.4s infinite;
+  pointer-events: none;
+}
+
+/* 손끝(svg 좌표 15,2)을 top/left 지점에 맞춘다 */
+.coachmark-hand {
+  position: fixed;
+  width: 44px;
+  height: 56px;
+  transform: translate(-15px, -2px);
+  transform-origin: 15px 2px;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+  animation: coachmark-fade-in 0.3s ease both;
+}
+
+.coachmark-hand-flip {
+  transform: translate(-15px, -2px) rotate(180deg);
+}
+
+.coachmark-hand-svg {
+  display: block;
+  animation: coachmark-tap 1.6s ease-in-out infinite;
+}
+
+.coachmark-bubble {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-solid);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-float-lg);
+  animation: coachmark-fade-in 0.3s ease both;
+}
+
+.coachmark-progress {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-amber);
+  font-variant-numeric: tabular-nums;
+}
+
+.coachmark-title {
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+
+.coachmark-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.coachmark-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.coachmark-skip,
+.coachmark-next {
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.coachmark-next {
+  background: var(--color-primary);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+
+.coachmark-skip:focus-visible,
+.coachmark-next:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* 손이 대상에서 살짝 물러났다가 다시 눌러 닿는다 — 닿는 순간에 맞춰 물결이 퍼진다 */
+@keyframes coachmark-tap {
+  0%,
+  100% {
+    transform: translateY(12px);
+  }
+  25% {
+    transform: translateY(0) scale(0.94);
+  }
+  45% {
+    transform: translateY(12px);
+  }
+}
+
+@keyframes coachmark-ripple {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.4);
+  }
+  60%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+@keyframes coachmark-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coachmark-spot {
+    transition: none;
+  }
+  .coachmark-hand-svg,
+  .coachmark-ripple {
+    animation: none;
+  }
+}
+
 .share-mode.share-onboarding-active > *:not(.share-onboarding-layer) {
   pointer-events: none;
 }
@@ -8474,7 +8647,8 @@ button {
   text-decoration: none;
 }
 
-.admin-header-nav .admin-link-btn.active {
+.admin-header-nav .admin-link-btn.active,
+.admin-filter-row .admin-link-btn.active {
   background: var(--color-primary, #1f2937);
   color: #fff;
   border-color: var(--color-primary, #1f2937);
@@ -18382,4 +18556,223 @@ a.guide-source-chip:hover {
   margin-top: 0.35rem;
   font-size: 0.82rem;
   color: #6b7280;
+}
+
+/* 접속 로그 — 이전 기간 대비 증감과 추세 그래프 */
+.admin-stat-delta {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.access-trend {
+  --trend-views: #2a78d6;
+  --trend-visitors: #eb6834;
+  transition: opacity 0.15s ease;
+}
+
+.access-trend-dimmed {
+  opacity: 0.6;
+}
+
+.access-trend-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.access-trend-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.access-trend-key {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.access-trend-plot {
+  position: relative;
+}
+
+.access-trend-plot svg {
+  display: block;
+  width: 100%;
+  touch-action: pan-y;
+}
+
+.access-trend-plot text {
+  fill: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+.access-trend-tooltip {
+  position: absolute;
+  top: 8px;
+  z-index: 1;
+  min-width: 112px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.access-trend-tooltip p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 0;
+}
+
+.access-trend-tooltip strong {
+  color: var(--color-text-primary);
+}
+
+.access-trend-table {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.access-trend-table summary {
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+/* 접속 로그 — 구역별 조회수 */
+.access-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.access-path-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary, #1f2937);
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.access-path-btn:hover {
+  text-decoration: underline;
+}
+
+.access-preview-modal {
+  max-width: 1120px;
+  height: min(88vh, 860px);
+  max-height: none;
+}
+
+.access-preview-modal .admin-preview-modal-head h2 {
+  overflow-wrap: anywhere;
+}
+
+.access-preview-open {
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.access-preview-modal .admin-preview-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding-right: 0;
+  margin-right: 0;
+}
+
+.access-preview-modal iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.access-filter-row {
+  align-items: center;
+}
+
+.admin-stats-grid.access-kpis {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  margin-bottom: 10px;
+}
+
+.access-criteria summary {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.access-criteria p {
+  margin: 6px 0 0;
+}
+
+/* 표가 길어도 페이지가 아니라 표 안에서만 스크롤된다 */
+.access-table-scroll {
+  max-height: min(60vh, 520px);
+}
+
+.access-table-scroll th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fff;
+}
+
+.access-rank-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.access-rank-columns h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+
+.access-section-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.access-section-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 4px;
+  font-size: 13px;
+}
+
+.access-section-bar {
+  display: block;
+  height: 10px;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+  background: #2a78d6;
+}
+
+.access-section-meta {
+  grid-column: 2;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.access-section-meta strong {
+  color: var(--color-text-primary);
 }

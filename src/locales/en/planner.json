@@ -404,6 +404,47 @@
         "home": "Home",
         "map": "Map",
         "info": "Info"
+      },
+      "bizVerified": "Verified business information.",
+      "googleUser": "Google user",
+      "googleApiNote": "Data from {{source}}",
+      "kakaoReviewCount": "{{count}} reviews",
+      "kakaoReviewCount_one": "{{count}} review",
+      "priceFree": "Free",
+      "priceUnder": "Under {{amount}}",
+      "service": {
+        "dineIn": "Dine-in",
+        "takeout": "Takeout",
+        "delivery": "Delivery",
+        "curbsidePickup": "Curbside pickup",
+        "reservable": "Reservations"
+      },
+      "facility": {
+        "groupSeating": "Group seating",
+        "babyChair": "High chairs",
+        "kidsMenu": "Kids menu",
+        "terrace": "Terrace",
+        "takeout": "Takeout",
+        "paidParking": "Paid parking",
+        "freeParking": "Free parking",
+        "parking": "Parking",
+        "pet": "Pets allowed",
+        "advanceBooking": "Advance booking",
+        "onlineTicket": "Online tickets",
+        "reservation": "Reservations",
+        "genderRestroom": "Separate restrooms",
+        "inStoreRestroom": "Restroom inside",
+        "restroom": "Restroom",
+        "barTable": "Bar seating",
+        "breakfast": "Breakfast",
+        "wifi": "Wi-Fi",
+        "smoking": "Smoking room",
+        "paidAdmission": "Paid admission",
+        "freeAdmission": "Free admission",
+        "souvenirShop": "Souvenir shop",
+        "restArea": "Rest area",
+        "cafeRestaurant": "Café/restaurant",
+        "payment": "Payment options"
       }
     }
   },
@@ -629,7 +670,34 @@
     "step2Title": "2. Pin places",
     "step2Body": "Pin from search results or the map to build your itinerary.",
     "step3Title": "3. Create route",
-    "step3Body": "Reorder pins and generate an optimized route."
+    "step3Body": "Reorder pins and generate an optimized route.",
+    "coach": {
+      "progress": "{{n}} / {{total}}",
+      "skip": "Skip",
+      "start": "Get started",
+      "searchTitle": "Search places",
+      "searchBody": "Find places by name or by keywords like \"restaurant\" or \"cafe\".",
+      "resultTitle": "Search results",
+      "resultBody": "We searched \"Gyeongbokgung\" as an example. Tap a result to see it on the map, or use the + button to add it right away.",
+      "bubbleTitle": "Map preview",
+      "bubbleBody": "Tap the photo in the map preview to open full details. You can pin the place from here too.",
+      "detailTitle": "Place details",
+      "detailBody": "Flip through real photos, then check the summary, menu, reviews and booking in one view — with a taxi card and map-app links.",
+      "pinupTitle": "Pin it",
+      "pinupBody": "Like it? Tap the pin button to add it to your plan. Press Next and we’ll pin Gyeongbokgung and two nearby places in a row.",
+      "pinsTitle": "Your pinned places",
+      "pinsBody": "The places we just pinned gather here in order, and the count on the tab above went up too. (The example pins are removed when the tour ends.)",
+      "routeTitle": "Build a route",
+      "routeBody": "We turn your pinned places into a visiting order and timetable automatically. Press Next and we’ll build one now.",
+
+      "routeDoneTitle": "Your route",
+
+      "routeDoneBody": "The route is drawn on the map, and the card below shows arrival times and travel time. (The example route is cleared when the tour ends.)",
+      "scenarioTitle": "Theme courses",
+      "scenarioBody": "Not sure where to start? Pick a theme and begin from a suggested course.",
+      "shareTitle": "Share",
+      "shareBody": "Share your finished plan as a link, or invite friends to edit it with you."
+    }
   },
   "plazaNav": "Share plaza",
   "export": {
@@ -674,6 +742,73 @@
       "note": "Note",
       "map": "Map link"
     }
+  },
+  "subFilter": {
+    "group": {
+      "FD6": "Dietary needs",
+      "AD5": "Stay type",
+      "AT4": "Sight type",
+      "MT1": "Shop type"
+    },
+    "option": {
+      "halal": "Halal",
+      "vegetarian": "Vegan",
+      "no_pork": "No pork",
+      "hotel": "Hotel",
+      "motel": "Motel",
+      "hanok": "Hanok",
+      "pension": "Pension",
+      "guesthouse": "Guesthouse",
+      "beach": "Beach",
+      "nature": "Nature",
+      "museum": "Museum",
+      "park": "Park",
+      "supermarket": "Supermarket",
+      "convenience": "Convenience store",
+      "market": "Market"
+    }
+  },
+  "import": {
+    "label": "Import",
+    "scopeAll": "All days",
+    "replaceCurrent": "Import (replace)",
+    "mergeCurrent": "Add to list",
+    "replaceAll": "Apply JSON to all",
+    "mergeAll": "Add JSON to all",
+    "hint": "JSON · CSV · TXT (export format)",
+    "doneReplaceDay": "Day {{day}}: {{count}} imported",
+    "doneMergeDay": "Day {{day}}: {{count}} added",
+    "doneReplaceAll": "All days: {{count}} imported",
+    "doneMergeAll": "All days: {{count}} added",
+    "readFailed": "Couldn’t read the file",
+    "errNoPins": "No places to import",
+    "errCsvColumns": "The CSV needs name, latitude and longitude columns",
+    "errNoDayPins": "No places for the current day"
+  },
+  "pwa": {
+    "install": "Install",
+    "installAria": "Install app",
+    "addToHome": "Add to Home Screen",
+    "dismissAria": "Close (don’t show again)",
+    "step1": "Tap the <b>Share</b> button at the bottom of Safari.",
+    "step2": "Choose <b>Add to Home Screen</b>.",
+    "step3": "Check the name, then tap <b>Add</b>.",
+    "dontShow": "Don’t show again"
+  },
+  "manualPin": {
+    "aria": "Pin a map location",
+    "title": "Pin from map",
+    "nameLabel": "Place name",
+    "namePlaceholder": "Enter a place name",
+    "confirm": "Add pin"
+  },
+  "roadviewModal": {
+    "roadview": "Roadview",
+    "streetview": "Street View",
+    "loading": "Loading {{title}}…",
+    "none": "No {{title}} available near this location.",
+    "openKakao": "View on Kakao Map",
+    "openGoogle": "View on Google Maps"
   },
   "scenario": {
     "menuLabel": "Create Theme Trip",

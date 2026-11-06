@@ -21,7 +21,10 @@
   },
   "checkout": {
     "redirecting": "Ouverture du paiement…",
-    "notConfigured": "Le paiement n’est pas encore configuré."
+    "notConfigured": "Le paiement n’est pas encore configuré.",
+    "processing": "Paiement en cours…",
+    "success": "Votre abonnement Plus a commencé.",
+    "failed": "Le paiement a échoué : {{message}}"
   },
   "compare": {
     "feature": "Fonction",
@@ -39,5 +42,12 @@
     "plazaImport": "Import depuis la place / un lien",
     "plazaImportFree": "Compte dans la limite de voyages",
     "unlimited": "Illimité"
+  },
+  "cancel": {
+    "button": "Résilier l’abonnement",
+    "confirm": "Voulez-vous vraiment résilier votre abonnement ? Vous pourrez continuer à utiliser Plus jusqu’à la fin de la période de facturation en cours.",
+    "processing": "Résiliation en cours…",
+    "success": "Votre abonnement a été résilié. Vous passerez à l’offre Gratuit à la fin de la période de facturation en cours.",
+    "failed": "Échec de la résiliation : {{message}}"
   }
 }

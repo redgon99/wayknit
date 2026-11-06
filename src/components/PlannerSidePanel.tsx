@@ -46,6 +46,8 @@ export function PlannerSidePanel({
               aria-selected={tab === id}
               // 핀업 애니메이션이 착지할 지점을 찾는 데 쓴다 (lib/pinFlyAnimation.ts)
               data-tab={id}
+              // 첫 진입 코치마크가 가리킬 대상 (components/OnboardingCoach.tsx)
+              data-tour={id}
               className={`planner-side-tab ${tab === id ? 'active' : ''}`}
               onClick={() => onTabChange(id)}
             >

@@ -8,11 +8,21 @@ interface Props {
   subtitle?: ReactNode;
   /** 시나리오 카탈로그의 언어 탭처럼, 제목 아래·본문 위에 넣을 보조 컨트롤 */
   headerExtra?: ReactNode;
+  /** 접속 로그의 페이지 미리보기처럼 크기를 달리할 때 */
+  className?: string;
   children: ReactNode;
 }
 
 /** 관리자 목록의 "미리보기" 액션이 공통으로 쓰는 모달 — 가이드 카드·시나리오·배포관리·시장 인사이트(§33) */
-export function AdminPreviewModal({ open, onClose, title, subtitle, headerExtra, children }: Props) {
+export function AdminPreviewModal({
+  open,
+  onClose,
+  title,
+  subtitle,
+  headerExtra,
+  className,
+  children,
+}: Props) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -32,7 +42,7 @@ export function AdminPreviewModal({ open, onClose, title, subtitle, headerExtra,
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
       <div
-        className="modal-card admin-preview-modal"
+        className={`modal-card admin-preview-modal${className ? ` ${className}` : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="admin-preview-modal-title"

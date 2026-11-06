@@ -22,7 +22,18 @@
   "trip": {
     "readOnly": "共享行程（只读）",
     "notFound": "未找到行程。",
-    "loading": "加载中…"
+    "loading": "加载中…",
+    "badge": "分享查看",
+    "addToMine": "添加到我的旅行",
+    "adding": "正在添加…",
+    "editMine": "编辑我的旅行",
+    "goToPlanner": "前往编辑页面",
+    "mapLoading": "正在加载地图…",
+    "empty": "还没有添加地点。",
+    "invalidLink": "分享链接无效。",
+    "notFoundDetail": "找不到这个分享的旅行。链接可能已过期或已设为私密。",
+    "loadFailed": "无法加载旅行。",
+    "addFailed": "保存失败，请重试。"
   },
   "plaza": {
     "title": "分享广场",
@@ -61,10 +72,10 @@
     "filterEmpty": "没有符合条件的行程。",
     "dayFilterLabel": "行程天数",
     "day": {
-      "all": "不限",
       "1": "1天",
       "2": "2天",
       "3": "3天",
+      "all": "不限",
       "4plus": "4天以上"
     },
     "regionFilterLabel": "地区",
@@ -171,5 +182,15 @@
     "notFound": "未找到邀请。链接可能已取消或不正确。",
     "loginCta": "登录并加入",
     "dismiss": "关闭"
+  },
+  "coach": {
+    "aria": "分享查看指南",
+    "viewTitle": "查看分享的旅行",
+    "viewBody": "可以在地图上查看钉选的地点和规划的路线。用顶部标签切换天数。",
+    "addTitle": "添加到我的旅行",
+    "addBody": "点击绿色按钮，即可把这个行程复制到你的旅行列表，之后可以随意修改。",
+    "editTitle": "前往编辑页面",
+    "editBody": "点击“{{editButton}}”即可直接进入搜索、钉选和路线规划页面。",
+    "dontShow": "不再显示"
   }
 }

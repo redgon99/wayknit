@@ -19,6 +19,7 @@ export function PanelIconRail({ visible, pinCount, activeTab, onOpen }: Props) {
         type="button"
         className={`planner-rail-btn ${activeTab === 'search' ? 'active' : ''}`}
         onClick={() => onOpen('search')}
+        data-tour="search"
         title={t('chrome.tabSearch')}
         aria-label={t('chrome.openSearch')}
       >
@@ -28,6 +29,7 @@ export function PanelIconRail({ visible, pinCount, activeTab, onOpen }: Props) {
         type="button"
         className={`planner-rail-btn ${activeTab === 'pins' ? 'active' : ''}`}
         onClick={() => onOpen('pins')}
+        data-tour="pins"
         title={t('chrome.tabPins', { count: pinCount })}
         aria-label={t('chrome.openPins')}
       >
@@ -38,6 +40,7 @@ export function PanelIconRail({ visible, pinCount, activeTab, onOpen }: Props) {
         type="button"
         className={`planner-rail-btn ${activeTab === 'route' ? 'active' : ''}`}
         onClick={() => onOpen('route')}
+        data-tour="route"
         title={t('chrome.tabRoute')}
         aria-label={t('chrome.openRoute')}
       >
@@ -47,6 +50,7 @@ export function PanelIconRail({ visible, pinCount, activeTab, onOpen }: Props) {
         type="button"
         className={`planner-rail-btn ${activeTab === 'scenario' ? 'active' : ''}`}
         onClick={() => onOpen('scenario')}
+        data-tour="scenario"
         title={t('chrome.tabScenario')}
         aria-label={t('chrome.openScenario')}
       >

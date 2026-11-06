@@ -8,7 +8,14 @@ import {
   writeGooglePlaceDetailCache,
 } from './googlePlaceDetailCache';
 
+export type GoogleServiceOptionId = 'dineIn' | 'takeout' | 'delivery' | 'curbsidePickup' | 'reservable';
+
 export interface GoogleServiceOption {
+  /**
+   * 화면이 이 id로 번역한다(`place.detail.service.<id>`). 상세는 30분 캐시되므로
+   * id가 없던 예전 항목은 아래 한국어 label로 보인다.
+   */
+  id?: GoogleServiceOptionId;
   label: string;
   available: boolean;
 }
@@ -88,13 +95,36 @@ function formatGooglePriceLevel(level: number | undefined): string | undefined {
   return labels[Math.min(level, labels.length - 1)];
 }
 
+const SERVICE_OPTION_LABEL_KO: Record<GoogleServiceOptionId, string> = {
+  dineIn: '매장 내 식사',
+  takeout: '테이크아웃',
+  delivery: '배달',
+  curbsidePickup: '매장 외 픽업',
+  reservable: '예약',
+};
+
 function pushServiceOption(
   list: GoogleServiceOption[],
-  label: string,
+  id: GoogleServiceOptionId,
   value: boolean | null | undefined
 ): void {
   if (typeof value !== 'boolean') return;
-  list.push({ label, available: value });
+  list.push({ id, label: SERVICE_OPTION_LABEL_KO[id], available: value });
+}
+
+/** Places API (New)는 가격대를 'MODERATE' 같은 문자열로 준다 — 예전 API의 0~4 숫자로 맞춘다. */
+const NEW_API_PRICE_LEVEL: Record<string, number> = {
+  FREE: 0,
+  INEXPENSIVE: 1,
+  MODERATE: 2,
+  EXPENSIVE: 3,
+  VERY_EXPENSIVE: 4,
+};
+
+function toPriceLevelNumber(value: unknown): number | undefined {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') return NEW_API_PRICE_LEVEL[value.replace(/^PRICE_LEVEL_/, '')];
+  return undefined;
 }
 
 function readLocalizedText(value: unknown): string | undefined {
@@ -110,7 +140,8 @@ function mapLegacyReviews(detail: Record<string, unknown>): GooglePlaceReview[] 
   return ((detail.reviews as Array<Record<string, unknown>>) ?? [])
     .slice(0, 5)
     .map((r) => ({
-      authorName: String(r.author_name ?? 'Google 사용자'),
+      // 이름이 없으면 비워 두고 화면이 지금 언어로 "Google 사용자"를 채운다.
+      authorName: String(r.author_name ?? ''),
       authorUri: r.author_url ? String(r.author_url) : undefined,
       rating: typeof r.rating === 'number' ? r.rating : undefined,
       text: r.text ? String(r.text) : undefined,
@@ -182,11 +213,11 @@ async function fetchGooglePlaceDetailLegacy(
   const openingText = Array.isArray(weekdayText) ? weekdayText.join('\n') : undefined;
 
   const serviceOptions: GoogleServiceOption[] = [];
-  pushServiceOption(serviceOptions, '매장 내 식사', detail.dine_in as boolean | undefined);
-  pushServiceOption(serviceOptions, '테이크아웃', detail.takeout as boolean | undefined);
-  pushServiceOption(serviceOptions, '배달', detail.delivery as boolean | undefined);
-  pushServiceOption(serviceOptions, '매장 외 픽업', detail.curbside_pickup as boolean | undefined);
-  pushServiceOption(serviceOptions, '예약', detail.reservable as boolean | undefined);
+  pushServiceOption(serviceOptions, 'dineIn', detail.dine_in as boolean | undefined);
+  pushServiceOption(serviceOptions, 'takeout', detail.takeout as boolean | undefined);
+  pushServiceOption(serviceOptions, 'delivery', detail.delivery as boolean | undefined);
+  pushServiceOption(serviceOptions, 'curbsidePickup', detail.curbside_pickup as boolean | undefined);
+  pushServiceOption(serviceOptions, 'reservable', detail.reservable as boolean | undefined);
 
   const priceLevel =
     typeof detail.price_level === 'number' ? detail.price_level : undefined;
@@ -264,11 +295,11 @@ async function fetchGooglePlaceDetailNew(
   });
 
   const serviceOptions: GoogleServiceOption[] = [];
-  pushServiceOption(serviceOptions, '매장 내 식사', p.hasDineIn);
-  pushServiceOption(serviceOptions, '테이크아웃', p.hasTakeout);
-  pushServiceOption(serviceOptions, '배달', p.hasDelivery);
-  pushServiceOption(serviceOptions, '매장 외 픽업', p.hasCurbsidePickup);
-  pushServiceOption(serviceOptions, '예약', p.isReservable);
+  pushServiceOption(serviceOptions, 'dineIn', p.hasDineIn);
+  pushServiceOption(serviceOptions, 'takeout', p.hasTakeout);
+  pushServiceOption(serviceOptions, 'delivery', p.hasDelivery);
+  pushServiceOption(serviceOptions, 'curbsidePickup', p.hasCurbsidePickup);
+  pushServiceOption(serviceOptions, 'reservable', p.isReservable);
 
   const photos: string[] = [];
   for (const photo of (p.photos as Array<{ getURI?: (o: object) => string }>) ?? []) {
@@ -290,8 +321,7 @@ async function fetchGooglePlaceDetailNew(
     .slice(0, 5)
     .map((r) => ({
       authorName: String(
-        (r.authorAttribution as { displayName?: string } | undefined)?.displayName ??
-          'Google 사용자'
+        (r.authorAttribution as { displayName?: string } | undefined)?.displayName ?? ''
       ),
       authorUri: (r.authorAttribution as { uri?: string } | undefined)?.uri
         ? String((r.authorAttribution as { uri?: string }).uri)
@@ -324,9 +354,9 @@ async function fetchGooglePlaceDetailNew(
       todayHours: Array.isArray(weekdayText) ? weekdayText[0] : undefined,
       editorialSummary: readLocalizedText(p.editorialSummary),
       categoryLabel: readLocalizedText(p.primaryTypeDisplayName) ?? place.categoryLabel,
-      priceLevelLabel: formatGooglePriceLevel(
-        typeof p.priceLevel === 'number' ? p.priceLevel : undefined
-      ),
+      // 예전엔 숫자일 때만 읽어서, 문자열로 주는 새 API에선 가격대가 아예 안 나왔다.
+      priceLevel: toPriceLevelNumber(p.priceLevel),
+      priceLevelLabel: formatGooglePriceLevel(toPriceLevelNumber(p.priceLevel)),
     },
     serviceOptions,
     reviews,

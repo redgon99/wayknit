@@ -21,7 +21,10 @@
   },
   "checkout": {
     "redirecting": "Zahlung wird geöffnet…",
-    "notConfigured": "Die Zahlung ist noch nicht eingerichtet."
+    "notConfigured": "Die Zahlung ist noch nicht eingerichtet.",
+    "processing": "Zahlung wird verarbeitet…",
+    "success": "Ihr Plus-Abo hat begonnen.",
+    "failed": "Zahlung fehlgeschlagen: {{message}}"
   },
   "compare": {
     "feature": "Funktion",
@@ -39,5 +42,12 @@
     "plazaImport": "Import aus Marktplatz/Link",
     "plazaImportFree": "Zählt zum Reiselimit",
     "unlimited": "Unbegrenzt"
+  },
+  "cancel": {
+    "button": "Abo kündigen",
+    "confirm": "Möchten Sie Ihr Abo wirklich kündigen? Sie können Plus bis zum Ende des aktuellen Abrechnungszeitraums weiter nutzen.",
+    "processing": "Kündigung wird bearbeitet…",
+    "success": "Ihr Abo wurde gekündigt. Am Ende des aktuellen Abrechnungszeitraums wechseln Sie in den Gratisplan.",
+    "failed": "Kündigung fehlgeschlagen: {{message}}"
   }
 }

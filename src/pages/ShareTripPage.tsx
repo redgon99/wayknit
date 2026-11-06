@@ -41,7 +41,8 @@ export default function ShareTripPage() {
   const [googleReady, setGoogleReady] = useState(false);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // 문구가 아니라 종류를 저장한다 — 예전엔 한국어 문장을 그대로 담아 어느 언어로 열어도 한국어였다.
+  const [error, setError] = useState<'invalid' | 'notFound' | 'failed' | null>(null);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
   const mapProvider = resolveMapProvider(mapCenter);
   const [adding, setAdding] = useState(false);
@@ -73,7 +74,7 @@ export default function ShareTripPage() {
 
   useEffect(() => {
     if (!slug) {
-      setError('잘못된 공유 링크입니다.');
+      setError('invalid');
       setLoading(false);
       return;
     }
@@ -83,7 +84,7 @@ export default function ShareTripPage() {
       try {
         const loaded = await tripsRepo.loadBySlug(slug);
         if (!loaded) {
-          setError('공유된 여행을 찾을 수 없습니다. 링크가 만료되었거나 비공개일 수 있습니다.');
+          setError('notFound');
           setTrip(null);
         } else {
           setTrip(loaded);
@@ -93,7 +94,9 @@ export default function ShareTripPage() {
           }
         }
       } catch (e) {
-        setError((e as Error).message);
+        // 기술적인 오류 문구(대개 영어·한국어 혼재)는 콘솔로만 보내고 화면엔 안내 문구를 쓴다.
+        console.error('[share] 공유 여행 조회 실패', e);
+        setError('failed');
       } finally {
         setLoading(false);
       }
@@ -120,13 +123,15 @@ export default function ShareTripPage() {
       }
       const cloned = cloneTripFromShare(trip, userId ?? undefined);
       await tripsRepo.save(cloned);
-      navigate('/', { state: { openTripId: cloned.id } });
+      // 복사한 여행은 플래너(PlannerPage의 openTripId)가 연다 — 예전엔 '/'(랜딩)로 보내
+      // 여행이 열리지 않았고 언어도 한국어로 바뀌었다.
+      navigate(planPath, { state: { openTripId: cloned.id } });
     } catch (e) {
       console.error(e);
-      setAddMessage('저장에 실패했습니다. 다시 시도해 주세요.');
+      setAddMessage(t('trip.addFailed'));
       setAdding(false);
     }
-  }, [trip, adding, user?.id, navigate, plan, isAdmin, tb]);
+  }, [trip, adding, user?.id, navigate, planPath, plan, isAdmin, t, tb]);
 
   const currentDay = trip?.currentDay ?? 1;
   const pinned = useMemo(
@@ -157,7 +162,7 @@ export default function ShareTripPage() {
   if (loading) {
     return (
       <div className="share-page">
-        <p>여행 불러오는 중…</p>
+        <p>{t('trip.loading')}</p>
       </div>
     );
   }
@@ -165,9 +170,15 @@ export default function ShareTripPage() {
   if (error || !trip) {
     return (
       <div className="share-page">
-        <p className="share-error">{error ?? '여행을 불러올 수 없습니다.'}</p>
+        <p className="share-error">
+          {error === 'invalid'
+            ? t('trip.invalidLink')
+            : error === 'notFound'
+              ? t('trip.notFoundDetail')
+              : t('trip.loadFailed')}
+        </p>
         <Link to={planPath} className="share-home-link">
-          편집 화면으로 이동
+          {t('trip.goToPlanner')}
         </Link>
       </div>
     );
@@ -179,7 +190,7 @@ export default function ShareTripPage() {
     >
       {!((mapProvider === 'kakao' && kakaoReady) || (mapProvider === 'google' && googleReady)) && (
         <div className="map-canvas map-loading" aria-live="polite">
-          지도를 불러오는 중…
+          {t('trip.mapLoading')}
         </div>
       )}
       {((mapProvider === 'kakao' && kakaoReady) || (mapProvider === 'google' && googleReady)) && (
@@ -198,7 +209,7 @@ export default function ShareTripPage() {
 
       <header className="share-header">
         <div className="share-header-title">
-          <span className="share-badge">공유 보기</span>
+          <span className="share-badge">{t('trip.badge')}</span>
           <h1 className="share-title">{trip.title}</h1>
         </div>
         <div className="share-header-actions">
@@ -210,10 +221,10 @@ export default function ShareTripPage() {
             disabled={adding}
           >
             <Icon name="plus" size={16} />
-            {adding ? '추가 중…' : '내 여행에 추가'}
+            {adding ? t('trip.adding') : t('trip.addToMine')}
           </button>
           <Link to={planPath} className="share-action-btn share-action-btn--edit">
-            내 여행 편집하기
+            {t('trip.editMine')}
           </Link>
           <ReportButton
             target={{
@@ -247,7 +258,7 @@ export default function ShareTripPage() {
       )}
 
       {pinned.length === 0 && !generatedRoute && (
-        <div className="share-empty-hint">등록된 장소가 없습니다.</div>
+        <div className="share-empty-hint">{t('trip.empty')}</div>
       )}
 
       {shareOnboardingOpen && (
