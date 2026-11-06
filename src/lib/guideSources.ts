@@ -187,6 +187,11 @@ export function isPhotoCreditLink(raw: string): boolean {
   }
 }
 
+/** 지도 검색 주소. 일정표의 길 찾기 링크이므로 출처로 보지 않는다. */
+export function isGuideMapLink(raw: string): boolean {
+  return /^https?:\/\/((www\.)?google\.[a-z.]+\/maps|maps\.google\.|map\.naver\.com|naver\.me|map\.kakao\.com)/i.test(raw.trim());
+}
+
 /** 다른 가이드로 가는 본문 링크의 경로. */
 export function guideInternalPath(raw: string): string | null {
   const path = raw.trim();
@@ -217,7 +222,7 @@ export function collectGuideSources(bodyMd: string, sourceUrls: string[] = []): 
   }
   for (const link of extractMarkdownLinks(bodyMd)) {
     if (link.image && guidePhotoUrl(link.href)) continue; // 본문 사진은 출처 목록에 넣지 않는다
-    if (isGuidePlaceLink(link.href) || isPhotoCreditLink(link.href)) continue; // 본문에 이미 연결된 링크
+    if (isGuidePlaceLink(link.href) || isPhotoCreditLink(link.href) || isGuideMapLink(link.href)) continue; // 본문에 이미 연결된 링크
     const hint = labelFromCiteAlt(link.alt) || (link.image ? null : link.alt.trim() || null);
     const usable =
       hint && !/^https?:/i.test(hint) && hint.length <= 40 ? hint : null;

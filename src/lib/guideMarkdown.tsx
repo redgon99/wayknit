@@ -6,6 +6,7 @@ import {
   guideInternalPath,
   guidePhotoUrl,
   isFaviconUrl,
+  isGuideMapLink,
   isGuidePlaceLink,
   isHttpUrl,
   isPhotoCreditLink,
@@ -120,7 +121,7 @@ export function renderGuideMarkdown(md: string, locale?: AppLocale): ReactNode[]
                   {simple[1] || internal}
                 </Link>
               );
-            } else if (!image && (isGuidePlaceLink(href) || isPhotoCreditLink(href))) {
+            } else if (!image && (isGuidePlaceLink(href) || isPhotoCreditLink(href) || isGuideMapLink(href))) {
               parts.push(
                 <a key={`a-${i++}`} href={href} target="_blank" rel="noopener noreferrer">
                   {simple[1] || href}
