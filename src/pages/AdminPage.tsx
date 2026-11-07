@@ -3,6 +3,12 @@ import { Navigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminShell } from '../components/AdminShell';
+import { AdminPager } from '../components/AdminPager';
+import {
+  AdminStatDetailModal,
+  STAT_DETAIL_LABEL,
+  type StatDetailKind,
+} from '../components/AdminStatDetailModal';
 import {
   addAdminUserAccount,
   createAdminNotice,
@@ -28,45 +34,6 @@ import { csvFilename, downloadCsv, toCsv } from '../lib/csv';
 import { deleteWayknitMockMailUsers } from '../lib/mockMailUsers';
 import { evaluateTier3Gates, type GateStatus } from '../lib/tierGates';
 import '../styles/app.css';
-
-/** 서버 페이지네이션용 이전/다음 컨트롤. 총 건수가 한 페이지 이하면 숨는다. */
-function Pager({
-  page,
-  total,
-  onPage,
-}: {
-  page: number;
-  total: number;
-  onPage: (next: number) => void;
-}) {
-  const lastPage = Math.max(Math.ceil(total / ADMIN_PAGE_SIZE) - 1, 0);
-  if (total <= ADMIN_PAGE_SIZE) return null;
-  const from = page * ADMIN_PAGE_SIZE + 1;
-  const to = Math.min((page + 1) * ADMIN_PAGE_SIZE, total);
-  return (
-    <div className="admin-pager">
-      <button
-        type="button"
-        className="admin-link-btn"
-        disabled={page <= 0}
-        onClick={() => onPage(page - 1)}
-      >
-        이전
-      </button>
-      <span className="admin-cell-sub">
-        {from}–{to} / {total}
-      </span>
-      <button
-        type="button"
-        className="admin-link-btn"
-        disabled={page >= lastPage}
-        onClick={() => onPage(page + 1)}
-      >
-        다음
-      </button>
-    </div>
-  );
-}
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return '-';
@@ -96,6 +63,7 @@ export default function AdminPage() {
   const [plazaPage, setPlazaPage] = useState(0);
 
   const [stats, setStats] = useState<AdminShareStats | null>(null);
+  const [detailKind, setDetailKind] = useState<StatDetailKind | null>(null);
   const [notices, setNotices] = useState<AdminNotice[]>([]);
   const [gates, setGates] = useState<GateStatus[]>([]);
   const [adminAccounts, setAdminAccounts] = useState<AdminUserAccount[]>([]);
@@ -253,6 +221,17 @@ export default function AdminPage() {
     () => notices.filter((n) => n.isPublished).length,
     [notices]
   );
+
+  const closeDetail = useCallback(() => setDetailKind(null), []);
+
+  const statCards: Array<{ kind: StatDetailKind; value: number }> = [
+    { kind: 'trips', value: stats?.totalTrips ?? 0 },
+    { kind: 'public', value: stats?.publicTrips ?? 0 },
+    { kind: 'listed', value: stats?.listedTrips ?? 0 },
+    { kind: 'materials', value: stats?.totalMaterials ?? 0 },
+    { kind: 'imports', value: stats?.totalImports ?? 0 },
+    { kind: 'notices', value: publishedCount },
+  ];
 
   if (!configured) {
     return (
@@ -640,7 +619,7 @@ export default function AdminPage() {
             </table>
           </div>
 
-          <Pager
+          <AdminPager
             page={userPage}
             total={userTotal}
             onPage={setUserPage}
@@ -650,30 +629,17 @@ export default function AdminPage() {
         <section className="admin-section">
           <h2>공유자료 현황 관리</h2>
           <div className="admin-stats-grid">
-            <article className="admin-stat-card">
-              <span>총 여행 수</span>
-              <strong>{stats?.totalTrips ?? 0}</strong>
-            </article>
-            <article className="admin-stat-card">
-              <span>공개 여행 수</span>
-              <strong>{stats?.publicTrips ?? 0}</strong>
-            </article>
-            <article className="admin-stat-card">
-              <span>공유마당 등록 수</span>
-              <strong>{stats?.listedTrips ?? 0}</strong>
-            </article>
-            <article className="admin-stat-card">
-              <span>업로드 자료 수</span>
-              <strong>{stats?.totalMaterials ?? 0}</strong>
-            </article>
-            <article className="admin-stat-card">
-              <span>끌어오기 누적 수</span>
-              <strong>{stats?.totalImports ?? 0}</strong>
-            </article>
-            <article className="admin-stat-card">
-              <span>게시 중 공지</span>
-              <strong>{publishedCount}</strong>
-            </article>
+            {statCards.map((card) => (
+              <button
+                key={card.kind}
+                type="button"
+                className="admin-stat-card admin-stat-card-btn"
+                onClick={() => setDetailKind(card.kind)}
+              >
+                <span>{STAT_DETAIL_LABEL[card.kind]}</span>
+                <strong>{card.value}</strong>
+              </button>
+            ))}
           </div>
 
           <h3 className="admin-subheading">공유마당 등록 목록 ({plazaTotal}건)</h3>
@@ -735,7 +701,7 @@ export default function AdminPage() {
             </table>
           </div>
 
-          <Pager page={plazaPage} total={plazaTotal} onPage={setPlazaPage} />
+          <AdminPager page={plazaPage} total={plazaTotal} onPage={setPlazaPage} />
         </section>
 
         <section className="admin-section">
@@ -872,6 +838,10 @@ export default function AdminPage() {
             </table>
           </div>
         </section>
+
+      {detailKind && (
+        <AdminStatDetailModal key={detailKind} kind={detailKind} onClose={closeDetail} />
+      )}
     </AdminShell>
   );
 }

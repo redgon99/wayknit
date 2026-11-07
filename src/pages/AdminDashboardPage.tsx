@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminShell } from '../components/AdminShell';
+import { AdminPreviewModal } from '../components/AdminPreviewModal';
 import {
   deriveAlerts,
   fetchDashboardSummary,
@@ -17,22 +18,42 @@ function formatDate(iso: string | null): string {
   return d.toLocaleDateString('ko-KR');
 }
 
-/** 지표 한 덩어리 — 큰 숫자 하나와 곁들이는 설명들 */
+/** 카드를 눌렀을 때 모달 안에서 띄울 관리 화면 */
+interface OpenedCard {
+  title: string;
+  to: string;
+}
+
+/**
+ * 지표 한 덩어리 — 큰 숫자 하나와 곁들이는 설명들.
+ * 클릭하면 그 영역의 관리 화면을 모달로 연다. 링크는 유지해서 Cmd/Ctrl+클릭으로
+ * 새 탭에 여는 동작은 그대로 둔다.
+ */
 function MetricCard({
   title,
   to,
   primary,
   primaryLabel,
   details,
+  onOpen,
 }: {
   title: string;
   to: string;
   primary: number;
   primaryLabel: string;
   details: Array<{ label: string; value: string | number }>;
+  onOpen: (card: OpenedCard) => void;
 }) {
   return (
-    <Link to={to} className="dash-card">
+    <Link
+      to={to}
+      className="dash-card"
+      onClick={(e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+        e.preventDefault();
+        onOpen({ title, to });
+      }}
+    >
       <span className="dash-card-title">{title}</span>
       <span className="dash-card-primary">
         {primary.toLocaleString('ko-KR')}
@@ -56,6 +77,7 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [openedCard, setOpenedCard] = useState<OpenedCard | null>(null);
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -73,6 +95,12 @@ export default function AdminDashboardPage() {
     if (access !== 'ok') return;
     void load();
   }, [access, load]);
+
+  /** 모달 안에서 신고 처리 등을 했을 수 있으니 닫을 때 지표를 다시 읽는다 */
+  const closeCard = useCallback(() => {
+    setOpenedCard(null);
+    void load();
+  }, [load]);
 
   const alerts = useMemo(() => (summary ? deriveAlerts(summary) : []), [summary]);
 
@@ -147,6 +175,7 @@ export default function AdminDashboardPage() {
               <MetricCard
                 title="여행 · 가입자"
                 to="/admin"
+                onOpen={setOpenedCard}
                 primary={summary.trips.total}
                 primaryLabel="여행"
                 details={[
@@ -160,6 +189,7 @@ export default function AdminDashboardPage() {
               <MetricCard
                 title="공유마당"
                 to="/admin"
+                onOpen={setOpenedCard}
                 primary={summary.trips.listed}
                 primaryLabel="등록"
                 details={[{ label: '전체 공개 여행', value: summary.trips.public }]}
@@ -167,6 +197,7 @@ export default function AdminDashboardPage() {
               <MetricCard
                 title="신고 검수"
                 to="/admin/reports"
+                onOpen={setOpenedCard}
                 primary={summary.reports.open}
                 primaryLabel="미처리"
                 details={[{ label: '누적', value: summary.reports.total }]}
@@ -174,6 +205,7 @@ export default function AdminDashboardPage() {
               <MetricCard
                 title="시나리오 카탈로그"
                 to="/admin/scenarios"
+                onOpen={setOpenedCard}
                 primary={summary.scenarios.published}
                 primaryLabel="게시중"
                 details={[
@@ -185,6 +217,7 @@ export default function AdminDashboardPage() {
               <MetricCard
                 title="가이드 카드"
                 to="/admin/guides"
+                onOpen={setOpenedCard}
                 primary={summary.guides.published}
                 primaryLabel="게시중"
                 details={[{ label: '초안', value: summary.guides.draft }]}
@@ -192,6 +225,7 @@ export default function AdminDashboardPage() {
               <MetricCard
                 title="시장 인사이트"
                 to="/admin/insights"
+                onOpen={setOpenedCard}
                 primary={summary.insights.raw_items}
                 primaryLabel="수집 원문"
                 details={[
@@ -203,6 +237,7 @@ export default function AdminDashboardPage() {
               <MetricCard
                 title="배포관리"
                 to="/admin/distribution"
+                onOpen={setOpenedCard}
                 primary={summary.distribution.posted}
                 primaryLabel="게시됨"
                 details={[
@@ -214,6 +249,7 @@ export default function AdminDashboardPage() {
               <MetricCard
                 title="감사 로그"
                 to="/admin/audit"
+                onOpen={setOpenedCard}
                 primary={summary.audit.today}
                 primaryLabel="오늘 변경"
                 details={[
@@ -225,6 +261,27 @@ export default function AdminDashboardPage() {
             </div>
           </section>
         )}
+
+      {openedCard && (
+        <AdminPreviewModal
+          open
+          onClose={closeCard}
+          title={openedCard.title}
+          className="access-preview-modal dash-frame-modal"
+          headerExtra={
+            <a
+              href={openedCard.to}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="admin-link-btn access-preview-open"
+            >
+              새 탭에서 열기
+            </a>
+          }
+        >
+          <iframe key={openedCard.to} title={openedCard.title} src={openedCard.to} />
+        </AdminPreviewModal>
+      )}
     </AdminShell>
   );
 }

@@ -8911,6 +8911,24 @@ button {
   gap: 4px;
 }
 
+.admin-stat-card-btn {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-stat-card-btn:hover {
+  border-color: #94a3b8;
+  background: #fff;
+}
+
+.admin-stat-card-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
 .admin-stat-card-expandable.expanded {
   border-color: var(--color-primary);
   background: #fff;
@@ -18700,6 +18718,17 @@ a.guide-source-chip:hover {
   height: 100%;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
+}
+
+/* 현황 칩 상세 — 열이 많아 기본 미리보기보다 넓게 */
+.admin-stat-detail-modal {
+  max-width: 1040px;
+}
+
+/* 대시보드 카드 — 표가 넓은 관리 화면을 그대로 띄우므로 더 크게 */
+.dash-frame-modal {
+  max-width: 1320px;
+  height: min(92vh, 1000px);
 }
 
 .access-filter-row {

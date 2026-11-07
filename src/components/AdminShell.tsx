@@ -99,6 +99,10 @@ export function AdminShell({
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [term, setTerm] = useState(current === 'search' ? (params.get('q') ?? '') : '');
+  /* 대시보드 카드가 관리 화면을 iframe 모달로 띄운다. 메뉴·제목은 바깥 모달과
+     겹치므로 빼고, 새로고침과 페이지별 액션만 남긴다. iframe 안에서 다른 화면으로
+     옮겨가도 유지되도록 주소 파라미터가 아니라 실행 위치로 판단한다. */
+  const embedded = window.self !== window.top;
 
   const submitSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -109,62 +113,70 @@ export function AdminShell({
 
   return (
     <div className="admin-app-shell">
-      <nav className="admin-sidebar" aria-label="관리자 메뉴">
-        <div className="admin-sidebar-brand">
-          <span className="logo">Wayknit 관리자</span>
-        </div>
-        <div className="admin-sidebar-groups">
-          {NAV_GROUPS.map((group) => (
-            <div key={group.label}>
-              <div className="admin-sidebar-group-label">{group.label}</div>
-              {group.items.map((item) => (
-                <Link
-                  key={item.key}
-                  to={item.to}
-                  className={`admin-sidebar-link${item.key === current ? ' active' : ''}`}
-                  aria-current={item.key === current ? 'page' : undefined}
-                >
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-            </div>
-          ))}
-        </div>
-        <div className="admin-sidebar-account">
-          <AuthBar />
-        </div>
-        <div className="admin-sidebar-utility">
-          <Link to="/plan">플래너로 이동 ↗</Link>
-        </div>
-      </nav>
+      {!embedded && (
+        <nav className="admin-sidebar" aria-label="관리자 메뉴">
+          <div className="admin-sidebar-brand">
+            <span className="logo">Wayknit 관리자</span>
+          </div>
+          <div className="admin-sidebar-groups">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label}>
+                <div className="admin-sidebar-group-label">{group.label}</div>
+                {group.items.map((item) => (
+                  <Link
+                    key={item.key}
+                    to={item.to}
+                    className={`admin-sidebar-link${item.key === current ? ' active' : ''}`}
+                    aria-current={item.key === current ? 'page' : undefined}
+                  >
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="admin-sidebar-account">
+            <AuthBar />
+          </div>
+          <div className="admin-sidebar-utility">
+            <Link to="/plan">플래너로 이동 ↗</Link>
+          </div>
+        </nav>
+      )}
 
       <div className="admin-main-col">
-        <header className="admin-topbar">
-          <div className="admin-topbar-title">
-            <h1>{PAGE_TITLE[current]}</h1>
-            <p>{subtitle}</p>
-          </div>
-          <div className="admin-topbar-actions">
-            {onRefresh && (
-              <button type="button" className="admin-refresh-btn" onClick={onRefresh}>
-                {refreshing ? '새로고침 중...' : '새로고침'}
-              </button>
+        {(!embedded || onRefresh || extraActions) && (
+          <header className="admin-topbar">
+            {!embedded && (
+              <div className="admin-topbar-title">
+                <h1>{PAGE_TITLE[current]}</h1>
+                <p>{subtitle}</p>
+              </div>
             )}
-            {extraActions}
-            <form className="admin-global-search" onSubmit={submitSearch} role="search">
-              <input
-                type="search"
-                value={term}
-                onChange={(e) => setTerm(e.target.value)}
-                placeholder="전체 검색 (이메일 · 여행 · 시나리오 · 가이드)"
-                aria-label="관리자 전역 검색"
-              />
-              <button type="submit" className="admin-link-btn">
-                검색
-              </button>
-            </form>
-          </div>
-        </header>
+            <div className="admin-topbar-actions">
+              {onRefresh && (
+                <button type="button" className="admin-refresh-btn" onClick={onRefresh}>
+                  {refreshing ? '새로고침 중...' : '새로고침'}
+                </button>
+              )}
+              {extraActions}
+              {!embedded && (
+                <form className="admin-global-search" onSubmit={submitSearch} role="search">
+                  <input
+                    type="search"
+                    value={term}
+                    onChange={(e) => setTerm(e.target.value)}
+                    placeholder="전체 검색 (이메일 · 여행 · 시나리오 · 가이드)"
+                    aria-label="관리자 전역 검색"
+                  />
+                  <button type="submit" className="admin-link-btn">
+                    검색
+                  </button>
+                </form>
+              )}
+            </div>
+          </header>
+        )}
         <main className={`admin-content${wide ? ' admin-content-wide' : ''}`}>{children}</main>
       </div>
     </div>

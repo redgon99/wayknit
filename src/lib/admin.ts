@@ -46,6 +46,42 @@ export interface AdminPlazaListing {
   materialsCount: number;
 }
 
+/** 현황 칩 상세 — 총 여행·공개 여행·공유마당 등록이 함께 쓴다 */
+export interface AdminTripRow {
+  id: string;
+  title: string;
+  slug: string | null;
+  ownerEmail: string | null;
+  isPublic: boolean;
+  listedInPlaza: boolean;
+  plazaListedAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface AdminMaterialRow {
+  tripId: string;
+  materialId: string;
+  title: string;
+  kind: string | null;
+  fileName: string | null;
+  tripTitle: string;
+  /** 예전 payload에서 옮겨 온 자료는 작성자 기록이 없다 */
+  authorEmail: string | null;
+  createdAt: string | null;
+}
+
+export interface AdminImportRow {
+  id: string;
+  sourceTitle: string;
+  sourceSlug: string | null;
+  sourceIsPublic: boolean;
+  sourceOwnerEmail: string | null;
+  importerEmail: string | null;
+  /** 끌어온 사본을 지웠으면 null */
+  clonedTitle: string | null;
+  createdAt: string | null;
+}
+
 export interface AdminShareStats {
   totalTrips: number;
   publicTrips: number;
@@ -176,7 +212,7 @@ export async function setUserTestFlag(userId: string, isTest: boolean): Promise<
 
 /**
  * 공유자료 현황. 예전에는 자료 개수를 세려고 payload(여행 1건이 최대 150KB)를
- * 전부 내려받았다 — 이제 DB에서 jsonb_array_length로 세어 숫자만 받는다.
+ * 전부 내려받았다 — 이제 DB에서 trip_materials 행을 세어 숫자만 받는다.
  */
 export async function fetchAdminShareStats(): Promise<AdminShareStats> {
   const sb = requireSupabase();
@@ -213,6 +249,91 @@ export async function listPlazaListings(
       ownerEmail: (row.owner_email as string | null) ?? null,
       listedAt: (row.listed_at as string | null) ?? null,
       materialsCount: Number(row.materials_count ?? 0),
+    })),
+    totalCount: Number(rows[0]?.total_count ?? 0),
+  };
+}
+
+/** 현황 칩 상세 — 여행 목록 */
+export async function listAdminTripRows(
+  query: AdminListQuery & { filter?: 'all' | 'public' | 'listed' } = {}
+): Promise<AdminPage<AdminTripRow>> {
+  const sb = requireSupabase();
+  const { data, error } = await sb.rpc('admin_trip_rows', {
+    p_filter: query.filter ?? 'all',
+    p_search: query.search?.trim() || null,
+    p_limit: query.limit ?? ADMIN_PAGE_SIZE,
+    p_offset: query.offset ?? 0,
+  });
+  if (error) throw error;
+
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+  return {
+    rows: rows.map((row) => ({
+      id: row.id as string,
+      title: (row.title as string) || '제목 없음',
+      slug: (row.slug as string | null) ?? null,
+      ownerEmail: (row.owner_email as string | null) ?? null,
+      isPublic: Boolean(row.is_public),
+      listedInPlaza: Boolean(row.listed_in_plaza),
+      plazaListedAt: (row.plaza_listed_at as string | null) ?? null,
+      updatedAt: (row.updated_at as string | null) ?? null,
+    })),
+    totalCount: Number(rows[0]?.total_count ?? 0),
+  };
+}
+
+/** 현황 칩 상세 — 업로드 자료 목록 */
+export async function listAdminMaterialRows(
+  query: AdminListQuery = {}
+): Promise<AdminPage<AdminMaterialRow>> {
+  const sb = requireSupabase();
+  const { data, error } = await sb.rpc('admin_material_rows', {
+    p_search: query.search?.trim() || null,
+    p_limit: query.limit ?? ADMIN_PAGE_SIZE,
+    p_offset: query.offset ?? 0,
+  });
+  if (error) throw error;
+
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+  return {
+    rows: rows.map((row) => ({
+      tripId: row.trip_id as string,
+      materialId: row.material_id as string,
+      title: (row.title as string) || '제목 없음',
+      kind: (row.kind as string | null) ?? null,
+      fileName: (row.file_name as string | null) ?? null,
+      tripTitle: (row.trip_title as string) || '제목 없음',
+      authorEmail: (row.author_email as string | null) ?? null,
+      createdAt: (row.created_at as string | null) ?? null,
+    })),
+    totalCount: Number(rows[0]?.total_count ?? 0),
+  };
+}
+
+/** 현황 칩 상세 — 끌어오기 이력 */
+export async function listAdminImportRows(
+  query: AdminListQuery = {}
+): Promise<AdminPage<AdminImportRow>> {
+  const sb = requireSupabase();
+  const { data, error } = await sb.rpc('admin_import_rows', {
+    p_search: query.search?.trim() || null,
+    p_limit: query.limit ?? ADMIN_PAGE_SIZE,
+    p_offset: query.offset ?? 0,
+  });
+  if (error) throw error;
+
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+  return {
+    rows: rows.map((row) => ({
+      id: row.id as string,
+      sourceTitle: (row.source_title as string) || '제목 없음',
+      sourceSlug: (row.source_slug as string | null) ?? null,
+      sourceIsPublic: Boolean(row.source_is_public),
+      sourceOwnerEmail: (row.source_owner_email as string | null) ?? null,
+      importerEmail: (row.importer_email as string | null) ?? null,
+      clonedTitle: (row.cloned_title as string | null) ?? null,
+      createdAt: (row.created_at as string | null) ?? null,
     })),
     totalCount: Number(rows[0]?.total_count ?? 0),
   };
