@@ -6,7 +6,9 @@
     "subtitle": "推薦路線、實用貼士、出行準備等。僅展示管理員審核後的內容。",
     "loading": "加載中…",
     "empty": "暫無已發佈的指南。",
-    "kindFilter": "指南類型"
+    "kindFilter": "指南類型",
+    "shareLabel": "分享",
+    "shareCopied": "連結已複製"
   },
   "detail": {
     "back": "指南列表",

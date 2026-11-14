@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { SiteHeader } from '../components/SiteHeader';
@@ -26,6 +26,31 @@ export default function GuidesPage() {
   const [courseFilters, setCourseFilters] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const copiedTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(copiedTimer.current), []);
+
+  /** 휴대폰 등 공유창이 있으면 그걸 열고, 없으면(대부분의 PC) 링크를 복사한다. */
+  const shareGuide = async (id: string, title: string, path: string) => {
+    const url = `${window.location.origin}${path}`;
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title, url });
+        return;
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') return; // 사용자가 공유창을 닫음
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(id);
+      window.clearTimeout(copiedTimer.current);
+      copiedTimer.current = window.setTimeout(() => setCopiedId(null), 1800);
+    } catch {
+      window.prompt(t('list.shareLabel'), url);
+    }
+  };
 
   useSeoMeta({ title: t('list.metaTitle'), description: t('list.subtitle'), path: '/guides' });
 
@@ -127,12 +152,10 @@ export default function GuidesPage() {
                있으면 카드도 그 언어로 보여준다(scenario_catalog와 같은
                방식). 없으면 대표 언어 그대로. */
             const content = pickGuideContent(g, locale);
+            const path = pathWithLocale(`/guides/${g.slug}`, locale);
             return (
-              <Link
-                key={g.id}
-                to={pathWithLocale(`/guides/${g.slug}`, locale)}
-                className="guides-card"
-              >
+              <div key={g.id} className="guides-card-wrap">
+              <Link to={path} className="guides-card">
                 <div className="guides-card-tags">
                   <span className="guides-tag guides-tag-kind">{t(`kinds.${g.kind}`)}</span>
                   {displayCourseTags(g.topicTags, locale, 3).map((tag) => (
@@ -144,6 +167,27 @@ export default function GuidesPage() {
                 <h2>{content.title}</h2>
                 <p>{content.summary}</p>
               </Link>
+              <button
+                type="button"
+                className="guides-card-share"
+                aria-label={`${t('list.shareLabel')}: ${content.title}`}
+                title={t('list.shareLabel')}
+                onClick={() => void shareGuide(g.id, content.title, path)}
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+              </button>
+              {copiedId === g.id && (
+                <span className="guides-card-copied" role="status">
+                  {t('list.shareCopied')}
+                </span>
+              )}
+              </div>
             );
           })}
         </div>

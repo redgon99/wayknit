@@ -6,7 +6,9 @@
     "subtitle": "Rutas recomendadas, consejos prácticos y listas de preparación. Solo se publican fichas revisadas por un administrador.",
     "loading": "Cargando…",
     "empty": "Aún no hay guías publicadas.",
-    "kindFilter": "Tipos de guía"
+    "kindFilter": "Tipos de guía",
+    "shareLabel": "Compartir",
+    "shareCopied": "Enlace copiado"
   },
   "detail": {
     "back": "Todas las guías",

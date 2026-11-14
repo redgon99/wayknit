@@ -6,7 +6,9 @@
     "subtitle": "Recommended courses, practical tips, and prep checklists. Only admin-reviewed cards are published.",
     "loading": "Loading…",
     "empty": "No published guides yet.",
-    "kindFilter": "Guide types"
+    "kindFilter": "Guide types",
+    "shareLabel": "Share",
+    "shareCopied": "Link copied"
   },
   "detail": {
     "back": "All guides",

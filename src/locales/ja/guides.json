@@ -6,7 +6,9 @@
     "subtitle": "おすすめコース・実用Tips・準備チェック。管理者が確認したカードのみ公開されます。",
     "loading": "読み込み中…",
     "empty": "公開中のガイドはまだありません。",
-    "kindFilter": "ガイド種類"
+    "kindFilter": "ガイド種類",
+    "shareLabel": "共有",
+    "shareCopied": "リンクをコピーしました"
   },
   "detail": {
     "back": "ガイド一覧",

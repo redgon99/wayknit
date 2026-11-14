@@ -6,7 +6,9 @@
     "subtitle": "Empfohlene Routen, praktische Tipps und Checklisten. Nur von Admins geprüfte Karten werden veröffentlicht.",
     "loading": "Laden…",
     "empty": "Noch keine veröffentlichten Guides.",
-    "kindFilter": "Guide-Typen"
+    "kindFilter": "Guide-Typen",
+    "shareLabel": "Teilen",
+    "shareCopied": "Link kopiert"
   },
   "detail": {
     "back": "Alle Guides",

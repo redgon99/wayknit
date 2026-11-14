@@ -6,7 +6,9 @@
     "subtitle": "Parcours recommandés, conseils pratiques et listes de préparation. Seules les fiches validées par un admin sont publiées.",
     "loading": "Chargement…",
     "empty": "Aucun guide publié pour le moment.",
-    "kindFilter": "Types de guide"
+    "kindFilter": "Types de guide",
+    "shareLabel": "Partager",
+    "shareCopied": "Lien copié"
   },
   "detail": {
     "back": "Tous les guides",

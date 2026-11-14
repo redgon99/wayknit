@@ -10376,6 +10376,57 @@ button {
   }
 }
 
+.guides-card-wrap {
+  position: relative;
+}
+
+.guides-card-wrap > .guides-card {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.guides-card-wrap .guides-card-tags {
+  padding-right: 34px; /* 공유 버튼 자리 */
+}
+
+.guides-card-share {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 999px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.guides-card-share:hover,
+.guides-card-share:focus-visible {
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.28);
+  background: #f8fafc;
+}
+
+.guides-card-copied {
+  position: absolute;
+  top: 48px;
+  right: 10px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .guides-card {
   display: block;
   padding: 18px 18px 20px;

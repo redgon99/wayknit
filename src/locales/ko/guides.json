@@ -6,7 +6,9 @@
     "subtitle": "추천 코스·유용한 정보·준비 체크리스트 등. 관리자가 검수한 카드만 공개됩니다.",
     "loading": "불러오는 중…",
     "empty": "아직 공개된 가이드가 없습니다.",
-    "kindFilter": "가이드 종류"
+    "kindFilter": "가이드 종류",
+    "shareLabel": "공유하기",
+    "shareCopied": "링크를 복사했어요"
   },
   "detail": {
     "back": "가이드 목록",
