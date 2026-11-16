@@ -8886,7 +8886,18 @@ SQL 호출은 하지 않았다(`feedback_user_verifies`). plpgsql `return query`
 - 검증: 타입 검사, 개발 서버(https://localhost)에서 버튼 위치·스크롤 고정·복사 안내 확인. 휴대폰 공유창은 실기기 미확인.
 - **배포(2026-11-16):** `npm run deploy`.
 
+## 51. 가이드 본문: 굵게 감싼 링크가 마크다운 그대로 보이던 문제 (2026-11-17, Windows)
+
+- 증상: 본문에 `**[세운상가](https://korean.visitkorea.or.kr/search/…)**`처럼 링크를 굵게 감싸면 화면에 `[세운상가](https://…)`가 글자 그대로 나왔다.
+  `src/lib/guideMarkdown.tsx`의 굵게 처리가 `<strong>{token.slice(2, -2)}</strong>`로 안쪽을 해석하지 않았기 때문(기울임은 이미 `inline()` 재귀).
+- 발견 경로: ktrip 발행 미리보기(같은 렌더러 사본)에서 GPT 원고 #58. **공개 글 96편에는 이 형식이 없어 라이브 피해는 없었다** — 앞으로 GPT 원고가 발행될 때를 대비한 수정.
+- 수정: `<strong>{inline(token.slice(2, -2))}</strong>`. ktrip 사본(`lib/wayknit/guideMarkdown.tsx`)도 같은 줄을 함께 고침.
+- 검증: 타입 빌드, ktrip 미리보기 #58 네 언어 모두 원문 링크 0개·굵은 장소 링크 4개.
+- **배포(2026-11-17):** `npm run deploy`.
+
 ## ▶ 다음 세션 시작점 (2026-11-07 기준, 갱신)
+
+**+ §51 배포(2026-11-17):** 굵게 감싼 링크 렌더링 수정.
 
 **+ §50 배포(2026-11-16):** 가이드 상세 오른쪽 위 떠 있는 공유 버튼.
 

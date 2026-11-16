@@ -91,7 +91,8 @@ export function renderGuideMarkdown(md: string, locale?: AppLocale): ReactNode[]
       if (start > last) parts.push(text.slice(last, start));
       const token = m[0];
       if (token.startsWith('**')) {
-        parts.push(<strong key={`b-${i++}`}>{token.slice(2, -2)}</strong>);
+        // 굵게 안의 링크(**[장소](주소)**)도 해석한다 — 그대로 두면 마크다운이 글자로 보였다
+        parts.push(<strong key={`b-${i++}`}>{inline(token.slice(2, -2))}</strong>);
       } else if (token.startsWith('*') && !token.startsWith('*[')) {
         parts.push(<em key={`e-${i++}`}>{inline(token.slice(1, -1))}</em>);
       } else {
