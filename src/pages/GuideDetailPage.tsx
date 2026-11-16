@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AuthBar } from '../components/AuthBar';
 import { LocaleSwitcher } from '../components/LocaleSwitcher';
 import { ReportButton } from '../components/ReportButton';
+import { ShareIcon } from '../components/ShareIcon';
+import { shareLink } from '../lib/shareLink';
 import { useSeoMeta } from '../hooks/useSeoMeta';
 import { GUIDE_KIND_META } from '../lib/guideKinds';
 import { displayCourseTags } from '../lib/courseGuideTaxonomy';
@@ -36,6 +38,9 @@ export default function GuideDetailPage() {
    * 리셋 — 이전 글에서 고른 언어가 새 글에 남아 있지 않게).
    */
   const [viewLocale, setViewLocale] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(copiedTimer.current), []);
   useEffect(() => {
     setViewLocale(null);
   }, [slug]);
@@ -114,6 +119,17 @@ export default function GuideDetailPage() {
     return { to: plannerPath(locale), label: t('cta.planner') };
   })();
 
+  /** 지금 보고 있는 언어 버전의 주소를 공유한다. */
+  const shareGuide = async () => {
+    if (!guide) return;
+    const path = pathWithLocale(`/guides/${guide.slug}`, normalizeLocale(content?.locale ?? locale));
+    const result = await shareLink(content?.title ?? guide.slug, `${window.location.origin}${path}`, t('list.shareLabel'));
+    if (result !== 'copied') return;
+    setCopied(true);
+    window.clearTimeout(copiedTimer.current);
+    copiedTimer.current = window.setTimeout(() => setCopied(false), 1800);
+  };
+
   return (
     <main className="guides-page">
       <header className="guides-header">
@@ -135,6 +151,23 @@ export default function GuideDetailPage() {
         {error && !guide && <p className="guides-error">{error}</p>}
         {guide && (
           <>
+            {/* 오른쪽 위에 떠 있는 공유 버튼 — 스크롤해도 화면 위쪽에 붙어 따라온다 */}
+            <div className="guide-share-float">
+              <button
+                type="button"
+                className="guide-share-fab"
+                aria-label={`${t('list.shareLabel')}: ${content?.title ?? ''}`}
+                title={t('list.shareLabel')}
+                onClick={() => void shareGuide()}
+              >
+                <ShareIcon size={18} />
+              </button>
+              {copied && (
+                <span className="guides-card-copied guide-share-copied" role="status">
+                  {t('list.shareCopied')}
+                </span>
+              )}
+            </div>
             <div className="guides-card-tags">
               <span className="guides-tag guides-tag-kind">{t(`kinds.${guide.kind}`)}</span>
               {displayCourseTags(guide.topicTags, locale, 8).map((tag) => (

@@ -10427,6 +10427,51 @@ button {
   pointer-events: none;
 }
 
+/* 가이드 상세: 오른쪽 위 떠 있는 공유 버튼(높이 0 줄에 붙여 본문을 밀지 않음) */
+.guide-share-float {
+  position: sticky;
+  top: 16px;
+  z-index: 30;
+  height: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.guide-share-fab {
+  position: relative;
+  margin-top: 26px;
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.guide-share-fab:hover,
+.guide-share-fab:focus-visible {
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.3);
+  background: #f8fafc;
+}
+
+.guides-card-copied.guide-share-copied {
+  top: 76px;
+  right: 0;
+}
+
+.guides-detail > .guides-card-tags,
+.guides-detail > .guide-lang-switch {
+  padding-right: 56px; /* 공유 버튼 자리 */
+}
+
 .guides-card {
   display: block;
   padding: 18px 18px 20px;
