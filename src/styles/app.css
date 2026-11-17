@@ -18966,3 +18966,28 @@ a.guide-source-chip:hover {
 .access-section-meta strong {
   color: var(--color-text-primary);
 }
+
+/* 가이드 상세 관리자 도구(ktrip 업데이트 요청문 링크) — 관리자에게만 보인다 */
+.guide-admin-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+}
+.guide-admin-tool-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border: 1px dashed #c7a64a;
+  border-radius: 999px;
+  background: #fffbea;
+  color: #7a5b00;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.guide-admin-tool-link:hover,
+.guide-admin-tool-link:focus-visible {
+  background: #fff3c4;
+  border-style: solid;
+}
