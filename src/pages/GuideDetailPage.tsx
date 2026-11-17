@@ -41,6 +41,9 @@ export default function GuideDetailPage() {
   const [viewLocale, setViewLocale] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<number | undefined>(undefined);
+  /** 위쪽 "내 일정에 담기"가 화면에 보이는 동안엔 모바일 하단 고정 버튼을 숨긴다(같은 버튼 두 개 방지). */
+  const courseCtaRef = useRef<HTMLDivElement | null>(null);
+  const [courseCtaVisible, setCourseCtaVisible] = useState(true);
   useEffect(() => () => window.clearTimeout(copiedTimer.current), []);
   useEffect(() => {
     setViewLocale(null);
@@ -101,9 +104,10 @@ export default function GuideDetailPage() {
     if (!guide) return null;
     const meta = GUIDE_KIND_META[guide.kind];
     if (meta.cta === 'auto_route') {
+      // 일정 제목·안내에 쓰이므로 원문(한국어) 제목이 아니라 지금 보고 있는 언어의 제목을 넘긴다.
       const q = new URLSearchParams({
         autoRoute: '1',
-        guideTitle: guide.title,
+        guideTitle: content?.title ?? guide.title,
         fromGuide: guide.slug,
       });
       return {
@@ -120,6 +124,22 @@ export default function GuideDetailPage() {
     }
     return { to: plannerPath(locale), label: t('cta.planner'), cta: 'planner' };
   })();
+
+  /*
+   * 코스 핀이 있는 추천 코스는 "내 일정에 담기"를 본문 맨 아래뿐 아니라 요약 바로 아래에도 둔다.
+   * 2026-11 기준 가이드 방문자 110명 중 3명만 플래너로 갔다(개선계획 1단계).
+   */
+  const courseCta =
+    guide && guide.coursePins.length > 0 && primaryCta?.cta === 'auto_route' ? primaryCta : null;
+
+  const hasCourseCta = courseCta !== null;
+  useEffect(() => {
+    const el = courseCtaRef.current;
+    if (!hasCourseCta || !el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setCourseCtaVisible(entry.isIntersecting));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasCourseCta]);
 
   /** 지금 보고 있는 언어 버전의 주소를 공유한다. */
   const shareGuide = async () => {
@@ -148,7 +168,7 @@ export default function GuideDetailPage() {
         </div>
       </header>
 
-      <article className="guides-shell guides-detail">
+      <article className={`guides-shell guides-detail${courseCta ? ' guides-detail-has-sticky' : ''}`}>
         {loading && <p className="guides-muted">{t('list.loading')}</p>}
         {error && !guide && <p className="guides-error">{error}</p>}
         {guide && (
@@ -194,6 +214,20 @@ export default function GuideDetailPage() {
             )}
             <h1>{content?.title}</h1>
             {summaryText && <p className="guides-detail-summary">{summaryText}</p>}
+            {courseCta && (
+              <div className="guide-course-cta" ref={courseCtaRef}>
+                <Link
+                  to={courseCta.to}
+                  className="guides-btn guides-btn-primary"
+                  onClick={() => trackEvent('guide_cta_click', { slug: guide.slug, cta: courseCta.cta, button: 'top' })}
+                >
+                  {courseCta.label}
+                </Link>
+                <span className="guide-course-cta-note">
+                  {t('cta.courseNote', { count: guide.coursePins.length })}
+                </span>
+              </div>
+            )}
             {guide.kind === 'course' && guide.coursePins.length > 0 && (
               <GuideCourseMap pins={guide.coursePins} />
             )}
@@ -257,6 +291,17 @@ export default function GuideDetailPage() {
                 }}
               />
             </div>
+            {courseCta && (
+              <div className="guide-course-sticky" hidden={courseCtaVisible}>
+                <Link
+                  to={courseCta.to}
+                  className="guides-btn guides-btn-primary"
+                  onClick={() => trackEvent('guide_cta_click', { slug: guide.slug, cta: courseCta.cta, button: 'sticky' })}
+                >
+                  {courseCta.label}
+                </Link>
+              </div>
+            )}
           </>
         )}
       </article>

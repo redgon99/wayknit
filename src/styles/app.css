@@ -11337,6 +11337,51 @@ a.guide-source-chip:hover {
   color: #94a3b8;
 }
 
+.guide-course-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 4px 0 18px;
+}
+
+.guide-course-cta-note {
+  color: #475569;
+  font-size: 0.8125rem;
+}
+
+/* 모바일에서 위쪽 버튼이 화면 밖으로 나가면 아래에 붙는다 */
+.guide-course-sticky {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .guide-course-sticky:not([hidden]) {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px))
+      max(16px, env(safe-area-inset-left, 0px));
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid rgba(15, 23, 42, 0.1);
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+  }
+
+  .guide-course-sticky .guides-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 14px;
+  }
+
+  /* 고정 버튼이 본문 끝(신고 버튼 등)을 가리지 않게 */
+  .guides-detail-has-sticky {
+    padding-bottom: 88px;
+  }
+}
+
 .guides-detail-cta {
   display: flex;
   flex-wrap: wrap;
@@ -18829,6 +18874,16 @@ a.guide-source-chip:hover {
 
 .access-filter-row {
   align-items: center;
+}
+
+.access-funnel {
+  display: grid;
+  gap: 12px;
+}
+
+/* 단계 이름이 길어 구역 막대(96px)보다 넓은 이름 칸을 쓴다 */
+.access-funnel .access-section-row {
+  grid-template-columns: 150px minmax(0, 1fr);
 }
 
 .admin-stats-grid.access-kpis {

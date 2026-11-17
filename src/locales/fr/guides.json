@@ -3,7 +3,7 @@
   "list": {
     "metaTitle": "Guides de voyage · Wayknit",
     "title": "Guides de voyage",
-    "subtitle": "Parcours recommandés, conseils pratiques et listes de préparation. Seules les fiches validées par un admin sont publiées.",
+    "subtitle": "Parcours recommandés, conseils pratiques et listes de préparation pour votre voyage en Corée.",
     "loading": "Chargement…",
     "empty": "Aucun guide publié pour le moment.",
     "kindFilter": "Types de guide",
@@ -19,7 +19,9 @@
   },
   "cta": {
     "planner": "Ouvrir le planificateur",
-    "autoRoute": "Créer ce parcours automatiquement",
+    "autoRoute": "Ajouter ce parcours à mon voyage",
+    "courseNote": "{{count}} lieux · Enregistré sur cet appareil, sans inscription",
+    "courseNote_one": "{{count}} lieu · Enregistré sur cet appareil, sans inscription",
     "setup": "Liste de préparation Corée",
     "plaza": "Place de partage"
   },
@@ -44,5 +46,20 @@
   "errors": {
     "notConfigured": "Supabase doit être configuré pour afficher les guides.",
     "loadFailed": "Impossible de charger les guides."
+  },
+  "courseMap": {
+    "mapLabel": "Carte du parcours",
+    "expand": "Agrandir",
+    "collapse": "Réduire",
+    "directions": "Itinéraire",
+    "call": "Appeler",
+    "hours": "Horaires",
+    "address": "Adresse",
+    "phone": "Téléphone",
+    "schedule": "Programme",
+    "reviews": "Avis des visiteurs",
+    "detailLabel": "Détails : {{name}}",
+    "day": "Jour {{n}}",
+    "course": "Parcours"
   }
 }

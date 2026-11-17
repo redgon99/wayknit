@@ -3,6 +3,7 @@ import { Icon } from '../components/Icon';
 import { LegalLinks } from '../components/LegalLinks';
 import { PrivacyBody } from '../components/LegalDocuments';
 import i18n from '../lib/i18n';
+import { PRIVACY_EFFECTIVE_DATE } from '../lib/legalDates';
 import { normalizeLocale } from '../lib/locale';
 import { plannerPath } from '../lib/routes';
 import '../styles/app.css';
@@ -21,7 +22,7 @@ export default function PrivacyPage() {
           <Icon name="chevronLeft" /> 돌아가기
         </Link>
         <h1>개인정보처리방침</h1>
-        <p className="static-page-lead">시행일: 2026-09-01 · 한국어가 정본입니다</p>
+        <p className="static-page-lead">시행일: {PRIVACY_EFFECTIVE_DATE} · 한국어가 정본입니다</p>
       </header>
       <PrivacyBody />
       <LegalLinks className="static-page-legal-links" />

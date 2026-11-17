@@ -67,7 +67,7 @@
     "localeZhCN": "Упрощённый китайский",
     "localeZhTW": "Традиционный китайский",
     "filters": "Фильтры",
-    "filterSummaryEmpty": "Без фильтров · всего {{count}}",
+    "filterSummaryEmpty": "Все поездки · {{count}}",
     "filterSummaryActive": "Фильтров: {{count}} · результатов: {{results}}",
     "filterEmpty": "Нет поездок по заданным фильтрам.",
     "dayFilterLabel": "Длительность поездки",

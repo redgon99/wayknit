@@ -383,7 +383,12 @@ export default function PlannerPage() {
     setToastAction(null);
   }
 
-  function showToast(msg: string, action?: { label: string; onClick: () => void }) {
+  function showToast(
+    msg: string,
+    action?: { label: string; onClick: () => void },
+    /** 읽을 내용이 긴 안내만 따로 늘린다 */
+    durationMs?: number
+  ) {
     setToast(msg);
     // 실행 후에도 토스트가 남아 있으면 "안 눌렸나?" 싶어 또 누르게 된다 — 실행하고 바로 닫는다.
     setToastAction(
@@ -402,7 +407,7 @@ export default function PlannerPage() {
     toastTimerRef.current = window.setTimeout(() => {
       setToast(null);
       setToastAction(null);
-    }, action ? 6000 : 2800);
+    }, durationMs ?? (action ? 6000 : 2800));
   }
 
   // 경로 옵션 패널
@@ -674,12 +679,15 @@ export default function PlannerPage() {
       setPanelTab(imported > 0 ? 'pins' : 'route');
       setPanelOpen(true);
       if (imported > 0) {
+        // 로그인하지 않은 사람에겐 가입 없이 이 기기에 저장된다는 것까지 알려 준다.
         showToast(
-          i18n.t('toast.guideRouteImported', {
+          i18n.t(user ? 'toast.guideRouteImported' : 'toast.guideRouteImportedLocal', {
             ns: 'planner',
             title: title || guideTitle,
             count: imported,
-          })
+          }),
+          undefined,
+          user ? undefined : 6000
         );
       } else if (fromGuide) {
         showToast(

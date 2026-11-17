@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import { PrivacyBody, TermsBody } from './LegalDocuments';
+import { PRIVACY_EFFECTIVE_DATE, TERMS_EFFECTIVE_DATE } from '../lib/legalDates';
 
 export type LegalModalKind = 'terms' | 'privacy';
 
@@ -44,7 +45,9 @@ export function LegalModal({ kind, onClose }: Props) {
           <Icon name="close" />
         </button>
         <h2 id="legal-modal-title">{title}</h2>
-        <p className="legal-modal-lead">시행일: 2026-09-01 · 한국어가 정본입니다</p>
+        <p className="legal-modal-lead">
+          시행일: {kind === 'privacy' ? PRIVACY_EFFECTIVE_DATE : TERMS_EFFECTIVE_DATE} · 한국어가 정본입니다
+        </p>
         <div className="legal-modal-body legal-page">
           {kind === 'privacy' ? <PrivacyBody /> : <TermsBody />}
         </div>

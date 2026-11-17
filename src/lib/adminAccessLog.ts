@@ -270,6 +270,57 @@ interface AccessLogBreakdownRpcResult {
   country_total?: number;
 }
 
+export interface AccessLogFunnel {
+  visitors: number;
+  /** 가이드 상세를 본 방문자 */
+  guideReaders: number;
+  /** 그중 "내 일정에 담기"를 누른 방문자 */
+  courseClickers: number;
+  /** 그중 코스를 실제로 가져온 방문자 */
+  courseImporters: number;
+  /** 그중 로그인한 방문자 */
+  members: number;
+  /** 가이드를 거치지 않은 사람까지 포함한 플래너 방문자 */
+  plannerVisitors: number;
+  /** 버튼 클릭 기록이 처음 쌓인 시각. 그 전 기간은 클릭·가져오기가 0으로 나온다 */
+  trackingSince: string | null;
+}
+
+interface AccessLogFunnelRpcResult {
+  visitors: number;
+  guide_readers: number;
+  course_clickers: number;
+  course_importers: number;
+  members: number;
+  planner_visitors: number;
+  tracking_since: string | null;
+}
+
+/** 가이드 → 일정 담기 → 코스 가져오기 → 로그인. 경로 검색을 받지 않는 사이트 전체 기준이다. */
+export async function fetchAccessLogFunnel(
+  period: AccessLogPeriod,
+  includeInternal: boolean
+): Promise<AccessLogFunnel> {
+  const sb = requireSupabase();
+  const { data, error } = await sb.rpc('admin_access_log_funnel', {
+    p_since: period.since,
+    p_until: period.until,
+    p_include_internal: includeInternal,
+  });
+  if (error) throw new Error(`전환 흐름을 불러오지 못했습니다: ${error.message}`);
+
+  const r = data as AccessLogFunnelRpcResult;
+  return {
+    visitors: r.visitors,
+    guideReaders: r.guide_readers,
+    courseClickers: r.course_clickers,
+    courseImporters: r.course_importers,
+    members: r.members,
+    plannerVisitors: r.planner_visitors,
+    trackingSince: r.tracking_since,
+  };
+}
+
 /** 방문은 여러 경로에 걸치므로 경로 검색을 받지 않는다 — 사이트 전체 기준이다. */
 export async function fetchAccessLogBreakdown(
   period: AccessLogPeriod,

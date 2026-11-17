@@ -24,8 +24,17 @@ function formatRating(rating: number | undefined): string | null {
   return rating.toFixed(1);
 }
 
-function pinTag(pin: GuideCoursePin): string {
-  return pin.dayLabel || prettyCategory(pin.categoryLabel) || (pin.time ? pin.time : '코스');
+type Translate = (key: string, options?: Record<string, unknown>) => string;
+
+/** 데이터의 "1일차"를 지금 언어로 바꾼다. 다른 형식이면 그대로 둔다. */
+function dayText(t: Translate, dayLabel: string): string {
+  const m = dayLabel.match(/^(\d+)\s*일차$/);
+  return m ? t('courseMap.day', { n: Number(m[1]) }) : dayLabel;
+}
+
+function pinTag(t: Translate, pin: GuideCoursePin): string {
+  if (pin.dayLabel) return dayText(t, pin.dayLabel);
+  return prettyCategory(pin.categoryLabel) || (pin.time ? pin.time : t('courseMap.course'));
 }
 
 const GENERIC_CATEGORY = /^(establishment|point_of_interest|point of interest|premise|geocode|food)$/i;
@@ -285,13 +294,13 @@ export function GuideCourseExplorer({ pins, className }: Props) {
       }`}
     >
       <div className="gce-map-stage">
-        <div ref={mapElRef} className="gce-map" role="img" aria-label="코스 지도" />
+        <div ref={mapElRef} className="gce-map" role="img" aria-label={t('courseMap.mapLabel')} />
         <button
           type="button"
           className="gce-expand-btn"
           onClick={() => setExpanded((v) => !v)}
         >
-          {expanded ? '접기' : '펼치기'}
+          {expanded ? t('courseMap.collapse') : t('courseMap.expand')}
         </button>
 
         <div className="gce-cards" role="list">
@@ -318,7 +327,7 @@ export function GuideCourseExplorer({ pins, className }: Props) {
                   <strong className="gce-card-title">{pin.name}</strong>
                   <div className="gce-card-meta">
                     {rating && <span className="gce-card-rating">★ {rating}</span>}
-                    <span className="gce-card-tag">{pinTag(pin)}</span>
+                    <span className="gce-card-tag">{pinTag(t, pin)}</span>
                   </div>
                 </div>
               </button>
@@ -328,7 +337,7 @@ export function GuideCourseExplorer({ pins, className }: Props) {
       </div>
 
       {selected && (
-        <aside className="gce-detail" aria-label={`${selected.name} 상세`}>
+        <aside className="gce-detail" aria-label={t('courseMap.detailLabel', { name: selected.name })}>
           <div className="gce-detail-photos">
             {selectedPhotos.length > 0 ? (
               <>
@@ -377,7 +386,7 @@ export function GuideCourseExplorer({ pins, className }: Props) {
                 <span className="gce-detail-chip">{selected.priceLevelLabel}</span>
               )}
               {selected.dayLabel && (
-                <span className="gce-detail-chip">{selected.dayLabel}</span>
+                <span className="gce-detail-chip">{dayText(t, selected.dayLabel)}</span>
               )}
             </p>
 
@@ -389,12 +398,12 @@ export function GuideCourseExplorer({ pins, className }: Props) {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  경로
+                  {t('courseMap.directions')}
                 </a>
               )}
               {selected.phone && (
                 <a className="gce-btn" href={`tel:${selected.phone.replace(/\s+/g, '')}`}>
-                  전화
+                  {t('courseMap.call')}
                 </a>
               )}
             </div>
@@ -402,25 +411,25 @@ export function GuideCourseExplorer({ pins, className }: Props) {
             <ul className="gce-detail-facts">
               {selected.openingText && (
                 <li>
-                  <span className="gce-fact-label">영업</span>
+                  <span className="gce-fact-label">{t('courseMap.hours')}</span>
                   <span>{firstOpeningLine(selected.openingText)}</span>
                 </li>
               )}
               {selected.address && (
                 <li>
-                  <span className="gce-fact-label">주소</span>
+                  <span className="gce-fact-label">{t('courseMap.address')}</span>
                       <span>{prettyAddress(selected.address)}</span>
                 </li>
               )}
               {selected.phone && (
                 <li>
-                  <span className="gce-fact-label">전화</span>
+                  <span className="gce-fact-label">{t('courseMap.phone')}</span>
                   <span>{selected.phone}</span>
                 </li>
               )}
               {selected.time && (
                 <li>
-                  <span className="gce-fact-label">일정</span>
+                  <span className="gce-fact-label">{t('courseMap.schedule')}</span>
                   <span>
                     {selected.order}. {selected.time}
                   </span>
@@ -434,7 +443,7 @@ export function GuideCourseExplorer({ pins, className }: Props) {
 
             {selected.reviewHighlights && selected.reviewHighlights.length > 0 && (
               <div className="gce-detail-reviews">
-                <h4>방문객 평가</h4>
+                <h4>{t('courseMap.reviews')}</h4>
                 <ul>
                   {selected.reviewHighlights.map((line) => (
                     <li key={line.slice(0, 24)}>{line}</li>

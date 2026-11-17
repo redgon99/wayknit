@@ -8,6 +8,24 @@
  */
 
 import type { SimpleCategory } from '../types';
+import { normalizeLocale, type AppLocale } from './locale';
+
+/*
+ * 예약 사이트를 사용자 언어로 연다. 외국인이 한국어 페이지로 가지 않게 하려는 것이다(2026-11 해외 사용자 평가).
+ * 언어 경로가 확실한 언어만 직접 넣고, 나머지는 영어 페이지로 보낸다 — Klook은 언어 경로가 없으면 404다.
+ */
+const KLOOK_PATH: Partial<Record<AppLocale, string>> = {
+  ko: 'ko',
+  ja: 'ja',
+  'zh-CN': 'zh-CN',
+  'zh-TW': 'zh-TW',
+};
+const KKDAY_PATH: Partial<Record<AppLocale, string>> = {
+  ko: 'ko',
+  ja: 'ja',
+  'zh-CN': 'zh-cn',
+  'zh-TW': 'zh-tw',
+};
 
 export type BookingSearchProviderId =
   | 'naverMap'
@@ -25,7 +43,7 @@ export interface BookingSearchLink {
 
 const PROVIDERS: Record<
   BookingSearchProviderId,
-  { brand: string; buildUrl: (name: string) => string }
+  { brand: string; buildUrl: (name: string, locale: AppLocale) => string }
 > = {
   naverMap: {
     brand: '네이버지도',
@@ -41,15 +59,18 @@ const PROVIDERS: Record<
   },
   airbnb: {
     brand: 'Airbnb',
-    buildUrl: (name) => `https://www.airbnb.co.kr/s/${encodeURIComponent(name)}/homes`,
+    buildUrl: (name, locale) =>
+      `https://www.airbnb.${locale === 'ko' ? 'co.kr' : 'com'}/s/${encodeURIComponent(name)}/homes`,
   },
   klook: {
     brand: 'Klook',
-    buildUrl: (name) => `https://www.klook.com/ko/search-result/?query=${encodeURIComponent(name)}`,
+    buildUrl: (name, locale) =>
+      `https://www.klook.com/${KLOOK_PATH[locale] ?? 'en-US'}/search-result/?query=${encodeURIComponent(name)}`,
   },
   kkday: {
     brand: 'KKday',
-    buildUrl: (name) => `https://www.kkday.com/ko/search?keyword=${encodeURIComponent(name)}`,
+    buildUrl: (name, locale) =>
+      `https://www.kkday.com/${KKDAY_PATH[locale] ?? 'en'}/search?keyword=${encodeURIComponent(name)}`,
   },
 };
 
@@ -64,12 +85,16 @@ const PROVIDERS_BY_CATEGORY: Partial<Record<SimpleCategory, BookingSearchProvide
 export function getBookingSearchLinks(
   category: SimpleCategory | undefined,
   placeName: string | undefined,
+  locale?: string,
 ): BookingSearchLink[] {
   if (!category || !placeName) return [];
   const ids = PROVIDERS_BY_CATEGORY[category];
   if (!ids) return [];
   return ids.map((id) => {
     const p = PROVIDERS[id];
-    return { id, brand: p.brand, href: p.buildUrl(placeName) };
+    const lc = normalizeLocale(locale);
+    // 브랜드명은 번역하지 않지만, 한글 표기 '네이버지도'는 외국인이 읽을 수 없어 영문 공식 표기로 바꾼다.
+    const brand = id === 'naverMap' && lc !== 'ko' ? 'Naver Map' : p.brand;
+    return { id, brand, href: p.buildUrl(placeName, lc) };
   });
 }

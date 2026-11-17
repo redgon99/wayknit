@@ -8,7 +8,7 @@
     "secondary": ""
   },
   "notice": {
-    "trial": "Wayknit is in beta — features and screens may change."
+    "trial": "Wayknit is running as a pilot through December 31, 2026. Features and screens may change."
   },
   "nav": {
     "features": "About",
@@ -22,7 +22,7 @@
   },
   "hero": {
     "eyebrow": "Trip route planner",
-    "title": "Collect places.\nMeld your route.",
+    "title": "Collect places.\nKnit your route.",
     "subtitle": "Search and pin spots—they group by category. Drag to reorder, then build a timed itinerary. Not a visited map—a tool for weaving your next route.",
     "ctaPrimary": "Open planner",
     "ctaSecondary": "Browse share plaza",

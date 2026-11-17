@@ -2,7 +2,7 @@
   "brand": "Wayknit",
   "metaTitle": "韓國旅行信息 · Wayknit",
   "title": "韓國旅行信息",
-  "subtitle": "無法標記為行程地點，但對旅行有幫助的信息 — 精選旅遊照片、杜魯努比徒步路線、語音導覽、地區訪客統計、可攜帶寵物的景點、無障礙旅行景點。",
+  "subtitle": "精選旅遊照片、杜魯努比徒步路線、語音導覽、地區訪客統計、可攜帶寵物的景點、無障礙旅行景點等實用旅行資訊。",
   "cta": {
     "planner": "制定行程"
   },
@@ -45,8 +45,8 @@
     "copyAddress": "複製地址",
     "copied": "已複製",
     "copyAria": "複製韓語原文地址（出示給出租車司機或地圖應用）",
-    "checkedToday": "今天已確認",
-    "checkedDaysAgo": "最近確認：{{days}}天前"
+    "checkedToday": "地址確認：今天",
+    "checkedDaysAgo": "地址確認：{{days}}天前"
   },
   "photos": {
     "searchPlaceholder": "按地點或關鍵詞搜索 (如: 景福宮, 夜景)",

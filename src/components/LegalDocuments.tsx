@@ -1,3 +1,5 @@
+import { PRIVACY_EFFECTIVE_DATE, PRIVACY_PREVIOUS_DATE, TERMS_EFFECTIVE_DATE } from '../lib/legalDates';
+
 /** 시험 운영용 이용약관 본문 — 페이지와 로그인 모달이 공유합니다. */
 export function TermsBody() {
   return (
@@ -124,7 +126,7 @@ export function TermsBody() {
 
       <section>
         <h2>부칙</h2>
-        <p>이 약관은 2026-09-01부터 시행합니다.</p>
+        <p>이 약관은 {TERMS_EFFECTIVE_DATE}부터 시행합니다.</p>
       </section>
     </>
   );
@@ -135,7 +137,7 @@ export function PrivacyBody() {
   return (
     <>
       <p className="legal-notice">
-        본 서비스는 시험 운영 중입니다. 아래 내용은 현재 실제로 제공하는 기능(로그인, 일정 저장,
+        본 서비스는 2026-12-31까지 시험 운영 중입니다. 아래 내용은 현재 실제로 제공하는 기능(로그인, 일정 저장,
         지도 검색, 공유마당, 서비스 개선을 위한 이용 기록)을 기준으로 합니다.
       </p>
 
@@ -233,7 +235,14 @@ export function PrivacyBody() {
 
       <section>
         <h2>부칙</h2>
-        <p>이 방침은 2026-09-01부터 시행합니다. 2026-08-27 방침은 본 방침으로 대체됩니다.</p>
+        <p>
+          이 방침은 {PRIVACY_EFFECTIVE_DATE}부터 시행합니다. {PRIVACY_PREVIOUS_DATE} 방침은 본 방침으로
+          대체됩니다.
+        </p>
+        <p>
+          주요 변경: 서비스 개선을 위한 이용 기록에 방문한 페이지, 유입 경로, 접속 국가를 추가하고, 처리를
+          위탁하는 업체에 Netlify(웹사이트 호스팅, 접속 국가 판별)를 추가했습니다.
+        </p>
       </section>
     </>
   );

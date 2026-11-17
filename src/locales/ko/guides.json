@@ -3,7 +3,7 @@
   "list": {
     "metaTitle": "여행 가이드 · 여로담",
     "title": "여행 가이드",
-    "subtitle": "추천 코스·유용한 정보·준비 체크리스트 등. 관리자가 검수한 카드만 공개됩니다.",
+    "subtitle": "추천 코스, 유용한 정보, 여행 준비 체크리스트를 모았습니다.",
     "loading": "불러오는 중…",
     "empty": "아직 공개된 가이드가 없습니다.",
     "kindFilter": "가이드 종류",
@@ -19,7 +19,8 @@
   },
   "cta": {
     "planner": "동선 만들기",
-    "autoRoute": "이 코스로 자동 동선 짜기",
+    "autoRoute": "이 코스를 내 일정에 담기",
+    "courseNote": "{{count}}곳 · 가입 없이 이 기기에 저장돼요",
     "setup": "여행 준비 체크리스트",
     "plaza": "공유마당"
   },
@@ -44,5 +45,20 @@
   "errors": {
     "notConfigured": "가이드를 표시하려면 Supabase 설정이 필요합니다.",
     "loadFailed": "가이드를 불러오지 못했습니다."
+  },
+  "courseMap": {
+    "mapLabel": "코스 지도",
+    "expand": "펼치기",
+    "collapse": "접기",
+    "directions": "경로",
+    "call": "전화",
+    "hours": "영업",
+    "address": "주소",
+    "phone": "전화",
+    "schedule": "일정",
+    "reviews": "방문객 평가",
+    "detailLabel": "{{name}} 상세",
+    "day": "{{n}}일차",
+    "course": "코스"
   }
 }

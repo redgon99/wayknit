@@ -3,7 +3,7 @@
   "list": {
     "metaTitle": "Guías de viaje · Wayknit",
     "title": "Guías de viaje",
-    "subtitle": "Rutas recomendadas, consejos prácticos y listas de preparación. Solo se publican fichas revisadas por un administrador.",
+    "subtitle": "Rutas recomendadas, consejos prácticos y listas de preparación para tu viaje a Corea.",
     "loading": "Cargando…",
     "empty": "Aún no hay guías publicadas.",
     "kindFilter": "Tipos de guía",
@@ -19,7 +19,9 @@
   },
   "cta": {
     "planner": "Abrir el planificador",
-    "autoRoute": "Crear este recorrido automáticamente",
+    "autoRoute": "Añadir esta ruta a mi viaje",
+    "courseNote": "{{count}} lugares · Se guarda en este dispositivo, sin registrarte",
+    "courseNote_one": "{{count}} lugar · Se guarda en este dispositivo, sin registrarte",
     "setup": "Lista de preparación para Corea",
     "plaza": "Plaza de compartir"
   },
@@ -44,5 +46,20 @@
   "errors": {
     "notConfigured": "Hay que configurar Supabase para mostrar las guías.",
     "loadFailed": "No se pudieron cargar las guías."
+  },
+  "courseMap": {
+    "mapLabel": "Mapa de la ruta",
+    "expand": "Ampliar",
+    "collapse": "Reducir",
+    "directions": "Cómo llegar",
+    "call": "Llamar",
+    "hours": "Horario",
+    "address": "Dirección",
+    "phone": "Teléfono",
+    "schedule": "Itinerario",
+    "reviews": "Opiniones de visitantes",
+    "detailLabel": "Detalles de {{name}}",
+    "day": "Día {{n}}",
+    "course": "Ruta"
   }
 }

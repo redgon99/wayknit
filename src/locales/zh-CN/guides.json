@@ -3,7 +3,7 @@
   "list": {
     "metaTitle": "旅行指南 · Wayknit",
     "title": "旅行指南",
-    "subtitle": "推荐路线、实用贴士、出行准备等。仅展示管理员审核后的内容。",
+    "subtitle": "推荐路线、实用贴士和出行准备清单，助你畅游韩国。",
     "loading": "加载中…",
     "empty": "暂无已发布的指南。",
     "kindFilter": "指南类型",
@@ -19,7 +19,8 @@
   },
   "cta": {
     "planner": "打开行程规划",
-    "autoRoute": "用此路线自动规划",
+    "autoRoute": "将此路线加入我的行程",
+    "courseNote": "{{count}}个地点 · 无需注册，保存在本设备",
     "setup": "出行准备清单",
     "plaza": "分享广场"
   },
@@ -44,5 +45,20 @@
   "errors": {
     "notConfigured": "显示指南需要配置 Supabase。",
     "loadFailed": "无法加载指南。"
+  },
+  "courseMap": {
+    "mapLabel": "路线地图",
+    "expand": "展开",
+    "collapse": "收起",
+    "directions": "路线",
+    "call": "电话",
+    "hours": "营业时间",
+    "address": "地址",
+    "phone": "电话",
+    "schedule": "行程",
+    "reviews": "游客评价",
+    "detailLabel": "{{name}} 详情",
+    "day": "第{{n}}天",
+    "course": "路线"
   }
 }

@@ -2,7 +2,7 @@
   "brand": "Wayknit",
   "metaTitle": "Korea Travel Info · Wayknit",
   "title": "Korea Travel Info",
-  "subtitle": "Not pinnable, but useful for your trip — curated tourism photos, Durunubi walking trails, audio guides, regional visitor stats, pet-friendly spots, and accessible-travel spots.",
+  "subtitle": "Useful extras for your trip: curated tourism photos, Durunubi walking trails, audio guides, regional visitor stats, pet-friendly spots, and accessible-travel spots.",
   "cta": {
     "planner": "Build my route"
   },
@@ -45,8 +45,8 @@
     "copyAddress": "Copy address",
     "copied": "Copied",
     "copyAria": "Copy the original Korean address (show it to a taxi driver or map app)",
-    "checkedToday": "Checked today",
-    "checkedDaysAgo": "Last checked {{days}}d ago"
+    "checkedToday": "Address checked today",
+    "checkedDaysAgo": "Address checked {{days}}d ago"
   },
   "photos": {
     "searchPlaceholder": "Search by place or keyword (e.g. Gyeongbokgung, night view)",

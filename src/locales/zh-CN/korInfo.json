@@ -2,7 +2,7 @@
   "brand": "Wayknit",
   "metaTitle": "韩国旅行信息 · Wayknit",
   "title": "韩国旅行信息",
-  "subtitle": "无法标记为行程地点，但对旅行有帮助的信息 — 精选旅游照片、杜鲁努比徒步路线、语音导览、地区访客统计、可携带宠物的景点、无障碍旅行景点。",
+  "subtitle": "精选旅游照片、杜鲁努比徒步路线、语音导览、地区访客统计、可携带宠物的景点、无障碍旅行景点等实用旅行信息。",
   "cta": {
     "planner": "制定行程"
   },
@@ -45,8 +45,8 @@
     "copyAddress": "复制地址",
     "copied": "已复制",
     "copyAria": "复制韩语原文地址（出示给出租车司机或地图应用）",
-    "checkedToday": "今天已确认",
-    "checkedDaysAgo": "最近确认：{{days}}天前"
+    "checkedToday": "地址确认：今天",
+    "checkedDaysAgo": "地址确认：{{days}}天前"
   },
   "photos": {
     "searchPlaceholder": "按地点或关键词搜索 (如: 景福宫, 夜景)",

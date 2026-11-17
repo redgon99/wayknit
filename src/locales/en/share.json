@@ -67,7 +67,7 @@
     "localeZhCN": "Simplified Chinese",
     "localeZhTW": "Traditional Chinese",
     "filters": "Filters",
-    "filterSummaryEmpty": "No filters · {{count}} total",
+    "filterSummaryEmpty": "All trips · {{count}}",
     "filterSummaryActive": "{{count}} filters applied · {{results}} results",
     "filterEmpty": "No trips match your filters.",
     "dayFilterLabel": "Trip length",

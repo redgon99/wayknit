@@ -3,7 +3,7 @@
   "list": {
     "metaTitle": "Reiseführer · Wayknit",
     "title": "Reiseführer",
-    "subtitle": "Empfohlene Routen, praktische Tipps und Checklisten. Nur von Admins geprüfte Karten werden veröffentlicht.",
+    "subtitle": "Empfohlene Routen, praktische Tipps und Checklisten für Ihre Korea-Reise.",
     "loading": "Laden…",
     "empty": "Noch keine veröffentlichten Guides.",
     "kindFilter": "Guide-Typen",
@@ -19,7 +19,9 @@
   },
   "cta": {
     "planner": "Planer öffnen",
-    "autoRoute": "Diese Route automatisch erstellen",
+    "autoRoute": "Diese Route zu meiner Reise hinzufügen",
+    "courseNote": "{{count}} Orte · Wird auf diesem Gerät gespeichert, ohne Anmeldung",
+    "courseNote_one": "{{count}} Ort · Wird auf diesem Gerät gespeichert, ohne Anmeldung",
     "setup": "Korea-Vorbereitungsliste",
     "plaza": "Teilen-Platz"
   },
@@ -44,5 +46,20 @@
   "errors": {
     "notConfigured": "Supabase muss konfiguriert sein, um Guides anzuzeigen.",
     "loadFailed": "Guides konnten nicht geladen werden."
+  },
+  "courseMap": {
+    "mapLabel": "Routenkarte",
+    "expand": "Vergrößern",
+    "collapse": "Verkleinern",
+    "directions": "Route",
+    "call": "Anrufen",
+    "hours": "Öffnungszeiten",
+    "address": "Adresse",
+    "phone": "Telefon",
+    "schedule": "Ablauf",
+    "reviews": "Besucherbewertungen",
+    "detailLabel": "Details: {{name}}",
+    "day": "Tag {{n}}",
+    "course": "Route"
   }
 }

@@ -5,6 +5,7 @@ import { TermsBody } from '../components/LegalDocuments';
 import i18n from '../lib/i18n';
 import { normalizeLocale } from '../lib/locale';
 import { plannerPath } from '../lib/routes';
+import { TERMS_EFFECTIVE_DATE } from '../lib/legalDates';
 import '../styles/app.css';
 
 /**
@@ -21,7 +22,7 @@ export default function TermsPage() {
           <Icon name="chevronLeft" /> 돌아가기
         </Link>
         <h1>이용약관</h1>
-        <p className="static-page-lead">시행일: 2026-09-01 · 한국어가 정본입니다</p>
+        <p className="static-page-lead">시행일: {TERMS_EFFECTIVE_DATE} · 한국어가 정본입니다</p>
       </header>
       <TermsBody />
       <LegalLinks className="static-page-legal-links" />

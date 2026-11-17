@@ -108,6 +108,26 @@ function mapCoursePins(raw: unknown): GuideCoursePin[] {
   return out;
 }
 
+/*
+ * 코스 핀 중 장소가 아닌 일정표 줄(이동·휴식·체크인, 표가 깨진 조각)을 걸러 낸다.
+ * AI 일정표를 핀으로 옮길 때 "청계천 → 성수 이동", "입니다.", "(확인 필요)" 같은 줄까지 장소 검색이 돼
+ * 엉뚱한 곳(춘천 택시회사, 서면 한의원 등)에 찍혔다. 2026-11-17 공개 코스 가이드 16개에서 34개.
+ * "내 일정에 담기"로 사용자 일정에 들어가지 않게 공개 화면에서만 뺀다(관리자 편집 화면엔 그대로 보여 고칠 수 있게).
+ * DB 정리 SQL: docs/guide-course-pins-cleanup-2026-11-17.sql
+ */
+const SCHEDULE_PSEUDO_PIN =
+  /(→|(^|\s|·)이동($|\s|\(|·)|입니다|확인 필요|일정까지|안내하고|로 안내|^\*|자유시간|귀가|체크인|휴식$|점심\/|^점심$|^저녁 식사$|^저녁$)/;
+
+export function isSchedulePseudoPin(name: string): boolean {
+  const n = name.trim();
+  return n.length <= 2 || SCHEDULE_PSEUDO_PIN.test(n);
+}
+
+function mapPublishedRow(row: Record<string, unknown>): GuideArticle {
+  const guide = mapRow(row);
+  return { ...guide, coursePins: guide.coursePins.filter((p) => !isSchedulePseudoPin(p.name)) };
+}
+
 function mapRow(row: Record<string, unknown>): GuideArticle {
   return {
     id: row.id as string,
@@ -197,7 +217,7 @@ export async function listPublishedGuides(
   if (kind) query = query.eq('kind', kind);
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []).map((row) => mapRow(row as Record<string, unknown>));
+  return (data ?? []).map((row) => mapPublishedRow(row as Record<string, unknown>));
 }
 
 export async function getPublishedGuideBySlug(slug: string): Promise<GuideArticle | null> {
@@ -209,7 +229,7 @@ export async function getPublishedGuideBySlug(slug: string): Promise<GuideArticl
     .eq('status', 'published')
     .maybeSingle();
   if (error) throw error;
-  return data ? mapRow(data as Record<string, unknown>) : null;
+  return data ? mapPublishedRow(data as Record<string, unknown>) : null;
 }
 
 /*

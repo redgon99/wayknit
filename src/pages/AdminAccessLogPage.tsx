@@ -13,8 +13,10 @@ import {
   accessLogPreviewUrl,
   fetchAccessLog,
   fetchAccessLogBreakdown,
+  fetchAccessLogFunnel,
   fetchAccessLogTrend,
   type AccessLogBreakdown,
+  type AccessLogFunnel,
   type AccessLogRankItem,
   type AccessLogReport,
   type AccessLogSection,
@@ -37,10 +39,11 @@ const PREVIOUS_LABEL: Record<RangePreset, string> = {
   '30': '이전 30일',
 };
 
-type DetailTab = 'overview' | 'paths' | 'records';
+type DetailTab = 'overview' | 'funnel' | 'paths' | 'records';
 
 const DETAIL_TAB_LABEL: Record<DetailTab, string> = {
   overview: '구역·유입',
+  funnel: '전환 흐름',
   paths: '인기 경로',
   records: `최근 기록 (최대 ${ACCESS_LOG_ROW_LIMIT}건)`,
 };
@@ -78,6 +81,26 @@ function rankRows(
     label: label(item.key),
     value: item.count,
     detail: `${unit} · ${percentOf(item.count, total)}`,
+  }));
+}
+
+/** 방문자 → 가이드 → 담기 → 가져오기 → 로그인. 각 단계는 앞 단계를 거친 사람만 센다. */
+function funnelRows(f: AccessLogFunnel): AccessRankRow[] {
+  const steps: Array<[string, string, number]> = [
+    ['visitors', '방문자', f.visitors],
+    ['readers', '가이드 상세를 봄', f.guideReaders],
+    ['clickers', '"내 일정에 담기" 누름', f.courseClickers],
+    ['importers', '코스를 가져감', f.courseImporters],
+    ['members', '로그인', f.members],
+  ];
+  return steps.map(([key, label, value], i) => ({
+    key,
+    label,
+    value,
+    detail:
+      i === 0
+        ? '명'
+        : `명 · 앞 단계의 ${percentOf(value, steps[i - 1][2])} · 방문자의 ${percentOf(value, f.visitors)}`,
   }));
 }
 
@@ -135,6 +158,8 @@ export default function AdminAccessLogPage() {
   const [trendError, setTrendError] = useState<string | null>(null);
   const [breakdown, setBreakdown] = useState<AccessLogBreakdown | null>(null);
   const [breakdownError, setBreakdownError] = useState<string | null>(null);
+  const [funnel, setFunnel] = useState<AccessLogFunnel | null>(null);
+  const [funnelError, setFunnelError] = useState<string | null>(null);
   const [range, setRange] = useState<RangePreset>('7');
   const [pathInput, setPathInput] = useState('');
   const [pathFilter, setPathFilter] = useState('');
@@ -156,6 +181,7 @@ export default function AdminAccessLogPage() {
     setError(null);
     setTrendError(null);
     setBreakdownError(null);
+    setFunnelError(null);
     const period = accessLogPeriod(Number(range));
     const path = pathFilter || undefined;
     // 추세가 실패해도 합계와 기록 표는 보여줄 수 있다.
@@ -174,17 +200,27 @@ export default function AdminAccessLogPage() {
           }
           return null;
         });
+    const funnelRequest = path
+      ? Promise.resolve(null)
+      : fetchAccessLogFunnel(period, includeInternal).catch((e: unknown) => {
+          if (request === latestRequest.current) {
+            setFunnelError(e instanceof Error ? e.message : '전환 흐름을 불러오지 못했습니다.');
+          }
+          return null;
+        });
     try {
-      const [next, nextTrend, nextBreakdown] = await Promise.all([
+      const [next, nextTrend, nextBreakdown, nextFunnel] = await Promise.all([
         fetchAccessLog({ since: period.since, path, includeInternal }),
         trendRequest,
         breakdownRequest,
+        funnelRequest,
       ]);
       // 늦게 도착한 이전 조건의 응답이 최신 결과를 덮어쓰지 않게 한다.
       if (request === latestRequest.current) {
         setReport(next);
         setTrend(nextTrend);
         setBreakdown(nextBreakdown);
+        setFunnel(nextFunnel);
       }
     } catch (e) {
       if (request === latestRequest.current) {
@@ -192,6 +228,7 @@ export default function AdminAccessLogPage() {
         setReport(null);
         setTrend(null);
         setBreakdown(null);
+        setFunnel(null);
         setError(e instanceof Error ? e.message : '접속 로그를 불러오지 못했습니다.');
       }
     } finally {
@@ -268,7 +305,8 @@ export default function AdminAccessLogPage() {
   const rows = report?.rows ?? [];
   const excluded = report?.excluded ?? 0;
   // 구역·유입은 경로 검색 중 조회하지 않으므로 그동안만 인기 경로를 보여준다.
-  const activeTab = pathFilter && detailTab === 'overview' ? 'paths' : detailTab;
+  const activeTab =
+    pathFilter && (detailTab === 'overview' || detailTab === 'funnel') ? 'paths' : detailTab;
   const compare = (pick: 'views' | 'visitors') =>
     trend &&
     deltaText(trend.current[pick], trend.previous[pick], PREVIOUS_LABEL[range], trend.previousComplete);
@@ -412,7 +450,7 @@ export default function AdminAccessLogPage() {
               type="button"
               className={`admin-link-btn${activeTab === tab ? ' active' : ''}`}
               aria-pressed={activeTab === tab}
-              disabled={tab === 'overview' && Boolean(pathFilter)}
+              disabled={(tab === 'overview' || tab === 'funnel') && Boolean(pathFilter)}
               onClick={() => setDetailTab(tab)}
             >
               {DETAIL_TAB_LABEL[tab]}
@@ -462,6 +500,27 @@ export default function AdminAccessLogPage() {
           ) : (
             !refreshing && <p className="admin-cell-sub">표시할 집계가 없습니다.</p>
           ))}
+
+        {activeTab === 'funnel' && (
+          <div className="access-funnel">
+            {funnelError && <p className="admin-cell-sub">{funnelError}</p>}
+            {funnel ? (
+              <>
+                <AccessRankBars rows={funnelRows(funnel)} />
+                <p className="admin-cell-sub">
+                  가이드를 거치지 않은 사람까지 합친 플래너 방문자는{' '}
+                  {funnel.plannerVisitors.toLocaleString('ko-KR')}명입니다. 각 단계는 앞 단계를 거친 방문자만
+                  셉니다.
+                  {funnel.trackingSince
+                    ? ` 버튼 클릭 기록은 ${formatDateTime(funnel.trackingSince)}부터 쌓였습니다. 그 전 기간의 클릭·가져오기는 0으로 나옵니다.`
+                    : ' 버튼 클릭 기록이 아직 없습니다.'}
+                </p>
+              </>
+            ) : (
+              !refreshing && !funnelError && <p className="admin-cell-sub">표시할 집계가 없습니다.</p>
+            )}
+          </div>
+        )}
 
         {activeTab === 'paths' && (
           <div className="admin-table-wrap access-table-scroll">

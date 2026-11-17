@@ -67,7 +67,7 @@
     "localeZhCN": "中国語（簡体）",
     "localeZhTW": "中国語（繁体）",
     "filters": "フィルター",
-    "filterSummaryEmpty": "条件なし · 全{{count}}件",
+    "filterSummaryEmpty": "全{{count}}件",
     "filterSummaryActive": "条件{{count}}件 · {{results}}件",
     "filterEmpty": "条件に合う旅行がありません。",
     "dayFilterLabel": "旅行日数",

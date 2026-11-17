@@ -3,7 +3,7 @@
   "list": {
     "metaTitle": "旅行ガイド · Wayknit",
     "title": "旅行ガイド",
-    "subtitle": "おすすめコース・実用Tips・準備チェック。管理者が確認したカードのみ公開されます。",
+    "subtitle": "おすすめコース、お役立ち情報、旅の準備チェックリストをまとめました。",
     "loading": "読み込み中…",
     "empty": "公開中のガイドはまだありません。",
     "kindFilter": "ガイド種類",
@@ -19,7 +19,8 @@
   },
   "cta": {
     "planner": "プランナーを開く",
-    "autoRoute": "このコースで自動ルート作成",
+    "autoRoute": "このコースを旅程に追加",
+    "courseNote": "{{count}}か所 · 登録不要、この端末に保存されます",
     "setup": "旅行準備チェックリスト",
     "plaza": "共有広場"
   },
@@ -44,5 +45,20 @@
   "errors": {
     "notConfigured": "ガイド表示にはSupabase設定が必要です。",
     "loadFailed": "ガイドを読み込めませんでした。"
+  },
+  "courseMap": {
+    "mapLabel": "コース地図",
+    "expand": "広げる",
+    "collapse": "閉じる",
+    "directions": "経路",
+    "call": "電話",
+    "hours": "営業",
+    "address": "住所",
+    "phone": "電話",
+    "schedule": "日程",
+    "reviews": "訪問者の評価",
+    "detailLabel": "{{name}}の詳細",
+    "day": "{{n}}日目",
+    "course": "コース"
   }
 }

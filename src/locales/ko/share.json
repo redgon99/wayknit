@@ -67,7 +67,7 @@
     "localeZhCN": "简体中文",
     "localeZhTW": "繁體中文",
     "filters": "필터",
-    "filterSummaryEmpty": "선택한 조건 없음 · 전체 {{count}}개",
+    "filterSummaryEmpty": "전체 {{count}}개",
     "filterSummaryActive": "조건 {{count}}개 적용 · {{results}}개",
     "filterEmpty": "조건에 맞는 여행이 없습니다.",
     "dayFilterLabel": "여행 일수",

@@ -321,7 +321,10 @@ export function RouteTimelineDock({
             </div>
             {legIntoFocus && (
               <div className="route-dock-focus-leg">
-                {t('dock.travelFromPrev', { minutes: legIntoFocus.durationMinutes })}
+                {/* 대중교통·도보는 실제 길찾기 API가 없어 직선거리 추정치다(mobility.ts) */}
+                {t(legIntoFocus.source === 'estimate' ? 'dock.travelFromPrevEstimate' : 'dock.travelFromPrev', {
+                  minutes: legIntoFocus.durationMinutes,
+                })}
               </div>
             )}
             {recommendDepartMinutes != null && (
@@ -383,7 +386,7 @@ export function RouteTimelineDock({
               <div key={stop.id} className="route-dock-chip-wrap" role="listitem">
                 {i > 0 && (
                   <span className="route-dock-chip-arrow" aria-hidden>
-                    {leg ? `${leg.durationMinutes}${t('route.minutes')}` : '›'}
+                    {leg ? `${leg.source === 'estimate' ? '~' : ''}${leg.durationMinutes}${t('route.minutes')}` : '›'}
                   </span>
                 )}
                 <button

@@ -67,7 +67,7 @@
     "localeZhCN": "Chino simplificado",
     "localeZhTW": "Chino tradicional",
     "filters": "Filtros",
-    "filterSummaryEmpty": "Sin filtros · {{count}} en total",
+    "filterSummaryEmpty": "Todos los viajes · {{count}}",
     "filterSummaryActive": "{{count}} filtros aplicados · {{results}} resultados",
     "filterEmpty": "Ningún viaje coincide con tus filtros.",
     "dayFilterLabel": "Duración del viaje",

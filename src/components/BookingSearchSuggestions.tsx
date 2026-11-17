@@ -21,7 +21,7 @@ type Props = {
  * 이미 예약 링크를 붙여 넣은 곳(BookingLinkCards가 뜨는 곳)은 중복 노출하지 않는다.
  */
 export function BookingSearchSuggestions({ category, placeName, placeId, note, className = '' }: Props) {
-  const { t } = useTranslation('planner');
+  const { t, i18n } = useTranslation('planner');
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +43,7 @@ export function BookingSearchSuggestions({ category, placeName, placeId, note, c
 
   if (extractBookingLinks(note).length > 0) return null;
 
-  const links = getBookingSearchLinks(category, placeName);
+  const links = getBookingSearchLinks(category, placeName, i18n.language);
   if (links.length === 0) return null;
 
   return (

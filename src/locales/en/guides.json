@@ -3,7 +3,7 @@
   "list": {
     "metaTitle": "Travel guides · Wayknit",
     "title": "Travel guides",
-    "subtitle": "Recommended courses, practical tips, and prep checklists. Only admin-reviewed cards are published.",
+    "subtitle": "Recommended courses, practical tips, and prep checklists for your Korea trip.",
     "loading": "Loading…",
     "empty": "No published guides yet.",
     "kindFilter": "Guide types",
@@ -19,7 +19,9 @@
   },
   "cta": {
     "planner": "Open planner",
-    "autoRoute": "Build this course automatically",
+    "autoRoute": "Add this course to my trip",
+    "courseNote": "{{count}} places · Saved on this device, no sign-up needed",
+    "courseNote_one": "{{count}} place · Saved on this device, no sign-up needed",
     "setup": "Korea prep checklist",
     "plaza": "Share plaza"
   },
@@ -44,5 +46,20 @@
   "errors": {
     "notConfigured": "Supabase must be configured to show guides.",
     "loadFailed": "Could not load guides."
+  },
+  "courseMap": {
+    "mapLabel": "Course map",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "directions": "Directions",
+    "call": "Call",
+    "hours": "Hours",
+    "address": "Address",
+    "phone": "Phone",
+    "schedule": "Schedule",
+    "reviews": "Visitor reviews",
+    "detailLabel": "{{name}} details",
+    "day": "Day {{n}}",
+    "course": "Course"
   }
 }

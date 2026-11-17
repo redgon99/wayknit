@@ -3,7 +3,7 @@
   "list": {
     "metaTitle": "旅行指南 · Wayknit",
     "title": "旅行指南",
-    "subtitle": "推薦路線、實用貼士、出行準備等。僅展示管理員審核後的內容。",
+    "subtitle": "推薦路線、實用貼士和出行準備清單，助你暢遊韓國。",
     "loading": "加載中…",
     "empty": "暫無已發佈的指南。",
     "kindFilter": "指南類型",
@@ -19,7 +19,8 @@
   },
   "cta": {
     "planner": "打開行程規劃",
-    "autoRoute": "用此路線自動規劃",
+    "autoRoute": "將此路線加入我的行程",
+    "courseNote": "{{count}}個地點 · 無需註冊，儲存在本裝置",
     "setup": "出行準備清單",
     "plaza": "分享廣場"
   },
@@ -44,5 +45,20 @@
   "errors": {
     "notConfigured": "顯示指南需要配置 Supabase。",
     "loadFailed": "無法加載指南。"
+  },
+  "courseMap": {
+    "mapLabel": "路線地圖",
+    "expand": "展開",
+    "collapse": "收合",
+    "directions": "路線",
+    "call": "電話",
+    "hours": "營業時間",
+    "address": "地址",
+    "phone": "電話",
+    "schedule": "行程",
+    "reviews": "遊客評價",
+    "detailLabel": "{{name}} 詳情",
+    "day": "第{{n}}天",
+    "course": "路線"
   }
 }

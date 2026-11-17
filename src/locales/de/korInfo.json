@@ -2,7 +2,7 @@
   "brand": "Wayknit",
   "metaTitle": "Korea-Reiseinfos · Wayknit",
   "title": "Korea-Reiseinfos",
-  "subtitle": "Nicht anpinbar, aber nützlich: Tourismusfotos, Durunubi-Wanderwege, Audioguides, Besucherstatistiken, pet-freundliche und barrierefreie Orte.",
+  "subtitle": "Nützliches für Ihre Reise: Tourismusfotos, Durunubi-Wanderwege, Audioguides, Besucherstatistiken, pet-freundliche und barrierefreie Orte.",
   "cta": {
     "planner": "Meine Route erstellen"
   },
@@ -45,8 +45,8 @@
     "copyAddress": "Adresse kopieren",
     "copied": "Kopiert",
     "copyAria": "Die koreanische Originaladresse kopieren (Taxi oder Karten-App zeigen)",
-    "checkedToday": "Heute geprüft",
-    "checkedDaysAgo": "Zuletzt geprüft vor {{days}} Tagen"
+    "checkedToday": "Adresse heute geprüft",
+    "checkedDaysAgo": "Adresse vor {{days}} Tagen geprüft"
   },
   "photos": {
     "searchPlaceholder": "Suche nach Ort oder Stichwort (z. B. Gyeongbokgung, Nachtansicht)",
