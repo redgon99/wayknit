@@ -9029,6 +9029,15 @@ ktrip 운영자 분석 「독자 언어」 제안의 A안. ktrip 글 39편은 �
   `autoRoute=1&fromGuide=`로 코스 핀 전체만), 본문 링크 옆 "담기" 버튼. 계획서 "새 큰 기능은 전환이 오른 뒤" 원칙에
   따라 12월 초 전환 흐름 지표를 보고 결정하기로 하고 구현하지 않았다.
 
+## 55. 배포 스크립트: 커밋 안 한 변경이 있으면 멈춤 (2026-11-17, Windows)
+
+ktrip 운영자 분석의 운영 안정화 제안(11-10 ktrip에서 미커밋 코드가 운영에 나간 일). 사용자 결정: Wayknit도 「멈추게」.
+
+- `npm run deploy`(`scripts/deploy.mjs` → `deploy-prod.ps1`/`.sh`): `src supabase public index.html vite.config.ts package.json package-lock.json`에
+  커밋 안 한 변경(새 파일 포함)이 있거나, 푸시 안 한 커밋·원격에만 있는 커밋이 있으면 **빌드 전에 중단**. 예전엔 경고만.
+- 급할 때만 `npm run deploy -- --force "메모"`(경고로 바뀌고 진행). `--dry-run`은 배포하지 않으므로 경고만.
+- 검증: `src`에 임시 빈 파일을 두고 실행 → 사전 점검에서 중단 확인 후 파일 삭제. `bash -n`·`node --check` 통과.
+
 ## ▶ 다음 세션 시작점 (2026-11-17 기준, 갱신)
 
 **+ §55:** 가이드 ja·zh 번역 30편(라이브), 코스 장소 사진 TourAPI 대체(코드 배포 전), 본문 장소 담기 조사.

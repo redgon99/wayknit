@@ -48,6 +48,7 @@ MESSAGE=""
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=1 ;;
+    --force) FORCE=1 ;;
     *) MESSAGE="$arg" ;;
   esac
 done
@@ -67,9 +68,25 @@ export NETLIFY_AUTH_TOKEN="$TOKEN"
 
 # ── 사전 점검 ───────────────────────────────────────────────────────────
 say "사전 점검"
-if [ -n "$(git status --porcelain -- src supabase index.html vite.config.ts 2>/dev/null)" ]; then
-  printf '  \033[33m⚠ 커밋되지 않은 소스 변경이 있다. 배포되는 건 워킹트리 상태다.\033[0m\n'
-  git status --short -- src supabase index.html vite.config.ts | sed 's/^/    /'
+# 2026-11-17: 경고만 하던 것을 멈추게 바꿨다(--force로 넘김, --dry-run은 경고만)
+SRC_PATHS="src supabase public index.html vite.config.ts package.json package-lock.json"
+if [ -n "$(git status --porcelain -- $SRC_PATHS 2>/dev/null)" ]; then
+  git status --short -- $SRC_PATHS | sed 's/^/    /'
+  if [ "${FORCE:-0}" = 1 ] || [ "${DRY_RUN:-0}" = 1 ]; then
+    printf '  \033[33m⚠ 커밋되지 않은 소스 변경이 있다. 배포되는 건 워킹트리 상태다.\033[0m\n'
+  else
+    die "커밋되지 않은 소스 변경이 있다(위 목록). 커밋·푸시 후 다시 실행할 것. 급하면: npm run deploy -- --force \"메모\""
+  fi
+fi
+git fetch -q origin
+AHEAD="$(git rev-list --count '@{u}..HEAD')"
+BEHIND="$(git rev-list --count 'HEAD..@{u}')"
+if [ "$AHEAD" != 0 ] || [ "$BEHIND" != 0 ]; then
+  if [ "${FORCE:-0}" = 1 ] || [ "${DRY_RUN:-0}" = 1 ]; then
+    printf '  \033[33m⚠ 원격과 다르다: 푸시 안 한 커밋 %s개, 원격에만 있는 커밋 %s개\033[0m\n' "$AHEAD" "$BEHIND"
+  else
+    die "원격과 다르다: 푸시 안 한 커밋 ${AHEAD}개, 원격에만 있는 커밋 ${BEHIND}개. push/pull 후 다시 실행할 것. 급하면 --force"
+  fi
 fi
 echo "  HEAD: $(git log --oneline -1)"
 npx tsc --noEmit || die "타입체크 실패 — 배포 중단"

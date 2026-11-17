@@ -16,7 +16,9 @@ import { dirname, join } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
-const message = args.find((a) => a !== '--dry-run') ?? '';
+// --force: 커밋 안 한 변경·원격과 다른 커밋이 있어도 배포(급할 때만, 2026-11-17)
+const force = args.includes('--force');
+const message = args.find((a) => a !== '--dry-run' && a !== '--force') ?? '';
 
 let cmd, cmdArgs;
 if (process.platform === 'win32') {
@@ -27,10 +29,12 @@ if (process.platform === 'win32') {
   ];
   if (message) cmdArgs.push('-Message', message);
   if (dryRun) cmdArgs.push('-DryRun');
+  if (force) cmdArgs.push('-Force');
   cmd = 'powershell.exe';
 } else {
   cmdArgs = [join(here, 'deploy-prod.sh')];
   if (dryRun) cmdArgs.push('--dry-run');
+  if (force) cmdArgs.push('--force');
   if (message) cmdArgs.push(message);
   cmd = 'bash';
 }

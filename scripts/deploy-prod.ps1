@@ -14,7 +14,8 @@
 
 param(
   [string]$Message = "",
-  [switch]$DryRun
+  [switch]$DryRun,
+  [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
@@ -90,10 +91,21 @@ $env:NETLIFY_AUTH_TOKEN = $Token
 
 # ── 사전 점검 ───────────────────────────────────────────────────────────
 Say "사전 점검"
-$dirty = git status --porcelain -- src supabase index.html vite.config.ts
+# 2026-11-17: 경고만 하던 것을 멈추게 바꿨다 — 다른 세션의 미완성 작업이 운영에 섞여 나가지 않게.
+#   급할 때만 npm run deploy -- --force "메모". --dry-run은 배포하지 않으므로 경고만.
+$dirty = git status --porcelain -- src supabase public index.html vite.config.ts package.json package-lock.json
 if ($dirty) {
-  Warn "커밋되지 않은 소스 변경이 있다. 배포되는 건 워킹트리 상태다."
   $dirty | ForEach-Object { Write-Host "    $_" }
+  if ($Force -or $DryRun) { Warn "커밋되지 않은 소스 변경이 있다. 배포되는 건 워킹트리 상태다." }
+  else { Die "커밋되지 않은 소스 변경이 있다(위 목록). 커밋·푸시 후 다시 실행할 것. 급하면: npm run deploy -- --force `"메모`"" }
+}
+git fetch -q origin
+$ahead = [int](git rev-list --count '@{u}..HEAD')
+$behind = [int](git rev-list --count 'HEAD..@{u}')
+if ($ahead -gt 0 -or $behind -gt 0) {
+  $why = "원격과 다르다: 푸시 안 한 커밋 $ahead 개, 원격에만 있는 커밋 $behind 개."
+  if ($Force -or $DryRun) { Warn $why }
+  else { Die "$why push/pull 후 다시 실행할 것. 급하면: npm run deploy -- --force `"메모`"" }
 }
 Write-Host "  HEAD: $(git log --oneline -1)"
 npx tsc --noEmit
