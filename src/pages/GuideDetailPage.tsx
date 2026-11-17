@@ -5,6 +5,7 @@ import { AuthBar } from '../components/AuthBar';
 import { LocaleSwitcher } from '../components/LocaleSwitcher';
 import { ReportButton } from '../components/ReportButton';
 import { ShareIcon } from '../components/ShareIcon';
+import { trackEvent } from '../lib/analytics';
 import { shareLink } from '../lib/shareLink';
 import { useSeoMeta } from '../hooks/useSeoMeta';
 import { GUIDE_KIND_META } from '../lib/guideKinds';
@@ -108,15 +109,16 @@ export default function GuideDetailPage() {
       return {
         to: `${plannerPath(locale)}?${q.toString()}`,
         label: t('cta.autoRoute'),
+        cta: 'auto_route',
       };
     }
     if (meta.cta === 'setup') {
-      return { to: pathWithLocale('/setup', locale), label: t('cta.setup') };
+      return { to: pathWithLocale('/setup', locale), label: t('cta.setup'), cta: 'setup' };
     }
     if (meta.cta === 'plaza') {
-      return { to: pathWithLocale('/plaza', locale), label: t('cta.plaza') };
+      return { to: pathWithLocale('/plaza', locale), label: t('cta.plaza'), cta: 'plaza' };
     }
-    return { to: plannerPath(locale), label: t('cta.planner') };
+    return { to: plannerPath(locale), label: t('cta.planner'), cta: 'planner' };
   })();
 
   /** 지금 보고 있는 언어 버전의 주소를 공유한다. */
@@ -221,16 +223,28 @@ export default function GuideDetailPage() {
             )}
             <div className="guides-detail-cta">
               {primaryCta && (
-                <Link to={primaryCta.to} className="guides-btn guides-btn-primary">
+                <Link
+                  to={primaryCta.to}
+                  className="guides-btn guides-btn-primary"
+                  onClick={() => trackEvent('guide_cta_click', { slug: guide.slug, cta: primaryCta.cta, button: 'primary' })}
+                >
                   {primaryCta.label}
                 </Link>
               )}
               {guide.kind === 'course' ? (
-                <Link to={pathWithLocale('/plaza', locale)} className="guides-btn">
+                <Link
+                  to={pathWithLocale('/plaza', locale)}
+                  className="guides-btn"
+                  onClick={() => trackEvent('guide_cta_click', { slug: guide.slug, cta: 'plaza', button: 'secondary' })}
+                >
                   {t('cta.plaza')}
                 </Link>
               ) : (
-                <Link to={plannerPath(locale)} className="guides-btn">
+                <Link
+                  to={plannerPath(locale)}
+                  className="guides-btn"
+                  onClick={() => trackEvent('guide_cta_click', { slug: guide.slug, cta: 'planner', button: 'secondary' })}
+                >
                   {t('cta.planner')}
                 </Link>
               )}

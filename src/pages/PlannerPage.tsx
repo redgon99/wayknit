@@ -666,6 +666,8 @@ export default function PlannerPage() {
       }
       if (cancelled) return;
       guideImportKeyRef.current = importKey;
+      // 가이드에서 온 여행 계획 — 가져온 장소가 0이어도 기록(코스 핀이 없는 글)
+      if (fromGuide) trackEvent('guide_trip_import', { slug: fromGuide, places: imported });
       navigate({ pathname: location.pathname, search: '', hash: location.hash }, { replace: true });
       setMaterialsPanelOpen(false);
       setRouteOptionsOpen(true);

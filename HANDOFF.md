@@ -8895,7 +8895,18 @@ SQL 호출은 하지 않았다(`feedback_user_verifies`). plpgsql `return query`
 - 검증: 타입 빌드, ktrip 미리보기 #58 네 언어 모두 원문 링크 0개·굵은 장소 링크 4개.
 - **배포(2026-11-17):** `npm run deploy`.
 
+## 52. 가이드 → 여행 계획 계측 이벤트 2개 (2026-11-17, Windows)
+
+ktrip 운영자 분석의 「독자에게 닿았는지 모른다」에 답하려고, 가이드에서 여행 계획으로 이어지는 행동을 `analytics_events`에 남긴다(기존 싱크 그대로, DB 변경 없음 — 이벤트 이름 제한 없음).
+
+- `guide_cta_click` { slug, cta: auto_route|setup|plaza|planner, button: primary|secondary } — `GuideDetailPage` 하단 행동 버튼 클릭.
+- `guide_trip_import` { slug, places } — `PlannerPage`가 `?autoRoute=1&fromGuide=slug`로 열려 코스 핀을 가져온 뒤(가져온 장소가 0이어도 기록).
+- 집계는 ktrip(에이전트 화면 성과 탭·대시보드 「이번 주 결과」): ktrip 글만, 관리자 화면을 본 세션 제외. 기록 이전 기간은 page_view로 「같은 세션에서 /plan 이동」을 근사.
+- 검증: 타입 빌드. **배포(2026-11-17):** `npm run deploy`.
+
 ## ▶ 다음 세션 시작점 (2026-11-07 기준, 갱신)
+
+**+ §52 배포(2026-11-17):** 가이드 → 여행 계획 계측 이벤트(guide_cta_click·guide_trip_import).
 
 **+ §51 배포(2026-11-17):** 굵게 감싼 링크 렌더링 수정.
 

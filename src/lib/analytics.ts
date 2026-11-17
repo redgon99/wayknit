@@ -20,7 +20,11 @@ export type AnalyticsEvent =
   /** 앵커·영업시간을 지킬 수 없는 일정이 나옴 — 엔진 고도화 착수 판단 */
   | 'route_conflict'
   /** 페이지 이동(관리자 접속 로그 화면의 기반 데이터, §42) — LocaleLayout에서 기록 */
-  | 'page_view';
+  | 'page_view'
+  /** 가이드 상세의 행동 버튼(플래너·자동 경로·준비·공유마당) 클릭 — 글이 여행 계획으로 이어지는지(ktrip 성과, §52) */
+  | 'guide_cta_click'
+  /** 플래너가 가이드(fromGuide)의 코스를 실제로 가져옴. places = 가져온 장소 수 */
+  | 'guide_trip_import';
 
 export type AnalyticsProps = Record<string, string | number | boolean | null>;
 
