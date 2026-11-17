@@ -55,6 +55,7 @@ import type { GuideArticle, GuideCoursePin, GuideStatus } from '../types/guides'
 import { GuideCourseMap } from '../components/GuideCourseMap';
 import { CourseTaxonomyPicker } from '../components/CourseTaxonomyChips';
 import { displayCourseTags } from '../lib/courseGuideTaxonomy';
+import { ktripRewriteUrl } from '../lib/ktripLinks';
 import '../styles/app.css';
 
 function formatUnknownError(e: unknown, fallback: string): string {
@@ -1715,6 +1716,18 @@ Check entry requirements before departure…`}
                     {tag}
                   </span>
                 ))}
+                {/* ktrip이 이 글의 업데이트 버전 요청문(ChatGPT @Wayknit Guide Inbox용)을 만든다. 기존 글은 바뀌지 않는다. */}
+                <div className="guide-admin-tools" style={{ marginTop: 8, marginBottom: 0 }}>
+                  <a
+                    className="guide-admin-tool-link"
+                    href={ktripRewriteUrl(previewGuide.slug)}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="ktrip에서 이 글의 업데이트 버전 요청문을 만들고 ChatGPT로 새 글을 씁니다. 새 글을 공개하면 이 글은 보관(비공개)하세요."
+                  >
+                    GPT로 업데이트 버전 만들기 ↗
+                  </a>
+                </div>
               </div>
             )
           }
