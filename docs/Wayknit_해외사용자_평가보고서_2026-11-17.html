@@ -1,0 +1,402 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Wayknit 해외 사용자 평가</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* 레이아웃: 한 줄 결론 → 30일 숫자(퍼널·언어) → 질문 다섯 개를 순서대로. Wayknit 브랜드(남색·노랑)를 그대로 쓴다. */
+:root {
+  --bg: #fafaf8;
+  --surface: #ffffff;
+  --ink: #0f172a;
+  --muted: #526077;
+  --line: rgba(15, 23, 42, 0.10);
+  --accent: #facc15;
+  --accent-ink: #713f12;
+  --accent-soft: #fef9c3;
+  --bar: #0f172a;
+  --bar-dim: #cbd5e1;
+  --good: #15803d;
+  --good-soft: #dcfce7;
+  --warn: #b45309;
+  --warn-soft: #fef3c7;
+  --bad: #b91c1c;
+  --bad-soft: #fee2e2;
+  --font-display: "Instrument Sans", "Noto Sans KR", system-ui, sans-serif;
+  --font-body: "Noto Sans KR", "Instrument Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1220; --surface: #151c2e; --ink: #e8ecf4; --muted: #9aa6bd;
+    --line: rgba(232, 236, 244, 0.12); --accent: #facc15; --accent-ink: #fde68a;
+    --accent-soft: rgba(250, 204, 21, 0.14); --bar: #facc15; --bar-dim: #334155;
+    --good: #4ade80; --good-soft: rgba(74, 222, 128, 0.14);
+    --warn: #fbbf24; --warn-soft: rgba(251, 191, 36, 0.14);
+    --bad: #f87171; --bad-soft: rgba(248, 113, 113, 0.14);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1220; --surface: #151c2e; --ink: #e8ecf4; --muted: #9aa6bd;
+  --line: rgba(232, 236, 244, 0.12); --accent: #facc15; --accent-ink: #fde68a;
+  --accent-soft: rgba(250, 204, 21, 0.14); --bar: #facc15; --bar-dim: #334155;
+  --good: #4ade80; --good-soft: rgba(74, 222, 128, 0.14);
+  --warn: #fbbf24; --warn-soft: rgba(251, 191, 36, 0.14);
+  --bad: #f87171; --bad-soft: rgba(248, 113, 113, 0.14);
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.7;
+}
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 64px;
+  display: grid;
+  gap: 48px;
+}
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.3; }
+h1 { font-size: clamp(28px, 5vw, 40px); letter-spacing: -0.02em; }
+h2 { font-size: 22px; letter-spacing: -0.01em; }
+h3 { font-size: 16px; }
+p { margin: 0; }
+a { color: inherit; text-underline-offset: 3px; }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* 머리 */
+.head { display: grid; gap: 14px; }
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted);
+}
+.verdict {
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+  padding: 14px 18px;
+  border-radius: 0 10px 10px 0;
+  font-size: 17px; font-weight: 500;
+  max-width: 68ch;
+}
+.basis { color: var(--muted); font-size: 13.5px; max-width: 72ch; }
+
+/* 섹션 */
+section { display: grid; gap: 18px; min-width: 0; }
+.section-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.qno {
+  font-family: var(--font-display); font-weight: 700; font-size: 13px;
+  background: var(--ink); color: var(--bg);
+  border-radius: 999px; padding: 2px 10px;
+}
+.lead { color: var(--muted); max-width: 68ch; }
+
+/* 30일 숫자 */
+.data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  display: grid; gap: 12px;
+  min-width: 0;
+}
+.panel h3 { font-size: 14px; }
+.bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.bars li { display: grid; grid-template-columns: 112px minmax(0, 1fr) 64px; align-items: center; gap: 10px; font-size: 13px; }
+.bars .track { height: 10px; background: var(--bar-dim); border-radius: 4px; overflow: hidden; }
+.bars .fill { height: 100%; background: var(--bar); border-radius: 4px; }
+.bars .fill.hot { background: var(--bad); }
+.bars .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.bars .val strong { color: var(--ink); }
+.note { font-size: 12.5px; color: var(--muted); }
+
+/* 목록 카드 */
+.items { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.item {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: grid; gap: 4px;
+}
+.item-title { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-weight: 700; }
+.item p { color: var(--muted); font-size: 14px; }
+.item code { font-size: 12.5px; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+.chip {
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em;
+  border-radius: 999px; padding: 1px 9px;
+  white-space: nowrap;
+}
+.chip.good { color: var(--good); background: var(--good-soft); }
+.chip.warn { color: var(--warn); background: var(--warn-soft); }
+.chip.bad { color: var(--bad); background: var(--bad-soft); }
+.chip.plain { color: var(--muted); border: 1px solid var(--line); }
+ol.items { counter-reset: step; }
+ol.items .item { grid-template-columns: 32px minmax(0, 1fr); column-gap: 10px; }
+ol.items .item::before {
+  counter-increment: step; content: counter(step);
+  grid-row: 1 / span 3;
+  font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 1.2;
+  color: var(--muted);
+}
+ol.items .item > * { grid-column: 2; }
+
+/* 비교 표 */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 680px; font-size: 13.5px; }
+th, td { text-align: left; vertical-align: top; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-display); font-size: 12px; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: none; }
+td:first-child { font-weight: 700; white-space: nowrap; }
+.callouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.callout { border-radius: 10px; padding: 14px 16px; display: grid; gap: 4px; font-size: 14px; }
+.callout.opportunity { background: var(--good-soft); }
+.callout.threat { background: var(--bad-soft); }
+.callout strong { font-family: var(--font-display); }
+
+/* 출처 */
+.sources { font-size: 13px; color: var(--muted); display: grid; gap: 8px; }
+.sources ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.sources summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 480px) {
+  .bars li { grid-template-columns: 84px minmax(0, 1fr) 56px; }
+  .page { padding-block: 28px 48px; gap: 40px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fill { transition: width 0.4s ease; }
+}
+</style>
+
+<div class="page">
+  <header class="head">
+    <span class="eyebrow">해외 사용자 관점 평가 · 2026-11-17</span>
+    <h1>Wayknit 해외 사용자 평가</h1>
+    <p class="verdict">가이드는 외국인을 데려오지만, 핵심인 플래너까지 가는 사람이 거의 없다. 지금 가장 먼저 풀 문제는 기능 추가가 아니라 가이드에서 일정 만들기로 넘어가는 길이다.</p>
+    <p class="basis">근거는 세 가지다. 현재 코드와 화면 문구, 2026-10-27 라이브 점검에서 나온 문제 중 아직 남은 것, 최근 30일 외부 방문 기록. 이번 평가에서 라이브 사이트를 다시 둘러보지는 않았다.</p>
+  </header>
+
+  <section aria-labelledby="data-title">
+    <div class="section-head">
+      <h2 id="data-title">최근 30일 외부 방문</h2>
+    </div>
+    <div class="data-grid">
+      <div class="panel">
+        <h3>방문자 150명은 어디까지 갔나</h3>
+        <ul class="bars">
+          <li><span>전체 방문자</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="val num"><strong>150</strong>명</span></li>
+          <li><span>가이드를 봄</span><span class="track"><span class="fill" style="width:73.3%"></span></span><span class="val num"><strong>110</strong>명</span></li>
+          <li><span>플래너 도착</span><span class="track"><span class="fill hot" style="width:5.3%"></span></span><span class="val num"><strong>8</strong>명</span></li>
+          <li><span>가이드 → 플래너</span><span class="track"><span class="fill hot" style="width:2%"></span></span><span class="val num"><strong>3</strong>명</span></li>
+          <li><span>로그인</span><span class="track"><span class="fill hot" style="width:0%"></span></span><span class="val num"><strong>0</strong>명</span></li>
+        </ul>
+        <p class="note">조회 717회 중 570회(80%)가 가이드다. 공유마당 공개 여행은 2개, 가이드 영어 번역은 공개 96개 중 60개.</p>
+      </div>
+      <div class="panel">
+        <h3>화면 언어별 조회 (717회)</h3>
+        <ul class="bars">
+          <li><span>한국어</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="val num"><strong>26</strong>%</span></li>
+          <li><span>English</span><span class="track"><span class="fill" style="width:64.1%"></span></span><span class="val num"><strong>16</strong>%</span></li>
+          <li><span>日本語</span><span class="track"><span class="fill" style="width:48.4%"></span></span><span class="val num"><strong>12</strong>%</span></li>
+          <li><span>简体中文</span><span class="track"><span class="fill" style="width:41.3%"></span></span><span class="val num"><strong>11</strong>%</span></li>
+          <li><span>Русский</span><span class="track"><span class="fill" style="width:35.9%"></span></span><span class="val num"><strong>9</strong>%</span></li>
+          <li><span>繁體中文</span><span class="track"><span class="fill" style="width:31%"></span></span><span class="val num"><strong>8</strong>%</span></li>
+          <li><span>Français</span><span class="track"><span class="fill" style="width:26.1%"></span></span><span class="val num"><strong>7</strong>%</span></li>
+          <li><span>Español</span><span class="track"><span class="fill" style="width:21.7%"></span></span><span class="val num"><strong>6</strong>%</span></li>
+          <li><span>Deutsch</span><span class="track"><span class="fill" style="width:21.2%"></span></span><span class="val num"><strong>5</strong>%</span></li>
+        </ul>
+        <p class="note">한국어 외 화면이 74%다. 여러 언어에 고르게 퍼져 있다.</p>
+      </div>
+    </div>
+    <p class="note">출처: <code>analytics_events</code> 최근 30일, 내부 접속(관리자 페이지와 관리자·테스트 계정, 그 계정을 쓴 브라우저) 제외. 방문자가 적어 경향으로만 볼 것. 국가 1위 미국(26명)과 유입의 97%인 "직접 입력"에는 검색 로봇이 섞여 있을 수 있다.</p>
+  </section>
+
+  <section aria-labelledby="q1">
+    <div class="section-head"><span class="qno">1</span><h2 id="q1">좋은 점</h2></div>
+    <ul class="items">
+      <li class="item">
+        <span class="item-title">계획이 실제 시간표가 된다 <span class="chip good">핵심 강점</span></span>
+        <p>체류 시간, 점심 시간대, 카카오 도로 거리를 넣어 몇 시에 어디 있을지 계산한다. 장소를 모으기만 하는 리스트형 앱과 다른 점이다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">설치도 가입도 필요 없다</span>
+        <p>브라우저에서 바로 쓰고 기기에 저장된다. 여행 전에 한 번 써 보기에 부담이 적다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">한국 지도 데이터에 강하다</span>
+        <p>구글 지도는 한국에서 도보 길찾기가 약하다는 불만이 많다. 카카오 기반이라 이 빈틈을 메운다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">한국 여행에 맞춘 기능이 있다</span>
+        <p>택시 기사에게 보여 주는 카드, 로드뷰, 입국 체크리스트, 두루누비 걷기길, 오디오 가이드.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">언어와 공유</span>
+        <p>화면이 9개 언어로 나오고 실제 방문자도 여러 언어에 퍼져 있다. 공유 링크, 공유마당에서 가져오기, 공동 편집이 된다.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="q2">
+    <div class="section-head"><span class="qno">2</span><h2 id="q2">불편한 점</h2></div>
+    <ul class="items">
+      <li class="item">
+        <span class="item-title">가이드에서 플래너로 넘어가는 길이 약하다 <span class="chip bad">영향 큼</span></span>
+        <p>가이드 방문자 110명 중 플래너로 간 사람은 3명이다. 서비스 이름은 플래너인데 실제로는 읽을거리 사이트로 쓰이고 있다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">대중교통 시간이 실제 경로가 아니다 <span class="chip bad">영향 큼</span></span>
+        <p>직선거리에 1.6을 곱한 추정치다(<code>src/lib/mobility.ts:118</code>). 외국인은 대부분 지하철과 버스로 다니므로 시간표 전체의 신뢰가 떨어진다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">콘텐츠가 아직 한국어로 나온다 <span class="chip bad">영향 큼</span></span>
+        <p>영어를 골라도 가이드 36개(38%)는 한국어 원문 그대로다. 한국여행정보의 사진 캡션과 오디오 가이드도 한국어다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">예약 링크가 한국어 사이트로 연결된다 <span class="chip warn">보통</span></span>
+        <p>Klook은 <code>/ko/</code>, Airbnb는 <code>airbnb.co.kr</code>로 고정돼 있다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">결제가 원화 전용이다 <span class="chip warn">보통</span></span>
+        <p><code>₩4,900 / month</code>로만 표시되고 결제 대행은 국내 PG(PortOne)다. 해외 카드로 정기결제가 되는지 아직 확인하지 않았다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">운영자용 문구가 그대로 보인다 <span class="chip warn">보통</span></span>
+        <p>"Only admin-reviewed cards are published.", "Not pinnable, but useful…", "Checked today", "No filters · 0 total".</p>
+      </li>
+      <li class="item">
+        <span class="item-title">슬로건이 두 가지다 <span class="chip plain">작음</span></span>
+        <p>히어로는 "Meld your route", 메타 정보는 "Knit your route"로 섞여 있다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">빈 곳이 눈에 띈다 <span class="chip plain">작음</span></span>
+        <p>공유마당 공개 여행은 2개뿐이고, 외국인 방문 동기 1순위인 K-컬처 테마는 "Coming soon"이다. 상단에는 베타 배너가 떠 있다.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="q3">
+    <div class="section-head"><span class="qno">3</span><h2 id="q3">개선점</h2></div>
+    <p class="lead">위에서부터 먼저 할 일이다.</p>
+    <ol class="items">
+      <li class="item">
+        <span class="item-title">가이드에서 바로 일정 만들기 <span class="chip bad">가장 큰 누수</span></span>
+        <p>가이드 본문의 장소마다 "Add to my trip" 버튼을 달고, 코스형 가이드에는 "이 코스로 일정 만들기"를 둔다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">대중교통 실제 시간</span>
+        <p>ODsay 같은 대중교통 API를 붙인다. 당장 어렵다면 화면에 "예상치"라고 분명히 표시한다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">콘텐츠 번역 마무리</span>
+        <p>남은 가이드 36개와 한국여행정보 캡션을 번역한다. 번역 구조는 이미 있다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">예약 링크를 언어별로</span>
+        <p>사용자 언어의 Klook, Agoda 페이지로 연결하고 제휴 코드를 붙인다. 5번 수익화와 바로 이어진다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">신뢰를 깎는 문구 정리</span>
+        <p>운영자용 문구를 바꾸고, 슬로건을 하나로 통일하고, 베타 배너를 정리한다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">빈 화면 채우기</span>
+        <p>운영자가 영어 샘플 코스 몇 개를 공유마당에 올린다. 예: "Seoul 3 days for first-timers", "Busan 2 days". K-컬처 테마도 최소한의 코스로 연다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">현장 앱으로 이어 주기</span>
+        <p>각 이동 구간을 네이버·카카오 지도 길찾기로 바로 여는 흐름을 앞에 내세운다. 외국인은 결국 현장에서 두 앱을 쓴다.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="q4">
+    <div class="section-head"><span class="qno">4</span><h2 id="q4">유사 서비스 비교</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>서비스</th><th>핵심</th><th>Wayknit보다 나은 점</th><th>Wayknit이 나은 점</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Wanderlog</td><td>세계 공용 일정 플래너</td><td>인지도, 앱, 예약 메일 자동 정리, 오프라인 지원(유료, 연 $39.99 수준)</td><td>한국 지도 정확도, 한국 특화 기능, 시간표 계산</td></tr>
+          <tr><td>구글 지도</td><td>장소 저장과 길찾기</td><td>모두가 이미 쓴다</td><td>한국에서 약한 도보 길찾기, 여러 날 일정 계산</td></tr>
+          <tr><td>네이버 지도 / 카카오맵</td><td>현장 길찾기</td><td>실시간 대중교통, 현지 데이터</td><td>여러 날 일정 계획, 외국어 콘텐츠</td></tr>
+          <tr><td>Klook, Trazy, Creatrip</td><td>투어·티켓 예약과 콘텐츠</td><td>상품, 결제, 앱</td><td>일정 계획 도구(이들은 예약이 중심)</td></tr>
+          <tr><td>koreatravel.guru</td><td>영어 한국여행 미디어</td><td>검색 유입, r/KoreaTravel 커뮤니티</td><td>시간 계산이 되는 플래너, 다국어</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callouts">
+      <div class="callout opportunity">
+        <strong>비어 있는 자리</strong>
+        <p>외국인이 구글 방식으로 계획하고 한국 앱으로 현장을 다니는 사이를 잇는 한국 전용 플래너. 이 자리를 정면으로 차지한 서비스는 아직 없어 보인다.</p>
+      </div>
+      <div class="callout threat">
+        <strong>주의할 위협</strong>
+        <p>2026년 2월 한국 정부가 구글의 고정밀 지도 반출을 조건부로 승인했다는 보도가 있다. 구글 지도가 한국 길찾기를 제대로 지원하면 지도 정확도라는 강점은 줄어든다. 그때는 한국 특화 콘텐츠와 일정 계산이 차별점으로 남아야 한다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="q5">
+    <div class="section-head"><span class="qno">5</span><h2 id="q5">수익화 방법</h2></div>
+    <p class="lead">지금은 로그인 0명, 방문자 150명이라 구독을 팔기 전에 방문을 플래너 사용으로 바꾸는 일이 먼저다. 그 전제에서 순서를 매겼다.</p>
+    <ol class="items">
+      <li class="item">
+        <span class="item-title">제휴 수수료 <span class="chip good">지금 바로</span></span>
+        <p>예약 링크는 이미 앱 안에 있으니 제휴 코드만 붙이면 된다. 대상은 Klook, KKday, Agoda, Trip.com, GetYourGuide, eSIM 등. 로그인이나 결제 없이 수익이 나서 지금 단계에 가장 잘 맞는다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">여행 단위 이용권 (Trip Pass) <span class="chip warn">결제 정비 후</span></span>
+        <p>외국인 여행은 1~2주로 짧아서 월 구독과 맞지 않는다. 한 여행에 30일 동안 쓰는 일회성 결제($4.99~9.99)에 오프라인 자료, 내 언어로 내보내기, 실제 대중교통 시간, AI 무제한을 담는다. 달러 표시와 해외 카드 결제가 같이 필요하다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">연간 Plus <span class="chip plain">유지</span></span>
+        <p>한국을 반복 방문하는 사람과 국내 사용자를 위해 남겨 둔다. 참고로 Wanderlog Pro는 연 $39.99 수준이다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">코스 판매 <span class="chip plain">사용자 늘면</span></span>
+        <p>현지 크리에이터나 가이드의 검증된 코스를 팔고 수익을 나눈다. 공유마당을 시장으로 키우는 방식이다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">기업 고객(B2B) <span class="chip plain">사용자 늘면</span></span>
+        <p>게스트하우스나 여행사가 외국인 손님에게 맞춤 일정을 주는 화이트라벨. 지자체·관광공사의 지역 코스 후원은 광고임을 밝혀야 한다.</p>
+      </li>
+      <li class="item">
+        <span class="item-title">배너 광고는 피한다 <span class="chip bad">비추천</span></span>
+        <p>방문이 적어 수익이 미미한 데다 신뢰만 깎는다.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="sources" aria-labelledby="src-title">
+    <details>
+      <summary id="src-title">참고 자료</summary>
+      <ul>
+        <li><a href="https://www.endlesstravelplans.com/guides/planning-tools/wanderlog-review" target="_blank" rel="noopener">Endless Travel Plans — Wanderlog review</a></li>
+        <li><a href="https://www.stippl.io/blog/stippl-vs-wanderlog" target="_blank" rel="noopener">Stippl vs Wanderlog (2026)</a></li>
+        <li><a href="https://seoulstart.com/guides/naver-map-guide" target="_blank" rel="noopener">Seoul Start — Why Google Maps lacks walking directions in Korea</a></li>
+        <li><a href="https://sg.trip.com/guide/phone/naver-map.html" target="_blank" rel="noopener">Trip.com — Naver Map English guide</a></li>
+        <li><a href="https://sg.trip.com/guide/phone/travel-apps-for-south-korea.html" target="_blank" rel="noopener">Trip.com — Best travel apps for Korea 2026</a></li>
+        <li><a href="https://www.haniseoul.com/travels/korea/best-platforms-booking-seoul-tours" target="_blank" rel="noopener">HaniSeoul — Best platforms for booking Seoul tours</a></li>
+        <li><a href="https://apps.apple.com/us/app/creatrip-korea-your-way/id1221245620" target="_blank" rel="noopener">Creatrip App Store listing</a></li>
+      </ul>
+    </details>
+  </section>
+
+  <footer>
+    Wayknit 내부 검토 자료 · 2026-11-17 작성. 경쟁 서비스 가격과 기능은 2026년 블로그·비교 글 기준이라 구매·계약 전에 공식 페이지를 다시 확인할 것.
+  </footer>
+</div>
+
+</body></html>
