@@ -170,8 +170,9 @@ export function guideAvailableLocales(guide: GuideArticle): string[] {
 }
 
 /**
- * scenarioCatalog.ts의 pickLocaleContent()와 같은 규칙 — 요청 로케일이
- * 없으면 중국어 번체/간체는 서로 폴백, 그 외엔 대표 언어로 돌아간다.
+ * 요청 로케일이 없으면 중국어 번체/간체는 서로 폴백, 그 외엔 영어 → 대표 언어 순.
+ * 2026-11-17 — ktrip 글은 대표 언어가 한국어라, 독·불·서·러 독자가 한국어 본문을
+ * 보던 문제(가이드 독자 세션의 약 28%)를 영어로 돌린다. 한국어 독자는 그대로.
  */
 export function pickGuideContent(guide: GuideArticle, locale: string): ResolvedGuideContent {
   if (locale === guide.locale) {
@@ -187,6 +188,9 @@ export function pickGuideContent(guide: GuideArticle, locale: string): ResolvedG
   if (locale === 'zh-TW') {
     const alt = guide.translations['zh-CN'];
     if (alt) return { locale: 'zh-CN', ...alt };
+  }
+  if (locale !== 'ko' && guide.locale !== 'en' && guide.translations.en) {
+    return { locale: 'en', ...guide.translations.en };
   }
 
   return { locale: guide.locale, title: guide.title, summary: guide.summary, bodyMd: guide.bodyMd };

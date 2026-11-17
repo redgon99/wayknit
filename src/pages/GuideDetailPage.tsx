@@ -212,6 +212,14 @@ export default function GuideDetailPage() {
                 ))}
               </div>
             )}
+            {content && !viewLocale && content.locale !== locale && (
+              <p className="guide-lang-fallback">
+                {t('detail.fallbackNotice', {
+                  lang: LOCALE_LABELS[locale] ?? locale,
+                  shown: LOCALE_LABELS[content.locale as AppLocale] ?? content.locale,
+                })}
+              </p>
+            )}
             <h1>{content?.title}</h1>
             {summaryText && <p className="guides-detail-summary">{summaryText}</p>}
             {courseCta && (

@@ -15,7 +15,8 @@
     "notFound": "No se encontró la guía.",
     "sources": "Fuentes",
     "placeCredit": "Datos del lugar · Google",
-    "disclaimer": "Tarifas, normas y horarios pueden cambiar. Consulta la información oficial antes de ir."
+    "disclaimer": "Tarifas, normas y horarios pueden cambiar. Consulta la información oficial antes de ir.",
+    "fallbackNotice": "Aún no hay versión en {{lang}}. Versión mostrada: {{shown}}."
   },
   "cta": {
     "planner": "Abrir el planificador",

@@ -15,7 +15,8 @@
     "notFound": "未找到该指南。",
     "sources": "参考来源",
     "placeCredit": "地点信息 · Google",
-    "disclaimer": "费用、政策与营业时间可能变动。出行前请核对官方信息。"
+    "disclaimer": "费用、政策与营业时间可能变动。出行前请核对官方信息。",
+    "fallbackNotice": "暂无{{lang}}版本，当前显示{{shown}}版本。"
   },
   "cta": {
     "planner": "打开行程规划",

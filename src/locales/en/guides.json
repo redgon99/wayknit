@@ -15,7 +15,8 @@
     "notFound": "Guide not found.",
     "sources": "Sources",
     "placeCredit": "Place info · Google",
-    "disclaimer": "Fares, policies, and hours may change. Check official information before you go."
+    "disclaimer": "Fares, policies, and hours may change. Check official information before you go.",
+    "fallbackNotice": "No {{lang}} version yet — showing the {{shown}} version."
   },
   "cta": {
     "planner": "Open planner",

@@ -10684,6 +10684,16 @@ button {
   color: #1f2937;
 }
 
+/* 2026-11-17 — 독자 언어 번역이 없어 다른 언어(주로 영어)로 보여 줄 때 */
+.guide-lang-fallback {
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 13px;
+}
+
 .guide-course-map {
   margin: 0 0 1.5rem;
   border: 1px solid #e2e8f0;

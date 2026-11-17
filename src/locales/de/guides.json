@@ -15,7 +15,8 @@
     "notFound": "Guide nicht gefunden.",
     "sources": "Quellen",
     "placeCredit": "Ortsangaben · Google",
-    "disclaimer": "Preise, Regeln und Öffnungszeiten können sich ändern. Prüfen Sie offizielle Infos vor der Reise."
+    "disclaimer": "Preise, Regeln und Öffnungszeiten können sich ändern. Prüfen Sie offizielle Infos vor der Reise.",
+    "fallbackNotice": "Noch keine {{lang}}-Version – angezeigt wird die Version: {{shown}}."
   },
   "cta": {
     "planner": "Planer öffnen",
