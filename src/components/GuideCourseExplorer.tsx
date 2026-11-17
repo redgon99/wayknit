@@ -10,6 +10,94 @@ type Props = {
   className?: string;
 };
 
+/*
+ * 구글 지도 JS의 PhotoService.GetPhoto 주소는 세션에 묶여 며칠 뒤 열리지 않는다
+ * (2026-11-17 공개 코스 핀 사진 398개가 이 형식이라 기본 그림만 보였다). 화면에서 빼고,
+ * 무료인 관광공사 TourAPI 사진으로 채운다.
+ */
+const EXPIRING_PHOTO = /maps\.googleapis\.com\/maps\/api\/place\/js\/PhotoService\.GetPhoto/;
+
+function usablePhotos(urls: string[] | undefined): string[] {
+  return (urls ?? []).filter((u) => !EXPIRING_PHOTO.test(u));
+}
+
+function normalizePlaceName(name: string): string {
+  return name
+    .replace(/<[^>]+>/g, '')
+    .replace(/[①-⑳]/g, '')
+    .replace(/\([^)]*\)/g, '')
+    .replace(/(본점|본관)$/u, '')
+    .replace(/[\s·・,.'"’“”\-–—_/]/g, '')
+    .toLowerCase();
+}
+
+function sameName(a: string, b: string): boolean {
+  const x = normalizePlaceName(a);
+  const y = normalizePlaceName(b);
+  if (x.length < 2 || y.length < 2) return false;
+  return x === y || (Math.min(x.length, y.length) >= 3 && (x.includes(y) || y.includes(x)));
+}
+
+function distanceMeters(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad;
+  const dLng = (b.lng - a.lng) * rad;
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.sqrt(h));
+}
+
+/**
+ * TourAPI 키워드 검색으로 같은 이름의 관광지를 찾아 대표 사진을 쓴다. 이름이 같고 핀에서 3km 안일 때만
+ * (동명 장소·엉뚱한 사진 방지). 좌표 주변 조회(locationBasedList)는 결과가 적어 바로 옆 명소도 빠졌다.
+ */
+const TOUR_PHOTO_CACHE_KEY = 'wayknit:guide-tour-photo-v1';
+const TOUR_PHOTO_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+type TourPhotoCache = Record<string, { url: string | null; at: number }>;
+
+function readTourPhotoCache(): TourPhotoCache {
+  try {
+    return JSON.parse(localStorage.getItem(TOUR_PHOTO_CACHE_KEY) ?? '{}') as TourPhotoCache;
+  } catch {
+    return {};
+  }
+}
+
+/** 같은 방문자가 다시 볼 때 TourAPI(일일 호출 한도)를 또 부르지 않게 결과(못 찾음 포함)를 7일 보관 */
+async function findTourPhoto(pin: GuideCoursePin): Promise<string | null> {
+  const cacheKey = `${pin.name}|${pin.lat.toFixed(4)},${pin.lng.toFixed(4)}`;
+  const cached = readTourPhotoCache()[cacheKey];
+  // 못 찾은 결과는 일시 오류일 수 있어 하루만 기억한다
+  const ttl = cached?.url ? TOUR_PHOTO_TTL_MS : 24 * 60 * 60 * 1000;
+  if (cached && Date.now() - cached.at < ttl) return cached.url;
+  const url = await lookupTourPhoto(pin);
+  try {
+    const cache = readTourPhotoCache();
+    for (const [k, v] of Object.entries(cache)) if (Date.now() - v.at >= TOUR_PHOTO_TTL_MS) delete cache[k];
+    cache[cacheKey] = { url, at: Date.now() };
+    localStorage.setItem(TOUR_PHOTO_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    /* 저장 실패는 무시 */
+  }
+  return url;
+}
+
+async function lookupTourPhoto(pin: GuideCoursePin): Promise<string | null> {
+  const { searchTourPlaces } = await import('../lib/tourApi');
+  const keyword = pin.name.replace(/[①-⑳]/g, '').replace(/\([^)]*\)/g, '').trim();
+  if (keyword.length < 2) return null;
+  const places = await searchTourPlaces(keyword);
+  const names = [pin.name, pin.label].filter((n): n is string => !!n);
+  const hit = places
+    .filter((p) => p.thumbnailUrl && names.some((n) => sameName(n, p.name)))
+    .map((p) => ({ p, d: distanceMeters(pin, p) }))
+    .filter((x) => x.d <= 3000)
+    .sort((x, y) => x.d - y.d)[0]?.p;
+  if (!hit?.thumbnailUrl) return null;
+  return hit.thumbnailUrl.replace(/^http:\/\//, 'https://');
+}
+
 function pinsSignature(pins: GuideCoursePin[]): string {
   return pins
     .map(
@@ -57,8 +145,22 @@ function firstOpeningLine(text: string): string {
 }
 
 /** 추천 코스: OSM 지도 + 카드 캐러셀 + 사진 + 상세 패널 */
-export function GuideCourseExplorer({ pins, className }: Props) {
+export function GuideCourseExplorer({ pins: rawPins, className }: Props) {
   const { t } = useTranslation('guides');
+  const pins = useMemo(
+    () => rawPins.map((p) => ({ ...p, photoUrls: usablePhotos(p.photoUrls) })),
+    [rawPins]
+  );
+  /** 저장된 사진이 있었지만 전부 만료 주소였던 핀 — 구글 재조회(유료)는 하지 않고 TourAPI만 쓴다. */
+  const expiredOrders = useMemo(
+    () =>
+      new Set(
+        rawPins
+          .filter((p) => (p.photoUrls?.length ?? 0) > 0 && usablePhotos(p.photoUrls).length === 0)
+          .map((p) => p.order)
+      ),
+    [rawPins]
+  );
   const mapElRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<number, L.Marker>>(new Map());
@@ -95,18 +197,41 @@ export function GuideCourseExplorer({ pins, className }: Props) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { getGoogleMapsApiKey, loadGoogleMapsSdk, resolvePlaceQueryWithGoogle } = await import(
-        '../lib/googleMaps'
-      );
+      const googleMaps = await import('../lib/googleMaps');
+      const { resolvePlaceQueryWithGoogle } = googleMaps;
       const { fetchGooglePlaceDetail } = await import('../lib/googlePlaceDetail');
-      const key = getGoogleMapsApiKey();
-      if (!key) return;
-      await loadGoogleMapsSdk(key);
+      let googleReady: Promise<boolean> | null = null;
+      const ensureGoogle = () => {
+        googleReady ??= (async () => {
+          const key = googleMaps.getGoogleMapsApiKey();
+          if (!key) return false;
+          await googleMaps.loadGoogleMapsSdk(key);
+          return true;
+        })();
+        return googleReady;
+      };
       for (const pin of pins) {
         if (cancelled) return;
         if ((pin.photoUrls?.length ?? 0) > 0) continue;
         if (hydrateTried.current.has(pin.order)) continue;
         hydrateTried.current.add(pin.order);
+        // 1) 무료 TourAPI 사진부터
+        try {
+          const tourPhoto = await findTourPhoto(pin);
+          if (cancelled) return;
+          if (tourPhoto) {
+            setHydrated((prev) => ({
+              ...prev,
+              [pin.order]: { ...pin, ...prev[pin.order], photoUrls: [tourPhoto] },
+            }));
+            continue;
+          }
+        } catch (e) {
+          console.warn('[GuideCourseExplorer] tour photo failed', pin.name, e);
+        }
+        // 2) 구글 조회는 원래부터 사진이 없던 핀에만(만료 사진 핀까지 넓히면 열람마다 유료 호출이 늘어난다)
+        if (expiredOrders.has(pin.order)) continue;
+        if (!(await ensureGoogle())) continue;
         try {
           let placeId = pin.googlePlaceId;
           let label = pin.label || pin.name;
@@ -165,7 +290,7 @@ export function GuideCourseExplorer({ pins, className }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [sig, pins]);
+  }, [sig, pins, expiredOrders]);
 
   useEffect(() => {
     setSelectedOrder(pins[0]?.order ?? null);

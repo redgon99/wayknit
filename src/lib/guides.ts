@@ -116,7 +116,7 @@ function mapCoursePins(raw: unknown): GuideCoursePin[] {
  * DB 정리 SQL: docs/guide-course-pins-cleanup-2026-11-17.sql
  */
 const SCHEDULE_PSEUDO_PIN =
-  /(→|(^|\s|·)이동($|\s|\(|·)|입니다|확인 필요|일정까지|안내하고|로 안내|^\*|자유시간|귀가|체크인|휴식$|점심\/|^점심$|^저녁 식사$|^저녁$)/;
+  /(→|(^|\s|·)이동($|\s|\(|·)|입니다|확인 필요|일정까지|안내하고|로 안내|^\*|자유시간|귀가|체크인|휴식$|점심\/|^점심$|^저녁 식사$|^저녁$|^약?\s*\d{1,2}:\d{2}\s*$)/;
 
 export function isSchedulePseudoPin(name: string): boolean {
   const n = name.trim();
