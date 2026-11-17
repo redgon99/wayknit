@@ -142,6 +142,27 @@ export function extractMarkdownLinks(md: string): { alt: string; href: string; i
  */
 const GUIDE_PHOTO_HOSTS = ['tong.visitkorea.or.kr', 'upload.wikimedia.org'];
 
+/**
+ * 편집 화면에서 사람이 넣은 다른 사이트 사진: 「설명 — Photo: 사이트」 표기와 출처 페이지 링크
+ * ([![설명 — Photo: 사이트](https 사진)](출처 페이지))가 함께 있을 때만 사진으로 보여 준다.
+ * 기존 글의 다른 이미지 문법(출처 칩 등)은 그대로 둔다.
+ */
+const WEB_PHOTO_MARK = /\s—\sPhoto:\s\S/;
+
+export function isWebPhotoCaption(alt: string): boolean {
+  return WEB_PHOTO_MARK.test(alt);
+}
+
+export function guideWebPhotoUrl(raw: string, alt: string, href: string | undefined): string | null {
+  if (!href || !isHttpUrl(href) || !isWebPhotoCaption(alt) || !isHttpUrl(raw)) return null;
+  try {
+    const u = new URL(raw.trim());
+    return u.protocol === 'https:' ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 export function guidePhotoUrl(raw: string): string | null {
   if (!isHttpUrl(raw)) return null;
   try {
@@ -222,6 +243,7 @@ export function collectGuideSources(bodyMd: string, sourceUrls: string[] = []): 
   }
   for (const link of extractMarkdownLinks(bodyMd)) {
     if (link.image && guidePhotoUrl(link.href)) continue; // 본문 사진은 출처 목록에 넣지 않는다
+    if (link.image && isWebPhotoCaption(link.alt)) continue; // 사진 출처 페이지(사진을 누르면 가는 곳)도 출처 목록에 넣지 않는다
     if (isGuidePlaceLink(link.href) || isPhotoCreditLink(link.href) || isGuideMapLink(link.href)) continue; // 본문에 이미 연결된 링크
     const hint = labelFromCiteAlt(link.alt) || (link.image ? null : link.alt.trim() || null);
     const usable =

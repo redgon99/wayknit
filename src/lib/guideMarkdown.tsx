@@ -5,11 +5,13 @@ import {
   cleanSourceUrl,
   guideInternalPath,
   guidePhotoUrl,
+  guideWebPhotoUrl,
   isFaviconUrl,
   isGuideMapLink,
   isGuidePlaceLink,
   isHttpUrl,
   isPhotoCreditLink,
+  isWebPhotoCaption,
   labelFromCiteAlt,
   labelFromCiteCaption,
   labelFromUrl,
@@ -42,7 +44,7 @@ function SourceChip({ href, label }: { href: string; label: string }) {
 function GuidePhoto({ src, alt, href }: { src: string; alt: string; href?: string }) {
   const [broken, setBroken] = useState(false);
   if (broken) return null;
-  const image = <img src={src} alt={alt} loading="lazy" decoding="async" onError={() => setBroken(true)} />;
+  const image = <img src={src} alt={alt} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setBroken(true)} />;
   return (
     <figure className="guide-photo">
       {href ? (
@@ -218,10 +220,14 @@ export function renderGuideMarkdown(md: string, locale?: AppLocale): ReactNode[]
     const photo =
       trimmed.match(/^\[!\[([^\]]*)\]\(([^)\s]+)\)\]\(([^)\s]+)\)$/) ??
       trimmed.match(/^!\[([^\]]*)\]\(([^)\s]+)\)$/);
-    const photoSrc = photo ? guidePhotoUrl(photo[2]) : null;
+    const photoSrc = photo ? (guidePhotoUrl(photo[2]) ?? guideWebPhotoUrl(photo[2], photo[1], photo[3])) : null;
     if (photo && photoSrc) {
       flushList();
-      const href = photo[3] && isGuidePlaceLink(photo[3]) ? photo[3] : undefined;
+      // 사진을 누르면: 관광공사 사진은 장소 검색, Commons 사진은 파일 페이지, 다른 사이트 사진은 출처 페이지
+      const href =
+        photo[3] && (isGuidePlaceLink(photo[3]) || isPhotoCreditLink(photo[3]) || (isWebPhotoCaption(photo[1]) && isHttpUrl(photo[3])))
+          ? photo[3]
+          : undefined;
       nodes.push(<GuidePhoto key={`photo-${key++}`} src={photoSrc} alt={photo[1].trim()} href={href} />);
       continue;
     }
