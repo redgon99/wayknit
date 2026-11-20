@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AuthBar } from '../components/AuthBar';
-import { useAuth } from '../contexts/AuthContext';
-import { ktripRewriteUrl } from '../lib/ktripLinks';
 import { LocaleSwitcher } from '../components/LocaleSwitcher';
 import { ReportButton } from '../components/ReportButton';
 import { ShareIcon } from '../components/ShareIcon';
@@ -30,7 +28,6 @@ import '../styles/app.css';
 export default function GuideDetailPage() {
   const { slug = '' } = useParams<{ slug: string }>();
   const { t } = useTranslation('guides');
-  const { isAdmin } = useAuth();
   const locale = normalizeLocale(i18n.language);
   const [guide, setGuide] = useState<GuideArticle | null>(null);
   const [loading, setLoading] = useState(true);
@@ -193,20 +190,6 @@ export default function GuideDetailPage() {
                 </span>
               )}
             </div>
-            {/* 관리자 전용: ktrip이 이 글의 업데이트 버전 요청문(ChatGPT @Wayknit Guide Inbox용)을 만든다. 기존 글은 바뀌지 않는다. */}
-            {isAdmin && (
-              <div className="guide-admin-tools">
-                <a
-                  className="guide-admin-tool-link"
-                  href={ktripRewriteUrl(guide.slug)}
-                  target="_blank"
-                  rel="noreferrer"
-                  title="ktrip에서 이 글의 업데이트 버전 요청문을 만들고 ChatGPT로 새 글을 씁니다. 새 글을 공개하면 이 글은 비공개로 돌리세요."
-                >
-                  GPT로 업데이트 버전 만들기 ↗
-                </a>
-              </div>
-            )}
             <div className="guides-card-tags">
               <span className="guides-tag guides-tag-kind">{t(`kinds.${guide.kind}`)}</span>
               {displayCourseTags(guide.topicTags, locale, 8).map((tag) => (
