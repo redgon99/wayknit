@@ -20,6 +20,18 @@
     "login": "ログイン",
     "menu": "メニュー"
   },
+  "search": {
+    "label": "サイト内検索",
+    "placeholder": "旅のヒント・コース・スポット検索",
+    "groupGuides": "旅のヒント",
+    "groupPlaza": "共有コース",
+    "inPlanner": "プランナーで「{{q}}」を探す",
+    "inPlannerHint": "地図でスポットを検索して日程に追加",
+    "loading": "読み込み中…",
+    "empty": "一致するヒント・コースはありません",
+    "days_one": "{{count}}日",
+    "days_other": "{{count}}日"
+  },
   "hero": {
     "eyebrow": "Wayknit",
     "title": "行きたい場所を集め、\n旅のルートを紡ぐ",

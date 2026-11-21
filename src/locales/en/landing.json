@@ -20,6 +20,18 @@
     "login": "Sign in",
     "menu": "Menu"
   },
+  "search": {
+    "label": "Search the site",
+    "placeholder": "Search tips, courses, places",
+    "groupGuides": "Travel tips",
+    "groupPlaza": "Shared courses",
+    "inPlanner": "Find “{{q}}” in the planner",
+    "inPlannerHint": "Search places on the map and add them to your trip",
+    "loading": "Loading…",
+    "empty": "No matching tips or courses",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days"
+  },
   "hero": {
     "eyebrow": "Trip route planner",
     "title": "Collect places.\nKnit your route.",

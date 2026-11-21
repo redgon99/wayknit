@@ -24,7 +24,9 @@ export type AnalyticsEvent =
   /** 가이드 상세의 행동 버튼(플래너·자동 경로·준비·공유마당) 클릭 — 글이 여행 계획으로 이어지는지(ktrip 성과, §52) */
   | 'guide_cta_click'
   /** 플래너가 가이드(fromGuide)의 코스를 실제로 가져옴. places = 가져온 장소 수 */
-  | 'guide_trip_import';
+  | 'guide_trip_import'
+  /** 상단 통합검색 결과 선택. type = guide·plaza·planner, chars = 검색어 길이(검색어 자체는 남기지 않는다) */
+  | 'site_search_select';
 
 export type AnalyticsProps = Record<string, string | number | boolean | null>;
 

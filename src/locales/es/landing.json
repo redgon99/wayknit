@@ -20,6 +20,18 @@
     "login": "Iniciar sesión",
     "menu": "Menú"
   },
+  "search": {
+    "label": "Buscar en el sitio",
+    "placeholder": "Buscar consejos, rutas, lugares",
+    "groupGuides": "Consejos de viaje",
+    "groupPlaza": "Rutas compartidas",
+    "inPlanner": "Buscar «{{q}}» en el planificador",
+    "inPlannerHint": "Busca lugares en el mapa y añádelos a tu viaje",
+    "loading": "Cargando…",
+    "empty": "No hay consejos ni rutas que coincidan",
+    "days_one": "{{count}} día",
+    "days_other": "{{count}} días"
+  },
   "hero": {
     "eyebrow": "Planificador de rutas",
     "title": "Reúne lugares.\nUne tu ruta.",

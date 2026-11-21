@@ -20,6 +20,18 @@
     "login": "Connexion",
     "menu": "Menu"
   },
+  "search": {
+    "label": "Rechercher sur le site",
+    "placeholder": "Conseils, itinéraires, lieux",
+    "groupGuides": "Conseils de voyage",
+    "groupPlaza": "Itinéraires partagés",
+    "inPlanner": "Chercher « {{q}} » dans le planificateur",
+    "inPlannerHint": "Cherchez des lieux sur la carte et ajoutez-les au voyage",
+    "loading": "Chargement…",
+    "empty": "Aucun conseil ni itinéraire correspondant",
+    "days_one": "{{count}} jour",
+    "days_other": "{{count}} jours"
+  },
   "hero": {
     "eyebrow": "Planificateur d’itinéraires",
     "title": "Collectez des lieux.\nAssemblez votre itinéraire.",

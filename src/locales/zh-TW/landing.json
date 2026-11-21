@@ -20,6 +20,18 @@
     "login": "登錄",
     "menu": "選單"
   },
+  "search": {
+    "label": "站內搜尋",
+    "placeholder": "搜尋旅遊提示、路線、地點",
+    "groupGuides": "旅遊提示",
+    "groupPlaza": "共享路線",
+    "inPlanner": "在規劃器中尋找「{{q}}」",
+    "inPlannerHint": "在地圖上搜尋地點並加入行程",
+    "loading": "載入中…",
+    "empty": "沒有符合的提示或路線",
+    "days_one": "{{count}}天",
+    "days_other": "{{count}}天"
+  },
   "hero": {
     "eyebrow": "Wayknit",
     "title": "收藏想去的地方，\n編織旅行路線",

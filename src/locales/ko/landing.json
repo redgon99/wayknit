@@ -20,6 +20,18 @@
     "login": "로그인",
     "menu": "메뉴"
   },
+  "search": {
+    "label": "사이트 통합검색",
+    "placeholder": "여행 팁·코스·장소 검색",
+    "groupGuides": "여행 팁",
+    "groupPlaza": "공유마당 코스",
+    "inPlanner": "플래너에서 “{{q}}” 장소 찾기",
+    "inPlannerHint": "지도에서 장소를 검색해 일정에 담아요",
+    "loading": "불러오는 중…",
+    "empty": "일치하는 여행 팁·코스가 없어요",
+    "days_one": "{{count}}일",
+    "days_other": "{{count}}일"
+  },
   "hero": {
     "eyebrow": "Wayknit",
     "title": "가고 싶은 곳을 담으면,\n여행길이 됩니다",

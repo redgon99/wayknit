@@ -20,6 +20,18 @@
     "login": "Anmelden",
     "menu": "Menü"
   },
+  "search": {
+    "label": "Website durchsuchen",
+    "placeholder": "Tipps, Routen, Orte suchen",
+    "groupGuides": "Reisetipps",
+    "groupPlaza": "Geteilte Routen",
+    "inPlanner": "„{{q}}“ im Planer suchen",
+    "inPlannerHint": "Orte auf der Karte suchen und zur Reise hinzufügen",
+    "loading": "Wird geladen…",
+    "empty": "Keine passenden Tipps oder Routen",
+    "days_one": "{{count}} Tag",
+    "days_other": "{{count}} Tage"
+  },
   "hero": {
     "eyebrow": "Routenplaner",
     "title": "Orte sammeln.\nRoute zusammenfügen.",

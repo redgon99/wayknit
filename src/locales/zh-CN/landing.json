@@ -20,6 +20,18 @@
     "login": "登录",
     "menu": "菜单"
   },
+  "search": {
+    "label": "站内搜索",
+    "placeholder": "搜索旅行贴士、路线、地点",
+    "groupGuides": "旅行贴士",
+    "groupPlaza": "共享路线",
+    "inPlanner": "在规划器中查找“{{q}}”",
+    "inPlannerHint": "在地图上搜索地点并加入行程",
+    "loading": "加载中…",
+    "empty": "没有匹配的贴士或路线",
+    "days_one": "{{count}}天",
+    "days_other": "{{count}}天"
+  },
   "hero": {
     "eyebrow": "Wayknit",
     "title": "收藏想去的地方，\n编织旅行路线",

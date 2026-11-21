@@ -5,6 +5,7 @@ import { Icon } from './Icon';
 import { AuthBar } from './AuthBar';
 import { LandingCmsNav } from './LandingCms';
 import { LocaleSwitcher } from './LocaleSwitcher';
+import { SiteSearch } from './SiteSearch';
 import { useLandingCms } from '../hooks/useLandingCms';
 import { normalizeLocale, pathWithLocale } from '../lib/locale';
 import { plannerPath } from '../lib/routes';
@@ -112,6 +113,7 @@ export function SiteHeader({ active }: SiteHeaderProps) {
           {navLinks}
         </nav>
         <div className="landing-nav-actions">
+          <SiteSearch className="landing-nav-search" collapsible />
           <LocaleSwitcher compact />
           <AuthBar hideLocale />
           <Link to={planPath} className="landing-btn landing-btn-primary">
@@ -124,6 +126,7 @@ export function SiteHeader({ active }: SiteHeaderProps) {
 
         {menuOpen && (
           <div className="landing-nav-drawer" role="dialog" aria-label={t('nav.menu')}>
+            <SiteSearch onNavigate={() => setMenuOpen(false)} />
             <nav className="landing-nav-drawer-links" aria-label="Main">
               {navLinks}
             </nav>

@@ -18967,7 +18967,7 @@ a.guide-source-chip:hover {
   color: var(--color-text-primary);
 }
 
-/* 가이드 상세 관리자 도구(ktrip 업데이트 요청문 링크) — 관리자에게만 보인다 */
+/* 관리 「가이드 카드」 미리보기 창의 ktrip 업데이트 요청문 링크(AdminGuidesPage) — 공개 가이드 상세에서는 2026-11-18 뺐다 */
 .guide-admin-tools {
   display: flex;
   flex-wrap: wrap;
