@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { SiteHeader } from '../components/SiteHeader';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/Icon';
 import { HelpContent } from '../components/HelpContent';
@@ -12,6 +13,8 @@ export default function HelpPage() {
   const planPath = plannerPath(normalizeLocale(i18n.language));
 
   return (
+    <>
+    <SiteHeader active="trip" />
     <div className="static-page help-page">
       <header className="static-page-header">
         <Link to={planPath} className="static-page-back">
@@ -23,5 +26,6 @@ export default function HelpPage() {
       <HelpContent />
       <LegalLinks className="static-page-legal-links" />
     </div>
+    </>
   );
 }

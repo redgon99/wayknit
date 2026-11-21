@@ -1154,3 +1154,251 @@
     white-space: nowrap;
   }
 }
+
+/* ── 개편 2단계(2026-11-21): 메뉴 3묶음 (SiteNav.tsx) ── */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.site-nav-group {
+  position: relative;
+}
+
+.site-nav-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--landing-muted);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.site-nav-trigger:hover,
+.site-nav-group.is-open .site-nav-trigger {
+  color: var(--landing-ink);
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.site-nav-trigger.nav-active {
+  color: var(--landing-ink);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--landing-accent);
+  border-radius: 0;
+}
+
+.site-nav-trigger .wm-icon {
+  transition: transform 0.15s;
+}
+
+.site-nav-group.is-open .site-nav-trigger .wm-icon {
+  transform: rotate(180deg);
+}
+
+.site-nav-panel {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 300px;
+  padding: 8px;
+  margin-top: 4px;
+  background: var(--landing-surface);
+  border: 1px solid var(--landing-border);
+  border-radius: 16px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
+  z-index: 110;
+}
+
+/* 패널까지 마우스를 옮기는 동안 닫히지 않게 위쪽 빈틈을 메운다 */
+.site-nav-panel::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -8px;
+  height: 8px;
+}
+
+.site-nav-group.is-open .site-nav-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (hover: hover) {
+  .site-nav-group:hover .site-nav-panel {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.site-nav-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--landing-ink);
+  text-decoration: none;
+}
+
+.site-nav-item:hover,
+.site-nav-item:focus-visible {
+  background: #fffbeb;
+}
+
+.site-nav-item-label {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--landing-ink);
+}
+
+.site-nav-item-desc {
+  font-size: 0.8125rem;
+  color: var(--landing-muted);
+}
+
+.landing-nav-links .site-nav-item:hover {
+  color: var(--landing-ink);
+}
+
+/* 모바일 서랍 안 3묶음 */
+.site-nav-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.site-nav-drawer-group h2 {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #854d0e;
+  letter-spacing: 0.02em;
+}
+
+.site-nav-drawer-group .site-nav-item {
+  padding: 8px 4px;
+}
+
+/* 모바일 하단 탭 4개 */
+.site-tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 95;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--landing-surface);
+  border-top: 1px solid var(--landing-border);
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.05);
+}
+
+.site-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--landing-muted);
+  font: inherit;
+  font-size: 0.6875rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.site-tab.is-active {
+  color: var(--landing-ink);
+  font-weight: 700;
+}
+
+.site-tab-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 94;
+  background: rgba(15, 23, 42, 0.32);
+}
+
+.site-tab-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding: 14px 16px 16px;
+  background: var(--landing-surface);
+  border-radius: 18px 18px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.site-tab-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.site-tab-sheet-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.site-tab-sheet-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--landing-ink);
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  body.site-has-tabbar {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (min-width: 768px) {
+  .site-tabbar,
+  .site-tab-sheet-backdrop {
+    display: none;
+  }
+}
+
+/* 768~1023px: 메뉴 3묶음 + 검색 버튼 + 언어 + 로그인 + 플래너 열기가 한 줄에 들어가도록 로그인은 아이콘만 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .landing-nav-actions .auth-link-label {
+    display: none;
+  }
+
+  .landing-nav {
+    gap: 12px;
+  }
+
+  .site-nav {
+    gap: 2px;
+  }
+
+  .site-nav-trigger {
+    padding: 0 8px;
+  }
+}

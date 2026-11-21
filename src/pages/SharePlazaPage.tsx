@@ -14,7 +14,7 @@ export default function SharePlazaPage() {
 
   return (
     <div className="plaza-page">
-      <SiteHeader active="plaza" />
+      <SiteHeader active="courses" />
       <header className="plaza-header">
         <h1 className="plaza-title">{t('plaza.title')}</h1>
         <p className="plaza-subtitle">{t('meta.plazaDescription')}</p>

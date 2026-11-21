@@ -9,7 +9,7 @@
   },
   "notice": {
     "trial": "시범 운영 중입니다(2026년 12월 31일까지). 기능과 화면이 바뀔 수 있어요."
-  },
+  },
   "nav": {
     "features": "소개",
     "howItWorks": "사용 방법",
@@ -18,7 +18,24 @@
     "info": "한국여행정보",
     "start": "플래너 열기",
     "login": "로그인",
-    "menu": "메뉴"
+    "menu": "메뉴",
+    "courses": "코스",
+    "infoGroup": "여행 정보",
+    "myTrip": "내 여행",
+    "home": "홈",
+    "tabInfo": "정보",
+    "tabs": "하단 메뉴",
+    "close": "닫기"
+  },
+  "navItems": {
+    "recommended": { "label": "추천 코스", "desc": "지역·일수별 코스, 장소째로 담기" },
+    "shared": { "label": "공유 일정", "desc": "다른 여행자가 올린 일정" },
+    "themes": { "label": "테마로 만들기", "desc": "미식·야경·가족 등 테마로 첫 일정" },
+    "prep": { "label": "떠나기 전 준비", "desc": "교통카드·데이터·결제 체크리스트" },
+    "tips": { "label": "여행 팁", "desc": "교통·음식·문화·쇼핑·안전 실용 가이드" },
+    "resources": { "label": "관광 자료", "desc": "관광사진·걷기길·오디오 가이드·반려동물·무장애" },
+    "planner": { "label": "플래너", "desc": "담은 장소를 시간표·지도로" },
+    "help": { "label": "도움말", "desc": "처음 쓰는 방법" }
   },
   "search": {
     "label": "사이트 통합검색",

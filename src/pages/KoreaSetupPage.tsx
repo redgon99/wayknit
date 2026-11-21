@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { SiteHeader } from '../components/SiteHeader';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/Icon';
 import { KoreaSetupContent } from '../components/KoreaSetupContent';
@@ -11,6 +12,8 @@ export default function KoreaSetupPage() {
   const { t } = useTranslation('planner');
 
   return (
+    <>
+    <SiteHeader active="info" />
     <div className="static-page korea-setup-page">
       <header className="static-page-header">
         <Link to={plannerPath(normalizeLocale(i18n.language))} className="static-page-back">
@@ -21,5 +24,6 @@ export default function KoreaSetupPage() {
       </header>
       <KoreaSetupContent />
     </div>
+    </>
   );
 }

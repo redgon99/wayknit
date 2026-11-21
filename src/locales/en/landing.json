@@ -9,7 +9,7 @@
   },
   "notice": {
     "trial": "Wayknit is running as a pilot through December 31, 2026. Features and screens may change."
-  },
+  },
   "nav": {
     "features": "About",
     "howItWorks": "How it works",
@@ -18,7 +18,24 @@
     "info": "Korea travel info",
     "start": "Open planner",
     "login": "Sign in",
-    "menu": "Menu"
+    "menu": "Menu",
+    "courses": "Courses",
+    "infoGroup": "Travel info",
+    "myTrip": "My trip",
+    "home": "Home",
+    "tabInfo": "Info",
+    "tabs": "Bottom menu",
+    "close": "Close"
+  },
+  "navItems": {
+    "recommended": { "label": "Recommended courses", "desc": "Courses by region and length — add whole courses" },
+    "shared": { "label": "Shared trips", "desc": "Itineraries from other travelers" },
+    "themes": { "label": "Start from a theme", "desc": "Food, night views, family and more" },
+    "prep": { "label": "Before you go", "desc": "Transit card, data and payment checklist" },
+    "tips": { "label": "Travel tips", "desc": "Practical guides: transit, food, culture, shopping, safety" },
+    "resources": { "label": "Tourism resources", "desc": "Photos, walking trails, audio guides, pets, accessibility" },
+    "planner": { "label": "Planner", "desc": "Turn saved places into a timetable and map" },
+    "help": { "label": "Help", "desc": "Getting started" }
   },
   "search": {
     "label": "Search the site",

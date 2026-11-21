@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { SiteHeader } from '../components/SiteHeader';
 import { SegmentedTabs } from '../components/SegmentedTabs';
@@ -24,7 +24,14 @@ export default function GuidesPage() {
   const { t } = useTranslation('guides');
   const locale = normalizeLocale(i18n.language);
   const [guides, setGuides] = useState<GuideArticle[]>([]);
-  const [kindFilter, setKindFilter] = useState<GuideKind | ''>('');
+  // 개편 2단계(2026-11-21): 메뉴「추천 코스」가 /guides?kind=course로 들어온다 — 종류 필터는 주소가 기준
+  const [searchParams, setSearchParams] = useSearchParams();
+  const kindParam = searchParams.get('kind');
+  const kindFilter: GuideKind | '' = (GUIDE_KINDS as readonly string[]).includes(kindParam ?? '')
+    ? (kindParam as GuideKind)
+    : '';
+  const setKindFilter = (next: GuideKind | '') =>
+    setSearchParams(next ? { kind: next } : {}, { replace: true });
   const [courseFilters, setCourseFilters] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +108,7 @@ export default function GuidesPage() {
 
   return (
     <main className="guides-page">
-      <SiteHeader active="guides" />
+      <SiteHeader active={kindFilter === 'course' ? 'courses' : 'info'} />
 
       <div className="guides-shell">
         <div className="guides-page-title">

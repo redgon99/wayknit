@@ -9,7 +9,7 @@
   },
   "notice": {
     "trial": "試營運至2026年12月31日，功能與介面可能會有所調整。"
-  },
+  },
   "nav": {
     "features": "介紹",
     "howItWorks": "使用方法",
@@ -18,7 +18,24 @@
     "info": "韓國旅行信息",
     "start": "打開規劃器",
     "login": "登錄",
-    "menu": "選單"
+    "menu": "選單",
+    "courses": "路線",
+    "infoGroup": "旅遊資訊",
+    "myTrip": "我的行程",
+    "home": "首頁",
+    "tabInfo": "資訊",
+    "tabs": "底部選單",
+    "close": "關閉"
+  },
+  "navItems": {
+    "recommended": { "label": "推薦路線", "desc": "依地區與天數的路線，可整條加入" },
+    "shared": { "label": "共享行程", "desc": "其他旅客公開的行程" },
+    "themes": { "label": "依主題產生", "desc": "美食、夜景、親子等主題的第一份行程" },
+    "prep": { "label": "出發前準備", "desc": "交通卡、網路與付款清單" },
+    "tips": { "label": "旅遊提示", "desc": "交通、飲食、文化、購物、安全實用指南" },
+    "resources": { "label": "觀光資料", "desc": "觀光照片、步道、語音導覽、寵物、無障礙" },
+    "planner": { "label": "規劃器", "desc": "把加入的地點變成時間表和地圖" },
+    "help": { "label": "說明", "desc": "入門指南" }
   },
   "search": {
     "label": "站內搜尋",

@@ -9,7 +9,7 @@
   },
   "notice": {
     "trial": "Wayknit est en phase pilote jusqu’au 31 décembre 2026. Les fonctionnalités et les écrans peuvent changer."
-  },
+  },
   "nav": {
     "features": "À propos",
     "howItWorks": "Comment ça marche",
@@ -18,7 +18,24 @@
     "info": "Infos voyage en Corée",
     "start": "Ouvrir le planificateur",
     "login": "Connexion",
-    "menu": "Menu"
+    "menu": "Menu",
+    "courses": "Itinéraires",
+    "infoGroup": "Infos voyage",
+    "myTrip": "Mon voyage",
+    "home": "Accueil",
+    "tabInfo": "Infos",
+    "tabs": "Menu du bas",
+    "close": "Fermer"
+  },
+  "navItems": {
+    "recommended": { "label": "Itinéraires recommandés", "desc": "Par région et durée — ajoutez un itinéraire entier" },
+    "shared": { "label": "Voyages partagés", "desc": "Itinéraires d'autres voyageurs" },
+    "themes": { "label": "Partir d’un thème", "desc": "Cuisine, vues de nuit, famille et plus" },
+    "prep": { "label": "Avant de partir", "desc": "Liste : carte de transport, données, paiement" },
+    "tips": { "label": "Conseils de voyage", "desc": "Guides pratiques : transports, cuisine, culture, achats, sécurité" },
+    "resources": { "label": "Ressources touristiques", "desc": "Photos, sentiers, audioguides, animaux, accessibilité" },
+    "planner": { "label": "Planificateur", "desc": "Vos lieux en horaire et en carte" },
+    "help": { "label": "Aide", "desc": "Bien démarrer" }
   },
   "search": {
     "label": "Rechercher sur le site",

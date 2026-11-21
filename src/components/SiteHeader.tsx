@@ -6,13 +6,16 @@ import { AuthBar } from './AuthBar';
 import { LandingCmsNav } from './LandingCms';
 import { LocaleSwitcher } from './LocaleSwitcher';
 import { SiteSearch } from './SiteSearch';
+import { SiteNavDesktop, SiteNavDrawer, SiteTabBar } from './SiteNav';
 import { useLandingCms } from '../hooks/useLandingCms';
 import { normalizeLocale, pathWithLocale } from '../lib/locale';
 import { plannerPath } from '../lib/routes';
+import type { SiteNavActive } from '../lib/siteNav';
 import i18n from '../lib/i18n';
 import '../styles/landing.css';
 
-export type SiteHeaderActive = 'home' | 'plaza' | 'guides' | 'info';
+/** 개편 2단계(2026-11-21): 메뉴 3묶음 기준 — 코스(courses) · 여행 정보(info) · 내 여행(trip) */
+export type SiteHeaderActive = SiteNavActive;
 
 function SiteBrand({ className = '' }: { className?: string }) {
   const { t } = useTranslation('landing');
@@ -45,45 +48,16 @@ export function SiteHeader({ active }: SiteHeaderProps) {
   const notices = cms.noticeTexts ?? [t('notice.trial')];
   const locale = normalizeLocale(i18n.language);
   const homePath = pathWithLocale('/', locale);
-  const plazaPath = pathWithLocale('/plaza', locale);
-  const guidesPath = pathWithLocale('/guides', locale);
-  const infoPath = pathWithLocale('/info', locale);
   const planPath = plannerPath(locale);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const navLinks = (
-    <>
-      {/* CMS 섹션은 랜딩에만 있다 — 다른 페이지에선 랜딩의 그 섹션으로 보낸다(아래 "소개"와 같은 방식) */}
-      <LandingCmsNav
-        items={cms.navItems}
-        hrefBase={active === 'home' ? '' : homePath}
-        onNavigate={() => setMenuOpen(false)}
-      />
-      <a href={`${homePath}#features`} onClick={() => setMenuOpen(false)}>
-        {t('nav.features')}
-      </a>
-      <Link
-        to={plazaPath}
-        className={active === 'plaza' ? 'nav-active' : ''}
-        onClick={() => setMenuOpen(false)}
-      >
-        {t('nav.plaza')}
-      </Link>
-      <Link
-        to={guidesPath}
-        className={active === 'guides' ? 'nav-active' : ''}
-        onClick={() => setMenuOpen(false)}
-      >
-        {t('nav.tips')}
-      </Link>
-      <Link
-        to={infoPath}
-        className={active === 'info' ? 'nav-active' : ''}
-        onClick={() => setMenuOpen(false)}
-      >
-        {t('nav.info')}
-      </Link>
-    </>
+  // CMS 메뉴는 랜딩에만 있는 섹션이라 다른 페이지에선 랜딩의 그 섹션으로 보낸다
+  const cmsNav = (
+    <LandingCmsNav
+      items={cms.navItems}
+      hrefBase={active === 'home' ? '' : homePath}
+      onNavigate={() => setMenuOpen(false)}
+    />
   );
 
   return (
@@ -110,7 +84,8 @@ export function SiteHeader({ active }: SiteHeaderProps) {
           <SiteBrand />
         </Link>
         <nav className="landing-nav-links" aria-label="Main">
-          {navLinks}
+          {cmsNav}
+          <SiteNavDesktop active={active} />
         </nav>
         <div className="landing-nav-actions">
           <SiteSearch className="landing-nav-search" collapsible />
@@ -127,9 +102,12 @@ export function SiteHeader({ active }: SiteHeaderProps) {
         {menuOpen && (
           <div className="landing-nav-drawer" role="dialog" aria-label={t('nav.menu')}>
             <SiteSearch onNavigate={() => setMenuOpen(false)} />
-            <nav className="landing-nav-drawer-links" aria-label="Main">
-              {navLinks}
-            </nav>
+            <SiteNavDrawer onNavigate={() => setMenuOpen(false)} />
+            {cms.navItems.length > 0 && (
+              <nav className="landing-nav-drawer-links" aria-label="Main">
+                {cmsNav}
+              </nav>
+            )}
             <div className="landing-nav-drawer-actions">
               <LocaleSwitcher compact />
               <AuthBar hideLocale />
@@ -137,6 +115,7 @@ export function SiteHeader({ active }: SiteHeaderProps) {
           </div>
         )}
       </header>
+      <SiteTabBar active={active} />
     </div>
   );
 }

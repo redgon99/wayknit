@@ -9,7 +9,7 @@
   },
   "notice": {
     "trial": "试运营至2026年12月31日，功能和界面可能会有所调整。"
-  },
+  },
   "nav": {
     "features": "介绍",
     "howItWorks": "使用方法",
@@ -18,7 +18,24 @@
     "info": "韩国旅行信息",
     "start": "打开规划器",
     "login": "登录",
-    "menu": "菜单"
+    "menu": "菜单",
+    "courses": "路线",
+    "infoGroup": "旅行信息",
+    "myTrip": "我的行程",
+    "home": "首页",
+    "tabInfo": "信息",
+    "tabs": "底部菜单",
+    "close": "关闭"
+  },
+  "navItems": {
+    "recommended": { "label": "推荐路线", "desc": "按地区和天数的路线，可整条加入" },
+    "shared": { "label": "共享行程", "desc": "其他旅行者公开的行程" },
+    "themes": { "label": "按主题生成", "desc": "美食、夜景、亲子等主题的第一份行程" },
+    "prep": { "label": "出发前准备", "desc": "交通卡、流量和支付清单" },
+    "tips": { "label": "旅行贴士", "desc": "交通、饮食、文化、购物、安全实用指南" },
+    "resources": { "label": "旅游资料", "desc": "旅游照片、步道、语音导览、宠物、无障碍" },
+    "planner": { "label": "规划器", "desc": "把加入的地点变成时间表和地图" },
+    "help": { "label": "帮助", "desc": "入门指南" }
   },
   "search": {
     "label": "站内搜索",

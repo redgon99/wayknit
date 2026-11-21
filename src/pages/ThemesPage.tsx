@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { SiteHeader } from '../components/SiteHeader';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/Icon';
 import { TRIP_THEMES } from '../lib/themes';
@@ -12,6 +13,8 @@ export default function ThemesPage() {
   const planPath = plannerPath(normalizeLocale(i18n.language));
 
   return (
+    <>
+    <SiteHeader active="courses" />
     <div className="static-page themes-page">
       <header className="static-page-header">
         <Link to={planPath} className="static-page-back">
@@ -36,5 +39,6 @@ export default function ThemesPage() {
         ))}
       </div>
     </div>
+    </>
   );
 }

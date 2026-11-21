@@ -9,7 +9,7 @@
   },
   "notice": {
     "trial": "Wayknit läuft bis zum 31. Dezember 2026 im Testbetrieb. Funktionen und Ansichten können sich ändern."
-  },
+  },
   "nav": {
     "features": "Überblick",
     "howItWorks": "So funktioniert’s",
@@ -18,7 +18,24 @@
     "info": "Korea-Reiseinfos",
     "start": "Planer öffnen",
     "login": "Anmelden",
-    "menu": "Menü"
+    "menu": "Menü",
+    "courses": "Routen",
+    "infoGroup": "Reiseinfos",
+    "myTrip": "Meine Reise",
+    "home": "Start",
+    "tabInfo": "Infos",
+    "tabs": "Untere Navigation",
+    "close": "Schließen"
+  },
+  "navItems": {
+    "recommended": { "label": "Empfohlene Routen", "desc": "Nach Region und Dauer — ganze Routen übernehmen" },
+    "shared": { "label": "Geteilte Reisen", "desc": "Reisepläne anderer Reisender" },
+    "themes": { "label": "Nach Thema starten", "desc": "Essen, Nachtansichten, Familie und mehr" },
+    "prep": { "label": "Vor der Abreise", "desc": "Checkliste: Verkehrskarte, Daten, Zahlung" },
+    "tips": { "label": "Reisetipps", "desc": "Praktische Guides: Verkehr, Essen, Kultur, Shopping, Sicherheit" },
+    "resources": { "label": "Tourismus-Infos", "desc": "Fotos, Wanderwege, Audioguides, Haustiere, Barrierefreiheit" },
+    "planner": { "label": "Planer", "desc": "Gespeicherte Orte als Zeitplan und Karte" },
+    "help": { "label": "Hilfe", "desc": "Erste Schritte" }
   },
   "search": {
     "label": "Website durchsuchen",

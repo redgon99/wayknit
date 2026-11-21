@@ -191,7 +191,7 @@ export default function GuideDetailPage() {
   return (
     <main className="guides-page">
       {/* 개편 1단계(2026-11-21): 랜딩과 같은 공통 헤더 — 메뉴·통합검색·플래너 열기. 방문의 80%가 가이드로 들어온다 */}
-      <SiteHeader active="guides" />
+      <SiteHeader active={guide?.kind === 'course' ? 'courses' : 'info'} />
 
       <div className="guides-shell guide-detail-layout">
       <article className={`guides-detail${courseCta ? ' guides-detail-has-sticky' : ''}`}>

@@ -9,7 +9,7 @@
   },
   "notice": {
     "trial": "Wayknit está en fase de prueba hasta el 31 de diciembre de 2026. Las funciones y pantallas pueden cambiar."
-  },
+  },
   "nav": {
     "features": "Acerca de",
     "howItWorks": "Cómo funciona",
@@ -18,7 +18,24 @@
     "info": "Info de viaje en Corea",
     "start": "Abrir el planificador",
     "login": "Iniciar sesión",
-    "menu": "Menú"
+    "menu": "Menú",
+    "courses": "Rutas",
+    "infoGroup": "Info de viaje",
+    "myTrip": "Mi viaje",
+    "home": "Inicio",
+    "tabInfo": "Info",
+    "tabs": "Menú inferior",
+    "close": "Cerrar"
+  },
+  "navItems": {
+    "recommended": { "label": "Rutas recomendadas", "desc": "Por región y duración — añade rutas completas" },
+    "shared": { "label": "Viajes compartidos", "desc": "Itinerarios de otros viajeros" },
+    "themes": { "label": "Empezar por un tema", "desc": "Comida, vistas nocturnas, familia y más" },
+    "prep": { "label": "Antes de salir", "desc": "Lista: tarjeta de transporte, datos, pagos" },
+    "tips": { "label": "Consejos de viaje", "desc": "Guías prácticas: transporte, comida, cultura, compras, seguridad" },
+    "resources": { "label": "Recursos turísticos", "desc": "Fotos, senderos, audioguías, mascotas, accesibilidad" },
+    "planner": { "label": "Planificador", "desc": "Convierte tus lugares en horario y mapa" },
+    "help": { "label": "Ayuda", "desc": "Primeros pasos" }
   },
   "search": {
     "label": "Buscar en el sitio",

@@ -19165,3 +19165,11 @@ a.guide-source-chip:hover {
   gap: 8px;
   margin-top: auto;
 }
+
+/* 개편 2단계: 모바일 하단 탭(60px) 위로 가이드 담기 고정 버튼을 올린다 */
+@media (max-width: 720px) {
+  body.site-has-tabbar .guide-course-sticky:not([hidden]) {
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 10px;
+  }
+}
