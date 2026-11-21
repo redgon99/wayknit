@@ -17,6 +17,7 @@ import {
   guideAvailableLocales,
   isGuidesConfigured,
   pickGuideContent,
+  plainGuideSummary,
 } from '../lib/guides';
 import { renderGuideMarkdown } from '../lib/guideMarkdown';
 import { collectGuideSources } from '../lib/guideSources';
@@ -103,10 +104,11 @@ export default function GuideDetailPage() {
   const content = guide ? pickGuideContent(guide, viewLocale ?? locale) : null;
   /* summaryEn은 translations가 생기기 전부터 있던 필드 — 제대로 된
      translations.en이 있으면 그쪽이 우선, 없을 때만 이 레거시 값을 쓴다. */
-  const summaryText =
+  const rawSummary =
     content?.locale === 'en' && !guide?.translations.en && guide?.summaryEn
       ? guide.summaryEn
       : content?.summary;
+  const summaryText = rawSummary ? plainGuideSummary(rawSummary) : rawSummary;
   const sources = content ? collectGuideSources(content.bodyMd, guide?.sourceUrls ?? []) : [];
 
   useSeoMeta(

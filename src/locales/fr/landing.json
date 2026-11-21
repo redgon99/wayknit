@@ -140,5 +140,49 @@
     "login": "Connexion",
     "plan": "Planificateur",
     "rights": "© {{year}} Wayknit"
+  },
+  "home": {
+    "lead": "Choisissez simplement par où commencer. Sans inscription.",
+    "continue": "Reprendre",
+    "continueTrip_one": "{{title}} · {{count}} jour",
+    "continueTrip_other": "{{title}} · {{count}} jours",
+    "course": {
+      "badge": "1 · Le plus rapide",
+      "title": "Partir d'un itinéraire recommandé",
+      "body": "Ajoutez un itinéraire entier avec ses lieux, puis retirez ou ajoutez des étapes pour le faire vôtre.",
+      "cta": "Choisir un itinéraire"
+    },
+    "place": {
+      "badge": "2 · Vous savez où aller ?",
+      "title": "Ajouter des lieux vous-même",
+      "body": "Cherchez et ajoutez des lieux : l'itinéraire et l'horaire s'organisent tout seuls.",
+      "placeholder": "ex. : Gyeongbokgung, marché de Gwangjang",
+      "submit": "Rechercher"
+    },
+    "theme": {
+      "badge": "3 · Pas encore d'idée ?",
+      "title": "Un premier programme par thème",
+      "body": "Choisissez un centre d'intérêt et nous proposons une journée avec de vrais lieux.",
+      "cta": "Tous les thèmes"
+    },
+    "courses": {
+      "title": "Itinéraires recommandés",
+      "more": "Tous les itinéraires",
+      "add": "Ajouter à mon voyage",
+      "read": "Lire",
+      "empty": "Des itinéraires recommandés arrivent bientôt."
+    },
+    "info": {
+      "title": "Infos pratiques",
+      "more": "Tout voir",
+      "transport": {
+        "label": "Se déplacer",
+        "desc": "Cartes de transport, métro, trajets depuis l'aéroport"
+      },
+      "culture": {
+        "label": "Cuisine et culture",
+        "desc": "Commander au restaurant et savoir-vivre"
+      }
+    }
   }
 }

@@ -10,13 +10,14 @@ import { GUIDE_KINDS, type GuideKind } from '../lib/guideKinds';
 import { CourseTaxonomyChips } from '../components/CourseTaxonomyChips';
 import {
   displayCourseTags,
+  getCourseTaxonomyTag,
   guideMatchesCourseFilters,
   inferCourseTaxonomyTags,
   resolveCourseTag,
 } from '../lib/courseGuideTaxonomy';
 import { normalizeLocale, pathWithLocale } from '../lib/locale';
 import i18n from '../lib/i18n';
-import { isGuidesConfigured, listPublishedGuides, pickGuideContent } from '../lib/guides';
+import { isGuidesConfigured, listPublishedGuides, pickGuideContent, plainGuideSummary } from '../lib/guides';
 import type { GuideArticle } from '../types/guides';
 import '../styles/app.css';
 
@@ -32,7 +33,11 @@ export default function GuidesPage() {
     : '';
   const setKindFilter = (next: GuideKind | '') =>
     setSearchParams(next ? { kind: next } : {}, { replace: true });
-  const [courseFilters, setCourseFilters] = useState<string[]>([]);
+  // 랜딩 "추천 코스에서 시작"의 지역 칩이 ?kind=course&tag=<지역 id>로 들어온다(개편 3단계)
+  const [courseFilters, setCourseFilters] = useState<string[]>(() => {
+    const tag = searchParams.get('tag');
+    return tag && getCourseTaxonomyTag(tag) ? [tag] : [];
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -161,7 +166,7 @@ export default function GuidesPage() {
                   ))}
                 </div>
                 <h2>{content.title}</h2>
-                <p>{content.summary}</p>
+                <p>{plainGuideSummary(content.summary)}</p>
               </Link>
               <button
                 type="button"

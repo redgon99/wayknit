@@ -140,5 +140,49 @@
     "login": "Iniciar sesión",
     "plan": "Planificador",
     "rights": "© {{year}} Wayknit"
+  },
+  "home": {
+    "lead": "Solo elige por dónde empezar. Sin registrarte.",
+    "continue": "Continuar",
+    "continueTrip_one": "{{title}} · {{count}} día",
+    "continueTrip_other": "{{title}} · {{count}} días",
+    "course": {
+      "badge": "1 · Lo más rápido",
+      "title": "Empieza con una ruta recomendada",
+      "body": "Añade una ruta completa con sus lugares y quita o suma paradas para hacerla tuya.",
+      "cta": "Elegir ruta"
+    },
+    "place": {
+      "badge": "2 · ¿Ya sabes adónde quieres ir?",
+      "title": "Añade lugares tú mismo",
+      "body": "Busca y añade lugares: la ruta y el horario se ordenan solos.",
+      "placeholder": "p. ej., Gyeongbokgung, mercado de Gwangjang",
+      "submit": "Buscar"
+    },
+    "theme": {
+      "badge": "3 · ¿Aún no lo sabes?",
+      "title": "Recibe un primer plan por tema",
+      "body": "Elige un interés y te proponemos un día con lugares reales.",
+      "cta": "Ver todos los temas"
+    },
+    "courses": {
+      "title": "Rutas recomendadas",
+      "more": "Todas las rutas",
+      "add": "Añadir a mi viaje",
+      "read": "Leer",
+      "empty": "Pronto habrá rutas recomendadas."
+    },
+    "info": {
+      "title": "Información de viaje",
+      "more": "Ver todo",
+      "transport": {
+        "label": "Cómo moverse",
+        "desc": "Tarjetas de transporte, metro y traslados al aeropuerto"
+      },
+      "culture": {
+        "label": "Comida y cultura",
+        "desc": "Pedir en restaurantes y etiqueta"
+      }
+    }
   }
 }

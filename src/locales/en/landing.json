@@ -140,5 +140,49 @@
     "login": "Sign in",
     "plan": "Planner",
     "rights": "© {{year}} Wayknit"
+  },
+  "home": {
+    "lead": "Just pick where to start. No sign-up needed.",
+    "continue": "Continue",
+    "continueTrip_one": "{{title}} · {{count}} day",
+    "continueTrip_other": "{{title}} · {{count}} days",
+    "course": {
+      "badge": "1 · Fastest",
+      "title": "Start from a course",
+      "body": "Add a whole course with its places, then drop or add stops to make it yours.",
+      "cta": "Pick a course"
+    },
+    "place": {
+      "badge": "2 · Know where you want to go?",
+      "title": "Add places yourself",
+      "body": "Search and add places — the route and timetable sort themselves out.",
+      "placeholder": "e.g. Gyeongbokgung, Gwangjang Market",
+      "submit": "Search"
+    },
+    "theme": {
+      "badge": "3 · Not sure yet?",
+      "title": "Get a first plan from a theme",
+      "body": "Pick an interest and we'll suggest a day of real places.",
+      "cta": "All themes"
+    },
+    "courses": {
+      "title": "Recommended courses",
+      "more": "All courses",
+      "add": "Add to my trip",
+      "read": "Read",
+      "empty": "Recommended courses are coming soon."
+    },
+    "info": {
+      "title": "Travel info",
+      "more": "See all",
+      "transport": {
+        "label": "Getting around",
+        "desc": "Transit cards, subway, airport transfers"
+      },
+      "culture": {
+        "label": "Food & culture",
+        "desc": "Ordering at restaurants and etiquette"
+      }
+    }
   }
 }

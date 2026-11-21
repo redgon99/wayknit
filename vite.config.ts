@@ -532,6 +532,9 @@ export default defineConfig(({ mode }) => {
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // 메인 번들이 기본 한도(2 MiB)를 넘으면 빌드가 실패하고, 한도를 넘는 파일은 오프라인 캐시에서 빠진다.
+        // 2026-11-21 랜딩 개편으로 2.01 MiB가 되어 3 MiB로 올렸다. 근본 해결은 관리자 화면 지연 로딩(코드 분할).
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
       },

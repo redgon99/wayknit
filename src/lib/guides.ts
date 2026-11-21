@@ -174,6 +174,14 @@ export function guideAvailableLocales(guide: GuideArticle): string[] {
  * 2026-11-17 — ktrip 글은 대표 언어가 한국어라, 독·불·서·러 독자가 한국어 본문을
  * 보던 문제(가이드 독자 세션의 약 28%)를 영어로 돌린다. 한국어 독자는 그대로.
  */
+/**
+ * 요약은 일반 문장으로 보여 주는데, 일부 글의 요약에 마크다운 굵게(**…**)가 남아 기호가 그대로 보였다.
+ * 화면·검색 결과·메타 설명에 쓰기 전에 기호만 뺀다(DB 원문은 그대로).
+ */
+export function plainGuideSummary(summary: string): string {
+  return summary.replace(/\*\*/g, '').trim();
+}
+
 export function pickGuideContent(guide: GuideArticle, locale: string): ResolvedGuideContent {
   if (locale === guide.locale) {
     return { locale: guide.locale, title: guide.title, summary: guide.summary, bodyMd: guide.bodyMd };

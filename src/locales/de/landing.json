@@ -140,5 +140,49 @@
     "login": "Anmelden",
     "plan": "Planer",
     "rights": "© {{year}} Wayknit"
+  },
+  "home": {
+    "lead": "Wählen Sie einfach, womit Sie anfangen. Ohne Anmeldung.",
+    "continue": "Weitermachen",
+    "continueTrip_one": "{{title}} · {{count}} Tag",
+    "continueTrip_other": "{{title}} · {{count}} Tage",
+    "course": {
+      "badge": "1 · Am schnellsten",
+      "title": "Mit einer empfohlenen Route starten",
+      "body": "Übernehmen Sie eine ganze Route mit allen Orten und passen Sie die Stopps an.",
+      "cta": "Route wählen"
+    },
+    "place": {
+      "badge": "2 · Sie wissen schon, wohin?",
+      "title": "Orte selbst hinzufügen",
+      "body": "Suchen und hinzufügen – Route und Zeitplan ordnen sich von selbst.",
+      "placeholder": "z. B. Gyeongbokgung, Gwangjang-Markt",
+      "submit": "Suchen"
+    },
+    "theme": {
+      "badge": "3 · Noch unentschlossen?",
+      "title": "Ersten Plan nach Thema erhalten",
+      "body": "Wählen Sie ein Interesse, und wir schlagen einen Tag mit echten Orten vor.",
+      "cta": "Alle Themen"
+    },
+    "courses": {
+      "title": "Empfohlene Routen",
+      "more": "Alle Routen",
+      "add": "Zu meiner Reise hinzufügen",
+      "read": "Lesen",
+      "empty": "Empfohlene Routen folgen in Kürze."
+    },
+    "info": {
+      "title": "Reiseinfos",
+      "more": "Alle ansehen",
+      "transport": {
+        "label": "Unterwegs",
+        "desc": "Verkehrskarten, U-Bahn, Flughafentransfer"
+      },
+      "culture": {
+        "label": "Essen & Kultur",
+        "desc": "Bestellen im Restaurant und Etikette"
+      }
+    }
   }
 }
