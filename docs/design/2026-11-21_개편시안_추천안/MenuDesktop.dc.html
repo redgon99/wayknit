@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>메뉴 3개 통합 · 데스크톱</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#fafaf8}
+a{color:#0f172a;text-decoration:none}a:hover{color:#854d0e}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 760px; background: #fafaf8; font-family: 'Noto Sans KR', system-ui, sans-serif; color: #0f172a; position: relative">
+
+  <header style="background: #ffffff; border-bottom: 1px solid #e7e7e3; position: relative; z-index: 2">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap">
+      <a href="#" style="display: flex; align-items: center; gap: 10px">
+        <span style="width: 36px; height: 36px; border-radius: 10px; background: #1f2937; display: grid; place-items: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+        </span>
+        <span style="display: flex; flex-direction: column; line-height: 1.1"><span style="font-weight: 800; font-size: 18px">여로담</span><span style="font-size: 12px; color: #64748b; font-weight: 500">Wayknit</span></span>
+      </a>
+      <span style="font-size: 12px; font-weight: 700; color: #713f12; background: #fef3c7; border-radius: 999px; padding: 4px 10px">시범 운영 · 12/31까지</span>
+      <nav aria-label="주 메뉴" style="display: flex; gap: 26px; font-size: 15px; font-weight: 500">
+        <a href="#" aria-expanded="true" style="color: #0f172a; font-weight: 700; border-bottom: 2px solid #facc15; padding-bottom: 4px">코스 ▴</a>
+        <a href="#" style="color: #475569">여행 정보 ▾</a>
+        <a href="#" style="color: #475569">내 여행</a>
+      </nav>
+      <div style="flex: 1 1 200px"></div>
+      <label style="display: flex; align-items: center; gap: 8px; width: 280px; height: 40px; padding: 0 14px; border: 1px solid #e2e2dc; border-radius: 999px; background: #ffffff; box-sizing: border-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <input type="search" aria-label="사이트 통합검색" placeholder="여행 팁·코스·장소 검색" style="border: 0; outline: 0; font: inherit; font-size: 14px; width: 100%; background: transparent; color: #0f172a">
+      </label>
+      <button type="button" style="height: 40px; padding: 0 12px; border: 1px solid #e2e2dc; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14px; color: #0f172a">한국어 ▾</button>
+      <a href="#" style="height: 44px; padding: 0 20px; border-radius: 999px; background: #1f2937; color: #ffffff; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center">플래너 열기</a>
+    </div>
+  </header>
+
+  <!-- 펼친 메뉴: 세 묶음을 한 판에 -->
+  <div style="max-width: 1280px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 2">
+    <div style="margin-top: 8px; background: #ffffff; border: 1px solid #ecece7; border-radius: 20px; box-shadow: 0 24px 60px rgba(15,23,42,0.14); padding: 28px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px">
+
+      <section style="display: flex; flex-direction: column; gap: 6px">
+        <h2 style="margin: 0 0 8px; font-size: 13px; font-weight: 800; color: #854d0e">코스</h2>
+        <sc-for list="{{courses}}" as="m" hint-placeholder-count="3">
+          <a href="#" style="display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 12px; background: {{m.bg}}">
+            <span style="font-weight: 700; font-size: 16px">{{m.label}}</span>
+            <span style="font-size: 13px; color: #64748b">{{m.desc}}</span>
+          </a>
+        </sc-for>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 6px">
+        <h2 style="margin: 0 0 8px; font-size: 13px; font-weight: 800; color: #854d0e">여행 정보</h2>
+        <sc-for list="{{info}}" as="m" hint-placeholder-count="4">
+          <a href="#" style="display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 12px">
+            <span style="font-weight: 700; font-size: 16px">{{m.label}}</span>
+            <span style="font-size: 13px; color: #64748b">{{m.desc}}</span>
+          </a>
+        </sc-for>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 6px">
+        <h2 style="margin: 0 0 8px; font-size: 13px; font-weight: 800; color: #854d0e">내 여행</h2>
+        <sc-for list="{{mine}}" as="m" hint-placeholder-count="3">
+          <a href="#" style="display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 12px">
+            <span style="font-weight: 700; font-size: 16px">{{m.label}}</span>
+            <span style="font-size: 13px; color: #64748b">{{m.desc}}</span>
+          </a>
+        </sc-for>
+        <div style="margin-top: 10px; padding: 14px; border-radius: 14px; background: #f8fafc; border: 1px solid #ecece7">
+          <span style="display: block; font-size: 13px; color: #64748b">이어서 하기</span>
+          <a href="#" style="display: block; margin-top: 4px; font-weight: 700; font-size: 15px">제주 3일 · 마지막 수정 어제</a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- 뒤 페이지(흐리게) -->
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 72px; bottom: 0; z-index: 1; background: rgba(250,250,248,0.6)">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 380px 32px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; opacity: 0.45">
+      <div style="height: 200px; border-radius: 16px; background: #ececea"></div>
+      <div style="height: 200px; border-radius: 16px; background: #ececea"></div>
+      <div style="height: 200px; border-radius: 16px; background: #ececea"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      courses: [
+        { label: '추천 코스', desc: '지역·일수별 코스 가이드, 장소째로 담기', bg: '#fffbeb' },
+        { label: '공유 일정', desc: '다른 여행자가 올린 일정 (지금의 공유마당)', bg: 'transparent' },
+        { label: '테마로 만들기', desc: '미식·야경·가족 등 테마로 첫 일정 받기', bg: 'transparent' }
+      ],
+      info: [
+        { label: '떠나기 전 준비', desc: '체크리스트 · 교통카드 · 데이터 · 결제' },
+        { label: '현지에서', desc: '교통 · 음식 · 문화 · 쇼핑 · 안전' },
+        { label: '여행 팁', desc: '실용 가이드 글 모음' },
+        { label: '관광 자료', desc: '관광사진 · 걷기길 · 오디오 가이드 · 무장애' }
+      ],
+      mine: [
+        { label: '플래너', desc: '담은 장소를 시간표·지도로' },
+        { label: '여행 목록', desc: '이 기기 · 계정에 저장된 여행' },
+        { label: '도움말', desc: '처음 쓰는 방법' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

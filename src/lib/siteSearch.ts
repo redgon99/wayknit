@@ -81,7 +81,7 @@ export function searchSiteIndex(
 }
 
 /** pickGuideContent와 같은 폴백 순서: 요청 언어 → 번체/간체 서로 → 영어 → 대표 언어 */
-function fallbackLocales(locale: string): string[] {
+export function fallbackLocales(locale: string): string[] {
   const order = [locale];
   if (locale === 'zh-CN') order.push('zh-TW');
   if (locale === 'zh-TW') order.push('zh-CN');

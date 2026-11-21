@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>가이드 상세 · 데스크톱</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#fafaf8}
+a{color:#0f172a;text-decoration:none}a:hover{color:#854d0e}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1640px; background: #fafaf8; font-family: 'Noto Sans KR', system-ui, sans-serif; color: #0f172a">
+
+  <!-- 공통 헤더 (2단계 메뉴 3개 적용 상태) -->
+  <header style="background: #ffffff; border-bottom: 1px solid #e7e7e3">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap">
+      <a href="#" style="display: flex; align-items: center; gap: 10px">
+        <span style="width: 36px; height: 36px; border-radius: 10px; background: #1f2937; display: grid; place-items: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+        </span>
+        <span style="display: flex; flex-direction: column; line-height: 1.1"><span style="font-weight: 800; font-size: 18px">여로담</span><span style="font-size: 12px; color: #64748b; font-weight: 500">Wayknit</span></span>
+      </a>
+      <span style="font-size: 12px; font-weight: 700; color: #713f12; background: #fef3c7; border-radius: 999px; padding: 4px 10px">시범 운영 · 12/31까지</span>
+      <nav aria-label="주 메뉴" style="display: flex; gap: 26px; font-size: 15px; font-weight: 500">
+        <a href="#" style="color: #0f172a; font-weight: 700">코스 ▾</a>
+        <a href="#" style="color: #475569">여행 정보 ▾</a>
+        <a href="#" style="color: #475569">내 여행</a>
+      </nav>
+      <div style="flex: 1 1 200px"></div>
+      <label style="display: flex; align-items: center; gap: 8px; width: 280px; height: 40px; padding: 0 14px; border: 1px solid #e2e2dc; border-radius: 999px; background: #ffffff; box-sizing: border-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <input type="search" aria-label="사이트 통합검색" placeholder="여행 팁·코스·장소 검색" style="border: 0; outline: 0; font: inherit; font-size: 14px; width: 100%; background: transparent; color: #0f172a">
+      </label>
+      <button type="button" style="height: 40px; padding: 0 12px; border: 1px solid #e2e2dc; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14px; color: #0f172a">한국어 ▾</button>
+      <a href="#" style="height: 44px; padding: 0 20px; border-radius: 999px; background: #1f2937; color: #ffffff; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center">플래너 열기</a>
+    </div>
+  </header>
+
+  <main style="max-width: 1280px; margin: 0 auto; padding: 28px 32px 64px; box-sizing: border-box">
+    <p style="margin: 0 0 18px; font-size: 13px; color: #64748b">코스 › 추천 코스 › 경주</p>
+
+    <div style="display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap">
+      <!-- 본문 -->
+      <article style="flex: 999 1 640px; min-width: 0">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px">
+          <span style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #fef3c7; color: #713f12">추천 여행코스</span>
+          <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #f1f5f9; color: #334155">경주</span>
+          <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #f1f5f9; color: #334155">하루코스</span>
+          <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #f1f5f9; color: #334155">역사</span>
+          <span style="font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #f1f5f9; color: #334155">맛집</span>
+        </div>
+        <h1 style="margin: 0 0 12px; font-size: 36px; line-height: 1.3; font-weight: 800; letter-spacing: -0.02em">경주 역사·맛집 하루 여행 코스</h1>
+        <p style="margin: 0 0 24px; font-size: 17px; line-height: 1.7; color: #475569">대릉원부터 동궁과 월지 야경까지, 시내 역사권(약 2km)을 도보로 효율적으로 도는 하루 일정입니다. 유적 관람과 황리단길 먹거리를 함께 즐길 수 있습니다.</p>
+
+        <!-- 코스 지도 -->
+        <div style="position: relative; height: 300px; border-radius: 18px; background: #e8efe9; overflow: hidden; border: 1px solid #dfe7e1">
+          <svg width="100%" height="100%" viewBox="0 0 760 300" preserveAspectRatio="none" aria-hidden="true" style="position: absolute; inset: 0">
+            <path d="M0 210 C 160 180, 260 240, 420 200 S 640 150, 760 170" stroke="#ffffff" stroke-width="14" fill="none"></path>
+            <path d="M300 0 C 320 90, 280 180, 330 300" stroke="#ffffff" stroke-width="10" fill="none"></path>
+            <path d="M110 120 L 230 90 L 330 140 L 450 110 L 560 170 L 660 120" stroke="#1f2937" stroke-width="3" stroke-dasharray="8 7" fill="none"></path>
+          </svg>
+          <span style="position: absolute; left: 96px; top: 104px; width: 30px; height: 30px; border-radius: 50%; background: #1f2937; color: #facc15; font-weight: 800; font-size: 14px; display: grid; place-items: center; border: 2px solid #ffffff">1</span>
+          <span style="position: absolute; left: 216px; top: 74px; width: 30px; height: 30px; border-radius: 50%; background: #1f2937; color: #facc15; font-weight: 800; font-size: 14px; display: grid; place-items: center; border: 2px solid #ffffff">2</span>
+          <span style="position: absolute; left: 316px; top: 124px; width: 30px; height: 30px; border-radius: 50%; background: #1f2937; color: #facc15; font-weight: 800; font-size: 14px; display: grid; place-items: center; border: 2px solid #ffffff">3</span>
+          <span style="position: absolute; left: 436px; top: 94px; width: 30px; height: 30px; border-radius: 50%; background: #1f2937; color: #facc15; font-weight: 800; font-size: 14px; display: grid; place-items: center; border: 2px solid #ffffff">4</span>
+          <span style="position: absolute; left: 546px; top: 154px; width: 30px; height: 30px; border-radius: 50%; background: #1f2937; color: #facc15; font-weight: 800; font-size: 14px; display: grid; place-items: center; border: 2px solid #ffffff">5</span>
+          <span style="position: absolute; left: 646px; top: 104px; width: 30px; height: 30px; border-radius: 50%; background: #1f2937; color: #facc15; font-weight: 800; font-size: 14px; display: grid; place-items: center; border: 2px solid #ffffff">6</span>
+          <span style="position: absolute; left: 16px; bottom: 14px; font-size: 12px; font-weight: 500; color: #334155; background: #ffffff; padding: 5px 10px; border-radius: 999px">코스 지도 · 6곳 · 도보 약 2km</span>
+        </div>
+
+        <!-- 일정 목록: 장소마다 담기 -->
+        <h2 style="margin: 36px 0 14px; font-size: 22px; font-weight: 800">추천 일정</h2>
+        <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+          <sc-for list="{{stops}}" as="s" hint-placeholder-count="6">
+            <li style="display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #ffffff; border: 1px solid #ecece7; border-radius: 14px">
+              <span style="flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; background: #1f2937; color: #facc15; font-weight: 800; font-size: 13px; display: grid; place-items: center">{{s.n}}</span>
+              <span style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column">
+                <span style="font-weight: 700; font-size: 16px">{{s.name}}</span>
+                <span style="font-size: 13px; color: #64748b">{{s.note}}</span>
+              </span>
+              <button type="button" style="flex: 0 0 auto; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid #e2e2dc; background: #ffffff; font: inherit; font-size: 13px; font-weight: 700; color: #0f172a">+ 담기</button>
+            </li>
+          </sc-for>
+        </ol>
+
+        <h2 style="margin: 36px 0 10px; font-size: 22px; font-weight: 800">본문</h2>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <div style="height: 14px; border-radius: 7px; background: #ececea; width: 100%"></div>
+          <div style="height: 14px; border-radius: 7px; background: #ececea; width: 96%"></div>
+          <div style="height: 14px; border-radius: 7px; background: #ececea; width: 88%"></div>
+          <div style="height: 14px; border-radius: 7px; background: #ececea; width: 92%"></div>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #64748b">(기존 가이드 본문 그대로 — 표·출처 칩·사진 포함)</p>
+        </div>
+      </article>
+
+      <!-- 오른쪽 고정 담기 카드 -->
+      <aside style="flex: 1 1 320px; max-width: 360px; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px">
+        <section style="background: #ffffff; border: 1px solid #ecece7; border-radius: 18px; padding: 22px; box-shadow: 0 10px 30px rgba(15,23,42,0.08)">
+          <h2 style="margin: 0 0 6px; font-size: 18px; font-weight: 800">이 코스를 내 일정에</h2>
+          <p style="margin: 0 0 16px; font-size: 14px; color: #64748b">6곳 · 도보 약 2km · 하루</p>
+          <a href="#" style="display: flex; align-items: center; justify-content: center; height: 50px; border-radius: 14px; background: #facc15; color: #1f2937; font-weight: 800; font-size: 16px">+ 내 일정에 담기 (6곳)</a>
+          <a href="#" style="margin-top: 10px; display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 14px; border: 1px solid #e2e2dc; background: #ffffff; color: #0f172a; font-weight: 700; font-size: 15px">시간표로 바로 보기</a>
+          <p style="margin: 12px 0 0; font-size: 12px; color: #64748b; text-align: center">로그인 없이 이 기기에 저장돼요</p>
+        </section>
+        <section style="background: #ffffff; border: 1px solid #ecece7; border-radius: 18px; padding: 20px">
+          <h2 style="margin: 0 0 12px; font-size: 16px; font-weight: 800">떠나기 전 준비</h2>
+          <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: #334155">
+            <li>☐ 교통카드 · 결제</li>
+            <li>☐ 데이터(eSIM · 유심)</li>
+            <li>☐ 경주 가는 기차 예매</li>
+          </ul>
+          <a href="#" style="margin-top: 14px; display: inline-flex; font-size: 14px; font-weight: 700; color: #854d0e">준비 체크리스트에 추가 →</a>
+          <p style="margin: 14px 0 0; padding: 10px 12px; border: 1px dashed #d6d3c4; border-radius: 10px; font-size: 12px; color: #64748b">제휴 링크 자리 — 제휴 가입(4-2) 결정 후, "제휴" 표시와 함께</p>
+        </section>
+      </aside>
+    </div>
+
+    <!-- 다음 코스 -->
+    <h2 style="margin: 48px 0 16px; font-size: 22px; font-weight: 800">이어서 볼 코스</h2>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+      <sc-for list="{{related}}" as="c" hint-placeholder-count="3">
+        <div style="background: #ffffff; border: 1px solid #ecece7; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column">
+          <div style="height: 120px; background: {{c.tint}}"></div>
+          <div style="padding: 16px; display: flex; flex-direction: column; gap: 10px">
+            <span style="font-size: 12px; color: #64748b">{{c.kind}}</span>
+            <a href="#" style="font-weight: 700; font-size: 16px; line-height: 1.45">{{c.title}}</a>
+            <button type="button" style="align-self: flex-start; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid #e2e2dc; background: #ffffff; font: inherit; font-size: 13px; font-weight: 700; color: #0f172a">+ 내 일정에 담기</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      stops: [
+        { n: 1, name: '대릉원', note: '고분 공원 산책' },
+        { n: 2, name: '황리단길', note: '점심 · 먹거리' },
+        { n: 3, name: '첨성대 · 계림', note: '도보 이동' },
+        { n: 4, name: '국립경주박물관', note: '실내 관람' },
+        { n: 5, name: '월정교', note: '해 질 무렵' },
+        { n: 6, name: '동궁과 월지', note: '야경' }
+      ],
+      related: [
+        { kind: '추천 여행코스 · 부산', title: '부산 영도 예술 산책 — 흰여울문화마을·아르떼뮤지엄 코스', tint: '#dbe7f3' },
+        { kind: '추천 여행코스 · 서울', title: '서울 한강 1일 관광 코스', tint: '#e3eedf' },
+        { kind: '추천 여행코스 · 원주', title: '원주에서 횡성으로 이어지는 1일 가족 힐링여행', tint: '#f3e6d6' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

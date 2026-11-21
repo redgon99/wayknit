@@ -16,7 +16,10 @@
     "sources": "Sources",
     "placeCredit": "Place info · Google",
     "disclaimer": "Fares, policies, and hours may change. Check official information before you go.",
-    "fallbackNotice": "No {{lang}} version yet — showing the {{shown}} version."
+    "fallbackNotice": "No {{lang}} version yet — showing the {{shown}} version.",
+    "relatedTitle": "More courses",
+    "relatedAdd": "+ Add to my trip",
+    "relatedRead": "Read"
   },
   "cta": {
     "planner": "Open planner",
@@ -61,6 +64,18 @@
     "reviews": "Visitor reviews",
     "detailLabel": "{{name}} details",
     "day": "Day {{n}}",
-    "course": "Course"
+    "course": "Course",
+    "addThis": "Add just this place"
+  },
+  "aside": {
+    "courseTitle": "Add this course to your trip",
+    "addAll_one": "+ Add {{count}} place",
+    "addAll_other": "+ Add all {{count}} places",
+    "localNote": "No sign-up · saved on this device",
+    "planTitle": "Plan a trip from this guide",
+    "planDesc": "Add the places you want and get a route and timetable.",
+    "prepTitle": "Before you go",
+    "prepDesc": "Check transit cards, mobile data and payments with a checklist.",
+    "prepLink": "Open the prep checklist"
   }
 }

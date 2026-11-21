@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Courses tab · mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0f172a;text-decoration:none}a:hover{color:#854d0e}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #fafaf8; font-family: Inter, system-ui, sans-serif; color: #0f172a; display: flex; flex-direction: column">
+
+  <header style="flex: 0 0 auto; height: 60px; padding: 0 16px; display: flex; align-items: center; gap: 10px; background: #ffffff; border-bottom: 1px solid #e7e7e3">
+    <span style="width: 32px; height: 32px; border-radius: 9px; background: #1f2937; display: grid; place-items: center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+    </span>
+    <span style="font-weight: 800; font-size: 17px">Courses</span>
+    <span style="flex: 1 1 auto"></span>
+    <button type="button" aria-label="Search the site" style="width: 44px; height: 44px; border-radius: 999px; border: 1px solid #e2e2dc; background: #ffffff; display: grid; place-items: center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+    </button>
+    <button type="button" style="height: 44px; padding: 0 10px; border-radius: 10px; border: 1px solid #e2e2dc; background: #ffffff; font: inherit; font-size: 13px; color: #0f172a">EN ▾</button>
+  </header>
+
+  <div style="flex: 1 1 auto; overflow: hidden; padding: 14px 16px 0; display: flex; flex-direction: column; gap: 12px">
+    <!-- 세 갈래: 추천 코스 · 공유 일정 · 테마 -->
+    <div role="tablist" aria-label="Course type" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #efefeb; border-radius: 12px">
+      <button type="button" role="tab" aria-selected="true" style="height: 40px; border: 0; border-radius: 9px; background: #ffffff; font: inherit; font-size: 13px; font-weight: 700; color: #0f172a; box-shadow: 0 1px 3px rgba(15,23,42,0.12)">Recommended</button>
+      <button type="button" role="tab" aria-selected="false" style="height: 40px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13px; color: #475569">Shared trips</button>
+      <button type="button" role="tab" aria-selected="false" style="height: 40px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13px; color: #475569">By theme</button>
+    </div>
+
+    <div style="display: flex; gap: 8px; overflow: hidden">
+      <sc-for list="{{regions}}" as="r" hint-placeholder-count="5">
+        <button type="button" style="flex: 0 0 auto; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid {{r.border}}; background: {{r.bg}}; font: inherit; font-size: 13px; font-weight: 600; color: {{r.ink}}">{{r.label}}</button>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <sc-for list="{{cards}}" as="c" hint-placeholder-count="4">
+        <div style="display: flex; gap: 12px; padding: 10px; background: #ffffff; border: 1px solid #ecece7; border-radius: 14px; align-items: center">
+          <div style="flex: 0 0 auto; width: 76px; height: 76px; border-radius: 10px; background: {{c.tint}}"></div>
+          <div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 11px; color: #64748b">{{c.meta}}</span>
+            <a href="#" style="font-weight: 700; font-size: 14px; line-height: 1.35">{{c.title}}</a>
+          </div>
+          <button type="button" aria-label="Add course to my trip" style="flex: 0 0 auto; width: 44px; height: 44px; border-radius: 999px; border: 1px solid #e2e2dc; background: #ffffff; font: inherit; font-size: 18px; font-weight: 700; color: #0f172a">+</button>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: #ffffff; border-top: 1px solid #e7e7e3; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #64748b">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 11 12 4l9 7"></path><path d="M5 10v10h14V10"></path></svg>Home</a>
+    <a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 700; color: #0f172a">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19c4-1 4-7 8-7s4 6 8 7"></path><circle cx="6" cy="6" r="2"></circle><circle cx="18" cy="6" r="2"></circle></svg>Courses</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #64748b">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6"></path><path d="M12 7.5v.5"></path></svg>Info</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #64748b">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16"></path><path d="M9 3v4"></path><path d="M15 3v4"></path></svg>My trip</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const on = { border: '#1f2937', bg: '#1f2937', ink: '#ffffff' };
+    const off = { border: '#e2e2dc', bg: '#ffffff', ink: '#334155' };
+    return {
+      regions: [
+        { label: 'All', ...on },
+        { label: 'Seoul', ...off },
+        { label: 'Busan', ...off },
+        { label: 'Gyeongju', ...off },
+        { label: 'Gangwon', ...off }
+      ],
+      cards: [
+        { meta: 'Gyeongju · 1 day', title: 'Gyeongju in a Day: History and Food', tint: '#f3e6d6' },
+        { meta: 'Busan · half day', title: 'Busan Yeongdo Art Walk — Huinnyeoul Village & ARTE Museum', tint: '#dbe7f3' },
+        { meta: 'Seoul · 1 day', title: 'Seoul Han River One-Day Course', tint: '#e3eedf' },
+        { meta: 'Seoul · half day', title: 'Namsan and N Seoul Tower: A Hill Walk for Visitors', tint: '#ede4f3' },
+        { meta: 'Gangwon · 1 day', title: 'Wonju to Hoengseong: A Family Day Out', tint: '#f3efd6' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

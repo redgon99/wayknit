@@ -16,7 +16,10 @@
     "sources": "Quellen",
     "placeCredit": "Ortsangaben · Google",
     "disclaimer": "Preise, Regeln und Öffnungszeiten können sich ändern. Prüfen Sie offizielle Infos vor der Reise.",
-    "fallbackNotice": "Noch keine {{lang}}-Version – angezeigt wird die Version: {{shown}}."
+    "fallbackNotice": "Noch keine {{lang}}-Version – angezeigt wird die Version: {{shown}}.",
+    "relatedTitle": "Weitere Routen",
+    "relatedAdd": "+ Zur Reise hinzufügen",
+    "relatedRead": "Lesen"
   },
   "cta": {
     "planner": "Planer öffnen",
@@ -61,6 +64,18 @@
     "reviews": "Besucherbewertungen",
     "detailLabel": "Details: {{name}}",
     "day": "Tag {{n}}",
-    "course": "Route"
+    "course": "Route",
+    "addThis": "Nur diesen Ort hinzufügen"
+  },
+  "aside": {
+    "courseTitle": "Diese Route zur Reise hinzufügen",
+    "addAll_one": "+ {{count}} Ort hinzufügen",
+    "addAll_other": "+ Alle {{count}} Orte hinzufügen",
+    "localNote": "Ohne Anmeldung · auf diesem Gerät gespeichert",
+    "planTitle": "Reise mit diesem Guide planen",
+    "planDesc": "Orte hinzufügen und Route samt Zeitplan erhalten.",
+    "prepTitle": "Vor der Abreise",
+    "prepDesc": "Verkehrskarte, mobile Daten und Zahlung per Checkliste prüfen.",
+    "prepLink": "Checkliste öffnen"
   }
 }

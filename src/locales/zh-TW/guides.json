@@ -16,7 +16,10 @@
     "sources": "參考來源",
     "placeCredit": "地點資訊 · Google",
     "disclaimer": "費用、政策與營業時間可能變動。出行前請核對官方信息。",
-    "fallbackNotice": "尚無{{lang}}版本，目前顯示{{shown}}版本。"
+    "fallbackNotice": "尚無{{lang}}版本，目前顯示{{shown}}版本。",
+    "relatedTitle": "更多路線",
+    "relatedAdd": "+ 加入我的行程",
+    "relatedRead": "閱讀"
   },
   "cta": {
     "planner": "打開行程規劃",
@@ -60,6 +63,18 @@
     "reviews": "遊客評價",
     "detailLabel": "{{name}} 詳情",
     "day": "第{{n}}天",
-    "course": "路線"
+    "course": "路線",
+    "addThis": "只加入這個地點"
+  },
+  "aside": {
+    "courseTitle": "把這條路線加入行程",
+    "addAll_one": "+ 全部加入（{{count}}個）",
+    "addAll_other": "+ 全部加入（{{count}}個）",
+    "localNote": "無需註冊 · 儲存在本裝置",
+    "planTitle": "用這篇指南規劃行程",
+    "planDesc": "加入想去的地方，自動整理路線和時間表。",
+    "prepTitle": "出發前準備",
+    "prepDesc": "用清單確認交通卡、網路和付款等出發前要準備的事項。",
+    "prepLink": "打開準備清單"
   }
 }

@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AuthBar } from '../components/AuthBar';
-import { LocaleSwitcher } from '../components/LocaleSwitcher';
+import { SiteHeader } from '../components/SiteHeader';
 import { ReportButton } from '../components/ReportButton';
 import { ShareIcon } from '../components/ShareIcon';
 import { trackEvent } from '../lib/analytics';
@@ -22,6 +21,7 @@ import {
 import { renderGuideMarkdown } from '../lib/guideMarkdown';
 import { collectGuideSources } from '../lib/guideSources';
 import { GuideCourseMap } from '../components/GuideCourseMap';
+import { listRelatedCourses, type RelatedCourse } from '../lib/relatedGuides';
 import type { GuideArticle } from '../types/guides';
 import '../styles/app.css';
 
@@ -44,6 +44,7 @@ export default function GuideDetailPage() {
   /** 위쪽 "내 일정에 담기"가 화면에 보이는 동안엔 모바일 하단 고정 버튼을 숨긴다(같은 버튼 두 개 방지). */
   const courseCtaRef = useRef<HTMLDivElement | null>(null);
   const [courseCtaVisible, setCourseCtaVisible] = useState(true);
+  const [related, setRelated] = useState<RelatedCourse[]>([]);
   useEffect(() => () => window.clearTimeout(copiedTimer.current), []);
   useEffect(() => {
     setViewLocale(null);
@@ -78,6 +79,25 @@ export default function GuideDetailPage() {
       alive = false;
     };
   }, [slug, t]);
+
+  // 개편 1단계(2026-11-21): 다 읽은 사람을 다음 코스로 — 태그가 겹치는 코스 3개
+  useEffect(() => {
+    if (!guide) {
+      setRelated([]);
+      return;
+    }
+    let alive = true;
+    listRelatedCourses(guide, locale)
+      .then((rows) => {
+        if (alive) setRelated(rows);
+      })
+      .catch(() => {
+        if (alive) setRelated([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [guide, locale]);
 
   const availableLocales = guide ? guideAvailableLocales(guide) : [];
   const content = guide ? pickGuideContent(guide, viewLocale ?? locale) : null;
@@ -141,6 +161,22 @@ export default function GuideDetailPage() {
     return () => observer.disconnect();
   }, [hasCourseCta]);
 
+  /** 코스 지도에서 고른 장소 하나만 플래너에 담는 주소(PlannerPage의 `pin` 파라미터) */
+  const addPinHref = courseCta
+    ? (order: number) => {
+        const q = new URLSearchParams({
+          autoRoute: '1',
+          guideTitle: content?.title ?? guide?.title ?? '',
+          fromGuide: guide?.slug ?? '',
+          pin: String(order),
+        });
+        return `${plannerPath(locale)}?${q.toString()}`;
+      }
+    : undefined;
+
+  const relatedAddHref = (r: RelatedCourse) =>
+    `${plannerPath(locale)}?${new URLSearchParams({ autoRoute: '1', guideTitle: r.title, fromGuide: r.slug }).toString()}`;
+
   /** 지금 보고 있는 언어 버전의 주소를 공유한다. */
   const shareGuide = async () => {
     if (!guide) return;
@@ -154,21 +190,14 @@ export default function GuideDetailPage() {
 
   return (
     <main className="guides-page">
-      <header className="guides-header">
-        <div className="guides-header-inner">
-          <div>
-            <Link to={pathWithLocale('/guides', locale)} className="guides-brand">
-              ← {t('detail.back')}
-            </Link>
-          </div>
-          <div className="guides-header-actions">
-            <LocaleSwitcher />
-            <AuthBar hideLocale />
-          </div>
-        </div>
-      </header>
+      {/* 개편 1단계(2026-11-21): 랜딩과 같은 공통 헤더 — 메뉴·통합검색·플래너 열기. 방문의 80%가 가이드로 들어온다 */}
+      <SiteHeader active="guides" />
 
-      <article className={`guides-shell guides-detail${courseCta ? ' guides-detail-has-sticky' : ''}`}>
+      <div className="guides-shell guide-detail-layout">
+      <article className={`guides-detail${courseCta ? ' guides-detail-has-sticky' : ''}`}>
+        <Link to={pathWithLocale('/guides', locale)} className="guides-brand guide-detail-back">
+          ← {t('detail.back')}
+        </Link>
         {loading && <p className="guides-muted">{t('list.loading')}</p>}
         {error && !guide && <p className="guides-error">{error}</p>}
         {guide && (
@@ -237,7 +266,13 @@ export default function GuideDetailPage() {
               </div>
             )}
             {guide.kind === 'course' && guide.coursePins.length > 0 && (
-              <GuideCourseMap pins={guide.coursePins} />
+              <GuideCourseMap
+                pins={guide.coursePins}
+                addPinHref={addPinHref}
+                onAddPin={(order) =>
+                  trackEvent('guide_cta_click', { slug: guide.slug, cta: 'add_pin', button: 'map', pin: order })
+                }
+              />
             )}
             <div className="guides-body">{content && renderGuideMarkdown(content.bodyMd, locale)}</div>
             <p className="guides-disclaimer">{t('detail.disclaimer')}</p>
@@ -313,6 +348,96 @@ export default function GuideDetailPage() {
           </>
         )}
       </article>
+
+      {guide && (
+        <aside className="guide-aside">
+          {courseCta ? (
+            <section className="guide-aside-card guide-aside-dup">
+              <h2>{t('aside.courseTitle')}</h2>
+              <Link
+                to={courseCta.to}
+                className="guides-btn guides-btn-primary guide-aside-main"
+                onClick={() => trackEvent('guide_cta_click', { slug: guide.slug, cta: courseCta.cta, button: 'aside' })}
+              >
+                {t('aside.addAll', { count: guide.coursePins.length })}
+              </Link>
+              <p className="guide-aside-note">{t('aside.localNote')}</p>
+            </section>
+          ) : (
+            primaryCta && (
+              <section className="guide-aside-card guide-aside-dup">
+                <h2>{t('aside.planTitle')}</h2>
+                <p>{t('aside.planDesc')}</p>
+                <Link
+                  to={primaryCta.to}
+                  className="guides-btn guides-btn-primary guide-aside-main"
+                  onClick={() => trackEvent('guide_cta_click', { slug: guide.slug, cta: primaryCta.cta, button: 'aside' })}
+                >
+                  {primaryCta.label}
+                </Link>
+              </section>
+            )
+          )}
+          {primaryCta?.cta !== 'setup' && (
+            <section className="guide-aside-card">
+              <h2>{t('aside.prepTitle')}</h2>
+              <p>{t('aside.prepDesc')}</p>
+              <Link
+                to={pathWithLocale('/setup', locale)}
+                className="guide-aside-link"
+                onClick={() => trackEvent('guide_cta_click', { slug: guide.slug, cta: 'setup', button: 'aside' })}
+              >
+                {t('aside.prepLink')} →
+              </Link>
+            </section>
+          )}
+        </aside>
+      )}
+      </div>
+
+      {related.length > 0 && (
+        <section className="guides-shell guide-related" aria-labelledby="guide-related-title">
+          <h2 id="guide-related-title">{t('detail.relatedTitle')}</h2>
+          <div className="guide-related-grid">
+            {related.map((r) => (
+              <div key={r.slug} className="guide-related-card">
+                <div className="guides-card-tags">
+                  {displayCourseTags(r.tags, locale, 3).map((tag) => (
+                    <span key={tag} className="guides-tag">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <Link to={pathWithLocale(`/guides/${r.slug}`, locale)} className="guide-related-title">
+                  {r.title}
+                </Link>
+                {r.summary && <p>{r.summary}</p>}
+                <div className="guide-related-actions">
+                  {r.hasPins && (
+                    <Link
+                      to={relatedAddHref(r)}
+                      className="guides-btn guides-btn-primary"
+                      onClick={() =>
+                        trackEvent('guide_cta_click', {
+                          slug: guide?.slug ?? '',
+                          cta: 'auto_route',
+                          button: 'related',
+                          target: r.slug,
+                        })
+                      }
+                    >
+                      {t('detail.relatedAdd')}
+                    </Link>
+                  )}
+                  <Link to={pathWithLocale(`/guides/${r.slug}`, locale)} className="guides-btn">
+                    {t('detail.relatedRead')}
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

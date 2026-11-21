@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { OSM_TILE_ATTRIBUTION, OSM_TILE_URL } from '../lib/osmTiles';
@@ -8,6 +9,9 @@ import type { GuideCoursePin } from '../types/guides';
 type Props = {
   pins: GuideCoursePin[];
   className?: string;
+  /** 「이 장소만 담기」 링크(플래너에 이 핀 하나만). 없으면 버튼을 그리지 않는다(관리자 미리보기 등) */
+  addPinHref?: (order: number) => string;
+  onAddPin?: (order: number) => void;
 };
 
 /*
@@ -145,7 +149,7 @@ function firstOpeningLine(text: string): string {
 }
 
 /** 추천 코스: OSM 지도 + 카드 캐러셀 + 사진 + 상세 패널 */
-export function GuideCourseExplorer({ pins: rawPins, className }: Props) {
+export function GuideCourseExplorer({ pins: rawPins, className, addPinHref, onAddPin }: Props) {
   const { t } = useTranslation('guides');
   const pins = useMemo(
     () => rawPins.map((p) => ({ ...p, photoUrls: usablePhotos(p.photoUrls) })),
@@ -385,8 +389,16 @@ export function GuideCourseExplorer({ pins: rawPins, className }: Props) {
       );
     });
 
-    const card = document.querySelector(`.gce-card[data-order="${selected.order}"]`);
-    card?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    // 카드 줄만 가로로 맞춘다 — scrollIntoView는 페이지 전체를 세로로도 움직여
+    // 처음 열 때 공통 헤더 아래로 「← 가이드 목록」이 숨었다(2026-11-21)
+    const card = document.querySelector<HTMLElement>(`.gce-card[data-order="${selected.order}"]`);
+    const strip = card?.parentElement;
+    if (card && strip) {
+      const cardRect = card.getBoundingClientRect();
+      const stripRect = strip.getBoundingClientRect();
+      const left = strip.scrollLeft + (cardRect.left - stripRect.left) - (strip.clientWidth - cardRect.width) / 2;
+      strip.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    }
   }, [selected, pins]);
 
   useEffect(() => {
@@ -516,6 +528,15 @@ export function GuideCourseExplorer({ pins: rawPins, className }: Props) {
             </p>
 
             <div className="gce-detail-actions">
+              {addPinHref && (
+                <Link
+                  className="gce-btn gce-btn-add"
+                  to={addPinHref(selected.order)}
+                  onClick={() => onAddPin?.(selected.order)}
+                >
+                  + {t('courseMap.addThis')}
+                </Link>
+              )}
               {mapsUrl && (
                 <a
                   className="gce-btn gce-btn-primary"

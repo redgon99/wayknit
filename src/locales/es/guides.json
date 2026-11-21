@@ -16,7 +16,10 @@
     "sources": "Fuentes",
     "placeCredit": "Datos del lugar · Google",
     "disclaimer": "Tarifas, normas y horarios pueden cambiar. Consulta la información oficial antes de ir.",
-    "fallbackNotice": "Aún no hay versión en {{lang}}. Versión mostrada: {{shown}}."
+    "fallbackNotice": "Aún no hay versión en {{lang}}. Versión mostrada: {{shown}}.",
+    "relatedTitle": "Más rutas",
+    "relatedAdd": "+ Añadir a mi viaje",
+    "relatedRead": "Leer"
   },
   "cta": {
     "planner": "Abrir el planificador",
@@ -61,6 +64,18 @@
     "reviews": "Opiniones de visitantes",
     "detailLabel": "Detalles de {{name}}",
     "day": "Día {{n}}",
-    "course": "Ruta"
+    "course": "Ruta",
+    "addThis": "Añadir solo este lugar"
+  },
+  "aside": {
+    "courseTitle": "Añade esta ruta a tu viaje",
+    "addAll_one": "+ Añadir {{count}} lugar",
+    "addAll_other": "+ Añadir los {{count}} lugares",
+    "localNote": "Sin registro · se guarda en este dispositivo",
+    "planTitle": "Planifica con esta guía",
+    "planDesc": "Añade los lugares que quieras y obtén ruta y horario.",
+    "prepTitle": "Antes de salir",
+    "prepDesc": "Revisa tarjeta de transporte, datos móviles y pagos con una lista.",
+    "prepLink": "Abrir la lista de preparación"
   }
 }

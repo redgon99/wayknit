@@ -606,7 +606,10 @@ export default function PlannerPage() {
     if (!hydrated) return;
     const guideTitle = params.get('guideTitle')?.trim() ?? '';
     const fromGuide = params.get('fromGuide')?.trim() ?? '';
-    const importKey = `${fromGuide}::${guideTitle}`;
+    // 가이드 코스 지도에서「이 장소만 담기」— 코스 핀 중 이 순번 하나만 담는다(개편 1단계, 2026-11-21)
+    const pinOrder = Number(params.get('pin') ?? '');
+    const onePin = Number.isInteger(pinOrder) && pinOrder > 0 ? pinOrder : null;
+    const importKey = `${fromGuide}::${guideTitle}::${onePin ?? ''}`;
     if (guideImportKeyRef.current === importKey) return;
 
     let cancelled = false;
@@ -618,8 +621,9 @@ export default function PlannerPage() {
           const guide = await getPublishedGuideBySlug(fromGuide);
           if (cancelled) return;
           title = (guideTitle || guide?.title || '').trim();
-          if (guide?.coursePins?.length) {
-            const result = importGuideCoursePins(guide.coursePins, {
+          const pins = onePin ? (guide?.coursePins ?? []).filter((p) => p.order === onePin) : guide?.coursePins;
+          if (pins?.length) {
+            const result = importGuideCoursePins(pins, {
               currentDay: 1,
               totalDays: trip.totalDays,
               existingByDay: trip.pinnedByDay,
@@ -631,7 +635,8 @@ export default function PlannerPage() {
               ...patchRouteOptionsForDay(
                 {
                   ...trip,
-                  title: (title || trip.title).slice(0, 80),
+                  // 한 곳만 담을 땐 지금 여행 제목을 가이드 제목으로 바꾸지 않는다
+                  title: (onePin ? trip.title || title : title || trip.title).slice(0, 80),
                   pinnedByDay: result.pinnedByDay,
                   totalDays: result.totalDays,
                   currentDay: 1,
@@ -672,7 +677,11 @@ export default function PlannerPage() {
       if (cancelled) return;
       guideImportKeyRef.current = importKey;
       // 가이드에서 온 여행 계획 — 가져온 장소가 0이어도 기록(코스 핀이 없는 글)
-      if (fromGuide) trackEvent('guide_trip_import', { slug: fromGuide, places: imported });
+      if (fromGuide) {
+        trackEvent('guide_trip_import', onePin
+          ? { slug: fromGuide, places: imported, pin: onePin }
+          : { slug: fromGuide, places: imported });
+      }
       navigate({ pathname: location.pathname, search: '', hash: location.hash }, { replace: true });
       setMaterialsPanelOpen(false);
       setRouteOptionsOpen(true);

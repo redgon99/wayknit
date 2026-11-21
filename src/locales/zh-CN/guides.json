@@ -16,7 +16,10 @@
     "sources": "参考来源",
     "placeCredit": "地点信息 · Google",
     "disclaimer": "费用、政策与营业时间可能变动。出行前请核对官方信息。",
-    "fallbackNotice": "暂无{{lang}}版本，当前显示{{shown}}版本。"
+    "fallbackNotice": "暂无{{lang}}版本，当前显示{{shown}}版本。",
+    "relatedTitle": "更多路线",
+    "relatedAdd": "+ 加入我的行程",
+    "relatedRead": "阅读"
   },
   "cta": {
     "planner": "打开行程规划",
@@ -60,6 +63,18 @@
     "reviews": "游客评价",
     "detailLabel": "{{name}} 详情",
     "day": "第{{n}}天",
-    "course": "路线"
+    "course": "路线",
+    "addThis": "只加入这个地点"
+  },
+  "aside": {
+    "courseTitle": "把这条路线加入行程",
+    "addAll_one": "+ 全部加入（{{count}}个）",
+    "addAll_other": "+ 全部加入（{{count}}个）",
+    "localNote": "无需注册 · 保存在本设备",
+    "planTitle": "用这篇指南规划行程",
+    "planDesc": "加入想去的地方，自动整理路线和时间表。",
+    "prepTitle": "出发前准备",
+    "prepDesc": "用清单确认交通卡、流量和支付等出发前要准备的事项。",
+    "prepLink": "打开准备清单"
   }
 }

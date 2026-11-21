@@ -18991,3 +18991,177 @@ a.guide-source-chip:hover {
   background: #fff3c4;
   border-style: solid;
 }
+
+/* ── 가이드 상세 개편 1단계(2026-11-21): 공통 헤더 + 오른쪽 담기 카드 + 이어서 볼 코스 ── */
+.guide-detail-layout {
+  max-width: 1200px;
+}
+
+.guide-detail-back {
+  margin-bottom: 14px;
+}
+
+/* 공통 헤더(공지+메뉴)가 위에 붙어 있어 공유 버튼은 그 아래에서 따라온다 */
+.guide-detail-layout .guide-share-float {
+  top: 128px;
+}
+
+.guide-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.guide-aside-card {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.guide-aside-card h2 {
+  margin: 0 0 6px;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.guide-aside-card p {
+  margin: 0 0 14px;
+  color: #475569;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.guide-aside-card .guide-aside-meta {
+  color: #64748b;
+}
+
+.guide-aside-main {
+  width: 100%;
+  justify-content: center;
+  padding: 13px 14px;
+  font-size: 0.9375rem;
+}
+
+.guide-aside-card .guide-aside-note {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.guide-aside-link {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #854d0e;
+  text-decoration: none;
+}
+
+.guide-aside-link:hover {
+  text-decoration: underline;
+}
+
+/* 좁은 화면: 담기 카드는 위쪽 버튼·하단 고정 버튼과 겹치므로 숨기고 준비 카드만 본문 아래에 */
+.guide-aside-dup {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .guide-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 40px;
+    align-items: start;
+  }
+
+  .guide-aside {
+    position: sticky;
+    top: 128px;
+    margin-top: 72px;
+  }
+
+  .guide-aside-dup {
+    display: block;
+  }
+
+  .guide-aside-card.guide-aside-dup {
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  }
+
+  /* 오른쪽 카드가 같은 일을 하므로 요약 아래 버튼은 숨긴다 */
+  .guide-detail-layout .guide-course-cta {
+    display: none;
+  }
+}
+
+.gce-btn-add {
+  background: #facc15;
+  border-color: #eab308;
+  color: #1f2937;
+}
+
+.guide-related {
+  max-width: 1200px;
+  padding-top: 8px;
+}
+
+.guide-related > h2 {
+  margin: 0 0 16px;
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.guide-related-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .guide-related-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.guide-related-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+}
+
+.guide-related-title {
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.guide-related-title:hover {
+  color: #854d0e;
+}
+
+.guide-related-card p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.guide-related-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+}

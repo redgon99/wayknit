@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>랜딩 · 데스크톱</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#fafaf8}
+a{color:#0f172a;text-decoration:none}a:hover{color:#854d0e}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1720px; background: #fafaf8; font-family: 'Noto Sans KR', system-ui, sans-serif; color: #0f172a">
+
+  <header style="background: #ffffff; border-bottom: 1px solid #e7e7e3">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap">
+      <a href="#" style="display: flex; align-items: center; gap: 10px">
+        <span style="width: 36px; height: 36px; border-radius: 10px; background: #1f2937; display: grid; place-items: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+        </span>
+        <span style="display: flex; flex-direction: column; line-height: 1.1"><span style="font-weight: 800; font-size: 18px">여로담</span><span style="font-size: 12px; color: #64748b; font-weight: 500">Wayknit</span></span>
+      </a>
+      <span style="font-size: 12px; font-weight: 700; color: #713f12; background: #fef3c7; border-radius: 999px; padding: 4px 10px">시범 운영 · 12/31까지</span>
+      <nav aria-label="주 메뉴" style="display: flex; gap: 26px; font-size: 15px; font-weight: 500">
+        <a href="#" style="color: #475569">코스 ▾</a>
+        <a href="#" style="color: #475569">여행 정보 ▾</a>
+        <a href="#" style="color: #475569">내 여행</a>
+      </nav>
+      <div style="flex: 1 1 200px"></div>
+      <label style="display: flex; align-items: center; gap: 8px; width: 280px; height: 40px; padding: 0 14px; border: 1px solid #e2e2dc; border-radius: 999px; background: #ffffff; box-sizing: border-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <input type="search" aria-label="사이트 통합검색" placeholder="여행 팁·코스·장소 검색" style="border: 0; outline: 0; font: inherit; font-size: 14px; width: 100%; background: transparent; color: #0f172a">
+      </label>
+      <button type="button" style="height: 40px; padding: 0 12px; border: 1px solid #e2e2dc; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14px; color: #0f172a">한국어 ▾</button>
+      <a href="#" style="height: 44px; padding: 0 20px; border-radius: 999px; background: #1f2937; color: #ffffff; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center">플래너 열기</a>
+    </div>
+  </header>
+
+  <main style="max-width: 1280px; margin: 0 auto; padding: 0 32px 64px; box-sizing: border-box">
+
+    <!-- 첫 화면: 문장 하나 + 시작점 3개 -->
+    <section style="padding: 56px 0 40px">
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 28px">
+        <div>
+          <h1 style="margin: 0 0 12px; font-size: 46px; line-height: 1.2; font-weight: 800; letter-spacing: -0.03em; white-space: pre-line">가고 싶은 곳을 담으면,
+여행길이 됩니다</h1>
+          <p style="margin: 0; font-size: 18px; color: #475569">어디서 시작할지만 고르세요. 로그인 없이 바로 됩니다.</p>
+        </div>
+        <a href="#" style="display: inline-flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; background: #ffffff; border: 1px solid #ecece7">
+          <span style="font-size: 13px; color: #64748b">이어서 하기</span>
+          <span style="font-weight: 700; font-size: 15px">제주 3일 →</span>
+        </a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+        <!-- 1. 추천 코스 -->
+        <div style="background: #1f2937; color: #ffffff; border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 14px; min-height: 280px; box-sizing: border-box">
+          <span style="font-size: 13px; font-weight: 700; color: #facc15">1 · 가장 빠름</span>
+          <h2 style="margin: 0; font-size: 24px; font-weight: 800">추천 코스에서 시작</h2>
+          <p style="margin: 0; font-size: 15px; color: #cbd5e1; line-height: 1.6">검증된 코스를 장소째로 담고, 빼고 더하며 내 일정으로.</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <span style="font-size: 13px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,0.1)">서울</span>
+            <span style="font-size: 13px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,0.1)">부산</span>
+            <span style="font-size: 13px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,0.1)">경주</span>
+            <span style="font-size: 13px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,0.1)">강원</span>
+          </div>
+          <span style="flex: 1 1 auto"></span>
+          <a href="#" style="align-self: flex-start; height: 46px; padding: 0 20px; border-radius: 12px; background: #facc15; color: #1f2937; font-weight: 800; font-size: 15px; display: inline-flex; align-items: center">코스 고르기 →</a>
+        </div>
+        <!-- 2. 직접 담기 -->
+        <div style="background: #ffffff; border: 1px solid #ecece7; border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 14px; min-height: 280px; box-sizing: border-box">
+          <span style="font-size: 13px; font-weight: 700; color: #854d0e">2 · 가고 싶은 곳이 있다면</span>
+          <h2 style="margin: 0; font-size: 24px; font-weight: 800">장소부터 직접 담기</h2>
+          <p style="margin: 0; font-size: 15px; color: #475569; line-height: 1.6">찾아서 담으면 동선과 시간표가 자동으로 정리돼요.</p>
+          <span style="flex: 1 1 auto"></span>
+          <label style="display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 16px; border: 1.5px solid #1f2937; border-radius: 12px; background: #ffffff; box-sizing: border-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+            <input type="search" aria-label="장소 검색" placeholder="예: 경복궁, 광장시장" style="border: 0; outline: 0; font: inherit; font-size: 15px; width: 100%; background: transparent; color: #0f172a">
+          </label>
+        </div>
+        <!-- 3. 테마 -->
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 14px; min-height: 280px; box-sizing: border-box">
+          <span style="font-size: 13px; font-weight: 700; color: #854d0e">3 · 아직 모르겠다면</span>
+          <h2 style="margin: 0; font-size: 24px; font-weight: 800">테마로 첫 일정 받기</h2>
+          <p style="margin: 0; font-size: 15px; color: #475569; line-height: 1.6">관심사를 고르면 지역 관광 데이터로 첫 일정을 만들어 드려요.</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <button type="button" style="height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid #fcd34d; background: #ffffff; font: inherit; font-size: 14px; color: #0f172a">미식</button>
+            <button type="button" style="height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid #fcd34d; background: #ffffff; font: inherit; font-size: 14px; color: #0f172a">야경</button>
+            <button type="button" style="height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid #fcd34d; background: #ffffff; font: inherit; font-size: 14px; color: #0f172a">가족</button>
+            <button type="button" style="height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid #fcd34d; background: #ffffff; font: inherit; font-size: 14px; color: #0f172a">걷기</button>
+          </div>
+          <span style="flex: 1 1 auto"></span>
+          <a href="#" style="align-self: flex-start; font-weight: 700; font-size: 15px; color: #854d0e">테마 전체 보기 →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 추천 코스 카드 (A안) -->
+    <section style="padding: 24px 0 8px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px">
+        <h2 style="margin: 0; font-size: 26px; font-weight: 800">추천 코스</h2>
+        <a href="#" style="font-size: 15px; font-weight: 700; color: #854d0e">전체 코스 →</a>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+        <sc-for list="{{courses}}" as="c" hint-placeholder-count="6">
+          <div style="background: #ffffff; border: 1px solid #ecece7; border-radius: 18px; overflow: hidden; display: flex; flex-direction: column">
+            <div style="height: 150px; background: {{c.tint}}; position: relative">
+              <span style="position: absolute; left: 12px; top: 12px; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #ffffff; color: #0f172a">{{c.region}}</span>
+            </div>
+            <div style="padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 12px; flex: 1 1 auto">
+              <a href="#" style="font-weight: 700; font-size: 17px; line-height: 1.45">{{c.title}}</a>
+              <span style="flex: 1 1 auto"></span>
+              <div style="display: flex; gap: 8px">
+                <button type="button" style="height: 40px; padding: 0 16px; border-radius: 999px; border: 0; background: #1f2937; font: inherit; font-size: 14px; font-weight: 700; color: #ffffff">+ 내 일정에 담기</button>
+                <a href="#" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #e2e2dc; font-size: 14px; display: inline-flex; align-items: center; color: #0f172a">읽기</a>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 여행 정보 타일 -->
+    <section style="padding: 48px 0 8px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px">
+        <h2 style="margin: 0; font-size: 26px; font-weight: 800">여행 정보</h2>
+        <a href="#" style="font-size: 15px; font-weight: 700; color: #854d0e">전체 보기 →</a>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+        <sc-for list="{{info}}" as="i" hint-placeholder-count="4">
+          <a href="#" style="display: flex; flex-direction: column; gap: 6px; padding: 20px; border-radius: 16px; background: #ffffff; border: 1px solid #ecece7">
+            <span style="font-weight: 800; font-size: 17px">{{i.label}}</span>
+            <span style="font-size: 14px; color: #64748b; line-height: 1.5">{{i.desc}}</span>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+
+  <footer style="border-top: 1px solid #e7e7e3; background: #ffffff">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 24px 32px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 13px; color: #64748b">
+      <span>© Wayknit · 여로담</span>
+      <span>이용약관 · 개인정보처리방침 · 도움말</span>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      courses: [
+        { region: '경주', title: '경주 역사·맛집 하루 여행 코스', tint: '#f3e6d6' },
+        { region: '부산', title: '부산 영도 예술 산책 — 흰여울문화마을·아르떼뮤지엄 코스', tint: '#dbe7f3' },
+        { region: '서울', title: '서울 한강 1일 관광 코스', tint: '#e3eedf' },
+        { region: '서울', title: '남산과 N서울타워: 방문객을 위한 언덕 코스', tint: '#ede4f3' },
+        { region: '강원', title: '원주에서 횡성으로 이어지는 1일 가족 힐링여행', tint: '#f3efd6' },
+        { region: '부산', title: '부산 슬로우 무드: 바다를 오래 바라보는 하루', tint: '#dcecef' }
+      ],
+      info: [
+        { label: '떠나기 전 준비', desc: '교통카드 · 데이터 · 결제 체크리스트' },
+        { label: '교통', desc: '지하철 · 버스 · 기차 · 택시 타는 법' },
+        { label: '음식과 문화', desc: '주문 · 예절 · 알레르기 표현' },
+        { label: '관광 자료', desc: '관광사진 · 걷기길 · 오디오 가이드' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

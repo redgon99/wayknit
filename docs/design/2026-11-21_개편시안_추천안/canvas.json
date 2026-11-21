@@ -1,0 +1,22 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-21T10:00:00Z" },
+  "title": "Wayknit 개편 시안 (추천안)",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 1640, "title": "1단계 · 가이드 상세 (데스크톱)", "expand": "fill" },
+    "GuideMobile.dc.html": { "x": 1520, "y": 0, "w": 390, "h": 844, "title": "1단계 · 가이드 상세 (모바일, 영어)" },
+    "MenuDesktop.dc.html": { "x": 0, "y": 2040, "w": 1440, "h": 760, "title": "2단계 · 메뉴 3개 통합 (데스크톱)", "expand": "fill" },
+    "CoursesMobile.dc.html": { "x": 1520, "y": 2040, "w": 390, "h": 844, "title": "2단계 · 코스 탭 (모바일, 영어)" },
+    "LandingDesktop.dc.html": { "x": 0, "y": 3284, "w": 1440, "h": 1720, "title": "3단계 · 랜딩 (데스크톱)", "expand": "fill" },
+    "LandingMobile.dc.html": { "x": 1520, "y": 3284, "w": 390, "h": 844, "title": "3단계 · 랜딩 첫 화면 (모바일, 영어)" }
+  },
+  "order": ["Main.dc.html", "GuideMobile.dc.html", "MenuDesktop.dc.html", "CoursesMobile.dc.html", "LandingDesktop.dc.html", "LandingMobile.dc.html"],
+  "notes": {
+    "t1": { "x": 0, "y": -300, "text": "1단계 · 가이드 상세: 공통 헤더 + 담기", "kind": "title1", "maxW": 1910 },
+    "t2": { "x": 0, "y": 1740, "text": "2단계 · 메뉴 3개(코스 · 여행 정보 · 내 여행) + 모바일 하단 탭", "kind": "title1", "maxW": 1910 },
+    "t3": { "x": 0, "y": 2984, "text": "3단계 · 랜딩: 시작점 3개 + 코스 카드", "kind": "title1", "maxW": 1910 }
+  },
+  "designSystems": []
+}
