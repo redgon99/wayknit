@@ -210,11 +210,15 @@ npm run build || die "빌드 실패"
 say "빌드 결과 검증"
 BUNDLE="$(ls -t dist/assets/index-*.js 2>/dev/null | head -1)"
 [ -n "$BUNDLE" ] || die "번들을 찾지 못했다"
+# 2026-11-22 페이지 지연 로딩으로 코드가 여러 조각(dist/assets/*.js)에 나뉜다 — 카카오 키는 플래너 조각에 있다.
+# 메인 파일만 보던 검사를 모든 JS 조각으로 넓히고, 키마다 들어 있는 조각 이름을 기억해 라이브 검증에 쓴다.
 fail=0
 for k in VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY VITE_KAKAO_JS_KEY; do
   v="${!k:-}"
-  if [ -z "$v" ]; then echo "  ✗ $k 값이 비어 있다"; fail=1
-  elif grep -qF -- "$v" "$BUNDLE"; then echo "  ✅ $k 인라인됨"
+  if [ -z "$v" ]; then echo "  ✗ $k 값이 비어 있다"; fail=1; continue; fi
+  hit="$(grep -lF -- "$v" dist/assets/*.js 2>/dev/null | sort | head -1 || true)"
+  # macOS 기본 bash 3.2엔 연관 배열이 없어 키마다 CHUNK_<키> 변수에 담는다
+  if [ -n "$hit" ]; then printf -v "CHUNK_$k" '%s' "$(basename "$hit")"; c="CHUNK_$k"; echo "  ✅ $k 인라인됨 (${!c})"
   else echo "  ✗ $k 가 번들에 없다"; fail=1; fi
 done
 # 개발 전용 값이 새어 들어갔는지 (§9-4).
@@ -230,7 +234,7 @@ if [ -f "$STASH/.env.local" ]; then
     [ ${#lv} -ge 8 ] || continue
     # Netlify 에 같은 키가 있으면 그 값이 정본이다
     case "|${PROD_KEYS:-}|" in *"|$lk|"*) continue ;; esac
-    if grep -qF -- "$lv" "$BUNDLE"; then
+    if grep -qF -- "$lv" dist/assets/*.js; then
       printf '  \033[33m⚠ %s 의 로컬 값이 번들에 있다 — 격리가 안 됐다\033[0m\n' "$lk"
       fail=1
     fi
@@ -254,12 +258,17 @@ sleep 5
 LIVE_JS="$(mktemp)"
 A=$(curl -s "$SITE_URL/" | grep -o 'assets/index-[A-Za-z0-9_-]*\.js' | head -1)
 echo "  라이브 번들: $A"
-curl -s "$SITE_URL/$A" -o "$LIVE_JS"
+# 방금 만든 메인 파일이 라이브에 걸렸는지(배포가 실제로 나갔는지)
+if [ "$A" = "assets/$(basename "$BUNDLE")" ]; then echo "  ✅ 라이브 메인 파일 = 이번 빌드"
+else echo "  ✗ 라이브 메인 파일이 이번 빌드($(basename "$BUNDLE"))와 다르다"; fi
+# 키가 든 조각을 라이브에서 받아 확인(조각 이름은 빌드 검증 때 기억한 것)
 for k in VITE_SUPABASE_URL VITE_KAKAO_JS_KEY; do
   v="${!k:-}"
-  grep -qF -- "$v" "$LIVE_JS" && echo "  ✅ $k 반영됨" || echo "  ✗ $k 미반영"
+  c="CHUNK_$k"
+  curl -s "$SITE_URL/assets/${!c}" -o "$LIVE_JS"
+  grep -qF -- "$v" "$LIVE_JS" && echo "  ✅ $k 반영됨 (${!c})" || echo "  ✗ $k 미반영 (${!c})"
 done
-# 에러 문자열이 남아 있으면 키가 안 들어간 것이다 (§9-2)
+# 에러 문자열이 남아 있으면 키가 안 들어간 것이다 (§9-2) — 카카오 코드가 든 조각에서 센다(루프 마지막이 카카오 조각)
 n=$(grep -c 'VITE_KAKAO_JS_KEY 환경 변수가 필요합니다' "$LIVE_JS" || true)
 echo "  카카오 에러 문자열: ${n}회 $([ "$n" = "0" ] && echo '(정상)' || echo '(키 누락!)')"
 rm -f "$LIVE_JS"

@@ -180,13 +180,19 @@ try {
   Say "빌드 결과 검증"
   $bundle = Get-ChildItem "dist\assets\index-*.js" | Sort-Object LastWriteTime -Desc | Select-Object -First 1
   if (-not $bundle) { Die "번들을 찾지 못했다" }
-  $text = Get-Content $bundle.FullName -Raw -Encoding UTF8
+  # 2026-11-22 페이지 지연 로딩으로 코드가 여러 조각(dist/assets/*.js)에 나뉜다 — 카카오 키는 플래너 조각에 있다.
+  # 메인 파일만 보던 검사를 모든 JS 조각으로 넓히고, 키마다 들어 있는 조각 이름을 기억해 라이브 검증에 쓴다.
+  $chunks = @{}
+  foreach ($f in Get-ChildItem "dist\assets\*.js") { $chunks[$f.Name] = Get-Content $f.FullName -Raw -Encoding UTF8 }
+  $text = ($chunks.Values -join "`n")
+  $keyChunk = @{}
   $fail = $false
   foreach ($k in @("VITE_SUPABASE_URL","VITE_SUPABASE_ANON_KEY","VITE_KAKAO_JS_KEY")) {
     $v = $prod[$k]
-    if (-not $v)                { Write-Host "  ✗ $k 값이 비어 있다" -ForegroundColor Red; $fail = $true }
-    elseif ($text.Contains($v)) { Write-Host "  ✅ $k 인라인됨" }
-    else                        { Write-Host "  ✗ $k 가 번들에 없다" -ForegroundColor Red; $fail = $true }
+    if (-not $v) { Write-Host "  ✗ $k 값이 비어 있다" -ForegroundColor Red; $fail = $true; continue }
+    $hit = $chunks.Keys | Where-Object { $chunks[$_].Contains($v) } | Sort-Object | Select-Object -First 1
+    if ($hit) { $keyChunk[$k] = $hit; Write-Host "  ✅ $k 인라인됨 ($hit)" }
+    else      { Write-Host "  ✗ $k 가 번들에 없다" -ForegroundColor Red; $fail = $true }
   }
 
   # 개발 전용 값이 새어 들어갔는지 (§9-4).
@@ -242,12 +248,18 @@ Start-Sleep -Seconds 5
 $html = (Invoke-WebRequest "$SiteUrl/" -UseBasicParsing).Content
 $asset = ([regex]::Match($html, 'assets/index-[A-Za-z0-9_-]+\.js')).Value
 Write-Host "  라이브 번들: $asset"
-$live = (Invoke-WebRequest "$SiteUrl/$asset" -UseBasicParsing).Content
+# 방금 만든 메인 파일이 라이브에 걸렸는지(배포가 실제로 나갔는지)
+if ($asset -eq "assets/$($bundle.Name)") { Write-Host "  ✅ 라이브 메인 파일 = 이번 빌드" }
+else { Write-Host "  ✗ 라이브 메인 파일이 이번 빌드($($bundle.Name))와 다르다" -ForegroundColor Red }
+# 키가 든 조각을 라이브에서 받아 확인(조각 이름은 빌드 검증 때 기억한 것)
+$liveChunk = @{}
 foreach ($k in @("VITE_SUPABASE_URL","VITE_KAKAO_JS_KEY")) {
-  if ($live.Contains($prod[$k])) { Write-Host "  ✅ $k 반영됨" } else { Write-Host "  ✗ $k 미반영" -ForegroundColor Red }
+  $name = $keyChunk[$k]
+  if (-not $liveChunk.ContainsKey($name)) { $liveChunk[$name] = (Invoke-WebRequest "$SiteUrl/assets/$name" -UseBasicParsing).Content }
+  if ($liveChunk[$name].Contains($prod[$k])) { Write-Host "  ✅ $k 반영됨 ($name)" } else { Write-Host "  ✗ $k 미반영 ($name)" -ForegroundColor Red }
 }
-# 에러 문자열이 남아 있으면 키가 안 들어간 것이다 (§9-2)
-$n = ([regex]::Matches($live, 'VITE_KAKAO_JS_KEY 환경 변수가 필요합니다')).Count
+# 에러 문자열이 남아 있으면 키가 안 들어간 것이다 (§9-2) — 카카오 코드가 든 조각에서 센다
+$n = ([regex]::Matches($liveChunk[$keyChunk["VITE_KAKAO_JS_KEY"]], 'VITE_KAKAO_JS_KEY 환경 변수가 필요합니다')).Count
 Write-Host "  카카오 에러 문자열: ${n}회 $(if ($n -eq 0) { '(정상)' } else { '(키 누락!)' })"
 
 Write-Host @"
