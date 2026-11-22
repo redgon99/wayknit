@@ -3,7 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import {
   DEFAULT_LOCALE,
   normalizeLocale,
-  resolveInitialLocale,
+  localeFromPathname,
   writeStoredLocale,
   localeToBcp47,
   type AppLocale,
@@ -18,99 +18,13 @@ import koLanding from '../locales/ko/landing.json';
 import koGuides from '../locales/ko/guides.json';
 import koKorInfo from '../locales/ko/korInfo.json';
 
-import enCommon from '../locales/en/common.json';
-import enPlanner from '../locales/en/planner.json';
-import enShare from '../locales/en/share.json';
-import enAuth from '../locales/en/auth.json';
-import enBilling from '../locales/en/billing.json';
-import enLanding from '../locales/en/landing.json';
-import enGuides from '../locales/en/guides.json';
-import enKorInfo from '../locales/en/korInfo.json';
-
-import jaCommon from '../locales/ja/common.json';
-import jaPlanner from '../locales/ja/planner.json';
-import jaShare from '../locales/ja/share.json';
-import jaAuth from '../locales/ja/auth.json';
-import jaBilling from '../locales/ja/billing.json';
-import jaLanding from '../locales/ja/landing.json';
-import jaGuides from '../locales/ja/guides.json';
-import jaKorInfo from '../locales/ja/korInfo.json';
-
-import zhCNCommon from '../locales/zh-CN/common.json';
-import zhCNPlanner from '../locales/zh-CN/planner.json';
-import zhCNShare from '../locales/zh-CN/share.json';
-import zhCNAuth from '../locales/zh-CN/auth.json';
-import zhCNBilling from '../locales/zh-CN/billing.json';
-import zhCNLanding from '../locales/zh-CN/landing.json';
-import zhCNGuides from '../locales/zh-CN/guides.json';
-import zhCNKorInfo from '../locales/zh-CN/korInfo.json';
-
-import zhTWCommon from '../locales/zh-TW/common.json';
-import zhTWPlanner from '../locales/zh-TW/planner.json';
-import zhTWShare from '../locales/zh-TW/share.json';
-import zhTWAuth from '../locales/zh-TW/auth.json';
-import zhTWBilling from '../locales/zh-TW/billing.json';
-import zhTWLanding from '../locales/zh-TW/landing.json';
-import zhTWGuides from '../locales/zh-TW/guides.json';
-import zhTWKorInfo from '../locales/zh-TW/korInfo.json';
-
-import esCommon from '../locales/es/common.json';
-import esPlanner from '../locales/es/planner.json';
-import esShare from '../locales/es/share.json';
-import esAuth from '../locales/es/auth.json';
-import esBilling from '../locales/es/billing.json';
-import esLanding from '../locales/es/landing.json';
-import esGuides from '../locales/es/guides.json';
-import esKorInfo from '../locales/es/korInfo.json';
-
-import frCommon from '../locales/fr/common.json';
-import frPlanner from '../locales/fr/planner.json';
-import frShare from '../locales/fr/share.json';
-import frAuth from '../locales/fr/auth.json';
-import frBilling from '../locales/fr/billing.json';
-import frLanding from '../locales/fr/landing.json';
-import frGuides from '../locales/fr/guides.json';
-import frKorInfo from '../locales/fr/korInfo.json';
-
-import deCommon from '../locales/de/common.json';
-import dePlanner from '../locales/de/planner.json';
-import deShare from '../locales/de/share.json';
-import deAuth from '../locales/de/auth.json';
-import deBilling from '../locales/de/billing.json';
-import deLanding from '../locales/de/landing.json';
-import deGuides from '../locales/de/guides.json';
-import deKorInfo from '../locales/de/korInfo.json';
-
-import ruCommon from '../locales/ru/common.json';
-import ruPlanner from '../locales/ru/planner.json';
-import ruShare from '../locales/ru/share.json';
-import ruAuth from '../locales/ru/auth.json';
-import ruBilling from '../locales/ru/billing.json';
-import ruLanding from '../locales/ru/landing.json';
-import ruGuides from '../locales/ru/guides.json';
-import ruKorInfo from '../locales/ru/korInfo.json';
-
-const zhCNBundle = {
-  common: zhCNCommon,
-  planner: zhCNPlanner,
-  share: zhCNShare,
-  auth: zhCNAuth,
-  billing: zhCNBilling,
-  landing: zhCNLanding,
-  guides: zhCNGuides,
-  korInfo: zhCNKorInfo,
-};
-
-const zhTWBundle = {
-  common: zhTWCommon,
-  planner: zhTWPlanner,
-  share: zhTWShare,
-  auth: zhTWAuth,
-  billing: zhTWBilling,
-  landing: zhTWLanding,
-  guides: zhTWGuides,
-  korInfo: zhTWKorInfo,
-};
+/**
+ * 한국어 말고 8개 언어는 필요할 때 받는다(2026-11-22). 예전엔 9개 언어 × 8개 파일(약 590 KB)이 전부
+ * 메인 번들에 들어 있어 방문자가 쓰지도 않는 언어까지 받았다. 한국어는 기본·대체(fallback) 언어라 그대로 둔다.
+ * 빌드에서는 언어마다 한 조각(`locale-en` …)으로 묶인다(vite.config.ts manualChunks).
+ * 모든 언어의 문구가 동시에 필요한 곳은 `virtual:locale-cross`를 쓴다(PlannerPage 새 여행 제목, importPins).
+ */
+const NAMESPACES = ['common', 'planner', 'share', 'auth', 'billing', 'landing', 'guides', 'korInfo'] as const;
 
 const resources = {
   ko: {
@@ -123,80 +37,55 @@ const resources = {
     guides: koGuides,
     korInfo: koKorInfo,
   },
-  en: {
-    common: enCommon,
-    planner: enPlanner,
-    share: enShare,
-    auth: enAuth,
-    billing: enBilling,
-    landing: enLanding,
-    guides: enGuides,
-    korInfo: enKorInfo,
-  },
-  ja: {
-    common: jaCommon,
-    planner: jaPlanner,
-    share: jaShare,
-    auth: jaAuth,
-    billing: jaBilling,
-    landing: jaLanding,
-    guides: jaGuides,
-    korInfo: jaKorInfo,
-  },
-  'zh-CN': zhCNBundle,
-  'zh-TW': zhTWBundle,
-  // Legacy alias — normalizeLocale maps "zh" → zh-CN; keep bundle for safety
-  zh: zhCNBundle,
-  es: {
-    common: esCommon,
-    planner: esPlanner,
-    share: esShare,
-    auth: esAuth,
-    billing: esBilling,
-    landing: esLanding,
-    guides: esGuides,
-    korInfo: esKorInfo,
-  },
-  fr: {
-    common: frCommon,
-    planner: frPlanner,
-    share: frShare,
-    auth: frAuth,
-    billing: frBilling,
-    landing: frLanding,
-    guides: frGuides,
-    korInfo: frKorInfo,
-  },
-  de: {
-    common: deCommon,
-    planner: dePlanner,
-    share: deShare,
-    auth: deAuth,
-    billing: deBilling,
-    landing: deLanding,
-    guides: deGuides,
-    korInfo: deKorInfo,
-  },
-  ru: {
-    common: ruCommon,
-    planner: ruPlanner,
-    share: ruShare,
-    auth: ruAuth,
-    billing: ruBilling,
-    landing: ruLanding,
-    guides: ruGuides,
-    korInfo: ruKorInfo,
-  },
-} as const;
+};
+
+const localeLoaders = import.meta.glob<Record<string, unknown>>(
+  ['../locales/*/*.json', '!../locales/ko/*.json'],
+  { import: 'default' }
+);
+
+const loading = new Map<AppLocale, Promise<void>>();
+
+/** 그 언어 번역을 받아 i18next에 넣는다. 한국어·이미 받은 언어는 바로 끝난다. */
+export function ensureLocale(locale: AppLocale): Promise<void> {
+  if (locale === DEFAULT_LOCALE || i18n.hasResourceBundle(locale, 'common')) return Promise.resolve();
+  let p = loading.get(locale);
+  if (!p) {
+    p = Promise.all(
+      NAMESPACES.map(async (ns) => {
+        const load = localeLoaders[`../locales/${locale}/${ns}.json`];
+        if (!load) return;
+        i18n.addResourceBundle(locale, ns, await load(), true, true);
+      })
+    ).then(() => undefined);
+    // 실패(오프라인 등)하면 다음에 다시 시도할 수 있게 기억을 지운다
+    p.catch(() => loading.delete(locale));
+    loading.set(locale, p);
+  }
+  return p;
+}
+
+/**
+ * 첫 화면 언어 — LocaleLayout과 같은 규칙(?lang= → 주소 앞의 언어 → 한국어).
+ * 예전엔 저장된 언어로 먼저 그렸다가 LocaleLayout이 곧바로 주소 언어로 바꿨다. 이제 처음부터 주소 언어로 그린다.
+ */
+function initialLocaleFromUrl(): AppLocale {
+  if (typeof window === 'undefined') return DEFAULT_LOCALE;
+  const fromQuery = new URLSearchParams(window.location.search).get('lang');
+  if (fromQuery) return normalizeLocale(fromQuery);
+  return localeFromPathname(window.location.pathname) ?? DEFAULT_LOCALE;
+}
+
+const initialLocale = initialLocaleFromUrl();
 
 void i18n.use(initReactI18next).init({
   resources,
-  lng: resolveInitialLocale(),
+  lng: initialLocale,
   fallbackLng: DEFAULT_LOCALE,
   supportedLngs: ['ko', 'en', 'ja', 'zh-CN', 'zh-TW', 'zh', 'es', 'fr', 'de', 'ru'],
   nonExplicitSupportedLngs: false,
   defaultNS: 'common',
-  ns: ['common', 'planner', 'share', 'auth', 'billing', 'landing', 'guides', 'korInfo'],
+  ns: [...NAMESPACES],
   interpolation: { escapeValue: false },
   returnEmptyString: false,
 });
@@ -207,10 +96,25 @@ function applyDocumentLang(locale: AppLocale): void {
   }
 }
 
+/** main.tsx가 첫 화면을 그리기 전에 기다린다 — 주소 언어 번역이 오기 전에 한국어로 잠깐 그려지지 않게 */
+export const i18nReady: Promise<void> = ensureLocale(initialLocale).catch((err) => {
+  console.warn('[i18n] 번역을 받지 못해 한국어로 보여 줍니다.', err);
+});
+
+let requestedLocale: AppLocale = initialLocale;
+
 export function setAppLocale(locale: AppLocale): void {
   const normalized = normalizeLocale(locale);
   writeStoredLocale(normalized);
-  void i18n.changeLanguage(normalized);
+  requestedLocale = normalized;
+  const apply = () => {
+    // 받는 사이 다른 언어를 또 골랐으면 마지막 것만 적용
+    if (requestedLocale === normalized && i18n.language !== normalized) void i18n.changeLanguage(normalized);
+  };
+  ensureLocale(normalized).then(apply, (err) => {
+    console.warn('[i18n] 번역을 받지 못했습니다:', normalized, err);
+    apply(); // 화면 언어 표시는 맞추고, 문구는 한국어로 대신 보인다
+  });
   applyDocumentLang(normalized);
 }
 
@@ -219,7 +123,7 @@ i18n.on('languageChanged', (lng) => {
 });
 
 if (typeof document !== 'undefined') {
-  applyDocumentLang(resolveInitialLocale());
+  applyDocumentLang(initialLocale);
 }
 
 export default i18n;

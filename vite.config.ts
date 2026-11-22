@@ -314,6 +314,39 @@ function mergeTourDetailResponse(
   };
 }
 
+/**
+ * 번역 파일은 언어별로 필요할 때 받는다(2026-11-22, src/lib/i18n.ts). 그런데 "모든 언어"의 문구가 동시에
+ * 필요한 곳이 두 군데 있다 — 기본 일정 제목 "새 여행" 알아보기(PlannerPage)와 다른 언어 화면에서 내보낸
+ * 파일 다시 읽기(importPins). 그 몇 줄만 9개 언어에서 뽑아 `virtual:locale-cross` 모듈로 메인 번들에 넣는다.
+ */
+function localeCrossPlugin() {
+  const id = 'virtual:locale-cross';
+  const resolved = '\0' + id;
+  const localesDir = path.resolve(process.cwd(), 'src/locales');
+  return {
+    name: 'locale-cross',
+    resolveId(source: string) {
+      return source === id ? resolved : null;
+    },
+    load(loadId: string) {
+      if (loadId !== resolved) return null;
+      const newTripTitles: string[] = [];
+      const exportLabels: Record<string, unknown> = {};
+      for (const loc of fs.readdirSync(localesDir)) {
+        const file = path.join(localesDir, loc, 'planner.json');
+        if (!fs.existsSync(file)) continue;
+        const planner = JSON.parse(fs.readFileSync(file, 'utf8'));
+        if (typeof planner?.trip?.newTrip === 'string') newTripTitles.push(planner.trip.newTrip);
+        if (planner?.export) exportLabels[loc] = planner.export;
+      }
+      return (
+        `export const NEW_TRIP_TITLES = ${JSON.stringify(newTripTitles)};\n` +
+        `export const EXPORT_LABELS = ${JSON.stringify(exportLabels)};\n`
+      );
+    },
+  };
+}
+
 /** 로컬 dev: Tour API CORS 우회 (VITE_TOUR_API_KEY 필요) */
 function tourApiDevProxyPlugin(tourApiKey: string) {
   return {
@@ -486,8 +519,21 @@ export default defineConfig(({ mode }) => {
     __APP_COMMIT__: JSON.stringify(gitShortHash()),
     __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // 언어별 번역 8개 파일을 언어마다 한 조각으로(요청 1번). 한국어는 기본·대체 언어라 메인 번들에 남는다.
+        manualChunks(id: string) {
+          const m = id.replace(/\\/g, '/').match(/\/src\/locales\/([^/]+)\/[^/]+\.json$/);
+          if (m && m[1] !== 'ko') return `locale-${m[1]}`;
+          return undefined;
+        },
+      },
+    },
+  },
   plugins: [
     react(),
+    localeCrossPlugin(),
     tourApiDevProxyPlugin(tourApiKey),
     VitePWA({
       registerType: 'autoUpdate',

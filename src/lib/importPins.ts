@@ -1,6 +1,6 @@
 import type { CategoryCode, PinnedPlace, SimpleCategory } from '../types';
 import { DEFAULT_CODE_BY_SIMPLE_CATEGORY } from './categories';
-import i18n from './i18n';
+import { EXPORT_LABELS } from 'virtual:locale-cross';
 
 /**
  * 화면에 보여 줄 문구는 호출부가 `import.<code>` 번역으로 바꾼다 — 이 파일은 언어를 모른다.
@@ -19,11 +19,15 @@ export class PinImportError extends Error {
 /**
  * 보내기 파일의 열 이름·줄 머리말은 보낸 사람의 화면 언어로 써진다. 영어 화면에서 내보낸
  * 파일을 다시 읽어올 수 있게, 모든 언어의 표기를 받아들인다(한국어는 번역이 없어도 항상 포함).
+ * 번역은 언어별로 따로 받으므로(2026-11-22) 빌드 때 9개 언어에서 뽑아 둔 `EXPORT_LABELS`를 본다.
  */
 function exportLabelVariants(key: string, korean: string): string[] {
   const variants = new Set<string>([korean]);
-  for (const lng of Object.keys(i18n.store?.data ?? {})) {
-    const value = i18n.getResource(lng, 'planner', `export.${key}`);
+  for (const labels of Object.values(EXPORT_LABELS)) {
+    const value = key.split('.').reduce<unknown>(
+      (node, part) => (node && typeof node === 'object' ? (node as Record<string, unknown>)[part] : undefined),
+      labels
+    );
     if (typeof value === 'string' && value) variants.add(value);
   }
   return [...variants];

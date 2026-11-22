@@ -37,8 +37,9 @@ import {
   writeMapViewport,
 } from '../lib/mapViewport';
 import { computeTripCenter } from '../lib/tripGeo';
-import { googleMapsLanguage, normalizeLocale, pathWithLocale, SUPPORTED_LOCALES } from '../lib/locale';
+import { googleMapsLanguage, normalizeLocale, pathWithLocale } from '../lib/locale';
 import i18n from '../lib/i18n';
+import { NEW_TRIP_TITLES } from 'virtual:locale-cross';
 import {
   canCreateTrip,
   canRunGoogleSearch,
@@ -207,10 +208,9 @@ function centerFromTrip(trip: Pick<Trip, 'pinnedByDay' | 'currentDay' | 'plazaCe
   return null;
 }
 
+/** 모든 언어의 기본 제목("새 여행", "New trip" …) — 번역은 언어별로 따로 받으므로 빌드 때 뽑아 둔 목록을 쓴다 */
 function defaultNewTripTitles(): Set<string> {
-  return new Set(
-    SUPPORTED_LOCALES.map((lng) => i18n.t('trip.newTrip', { ns: 'planner', lng }))
-  );
+  return new Set([...NEW_TRIP_TITLES, i18n.t('trip.newTrip', { ns: 'planner' })]);
 }
 
 function makeEmptyTrip(): Trip {
