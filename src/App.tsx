@@ -1,24 +1,29 @@
+import { useEffect, type ComponentType } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { LocaleLayout } from './components/LocaleLayout';
 import LandingPage from './pages/LandingPage';
-import PlannerPage from './pages/PlannerPage';
-import ShareTripPage from './pages/ShareTripPage';
-import ShareTargetPage from './pages/ShareTargetPage';
-import SharePlazaPage from './pages/SharePlazaPage';
-import LoginPage from './pages/LoginPage';
-import GuidesPage from './pages/GuidesPage';
-import GuideDetailPage from './pages/GuideDetailPage';
-import KoreaInfoPage from './pages/KoreaInfoPage';
-import KoreaSetupPage from './pages/KoreaSetupPage';
-import HelpPage from './pages/HelpPage';
-import ThemesPage from './pages/ThemesPage';
-import TermsPage from './pages/TermsPage';
-import PrivacyPage from './pages/PrivacyPage';
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from './lib/locale';
-import { lazyPage, PageSuspense } from './lib/lazyPage';
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, stripLocalePrefix } from './lib/locale';
+import { lazyPage, PageSuspense, type LazyPage } from './lib/lazyPage';
 
-// 관리자 화면은 처음 들어갈 때 따로 받는다(지연 로딩, 2026-11-22) — 여행자 첫 화면 번들에서 뺀다
+/*
+ * 랜딩만 메인 번들에 두고 나머지 페이지는 처음 들어갈 때 따로 받는다(지연 로딩).
+ * 2026-11-22 관리자 화면 12개 → 같은 날 공개 페이지까지. 첫 진입 페이지 조각은 main.tsx가 번역과 동시에 미리 받고(preloadRoute),
+ * 플래너는 첫 화면이 뜬 뒤 한가할 때 미리 받는다 — 랜딩·가이드에서 "내 일정에 담기"를 누를 때 기다리지 않게.
+ */
+const PlannerPage = lazyPage(() => import('./pages/PlannerPage'));
+const ShareTripPage = lazyPage(() => import('./pages/ShareTripPage'));
+const ShareTargetPage = lazyPage(() => import('./pages/ShareTargetPage'));
+const SharePlazaPage = lazyPage(() => import('./pages/SharePlazaPage'));
+const LoginPage = lazyPage(() => import('./pages/LoginPage'));
+const GuidesPage = lazyPage(() => import('./pages/GuidesPage'));
+const GuideDetailPage = lazyPage(() => import('./pages/GuideDetailPage'));
+const KoreaInfoPage = lazyPage(() => import('./pages/KoreaInfoPage'));
+const KoreaSetupPage = lazyPage(() => import('./pages/KoreaSetupPage'));
+const HelpPage = lazyPage(() => import('./pages/HelpPage'));
+const ThemesPage = lazyPage(() => import('./pages/ThemesPage'));
+const TermsPage = lazyPage(() => import('./pages/TermsPage'));
+const PrivacyPage = lazyPage(() => import('./pages/PrivacyPage'));
 const AdminPage = lazyPage(() => import('./pages/AdminPage'));
 const AdminInsightsPage = lazyPage(() => import('./pages/AdminInsightsPage'));
 const AdminInsightReportsPage = lazyPage(() => import('./pages/AdminInsightReportsPage'));
@@ -32,39 +37,83 @@ const AdminAccessLogPage = lazyPage(() => import('./pages/AdminAccessLogPage'));
 const AdminDashboardPage = lazyPage(() => import('./pages/AdminDashboardPage'));
 const AdminSearchPage = lazyPage(() => import('./pages/AdminSearchPage'));
 
+type AnyLazyPage = LazyPage<ComponentType<object>>;
+
+/** 주소 → 페이지. 아래 PAGE_ROUTES와 preloadRoute가 함께 쓴다 */
+const LAZY_ROUTES: [path: string, page: AnyLazyPage][] = [
+  ['login', LoginPage],
+  ['plan', PlannerPage],
+  ['trip/:slug', ShareTripPage],
+  // PWA share_target 수신 — manifest의 action과 경로가 같아야 한다
+  ['share', ShareTargetPage],
+  ['plaza', SharePlazaPage],
+  ['guides', GuidesPage],
+  ['guides/:slug', GuideDetailPage],
+  ['info', KoreaInfoPage],
+  ['admin', AdminPage],
+  ['admin/insights', AdminInsightsPage],
+  ['admin/insight-reports', AdminInsightReportsPage],
+  ['admin/guides', AdminGuidesPage],
+  ['admin/distribution', AdminDistributionPage],
+  ['admin/scenarios', AdminScenariosPage],
+  ['admin/landing', AdminLandingPage],
+  ['admin/reports', AdminReportsPage],
+  ['admin/audit', AdminAuditPage],
+  ['admin/access-log', AdminAccessLogPage],
+  ['admin/dashboard', AdminDashboardPage],
+  ['admin/search', AdminSearchPage],
+  ['setup', KoreaSetupPage],
+  ['help', HelpPage],
+  ['themes', ThemesPage],
+  ['terms', TermsPage],
+  ['privacy', PrivacyPage],
+];
+
+/** 첫 진입 페이지 조각을 번역과 동시에 받기 시작한다(main.tsx) — 받는 순서가 줄줄이 늘어나지 않게 */
+export function preloadRoute(pathname: string): void {
+  const segs = stripLocalePrefix(pathname).split('/').filter(Boolean);
+  if (segs.length === 0) return; // 랜딩은 메인 번들
+  for (const [path, page] of LAZY_ROUTES) {
+    const parts = path.split('/');
+    if (parts.length === segs.length && parts.every((p, i) => p.startsWith(':') || p === segs[i])) {
+      page.preload();
+      return;
+    }
+  }
+}
+
 const PAGE_ROUTES = (
   <>
-    <Route path="login" element={<LoginPage />} />
     <Route index element={<LandingPage />} />
-    <Route path="plan" element={<PlannerPage />} />
-    <Route path="trip/:slug" element={<ShareTripPage />} />
-    {/* PWA share_target 수신 — manifest의 action과 경로가 같아야 한다 */}
-    <Route path="share" element={<ShareTargetPage />} />
-    <Route path="plaza" element={<SharePlazaPage />} />
-    <Route path="guides" element={<GuidesPage />} />
-    <Route path="guides/:slug" element={<GuideDetailPage />} />
-    <Route path="info" element={<KoreaInfoPage />} />
-    <Route path="admin" element={<PageSuspense><AdminPage /></PageSuspense>} />
-    <Route path="admin/insights" element={<PageSuspense><AdminInsightsPage /></PageSuspense>} />
-    <Route path="admin/insight-reports" element={<PageSuspense><AdminInsightReportsPage /></PageSuspense>} />
-    <Route path="admin/guides" element={<PageSuspense><AdminGuidesPage /></PageSuspense>} />
-    <Route path="admin/distribution" element={<PageSuspense><AdminDistributionPage /></PageSuspense>} />
-    <Route path="admin/scenarios" element={<PageSuspense><AdminScenariosPage /></PageSuspense>} />
-    <Route path="admin/landing" element={<PageSuspense><AdminLandingPage /></PageSuspense>} />
-    <Route path="admin/reports" element={<PageSuspense><AdminReportsPage /></PageSuspense>} />
-    <Route path="admin/audit" element={<PageSuspense><AdminAuditPage /></PageSuspense>} />
-    <Route path="admin/access-log" element={<PageSuspense><AdminAccessLogPage /></PageSuspense>} />
-    <Route path="admin/dashboard" element={<PageSuspense><AdminDashboardPage /></PageSuspense>} />
-    <Route path="admin/search" element={<PageSuspense><AdminSearchPage /></PageSuspense>} />
-    <Route path="setup" element={<KoreaSetupPage />} />
-    <Route path="help" element={<HelpPage />} />
-    <Route path="themes" element={<ThemesPage />} />
-    <Route path="terms" element={<TermsPage />} />
-    <Route path="privacy" element={<PrivacyPage />} />
+    {LAZY_ROUTES.map(([path, Page]) => (
+      <Route
+        key={path}
+        path={path}
+        element={
+          <PageSuspense>
+            <Page />
+          </PageSuspense>
+        }
+      />
+    ))}
   </>
 );
 
+/** 첫 화면이 뜬 뒤 한가할 때 플래너 조각을 받아 둔다(가장 많이 가는 다음 화면) */
+function usePreloadPlannerWhenIdle() {
+  useEffect(() => {
+    const run = () => PlannerPage.preload();
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(run, { timeout: 5000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = globalThis.setTimeout(run, 2500);
+    return () => globalThis.clearTimeout(id);
+  }, []);
+}
+
 export default function App() {
+  usePreloadPlannerWhenIdle();
   return (
     <AuthProvider>
       <BrowserRouter>

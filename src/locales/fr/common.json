@@ -14,6 +14,7 @@
   "next": "Suivant",
   "back": "Retour",
   "retry": "Réessayer",
+  "pageLoadFailed": "Impossible de charger la page. Vérifiez votre connexion et réessayez.",
   "more": "Plus",
   "all": "Tout",
   "day": "Jour {{count}}",

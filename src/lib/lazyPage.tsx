@@ -1,8 +1,9 @@
-import { Component, lazy, Suspense, type ComponentType, type ReactNode } from 'react';
+import { Component, lazy, Suspense, type ComponentType, type LazyExoticComponent, type ReactNode } from 'react';
+import i18n from './i18n';
 
 /**
- * 페이지를 처음 열 때 따로 받아 오는 지연 로딩(React.lazy) — 관리자 화면용(2026-11-22).
- * 관리자 화면 12개가 메인 번들에 다 들어 있어 여행자(대부분 외국인 모바일)가 첫 화면에서 쓰지 않는 코드까지 받았다.
+ * 페이지를 처음 열 때 따로 받아 오는 지연 로딩(React.lazy).
+ * 2026-11-22: 관리자 화면 → 같은 날 랜딩을 뺀 모든 페이지로 넓혔다(첫 화면 번들 줄이기).
  *
  * 배포 직후 예전 index를 연 채로 들어오면 이미 지워진 옛 조각 파일을 찾다가 실패한다
  * ("Failed to fetch dynamically imported module"). 그때는 한 번만 새로고침해 새 index를 받는다 —
@@ -10,8 +11,13 @@ import { Component, lazy, Suspense, type ComponentType, type ReactNode } from 'r
  */
 const RELOAD_KEY = 'wayknit:lazy-reload';
 
-export function lazyPage<T extends ComponentType<object>>(load: () => Promise<{ default: T }>) {
-  return lazy(async () => {
+export type LazyPage<T extends ComponentType<object>> = LazyExoticComponent<T> & {
+  /** 조각 파일을 미리 받아 둔다(첫 진입 페이지는 번역과 동시에, 플래너는 한가할 때). 실패는 조용히 무시. */
+  preload: () => void;
+};
+
+export function lazyPage<T extends ComponentType<object>>(load: () => Promise<{ default: T }>): LazyPage<T> {
+  const page = lazy(async () => {
     try {
       const mod = await load();
       try {
@@ -34,7 +40,12 @@ export function lazyPage<T extends ComponentType<object>>(load: () => Promise<{ 
       }
       throw err;
     }
-  });
+  }) as LazyPage<T>;
+  // 같은 import()는 브라우저가 한 번만 받는다 — 나중에 lazy가 다시 불러도 그 결과를 쓴다
+  page.preload = () => {
+    load().catch(() => {});
+  };
+  return page;
 }
 
 /** 새로고침 후에도 조각 파일을 못 받으면(오프라인·배포 중) 빈 화면 대신 안내 */
@@ -49,7 +60,7 @@ class ChunkErrorBoundary extends Component<{ children: ReactNode }, { failed: bo
     if (!this.state.failed) return this.props.children;
     return (
       <div role="alert" style={{ padding: '48px 24px', textAlign: 'center', fontSize: 15, lineHeight: 1.6 }}>
-        <p style={{ margin: '0 0 16px' }}>화면을 불러오지 못했습니다. 네트워크를 확인한 뒤 새로고침해 주세요.</p>
+        <p style={{ margin: '0 0 16px' }}>{i18n.t('pageLoadFailed', { ns: 'common' })}</p>
         <button
           type="button"
           onClick={() => {
@@ -62,14 +73,14 @@ class ChunkErrorBoundary extends Component<{ children: ReactNode }, { failed: bo
           }}
           style={{ padding: '8px 18px', borderRadius: 999, border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer' }}
         >
-          새로고침
+          {i18n.t('retry', { ns: 'common' })}
         </button>
       </div>
     );
   }
 }
 
-/** 조각 파일을 받는 동안 — 관리자 화면은 짧게 비워 둔다(깜빡임 최소) */
+/** 조각 파일을 받는 동안 — 처음 들어올 때만 잠깐 비워 둔다(페이지 이동 중엔 react-router v7이 이전 화면을 유지) */
 export function PageSuspense({ children }: { children: ReactNode }) {
   return (
     <ChunkErrorBoundary>

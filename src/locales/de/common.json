@@ -14,6 +14,7 @@
   "next": "Weiter",
   "back": "Zurück",
   "retry": "Erneut",
+  "pageLoadFailed": "Die Seite konnte nicht geladen werden. Bitte Verbindung prüfen und erneut versuchen.",
   "more": "Mehr",
   "all": "Alle",
   "day": "Tag {{count}}",
