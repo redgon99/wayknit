@@ -407,7 +407,8 @@
   color: #475569;
 }
 
-.home-continue {
+/* 아래 링크 규칙의 .landing-page 접두: `.landing-page a { color: inherit }`(위쪽)보다 우선순위가 낮아 글자색이 무시되던 것(2026-11-22) */
+.landing-page .home-continue {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -506,28 +507,28 @@
   text-decoration: none;
 }
 
-.home-chip--dark {
+.landing-page .home-chip--dark {
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 
-.home-chip--dark:hover {
+.landing-page .home-chip--dark:hover {
   background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
 }
 
-.home-chip--soft {
+.landing-page .home-chip--soft {
   background: #ffffff;
   border: 1px solid #fcd34d;
   color: var(--landing-ink);
 }
 
-.home-chip--soft:hover {
+.landing-page .home-chip--soft:hover {
   border-color: #ca8a04;
   color: var(--landing-ink);
 }
 
-.home-start-cta {
+.landing-page .home-start-cta {
   margin-top: auto;
   align-self: flex-start;
   font-size: 15px;
@@ -536,7 +537,7 @@
   text-decoration: none;
 }
 
-.home-start-cta--accent {
+.landing-page .home-start-cta--accent {
   display: inline-flex;
   align-items: center;
   min-height: 46px;
@@ -547,7 +548,7 @@
   font-weight: 800;
 }
 
-.home-start-cta--accent:hover {
+.landing-page .home-start-cta--accent:hover {
   background: #eab308;
   color: #1f2937;
 }
@@ -675,7 +676,7 @@
   padding: 16px 18px 18px;
 }
 
-.home-course-title {
+.landing-page .home-course-title {
   font-size: 17px;
   font-weight: 700;
   line-height: 1.45;
@@ -683,7 +684,7 @@
   text-decoration: none;
 }
 
-.home-course-title:hover {
+.landing-page .home-course-title:hover {
   text-decoration: underline;
 }
 
@@ -694,7 +695,7 @@
   gap: 8px;
 }
 
-.home-course-add {
+.landing-page .home-course-add {
   display: inline-flex;
   align-items: center;
   min-height: 40px;
@@ -707,12 +708,12 @@
   text-decoration: none;
 }
 
-.home-course-add:hover {
+.landing-page .home-course-add:hover {
   background: #0f172a;
   color: #ffffff;
 }
 
-.home-course-read {
+.landing-page .home-course-read {
   display: inline-flex;
   align-items: center;
   min-height: 40px;
@@ -730,7 +731,7 @@
   gap: 16px;
 }
 
-.home-info-tile {
+.landing-page .home-info-tile {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -742,7 +743,7 @@
   color: var(--landing-ink);
 }
 
-.home-info-tile:hover {
+.landing-page .home-info-tile:hover {
   border-color: #cbd5e1;
   color: var(--landing-ink);
 }

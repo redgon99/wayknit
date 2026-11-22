@@ -33,7 +33,7 @@ export const COURSE_TAXONOMY_GROUP_META: Record<
 
 export const COURSE_TAXONOMY_TAGS: CourseTaxonomyTag[] = [
   // ① 지역·명소
-  { id: 'seoul', group: 'region', labelKo: '서울', labelEn: 'Seoul', aliases: ['서울', '강남', '홍대', '명동', '성수'] },
+  { id: 'seoul', group: 'region', labelKo: '서울', labelEn: 'Seoul', aliases: ['서울', '강남', '홍대', '명동', '성수', '동대문', '안국', '이태원', '종로', '광화문', '경복궁', '북촌', '인사동', '을지로', '여의도', '잠실', '용산'] },
   { id: 'busan', group: 'region', labelKo: '부산', labelEn: 'Busan', aliases: ['부산', '해운대', '광안리'] },
   { id: 'jeju', group: 'region', labelKo: '제주', labelEn: 'Jeju', aliases: ['제주', '서귀포'] },
   { id: 'incheon', group: 'region', labelKo: '인천', labelEn: 'Incheon', aliases: ['인천'] },
