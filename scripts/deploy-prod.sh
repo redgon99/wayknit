@@ -258,16 +258,22 @@ sleep 5
 LIVE_JS="$(mktemp)"
 A=$(curl -s "$SITE_URL/" | grep -o 'assets/index-[A-Za-z0-9_-]*\.js' | head -1)
 echo "  라이브 번들: $A"
-# 방금 만든 메인 파일이 라이브에 걸렸는지(배포가 실제로 나갔는지)
-if [ "$A" = "assets/$(basename "$BUNDLE")" ]; then echo "  ✅ 라이브 메인 파일 = 이번 빌드"
-else echo "  ✗ 라이브 메인 파일이 이번 빌드($(basename "$BUNDLE"))와 다르다"; fi
-# 키가 든 조각을 라이브에서 받아 확인(조각 이름은 빌드 검증 때 기억한 것)
+# 키가 든 조각을 라이브에서 받아 확인. netlify-cli가 netlify.toml의 build로 한 번 더 빌드해 올리므로
+# 라이브 파일 이름(해시)은 로컬 dist와 다르다 — 로컬 조각 이름의 앞부분(PlannerPage 등)으로 라이브 메인 파일 안에서 찾는다.
+LIVE_MAIN="$(mktemp)"
+curl -s "$SITE_URL/$A" -o "$LIVE_MAIN"
+: > "$LIVE_JS"
 for k in VITE_SUPABASE_URL VITE_KAKAO_JS_KEY; do
   v="${!k:-}"
   c="CHUNK_$k"
-  curl -s "$SITE_URL/assets/${!c}" -o "$LIVE_JS"
-  grep -qF -- "$v" "$LIVE_JS" && echo "  ✅ $k 반영됨 (${!c})" || echo "  ✗ $k 미반영 (${!c})"
+  prefix="$(printf '%s' "${!c}" | sed -E 's/-[A-Za-z0-9_-]{8}\.js$//')"
+  if [ "$prefix" = "index" ]; then live_name="$A"
+  else live_name="$(grep -oE "assets/${prefix}-[A-Za-z0-9_-]{8}\.js" "$LIVE_MAIN" | head -1 || true)"; fi
+  if [ -z "$live_name" ]; then echo "  ✗ $k : 라이브에서 $prefix 조각을 찾지 못했다"; continue; fi
+  curl -s "$SITE_URL/$live_name" -o "$LIVE_JS"
+  grep -qF -- "$v" "$LIVE_JS" && echo "  ✅ $k 반영됨 ($live_name)" || echo "  ✗ $k 미반영 ($live_name)"
 done
+rm -f "$LIVE_MAIN"
 # 에러 문자열이 남아 있으면 키가 안 들어간 것이다 (§9-2) — 카카오 코드가 든 조각에서 센다(루프 마지막이 카카오 조각)
 n=$(grep -c 'VITE_KAKAO_JS_KEY 환경 변수가 필요합니다' "$LIVE_JS" || true)
 echo "  카카오 에러 문자열: ${n}회 $([ "$n" = "0" ] && echo '(정상)' || echo '(키 누락!)')"

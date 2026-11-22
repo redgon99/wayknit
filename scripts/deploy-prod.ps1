@@ -248,18 +248,24 @@ Start-Sleep -Seconds 5
 $html = (Invoke-WebRequest "$SiteUrl/" -UseBasicParsing).Content
 $asset = ([regex]::Match($html, 'assets/index-[A-Za-z0-9_-]+\.js')).Value
 Write-Host "  라이브 번들: $asset"
-# 방금 만든 메인 파일이 라이브에 걸렸는지(배포가 실제로 나갔는지)
-if ($asset -eq "assets/$($bundle.Name)") { Write-Host "  ✅ 라이브 메인 파일 = 이번 빌드" }
-else { Write-Host "  ✗ 라이브 메인 파일이 이번 빌드($($bundle.Name))와 다르다" -ForegroundColor Red }
-# 키가 든 조각을 라이브에서 받아 확인(조각 이름은 빌드 검증 때 기억한 것)
+# 키가 든 조각을 라이브에서 받아 확인. netlify-cli가 netlify.toml의 build로 한 번 더 빌드해 올리므로
+# 라이브 파일 이름(해시)은 로컬 dist와 다르다 — 로컬 조각 이름의 앞부분(PlannerPage 등)으로 라이브 메인 파일 안에서 찾는다.
+$liveMain = (Invoke-WebRequest "$SiteUrl/$asset" -UseBasicParsing).Content
 $liveChunk = @{}
+$kakaoLive = ''
 foreach ($k in @("VITE_SUPABASE_URL","VITE_KAKAO_JS_KEY")) {
-  $name = $keyChunk[$k]
-  if (-not $liveChunk.ContainsKey($name)) { $liveChunk[$name] = (Invoke-WebRequest "$SiteUrl/assets/$name" -UseBasicParsing).Content }
-  if ($liveChunk[$name].Contains($prod[$k])) { Write-Host "  ✅ $k 반영됨 ($name)" } else { Write-Host "  ✗ $k 미반영 ($name)" -ForegroundColor Red }
+  $prefix = $keyChunk[$k] -replace '-[A-Za-z0-9_-]{8}\.js$', ''
+  if ($prefix -eq 'index') { $liveName = $asset }
+  else { $liveName = ([regex]::Match($liveMain, "assets/$([regex]::Escape($prefix))-[A-Za-z0-9_-]{8}\.js")).Value }
+  if (-not $liveName) { Write-Host "  ✗ $k : 라이브에서 $prefix 조각을 찾지 못했다" -ForegroundColor Red; continue }
+  if (-not $liveChunk.ContainsKey($liveName)) {
+    $liveChunk[$liveName] = if ($liveName -eq $asset) { $liveMain } else { (Invoke-WebRequest "$SiteUrl/$liveName" -UseBasicParsing).Content }
+  }
+  if ($k -eq 'VITE_KAKAO_JS_KEY') { $kakaoLive = $liveChunk[$liveName] }
+  if ($liveChunk[$liveName].Contains($prod[$k])) { Write-Host "  ✅ $k 반영됨 ($liveName)" } else { Write-Host "  ✗ $k 미반영 ($liveName)" -ForegroundColor Red }
 }
 # 에러 문자열이 남아 있으면 키가 안 들어간 것이다 (§9-2) — 카카오 코드가 든 조각에서 센다
-$n = ([regex]::Matches($liveChunk[$keyChunk["VITE_KAKAO_JS_KEY"]], 'VITE_KAKAO_JS_KEY 환경 변수가 필요합니다')).Count
+$n = ([regex]::Matches($kakaoLive, 'VITE_KAKAO_JS_KEY 환경 변수가 필요합니다')).Count
 Write-Host "  카카오 에러 문자열: ${n}회 $(if ($n -eq 0) { '(정상)' } else { '(키 누락!)' })"
 
 Write-Host @"
