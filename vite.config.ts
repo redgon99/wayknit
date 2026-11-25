@@ -1,4 +1,5 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, normalizePath, type Plugin } from 'vite';
+import postcss from 'postcss';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import type { IncomingMessage, ServerResponse } from 'http';
@@ -347,6 +348,98 @@ function localeCrossPlugin() {
   };
 }
 
+/**
+ * 첫 화면 CSS 줄이기(§67) — app.css(gzip 약 42 kB)는 플래너·가이드·관리자 화면용이라 랜딩은 그중 수십 줄만 쓴다.
+ * main.tsx는 `app.css?main`을 가져오고, 이 플러그인이 그 자리에 app.css에서 "메인 묶음(main.tsx에서 정적
+ * import로 닿는 파일 + index.html)에 나오는 낱말로만 된 선택자"의 규칙만 원래 순서대로 남겨 넣는다.
+ * 다른 화면은 각 페이지 파일이 app.css 원본을 그대로 가져오므로 그 화면에 들어가면 원본이 뒤에 붙는다.
+ * 원본 안의 같은 규칙이 더 뒤에 오니 겹침 결과는 예전(landing.css → app.css 전체)과 똑같다.
+ * 클래스 이름을 이어 붙여 만들면(`foo-${x}`, 'foo-' + x) 앞부분('foo-')으로 잡는다. 그 밖의 방법으로
+ * 만든 이름은 못 잡으니, 메인 묶음 컴포넌트에서는 app.css의 클래스 이름을 문자 그대로 쓴다.
+ */
+function mainCssSubsetPlugin(): Plugin {
+  const root = process.cwd();
+  const key = (f: string) => normalizePath(f).toLowerCase();
+  const isSubsetId = (id: string) => normalizePath(id).endsWith('/src/styles/app.css?main');
+  let graph = new Set<string>();
+
+  // main.tsx에서 정적 import(`import … from`, `export … from`, `import '…'`)로 닿는 소스 파일. 동적 import()는 지연 조각이라 뺀다.
+  function collectGraph(): string[] {
+    const seen = new Map<string, string>();
+    const stack = [path.resolve(root, 'src/main.tsx')];
+    const importRe = /(?:^|\n)\s*(?:import|export)\s[^;]*?from\s*['"](\.[^'"]+)['"]|(?:^|\n)\s*import\s*['"](\.[^'"]+)['"]/g;
+    while (stack.length) {
+      const file = stack.pop()!;
+      if (seen.has(key(file))) continue;
+      seen.set(key(file), file);
+      const src = fs.readFileSync(file, 'utf8');
+      for (const m of src.matchAll(importRe)) {
+        const spec = m[1] || m[2];
+        const base = path.resolve(path.dirname(file), spec);
+        const hit = [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`].find(
+          (c) => /\.tsx?$/.test(c) && fs.existsSync(c) && fs.statSync(c).isFile(),
+        );
+        if (hit) stack.push(hit);
+      }
+    }
+    return [...seen.values()];
+  }
+
+  function subset(files: string[]): string {
+    const words = new Set<string>();
+    const prefixes: string[] = [];
+    for (const file of [...files, path.resolve(root, 'index.html')]) {
+      const src = fs.readFileSync(file, 'utf8');
+      for (const w of src.match(/[A-Za-z_][\w-]*/g) ?? []) words.add(w);
+      for (const m of src.matchAll(/([A-Za-z_][\w-]*-)(?:\$\{|['"`]\s*\+)/g)) prefixes.push(m[1]);
+    }
+    const known = (name: string) => words.has(name) || prefixes.some((p) => name.startsWith(p));
+    // :not(.x) 안의 클래스는 "없어야 맞는" 조건이라 보지 않는다
+    const usable = (selector: string) =>
+      [...selector.replace(/:not\([^()]*\)/g, '').matchAll(/\.((?:\\.|[\w-])+)/g)].every((m) =>
+        known(m[1].replace(/\\/g, '')),
+      );
+    const css = postcss.parse(fs.readFileSync(path.resolve(root, 'src/styles/app.css'), 'utf8'));
+    css.walkComments((c) => {
+      c.remove();
+    });
+    css.walkRules((rule) => {
+      if (rule.parent?.type === 'atrule' && /keyframes$/i.test((rule.parent as postcss.AtRule).name)) return;
+      if (!rule.selectors.some(usable)) rule.remove();
+    });
+    // 안이 비어 버린 @media 등은 바깥쪽까지 지운다
+    let emptied = true;
+    while (emptied) {
+      emptied = false;
+      css.walkAtRules((at) => {
+        if (at.nodes && at.nodes.length === 0) {
+          at.remove();
+          emptied = true;
+        }
+      });
+    }
+    return css.toString();
+  }
+
+  return {
+    name: 'main-css-subset',
+    enforce: 'pre',
+    load(id) {
+      if (!isSubsetId(id)) return null;
+      const files = collectGraph();
+      graph = new Set(files.map(key));
+      return subset(files);
+    },
+    // dev: 메인 묶음 파일의 클래스 이름이 바뀌면 골라 넣은 CSS도 다시 만든다(app.css 자체 수정은 Vite가 알아서 다시 읽는다)
+    handleHotUpdate(ctx) {
+      if (!graph.has(key(ctx.file))) return;
+      const mods = [...ctx.server.moduleGraph.idToModuleMap.values()].filter((m) => m.id && isSubsetId(m.id));
+      for (const m of mods) ctx.server.moduleGraph.invalidateModule(m);
+      return mods.length ? [...ctx.modules, ...mods] : undefined;
+    },
+  };
+}
+
 /** 로컬 dev: Tour API CORS 우회 (VITE_TOUR_API_KEY 필요) */
 function tourApiDevProxyPlugin(tourApiKey: string) {
   return {
@@ -534,6 +627,7 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react(),
     localeCrossPlugin(),
+    mainCssSubsetPlugin(),
     tourApiDevProxyPlugin(tourApiKey),
     VitePWA({
       registerType: 'autoUpdate',

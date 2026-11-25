@@ -5,9 +5,9 @@ import { migrateLegacyStorageKeys } from './lib/migrateStorageKeys';
 import { startAnalyticsSink } from './lib/analyticsSink';
 import { i18nReady } from './lib/i18n';
 import App, { preloadRoute } from './App';
-// 페이지들이 지연 로딩으로 빠지면 공용 스타일 app.css도 따라 빠져 랜딩에서 사라지고 순서가 바뀐다.
-// App(랜딩 → landing.css) 다음에 불러와 예전 메인 CSS 순서(landing.css → app.css)를 그대로 지킨다(2026-11-22).
-import './styles/app.css';
+// 공용 스타일 app.css 중 메인 묶음(랜딩·머리글·검색 등)이 쓰는 규칙만 골라 넣는다 — vite.config.ts mainCssSubsetPlugin(§67).
+// App(랜딩 → landing.css) 다음에 불러와 예전 순서(landing.css → app.css)를 지킨다. app.css 원본은 각 페이지 조각이 가져온다.
+import './styles/app.css?main';
 
 migrateLegacyStorageKeys();
 startAnalyticsSink();
