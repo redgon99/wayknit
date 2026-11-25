@@ -682,6 +682,9 @@ export default defineConfig(({ mode }) => {
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // 공유 미리보기(og:image)용 큰 PNG는 앱 화면이 쓰지 않는다 — 서비스 워커 설치 때마다 4.3 MB를 더 받지 않게 뺀다(§70).
+        // 랜딩 기본 이미지는 WebP(globPatterns에 없음 → 볼 때 받음).
+        globIgnores: ['landing/*.png', 'og-default.png'],
         // 메인 번들이 기본 한도(2 MiB)를 넘으면 빌드가 실패하고, 한도를 넘는 파일은 오프라인 캐시에서 빠진다.
         // 2026-11-21 랜딩 개편으로 2.01 MiB가 되어 3 MiB로 올렸다. 근본 해결은 관리자 화면 지연 로딩(코드 분할).
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,

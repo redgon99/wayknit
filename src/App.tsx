@@ -5,6 +5,7 @@ import { LocaleLayout } from './components/LocaleLayout';
 import LandingPage from './pages/LandingPage';
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, stripLocalePrefix } from './lib/locale';
 import { lazyPage, PageSuspense, type LazyPage } from './lib/lazyPage';
+import { firstScreenSettled } from './lib/firstScreen';
 
 /*
  * 랜딩만 메인 번들에 두고 나머지 페이지는 처음 들어갈 때 따로 받는다(지연 로딩).
@@ -99,16 +100,34 @@ const PAGE_ROUTES = (
   </>
 );
 
-/** 첫 화면이 뜬 뒤 한가할 때 플래너 조각을 받아 둔다(가장 많이 가는 다음 화면) */
+/** 랜딩이 아닌 페이지로 들어왔거나 첫 화면 데이터가 오래 걸려도 이 시간이 지나면 미리 받는다 */
+const PLANNER_PRELOAD_MAX_WAIT_MS = 8000;
+
+/**
+ * 첫 화면이 자기 데이터를 다 받은 뒤(firstScreenSettled) 한가할 때 플래너 조각을 받아 둔다(가장 많이 가는 다음 화면).
+ * 예전엔 첫 그림 직후 바로 시작해 느린 회선에서 추천 코스 조회와 대역폭을 나눠 썼다(§69·§70).
+ */
 function usePreloadPlannerWhenIdle() {
   useEffect(() => {
-    const run = () => PlannerPage.preload();
-    if ('requestIdleCallback' in window) {
-      const id = window.requestIdleCallback(run, { timeout: 5000 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const id = globalThis.setTimeout(run, 2500);
-    return () => globalThis.clearTimeout(id);
+    let cancelled = false;
+    let idleId: number | undefined;
+    let timerId: ReturnType<typeof setTimeout> | undefined;
+    const run = () => {
+      if (!cancelled) PlannerPage.preload();
+    };
+    const maxWait = new Promise<void>((resolve) => {
+      timerId = globalThis.setTimeout(resolve, PLANNER_PRELOAD_MAX_WAIT_MS);
+    });
+    void Promise.race([firstScreenSettled, maxWait]).then(() => {
+      if (cancelled) return;
+      if ('requestIdleCallback' in window) idleId = window.requestIdleCallback(run, { timeout: 5000 });
+      else run();
+    });
+    return () => {
+      cancelled = true;
+      if (timerId !== undefined) globalThis.clearTimeout(timerId);
+      if (idleId !== undefined && 'cancelIdleCallback' in window) window.cancelIdleCallback(idleId);
+    };
   }, []);
 }
 

@@ -48,9 +48,9 @@ import '../styles/app.css';
 import '../styles/landing.css';
 
 const DEFAULT_GALLERY = [
-  { src: '/landing/hero.png', alt: '히어로' },
-  { src: '/landing/screen-search.png', alt: '검색' },
-  { src: '/landing/screen-route.png', alt: '동선' },
+  { src: '/landing/hero.webp', alt: '히어로' },
+  { src: '/landing/screen-search.webp', alt: '검색' },
+  { src: '/landing/screen-route.webp', alt: '동선' },
 ];
 
 export default function AdminLandingPage() {

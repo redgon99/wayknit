@@ -9,9 +9,10 @@ import {
 import { youtubeEmbedUrl } from '../lib/landingPromo';
 
 const FALLBACK_IMAGES = [
-  { url: '/landing/hero.png', alt: 'Wayknit map' },
-  { url: '/landing/screen-search.png', alt: 'Search' },
-  { url: '/landing/screen-route.png', alt: 'Route' },
+  // WebP(3장 211 KB) — 예전 PNG는 3장 4 MB였다(§70). PNG는 공유 미리보기(og:image)용으로 public/landing에 남아 있다.
+  { url: '/landing/hero.webp', alt: 'Wayknit map' },
+  { url: '/landing/screen-search.webp', alt: 'Search' },
+  { url: '/landing/screen-route.webp', alt: 'Route' },
 ];
 
 export function collectNoticeTexts(tree: LandingMenuNode[]): string[] {

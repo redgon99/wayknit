@@ -6,7 +6,7 @@ import { courseTaxonomyOf } from './relatedGuides';
 /**
  * 랜딩 "추천 코스" 카드(개편 3단계, 2026-11-21).
  * 카드에서 바로 "+ 내 일정에 담기"를 하므로 담을 장소(코스 핀)가 있는 코스 글만 보여 준다.
- * 코스 핀 전체는 무거워서(약 580KB) 첫 핀 하나만 받아 있는지만 본다(relatedGuides.ts와 같은 방식).
+ * 코스 핀 전체는 무거워서(약 580KB) 첫 핀의 이름만 받아 핀이 있는지만 본다.
  */
 export interface LandingCourse {
   slug: string;
@@ -38,12 +38,14 @@ export function regionLabel(id: string, locale: string): string {
 export async function listLandingCourses(locale: string, limit = 6): Promise<LandingCourse[]> {
   const sb = getSupabase();
   if (!sb) return [];
+  // 카드는 제목만 쓴다 — 요약은 받지 않고, 첫 핀도 객체 전체(80행이면 약 100 KB) 대신 이름만 받아 있는지 본다.
+  // 예전 응답 72 KB → 수 KB(§70, 느린 모바일에서 코스 카드가 늦게 뜨던 원인).
   const extra = fallbackLocales(locale)
-    .map((loc, i) => `t${i}:translations->"${loc}"->>title,s${i}:translations->"${loc}"->>summary`)
+    .map((loc, i) => `t${i}:translations->"${loc}"->>title`)
     .join(',');
   const { data, error } = await sb
     .from('guide_articles')
-    .select(`slug,kind,locale,title,summary,topic_tags,first_pin:course_pins->0,${extra}`)
+    .select(`slug,locale,title,topic_tags,first_pin:course_pins->0->>name,${extra}`)
     .eq('status', 'published')
     .eq('kind', 'course')
     .order('published_at', { ascending: false })

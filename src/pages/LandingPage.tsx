@@ -15,6 +15,7 @@ import { readActiveLocalTripSummary } from '../lib/localTripSummary';
 import { trackEvent } from '../lib/analytics';
 import { LandingCmsSections } from '../components/LandingCms';
 import { landingAnchor } from '../lib/landingMenu';
+import { markFirstScreenSettled } from '../lib/firstScreen';
 import '../styles/landing.css';
 
 /** "추천 코스에서 시작"의 지역 칩 — 공개 코스 글이 많은 지역 */
@@ -92,6 +93,11 @@ export default function LandingPage() {
    * 시점엔 아직 없다 — 조회가 끝난 뒤 직접 한 번 맞춰 준다.
    */
   const { hash } = useLocation();
+  // 첫 화면 데이터를 다 받은 뒤에야 플래너 조각을 미리 받는다(App.usePreloadPlannerWhenIdle, §70)
+  useEffect(() => {
+    if (coursesLoaded && cmsLoaded) markFirstScreenSettled();
+  }, [coursesLoaded, cmsLoaded]);
+
   useEffect(() => {
     if (!cmsLoaded || !hash) return;
     const el = document.getElementById(decodeURIComponent(hash.slice(1)));
