@@ -323,13 +323,21 @@ function mergeTourDetailResponse(
 function localeCrossPlugin() {
   const id = 'virtual:locale-cross';
   const resolved = '\0' + id;
+  // 랜딩 테마 칩이 쓰는 한국어 planner.themes만 — 나머지 한국어 planner.json은 페이지와 함께 받는다(§68, i18n.ts)
+  const koThemesId = 'virtual:ko-planner-themes';
+  const koThemesResolved = '\0' + koThemesId;
   const localesDir = path.resolve(process.cwd(), 'src/locales');
   return {
     name: 'locale-cross',
     resolveId(source: string) {
+      if (source === koThemesId) return koThemesResolved;
       return source === id ? resolved : null;
     },
     load(loadId: string) {
+      if (loadId === koThemesResolved) {
+        const planner = JSON.parse(fs.readFileSync(path.join(localesDir, 'ko', 'planner.json'), 'utf8'));
+        return `export default ${JSON.stringify(planner.themes ?? {})};\n`;
+      }
       if (loadId !== resolved) return null;
       const newTripTitles: string[] = [];
       const exportLabels: Record<string, unknown> = {};
@@ -619,6 +627,8 @@ export default defineConfig(({ mode }) => {
         manualChunks(id: string) {
           const m = id.replace(/\\/g, '/').match(/\/src\/locales\/([^/]+)\/[^/]+\.json$/);
           if (m && m[1] !== 'ko') return `locale-${m[1]}`;
+          // 한국어는 첫 화면 묶음(common·landing·guides)만 메인에, 나머지는 한 조각으로(§68)
+          if (m && !/\/(common|landing|guides)\.json$/.test(id.replace(/\\/g, '/'))) return 'locale-ko';
           return undefined;
         },
       },

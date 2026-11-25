@@ -9,10 +9,9 @@ import {
   type ReactNode,
 } from 'react';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
-import { tripsRepo, acceptPendingInvites } from '../lib/trips';
+// trips·admin은 로그인한 뒤에만 쓰므로 그때 받는다 — 첫 화면(메인 번들)에서 플래너·관리자 코드를 빼려고(§68)
 import { formatAuthError, isGoogleAuthEnabled } from '../lib/authErrors';
 import { fetchUserProfile } from '../lib/profiles';
-import { isCurrentUserAdmin } from '../lib/admin';
 import { isMockMailUser, signInMockMailUser } from '../lib/mockMailUsers';
 import {
   forgetPersistedSession,
@@ -80,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
+      const { isCurrentUserAdmin } = await import('../lib/admin');
       const ok = await isCurrentUserAdmin();
       setIsAdmin(ok);
     } catch {
@@ -91,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userId = state.user?.id;
     if (!userId || !isSupabaseConfigured) return 0;
     if (migratedForUserRef.current === userId) return 0;
+    const { tripsRepo } = await import('../lib/trips');
     const count = await tripsRepo.migrateLocalToUser(userId);
     migratedForUserRef.current = userId;
     return count;
@@ -195,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refreshProfile();
     void refreshAdmin();
     // 이 이메일로 온 여행 공동편집 초대가 있으면 로그인 시점에 자동 수락
-    void acceptPendingInvites();
+    void import('../lib/trips').then((m) => m.acceptPendingInvites());
   }, [state.user?.id, syncLocalTrips, refreshProfile, refreshAdmin]);
 
   useEffect(() => {

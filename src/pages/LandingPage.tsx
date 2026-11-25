@@ -11,7 +11,7 @@ import { plannerPath } from '../lib/routes';
 import i18n from '../lib/i18n';
 import { isGuidesConfigured } from '../lib/guides';
 import { listLandingCourses, regionLabel, type LandingCourse } from '../lib/landingCourses';
-import { readActiveLocalTripSummary } from '../lib/trips';
+import { readActiveLocalTripSummary } from '../lib/localTripSummary';
 import { trackEvent } from '../lib/analytics';
 import { LandingCmsSections } from '../components/LandingCms';
 import { landingAnchor } from '../lib/landingMenu';

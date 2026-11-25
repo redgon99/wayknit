@@ -1,5 +1,5 @@
 import { Component, lazy, Suspense, type ComponentType, type LazyExoticComponent, type ReactNode } from 'react';
-import i18n from './i18n';
+import i18n, { ensurePageTranslations } from './i18n';
 
 /**
  * 페이지를 처음 열 때 따로 받아 오는 지연 로딩(React.lazy).
@@ -16,7 +16,9 @@ export type LazyPage<T extends ComponentType<object>> = LazyExoticComponent<T> &
   preload: () => void;
 };
 
-export function lazyPage<T extends ComponentType<object>>(load: () => Promise<{ default: T }>): LazyPage<T> {
+export function lazyPage<T extends ComponentType<object>>(loadPage: () => Promise<{ default: T }>): LazyPage<T> {
+  // 페이지 조각과 그 페이지가 쓰는 한국어 문구(locale-ko, §68)를 함께 받는다 — 문구 없이 먼저 그려지지 않게
+  const load = () => Promise.all([loadPage(), ensurePageTranslations()]).then(([mod]) => mod);
   const page = lazy(async () => {
     try {
       const mod = await load();

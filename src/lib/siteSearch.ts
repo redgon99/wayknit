@@ -1,5 +1,5 @@
 import { getSupabase } from './supabase';
-import { listPlazaEntries, type PlazaListing } from './trips';
+import type { PlazaListing } from './trips';
 import type { GuideKind } from './guideKinds';
 
 /**
@@ -148,6 +148,8 @@ export function plazaToSearchItem(entry: PlazaListing): PlazaSearchItem {
 
 async function loadPlaza(): Promise<PlazaSearchItem[]> {
   try {
+    // 검색창을 처음 쓸 때 받는다 — trips(플래너 저장 코드)를 첫 화면 번들에서 빼려고(§68)
+    const { listPlazaEntries } = await import('./trips');
     const entries = await listPlazaEntries(null);
     return entries.map(plazaToSearchItem);
   } catch {

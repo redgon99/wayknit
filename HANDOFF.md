@@ -9227,10 +9227,35 @@ ktrip 운영자 분석의 운영 안정화 제안(11-10 ktrip에서 미커밋 �
   랜딩 5장면(ko/en·1280/390·검색 펼침·메뉴)은 `app-….css`를 붙잡아 둔 상태(첫 화면 그대로), 공개 페이지 15개 바로 진입,
   관리자 2개(비로그인 화면), 랜딩 → 가이드 → 뒤로, 랜딩 → 코스 담기 → 플래너. 비교기 자체 확인: app.css를 비우면 113곳 차이로 잡힘.
   dev 서버도 `app.css?main` 7.7 kB(원본 445 kB) 확인.
+- **라이브 확인(배포 후):** 랜딩(1280·390)·모바일 가이드·코스 목록 예전 빌드와 차이 0. 플래너 차이는 지도 영역(라이브는 카카오 지도가
+  실제로 뜨고 로컬은 키 막힘 → 지도 서비스 버튼·토스트가 다름)뿐.
+
+## 68. 메인 JS 다시 측정 → 한국어 페이지 번역·trips 빼기 (2026-11-25)
+
+- **측정(소스맵, 메인 614 kB / gzip 196 kB):** react-dom 128 KB, Supabase 전체 약 205 KB(auth 96·realtime 30·phoenix 25·storage 21·
+  postgrest 16 …), i18next+react-i18next 60, react-router 37, **한국어 번역 8개 파일 57 KB**(planner.json만 50 KB), **trips.ts 22.5 KB**
+  (랜딩 "이어서 하기"·검색의 공유마당·로그인 후 동기화 때문에 들어와 있었다), admin.ts 6 KB(로그인 후 관리자 확인).
+- **한국어 번역:** 메인에는 첫 화면이 쓰는 `common`·`landing`·`guides` + 랜딩 테마 칩용 `planner.themes`(`virtual:ko-planner-themes`,
+  vite.config.ts localeCrossPlugin)만. 나머지(planner·share·auth·billing·korInfo)는 `locale-ko` 조각(gzip 20.7 kB) —
+  `lazyPage`가 페이지 조각과 `ensurePageTranslations()`를 **함께 기다린다**(다른 언어 화면도 빠진 문구는 한국어로 보이니 언어 상관없이).
+  메인 묶음 코드에서 planner·share·auth·billing·korInfo 문구를 새로 쓰면 첫 화면에서 키가 그대로 보인다 → 그 경우 landing/common에 넣는다.
+- **trips·admin:** `lib/localTripSummary.ts`(신규, `LS_TRIPS_STORE` 키 + `readActiveLocalTripSummary`) — trips.ts는 이 키를 가져다 쓴다.
+  `AuthContext`는 로그인 뒤에만 `import('../lib/trips')`(동기화·초대 수락)·`import('../lib/admin')`(관리자 확인), `siteSearch`는
+  공유마당 목록을 검색 때 `import('./trips')`.
+- **결과:** 메인 JS 614 → 550 kB, **gzip 196.4 → 168.9 kB**(−27.5 kB). 오늘 아침(§67 전) 대비 첫 화면 JS+CSS gzip 244.6 → 174.2 kB.
+- **검증(`vite preview`, §67 전 빌드와 나란히):** 27개 장면에서 계산 스타일 + 보이는 글자·aria-label·placeholder·title 비교 — 차이 0
+  (랜딩 5장면은 `locale-ko`·`app.css`를 붙잡아 둔 첫 화면 상태, `/en/info`·`/ja/plaza`·`/en/guides` 추가). "랜딩 → 코스 담기 → 플래너"만
+  토스트·첫 사용 안내가 뜨는 시점에 따라 실행마다 0/1/34로 오락가락(예전 빌드 쪽에 있다 없다 함 — 시점 차이). dev 서버도 글자 동일.
+- **미검증:** 로그인 상태(로그인 후 여행 동기화·초대 수락·관리자 확인이 이제 지연 import) — 사용자 `/admin` 확인 때 같이 보면 된다.
+- **남은 큰 덩어리:** Supabase(약 205 KB, gzip 대략 50 kB). realtime·storage·functions 모두 실제 기능이 써서 빼려면 랜딩에서 Supabase
+  클라이언트 자체를 늦게 받는 구조로 바꿔야 한다(호출처 전부 비동기화 — 큰 작업). 아이콘 세트 13 KB(gzip 약 4 kB)는 작은 후보.
 
 ## ▶ 다음 세션 시작점 (2026-11-22 기준, 갱신)
 
-**+ §67 (2026-11-25):** 첫 화면 CSS를 필요한 규칙만으로(메인 CSS gzip 48.2 → 5.3 kB). 전 화면 계산 스타일 비교 차이 0.
+**+ §68 (2026-11-25):** 한국어 페이지 번역·trips·admin을 메인에서 빼기(메인 JS gzip 196.4 → 168.9 kB). 27개 장면 스타일·글자 비교 차이 0.
+로그인 상태(동기화·초대·관리자 확인 지연 import)는 미검증 — `/admin` 확인 때 같이.
+
+**+ §67 (2026-11-25 커밋·배포·라이브 확인):** 첫 화면 CSS를 필요한 규칙만으로(메인 CSS gzip 48.2 → 5.3 kB). 전 화면 계산 스타일 비교 차이 0.
 
 **▶ 다른 맥에서 이어갈 때 (2026-11-22 Windows에서 마감):**
 1. `git pull` → `npm install`(§67에서 `postcss` 개발 의존성 명시 — 이미 깔려 있던 버전). `.env.local`·`.certs/`는 git에 없으니 그 맥의 것을 쓴다.

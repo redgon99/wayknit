@@ -14,6 +14,11 @@ declare module 'virtual:locale-cross' {
   export const EXPORT_LABELS: Record<string, Record<string, unknown>>;
 }
 
+declare module 'virtual:ko-planner-themes' {
+  const themes: Record<string, unknown>;
+  export default themes;
+}
+
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;

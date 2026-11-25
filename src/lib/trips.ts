@@ -14,6 +14,7 @@ import { normalizeLocale } from './locale';
 import { plannerPath } from './routes';
 import { regionCodesFromPins } from './koreaRegions';
 import { effectiveOwnerId } from './authIdentity';
+import { LS_TRIPS_STORE } from './localTripSummary';
 
 export interface Trip {
   id: string;
@@ -97,7 +98,8 @@ export interface TripSummary {
   pinCount?: number;
 }
 
-const LS_STORE = 'wayknit:trips-store:v2';
+// 랜딩 "이어서 하기" 요약(readActiveLocalTripSummary)은 localTripSummary.ts — 첫 화면 번들에서 trips를 빼려고(§68)
+const LS_STORE = LS_TRIPS_STORE;
 const LS_PLAZA_IMPORTED = 'wayknit:plaza-imported-ids';
 
 interface LocalStore {
@@ -117,19 +119,6 @@ function readStore(): LocalStore {
   } catch {
     return { activeId: null, trips: [] };
   }
-}
-
-/**
- * 랜딩 첫 화면의 "이어서 하기"(개편 3단계, 2026-11-21) — 이 기기에서 마지막으로 연 여행.
- * 핀이 하나도 없는 빈 "새 여행"은 이어서 할 게 없으니 보여 주지 않는다.
- */
-export function readActiveLocalTripSummary(): { title: string; totalDays: number } | null {
-  const store = readStore();
-  const trip = store.trips.find((t) => t.id === store.activeId);
-  if (!trip) return null;
-  const pins = Object.values(trip.pinnedByDay ?? {}).reduce((n, list) => n + (list?.length ?? 0), 0);
-  if (pins === 0) return null;
-  return { title: trip.title, totalDays: Math.max(1, trip.totalDays || 1) };
 }
 
 function writeStore(store: LocalStore) {
