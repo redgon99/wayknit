@@ -2,6 +2,7 @@ import type { GuideArticle, GuideArticleInput, GuideCoursePin, GuideKind, GuideS
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { getSupabase, isSupabaseConfigured } from './supabase';
 import { normalizeGuideKind } from './guideKinds';
+import { SUPPORTED_LOCALES } from './locale';
 
 function requireSupabase() {
   if (!isSupabaseConfigured) {
@@ -230,6 +231,45 @@ export async function listPublishedGuides(
   const { data, error } = await query;
   if (error) throw error;
   return (data ?? []).map((row) => mapPublishedRow(row as Record<string, unknown>));
+}
+
+/*
+ * 2026-11-25 — 가이드 목록(/guides) 카드용. 예전엔 최신 48~80편을 select('*')로 받아(80편에 약 2MB)
+ * 태그 필터도 그 안에서만 찾았다 → 오래된 글은 태그가 맞아도 안 보였다(「K-POP」 0개).
+ * 카드에는 제목·요약만 쓰므로 번역도 언어별 제목·요약만 받아 공개 글 전부(114편에 약 0.15MB)를 가져온다.
+ * 본문(bodyMd)은 비어 있으니 상세 화면에는 쓰지 않는다.
+ */
+const CARD_LOCALES = SUPPORTED_LOCALES;
+const cardAlias = (loc: string) => `t_${loc.replace(/-/g, '_')}`;
+const GUIDE_CARD_SELECT = [
+  'id, slug, title, summary, kind, topic_tags, locale, published_at, created_at, updated_at',
+  ...CARD_LOCALES.map(
+    (loc) => `${cardAlias(loc)}_title:translations->${loc}->>title, ${cardAlias(loc)}_summary:translations->${loc}->>summary`
+  ),
+].join(', ');
+
+export async function listPublishedGuideCards(kind?: GuideKind): Promise<GuideArticle[]> {
+  const sb = requireSupabase();
+  let query = sb
+    .from('guide_articles')
+    .select(GUIDE_CARD_SELECT)
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+    .limit(1000);
+  if (kind) query = query.eq('kind', kind);
+  const { data, error } = await query;
+  if (error) throw error;
+  return ((data ?? []) as unknown as Record<string, unknown>[]).map((row) => {
+    const translations: GuideArticle['translations'] = {};
+    for (const loc of CARD_LOCALES) {
+      const title = row[`${cardAlias(loc)}_title`];
+      if (typeof title === 'string' && title) {
+        const summary = row[`${cardAlias(loc)}_summary`];
+        translations[loc] = { title, summary: typeof summary === 'string' ? summary : '', bodyMd: '' };
+      }
+    }
+    return mapRow({ ...row, translations });
+  });
 }
 
 export async function getPublishedGuideBySlug(slug: string): Promise<GuideArticle | null> {

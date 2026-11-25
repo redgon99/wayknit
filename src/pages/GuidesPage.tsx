@@ -17,7 +17,7 @@ import {
 } from '../lib/courseGuideTaxonomy';
 import { normalizeLocale, pathWithLocale } from '../lib/locale';
 import i18n from '../lib/i18n';
-import { isGuidesConfigured, listPublishedGuides, pickGuideContent, plainGuideSummary } from '../lib/guides';
+import { isGuidesConfigured, listPublishedGuideCards, pickGuideContent, plainGuideSummary } from '../lib/guides';
 import type { GuideArticle } from '../types/guides';
 import '../styles/app.css';
 
@@ -65,10 +65,8 @@ export default function GuidesPage() {
     (async () => {
       setLoading(true);
       try {
-        const rows = await listPublishedGuides(
-          kindFilter === 'course' || courseFilters.length > 0 ? 80 : 48,
-          kindFilter || undefined
-        );
+        // 2026-11-25 — 태그 필터가 최신 80편 안에서만 찾던 문제: 카드용 가벼운 목록으로 공개 글 전부를 받는다
+        const rows = await listPublishedGuideCards(kindFilter || undefined);
         if (alive) setGuides(rows);
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : t('errors.loadFailed'));
@@ -79,7 +77,7 @@ export default function GuidesPage() {
     return () => {
       alive = false;
     };
-  }, [t, kindFilter, courseFilters.length]);
+  }, [t, kindFilter]);
 
   const kindChips = useMemo(
     () => [{ id: '' as const, label: t('kinds.all') }, ...GUIDE_KINDS.map((k) => ({ id: k, label: t(`kinds.${k}`) }))],
@@ -103,13 +101,13 @@ export default function GuidesPage() {
     return [...ids];
   }, [guides, kindFilter]);
 
-  const visibleGuides = useMemo(
-    () =>
-      guides.filter((g) =>
-        guideMatchesCourseFilters(g.topicTags, g.title, g.summary, courseFilters)
-      ),
-    [guides, courseFilters]
-  );
+  // 필터가 없을 때는 예전처럼 최신 48편(추천 코스는 80편)만 보여 주고, 필터를 고르면 맞는 글을 모두 보여 준다
+  const visibleGuides = useMemo(() => {
+    if (courseFilters.length === 0) return guides.slice(0, kindFilter === 'course' ? 80 : 48);
+    return guides.filter((g) =>
+      guideMatchesCourseFilters(g.topicTags, g.title, g.summary, courseFilters)
+    );
+  }, [guides, courseFilters, kindFilter]);
 
   return (
     <main className="guides-page">
